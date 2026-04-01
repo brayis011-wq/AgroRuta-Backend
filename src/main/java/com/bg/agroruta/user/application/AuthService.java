@@ -1,9 +1,10 @@
 package com.bg.agroruta.user.application;
 
-import com.bg.agroruta.shared.security.JwtService;
+import com.bg.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
+import com.bg.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
+import com.bg.agroruta.user.application.ports.out.TokenPort;
 import com.bg.agroruta.user.domain.Rol;
 import com.bg.agroruta.user.domain.Usuario;
-import com.bg.agroruta.user.domain.UsuarioService;
 import com.bg.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.bg.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.bg.agroruta.user.infrastructure.web.dto.LoginRequest;
@@ -16,17 +17,20 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
-    private final UsuarioService usuarioService;
-    private final JwtService jwtService;
+    private final RegistrarUsuarioUseCase registrarUsuarioUseCase;
+    private final BuscarUsuarioUseCase buscarUsuarioUseCase;
+    private final TokenPort tokenPort;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
-    public AuthService(UsuarioService usuarioService,
-                       JwtService jwtService,
+    public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
+                       BuscarUsuarioUseCase buscarUsuarioUseCase,
+                       TokenPort tokenPort,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager) {
-        this.usuarioService = usuarioService;
-        this.jwtService = jwtService;
+        this.registrarUsuarioUseCase = registrarUsuarioUseCase;
+        this.buscarUsuarioUseCase = buscarUsuarioUseCase;
+        this.tokenPort = tokenPort;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
     }
@@ -40,11 +44,9 @@ public class AuthService {
                 Rol.valueOf(request.getRol())
         );
 
-        Usuario guardado = usuarioService.registrar(usuario);
-
-        // Envolvemos el Usuario en CustomUserDetails para que JwtService lo entienda
+        Usuario guardado = registrarUsuarioUseCase.registrar(usuario);
         CustomUserDetails userDetails = new CustomUserDetails(guardado);
-        String token = jwtService.generateToken(userDetails);
+        String token = tokenPort.generateToken(userDetails);
 
         return new AuthResponse(
                 token,
@@ -62,11 +64,9 @@ public class AuthService {
                 )
         );
 
-        Usuario usuario = usuarioService.buscarPorEmail(request.getEmail());
-
-        // Igual aquí — envolvemos en CustomUserDetails
+        Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
         CustomUserDetails userDetails = new CustomUserDetails(usuario);
-        String token = jwtService.generateToken(userDetails);
+        String token = tokenPort.generateToken(userDetails);
 
         return new AuthResponse(
                 token,
