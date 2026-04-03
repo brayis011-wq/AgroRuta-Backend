@@ -1,7 +1,7 @@
 package com.bg.agroruta.cultivo.application;
 
+import com.bg.agroruta.cultivo.application.ports.in.FincaUseCase;
 import com.bg.agroruta.cultivo.application.ports.in.LoteUseCase;
-import com.bg.agroruta.cultivo.domain.Finca;
 import com.bg.agroruta.cultivo.domain.Lote;
 import com.bg.agroruta.cultivo.domain.LoteRepository;
 import com.bg.agroruta.shared.exception.BusinessException;
@@ -23,7 +23,6 @@ public class LoteService implements LoteUseCase {
 
     @Override
     public Lote registrarLote(Lote lote) {
-        // Verificamos que la finca existe
         fincaUseCase.buscarFincaPorId(lote.getFincaId());
         if (lote.getNombre() == null || lote.getNombre().isBlank()) {
             throw new BusinessException("El nombre del lote es obligatorio.");
