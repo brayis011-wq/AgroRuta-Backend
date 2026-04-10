@@ -49,6 +49,7 @@ public class AuthService {
         String token = tokenPort.generateToken(userDetails);
 
         return new AuthResponse(
+                guardado.getId(),
                 token,
                 guardado.getEmail(),
                 guardado.getNombre(),
@@ -62,6 +63,7 @@ public class AuthService {
                         request.getEmail(),
                         request.getPassword()
                 )
+
         );
 
         Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
@@ -69,6 +71,7 @@ public class AuthService {
         String token = tokenPort.generateToken(userDetails);
 
         return new AuthResponse(
+                usuario.getId(),
                 token,
                 usuario.getEmail(),
                 usuario.getNombre(),

@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -16,8 +17,11 @@ import java.util.function.Function;
 @Service
 public class JwtService {
 
-    // Esta es la "firma" secreta de tu aplicación.
-    private static final String SECRET_KEY = "QWdyb1J1dGFDbGF2ZVNlY3JldGFQYXJhRmlybWFyVG9rZW5zMjAyNg==";
+    @Value("${jwt.secret}")
+    private String secretKey;
+
+    @Value("${jwt.expiration}")
+    private long jwtExpiration;
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -28,13 +32,12 @@ public class JwtService {
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        // Sintaxis actualizada para JJWT 0.12.x
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 horas
-                .signWith(getSignInKey()) // La versión 0.12 detecta el algoritmo automáticamente
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .signWith(getSignInKey())
                 .compact();
     }
 
@@ -57,7 +60,6 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        // Sintaxis actualizada para JJWT 0.12.x (usando verifyWith y getPayload)
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()
@@ -65,9 +67,8 @@ public class JwtService {
                 .getPayload();
     }
 
-    // Usamos SecretKey en lugar de Key para mayor compatibilidad con la nueva versión
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
