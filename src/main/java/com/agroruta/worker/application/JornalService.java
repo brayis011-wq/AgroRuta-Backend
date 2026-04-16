@@ -1,11 +1,11 @@
 package com.agroruta.worker.application;
 
-import com.agroRuta.worker.application.ports.ActividadRepository;
-import com.agroRuta.worker.application.ports.JornalRepository;
-import com.agroRuta.worker.application.ports.TrabajadorRepository;
-import com.agroRuta.worker.domain.Actividad;
-import com.agroRuta.worker.domain.Jornal;
-import com.agroRuta.worker.domain.Trabajador;
+import com.agroruta.worker.domain.ActividadRepository;
+import com.agroruta.worker.domain.JornalRepository;
+import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.domain.Actividad;
+import com.agroruta.worker.domain.Jornal;
+import com.agroruta.worker.domain.Trabajador;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,12 +24,9 @@ public class JornalService {
         this.actividadRepository = actividadRepository;
     }
 
-    /**
-     * Registra un jornal para un trabajador en un cultivo específico,
-     * con las actividades realizadas ese día.
-     */
     public Jornal registrarJornal(Long trabajadorId, Long cultivoId, String nombreCultivo,
                                   LocalDate fecha, List<Long> actividadIds, String observaciones) {
+
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
                 .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + trabajadorId));
 
@@ -39,7 +36,6 @@ public class JornalService {
 
         Jornal jornal = new Jornal(null, fecha, trabajador, cultivoId, nombreCultivo, observaciones);
 
-        // Agregar cada actividad al jornal
         for (Long actividadId : actividadIds) {
             Actividad actividad = actividadRepository.buscarPorId(actividadId)
                     .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + actividadId));
@@ -49,9 +45,6 @@ public class JornalService {
         return jornalRepository.guardar(jornal);
     }
 
-    /**
-     * Agrega una actividad adicional a un jornal existente.
-     */
     public Jornal agregarActividad(Long jornalId, Long actividadId) {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
                 .orElseThrow(() -> new IllegalArgumentException("Jornal no encontrado con id: " + jornalId));
@@ -63,9 +56,6 @@ public class JornalService {
         return jornalRepository.guardar(jornal);
     }
 
-    /**
-     * Remueve una actividad de un jornal existente.
-     */
     public Jornal removerActividad(Long jornalId, Long actividadId) {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
                 .orElseThrow(() -> new IllegalArgumentException("Jornal no encontrado con id: " + jornalId));

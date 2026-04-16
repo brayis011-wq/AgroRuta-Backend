@@ -1,10 +1,10 @@
 package com.agroruta.worker.application;
 
-import com.agroRuta.worker.application.ports.CargoRepository;
-import com.agroRuta.worker.application.ports.TrabajadorRepository;
-import com.agroRuta.worker.domain.Cargo;
-import com.agroRuta.worker.domain.TipoContrato;
-import com.agroRuta.worker.domain.Trabajador;
+import com.agroruta.worker.domain.CargoRepository;
+import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.domain.Cargo;
+import com.agroruta.worker.domain.TipoContrato;
+import com.agroruta.worker.domain.Trabajador;
 
 import java.time.LocalDate;
 import java.util.List;
