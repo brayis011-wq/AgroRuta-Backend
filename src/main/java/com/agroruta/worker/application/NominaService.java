@@ -10,8 +10,10 @@ import com.agroruta.worker.domain.Trabajador;
 
 import java.time.LocalDate;
 import java.util.List;
-
-public class NominaService {
+import org.springframework.stereotype.Service;
+import com.agroruta.worker.application.ports.in.NominaUseCase;
+@Service
+public class NominaService implements NominaUseCase{
 
     private final NominaRepository nominaRepository;
     private final JornalRepository jornalRepository;

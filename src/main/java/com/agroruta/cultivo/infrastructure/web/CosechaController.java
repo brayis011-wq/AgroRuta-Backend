@@ -1,8 +1,9 @@
-package com.agroruta.cultivo.infrastructure.web.dto;
+package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.CosechaUseCase;
 import com.agroruta.cultivo.domain.CalidadCosecha;
 import com.agroruta.cultivo.domain.Cosecha;
+import com.agroruta.cultivo.infrastructure.web.dto.CosechaRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

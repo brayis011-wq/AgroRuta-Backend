@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.TrabajadorRepository;
 import com.agroruta.worker.domain.Cargo;
@@ -8,8 +9,10 @@ import com.agroruta.worker.domain.Trabajador;
 
 import java.time.LocalDate;
 import java.util.List;
-
-public class TrabajadorService {
+import org.springframework.stereotype.Service;
+import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
+@Service
+public class TrabajadorService implements TrabajadorUseCase {
 
     private final TrabajadorRepository trabajadorRepository;
     private final CargoRepository cargoRepository;

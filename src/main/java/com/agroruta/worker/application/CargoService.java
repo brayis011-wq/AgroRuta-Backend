@@ -6,8 +6,11 @@ import com.agroruta.worker.domain.Cargo;
 import java.math.BigDecimal;
 import java.util.List;
 
-public class CargoService {
+import org.springframework.stereotype.Service;
+import com.agroruta.worker.application.ports.in.CargoUseCase;
 
+@Service
+public class CargoService implements CargoUseCase {
     private final CargoRepository cargoRepository;
 
     public CargoService(CargoRepository cargoRepository) {

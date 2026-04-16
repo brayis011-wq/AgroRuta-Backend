@@ -51,5 +51,83 @@ public class NominaEntity {
 
     public NominaEntity() {}
 
-    // getters & setters...
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public TrabajadorEntity getTrabajador() {
+        return trabajador;
+    }
+
+    public void setTrabajador(TrabajadorEntity trabajador) {
+        this.trabajador = trabajador;
+    }
+
+    public LocalDate getPeriodoInicio() {
+        return periodoInicio;
+    }
+
+    public void setPeriodoInicio(LocalDate periodoInicio) {
+        this.periodoInicio = periodoInicio;
+    }
+
+    public LocalDate getPeriodoFin() {
+        return periodoFin;
+    }
+
+    public void setPeriodoFin(LocalDate periodoFin) {
+        this.periodoFin = periodoFin;
+    }
+
+    public List<JornalEntity> getJornales() {
+        return jornales;
+    }
+
+    public void setJornales(List<JornalEntity> jornales) {
+        this.jornales = jornales;
+    }
+
+    public int getTotalJornales() {
+        return totalJornales;
+    }
+
+    public void setTotalJornales(int totalJornales) {
+        this.totalJornales = totalJornales;
+    }
+
+    public BigDecimal getValorTotal() {
+        return valorTotal;
+    }
+
+    public void setValorTotal(BigDecimal valorTotal) {
+        this.valorTotal = valorTotal;
+    }
+
+    public EstadoNomina getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoNomina estado) {
+        this.estado = estado;
+    }
+
+    public LocalDate getFechaGeneracion() {
+        return fechaGeneracion;
+    }
+
+    public void setFechaGeneracion(LocalDate fechaGeneracion) {
+        this.fechaGeneracion = fechaGeneracion;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
 }

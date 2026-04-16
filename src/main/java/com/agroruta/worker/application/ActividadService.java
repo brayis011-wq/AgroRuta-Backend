@@ -5,7 +5,11 @@ import com.agroruta.worker.domain.Actividad;
 
 import java.util.List;
 
-public class ActividadService {
+import org.springframework.stereotype.Service;
+import com.agroruta.worker.application.ports.in.ActividadUseCase;
+
+@Service
+public class ActividadService implements ActividadUseCase {
     private final ActividadRepository actividadRepository;
 
     public ActividadService(ActividadRepository actividadRepository) {
