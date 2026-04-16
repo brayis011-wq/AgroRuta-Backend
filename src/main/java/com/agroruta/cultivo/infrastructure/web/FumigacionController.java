@@ -2,8 +2,8 @@ package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.FumigacionUseCase;
 import com.agroruta.cultivo.domain.Fumigacion;
-import com.agroruta.cultivo.domain.UnidadMedida;
 import com.agroruta.cultivo.infrastructure.web.dto.FumigacionRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,18 +20,14 @@ public class FumigacionController {
     }
 
     @PostMapping
-    public ResponseEntity<Fumigacion> registrar(@RequestBody FumigacionRequest request) {
-        Fumigacion fumigacion = new Fumigacion(
-                null,
-                request.getFecha(),
-                request.getProducto(),
-                request.getDosis(),
-                UnidadMedida.valueOf(request.getUnidadMedida().toUpperCase()),
-                request.getAreaAplicada(),
-                request.getObservaciones(),
-                request.getSiembraId()
+    public ResponseEntity<Fumigacion> registrar(@RequestBody FumigacionRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                fumigacionUseCase.registrarFumigacion(
+                        req.getFecha(), req.getProducto(), req.getDosis(),
+                        req.getUnidadMedida(), req.getAreaAplicada(),
+                        req.getObservaciones(), req.getSiembraId()
+                )
         );
-        return ResponseEntity.ok(fumigacionUseCase.registrarFumigacion(fumigacion));
     }
 
     @GetMapping("/siembra/{siembraId}")

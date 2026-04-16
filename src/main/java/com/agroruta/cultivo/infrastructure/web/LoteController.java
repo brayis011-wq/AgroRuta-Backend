@@ -3,6 +3,7 @@ package com.agroruta.cultivo.infrastructure.web;
 import com.agroruta.cultivo.application.ports.in.LoteUseCase;
 import com.agroruta.cultivo.domain.Lote;
 import com.agroruta.cultivo.infrastructure.web.dto.LoteRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,14 +20,10 @@ public class LoteController {
     }
 
     @PostMapping
-    public ResponseEntity<Lote> registrar(@RequestBody LoteRequest request) {
-        Lote lote = new Lote(
-                null,
-                request.getNombre(),
-                request.getArea(),
-                request.getFincaId()
+    public ResponseEntity<Lote> registrar(@RequestBody LoteRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                loteUseCase.registrarLote(req.getNombre(), req.getArea(), req.getFincaId())
         );
-        return ResponseEntity.ok(loteUseCase.registrarLote(lote));
     }
 
     @GetMapping("/{id}")

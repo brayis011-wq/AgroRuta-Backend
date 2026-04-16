@@ -4,9 +4,11 @@ import com.agroruta.cultivo.application.ports.in.FumigacionUseCase;
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
 import com.agroruta.cultivo.domain.Fumigacion;
 import com.agroruta.cultivo.domain.FumigacionRepository;
+import com.agroruta.cultivo.domain.UnidadMedida;
 import com.agroruta.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,19 +24,14 @@ public class FumigacionService implements FumigacionUseCase {
     }
 
     @Override
-    public Fumigacion registrarFumigacion(Fumigacion fumigacion) {
-        // Verificamos que la siembra existe
-        siembraUseCase.buscarSiembraPorId(fumigacion.getSiembraId());
-
-        if (fumigacion.getProducto() == null || fumigacion.getProducto().isBlank()) {
-            throw new BusinessException("El producto de la fumigación es obligatorio.");
-        }
-        if (fumigacion.getDosis() == null || fumigacion.getDosis() <= 0) {
-            throw new BusinessException("La dosis debe ser mayor a cero.");
-        }
-        if (fumigacion.getFecha() == null) {
-            throw new BusinessException("La fecha de fumigación es obligatoria.");
-        }
+    public Fumigacion registrarFumigacion(LocalDate fecha, String producto, Double dosis,
+                                          String unidadMedida, Double areaAplicada,
+                                          String observaciones, Long siembraId) {
+        Fumigacion fumigacion = new Fumigacion(
+                null, fecha, producto, dosis,
+                UnidadMedida.valueOf(unidadMedida.toUpperCase()),
+                areaAplicada, observaciones, siembraId
+        );
         return fumigacionRepository.save(fumigacion);
     }
 

@@ -2,8 +2,8 @@ package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.cultivo.domain.ActividadCultivo;
-import com.agroruta.cultivo.domain.TipoActividad;
 import com.agroruta.cultivo.infrastructure.web.dto.ActividadRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,15 +20,13 @@ public class ActividadCultivoController {
     }
 
     @PostMapping
-    public ResponseEntity<ActividadCultivo> registrar(@RequestBody ActividadRequest request) {
-        ActividadCultivo actividad = new ActividadCultivo(
-                null,
-                TipoActividad.valueOf(request.getTipo().toUpperCase()),
-                request.getDescripcion(),
-                request.getFecha(),
-                request.getSiembraId()
+    public ResponseEntity<ActividadCultivo> registrar(@RequestBody ActividadRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                actividadUseCase.registrarActividad(
+                        req.getTipo(), req.getDescripcion(),
+                        req.getFecha(), req.getSiembraId()
+                )
         );
-        return ResponseEntity.ok(actividadUseCase.registrarActividad(actividad));
     }
 
     @GetMapping("/siembra/{siembraId}")
