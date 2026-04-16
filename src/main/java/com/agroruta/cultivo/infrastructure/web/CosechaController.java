@@ -1,9 +1,9 @@
 package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.CosechaUseCase;
-import com.agroruta.cultivo.domain.CalidadCosecha;
 import com.agroruta.cultivo.domain.Cosecha;
 import com.agroruta.cultivo.infrastructure.web.dto.CosechaRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,16 +20,13 @@ public class CosechaController {
     }
 
     @PostMapping
-    public ResponseEntity<Cosecha> registrar(@RequestBody CosechaRequest request) {
-        Cosecha cosecha = new Cosecha(
-                null,
-                request.getFecha(),
-                request.getCantidadKg(),
-                CalidadCosecha.valueOf(request.getCalidad().toUpperCase()),
-                request.getObservaciones(),
-                request.getSiembraId()
+    public ResponseEntity<Cosecha> registrar(@RequestBody CosechaRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                cosechaUseCase.registrarCosecha(
+                        req.getFecha(), req.getCantidadKg(),
+                        req.getCalidad(), req.getObservaciones(), req.getSiembraId()
+                )
         );
-        return ResponseEntity.ok(cosechaUseCase.registrarCosecha(cosecha));
     }
 
     @GetMapping("/siembra/{siembraId}")

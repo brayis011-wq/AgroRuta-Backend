@@ -2,13 +2,11 @@ package com.agroruta.cultivo.application;
 
 import com.agroruta.cultivo.application.ports.in.CosechaUseCase;
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
-import com.agroruta.cultivo.domain.Cosecha;
-import com.agroruta.cultivo.domain.CosechaRepository;
-import com.agroruta.cultivo.domain.EstadoCultivo;
-import com.agroruta.cultivo.domain.Siembra;
+import com.agroruta.cultivo.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,22 +22,12 @@ public class CosechaService implements CosechaUseCase {
     }
 
     @Override
-    public Cosecha registrarCosecha(Cosecha cosecha) {
-        Siembra siembra = siembraUseCase.buscarSiembraPorId(cosecha.getSiembraId());
-
-        // Solo se puede cosechar si el cultivo está en etapa PRODUCCION o COSECHA
-        if (siembra.getEstadoCultivo() != EstadoCultivo.PRODUCCION &&
-                siembra.getEstadoCultivo() != EstadoCultivo.COSECHA) {
-            throw new BusinessException("El cultivo debe estar en etapa PRODUCCION o COSECHA para registrar una cosecha.");
-        }
-
-        if (cosecha.getCantidadKg() == null || cosecha.getCantidadKg() <= 0) {
-            throw new BusinessException("La cantidad en kg debe ser mayor a cero.");
-        }
-        if (cosecha.getFecha() == null) {
-            throw new BusinessException("La fecha de cosecha es obligatoria.");
-        }
-
+    public Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg,
+                                    String calidad, String observaciones, Long siembraId) {
+        Cosecha cosecha = new Cosecha(
+                null, fecha, cantidadKg,
+                CalidadCosecha.valueOf(calidad.toUpperCase()), observaciones, siembraId
+        );
         return cosechaRepository.save(cosecha);
     }
 

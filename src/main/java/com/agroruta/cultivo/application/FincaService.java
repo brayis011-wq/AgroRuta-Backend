@@ -19,10 +19,9 @@ public class FincaService implements FincaUseCase {
     }
 
     @Override
-    public Finca registrarFinca(Finca finca) {
-        if (finca.getNombre() == null || finca.getNombre().isBlank()) {
-            throw new BusinessException("El nombre de la finca es obligatorio.");
-        }
+    public Finca registrarFinca(String nombre, String ubicacion,
+                                Double hectareas, Long agricultorId) {
+        Finca finca = new Finca(null, nombre, ubicacion, hectareas, agricultorId);
         return fincaRepository.save(finca);
     }
 

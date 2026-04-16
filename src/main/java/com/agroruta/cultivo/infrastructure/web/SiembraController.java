@@ -2,8 +2,8 @@ package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
 import com.agroruta.cultivo.domain.Siembra;
-import com.agroruta.cultivo.domain.VariedadUchuva;
 import com.agroruta.cultivo.infrastructure.web.dto.SiembraRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,15 +20,13 @@ public class SiembraController {
     }
 
     @PostMapping
-    public ResponseEntity<Siembra> registrar(@RequestBody SiembraRequest request) {
-        Siembra siembra = new Siembra(
-                null,
-                request.getFechaSiembra(),
-                request.getCantidadPlantas(),
-                VariedadUchuva.valueOf(request.getVariedad().toUpperCase()),
-                request.getLoteId()
+    public ResponseEntity<Siembra> registrar(@RequestBody SiembraRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                siembraUseCase.registrarSiembra(
+                        req.getFechaSiembra(), req.getCantidadPlantas(),
+                        req.getVariedad(), req.getLoteId()
+                )
         );
-        return ResponseEntity.ok(siembraUseCase.registrarSiembra(siembra));
     }
 
     @GetMapping("/{id}")

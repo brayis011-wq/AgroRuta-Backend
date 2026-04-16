@@ -3,6 +3,7 @@ package com.agroruta.cultivo.infrastructure.web;
 import com.agroruta.cultivo.application.ports.in.FincaUseCase;
 import com.agroruta.cultivo.domain.Finca;
 import com.agroruta.cultivo.infrastructure.web.dto.FincaRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,15 +20,13 @@ public class FincaController {
     }
 
     @PostMapping
-    public ResponseEntity<Finca> registrar(@RequestBody FincaRequest request) {
-        Finca finca = new Finca(
-                null,
-                request.getNombre(),
-                request.getUbicacion(),
-                request.getHectareas(),
-                request.getAgricultorId()
+    public ResponseEntity<Finca> registrar(@RequestBody FincaRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                fincaUseCase.registrarFinca(
+                        req.getNombre(), req.getUbicacion(),
+                        req.getHectareas(), req.getAgricultorId()
+                )
         );
-        return ResponseEntity.ok(fincaUseCase.registrarFinca(finca));
     }
 
     @GetMapping("/{id}")

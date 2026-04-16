@@ -4,9 +4,11 @@ import com.agroruta.cultivo.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
 import com.agroruta.cultivo.domain.ActividadCultivo;
 import com.agroruta.cultivo.domain.ActividadCultivoRepository;
+import com.agroruta.cultivo.domain.TipoActividad;
 import com.agroruta.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -22,16 +24,17 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
     }
 
     @Override
-    public ActividadCultivo registrarActividad(ActividadCultivo actividad) {
-        // Verificamos que la siembra existe
-        siembraUseCase.buscarSiembraPorId(actividad.getSiembraId());
-
-        if (actividad.getDescripcion() == null || actividad.getDescripcion().isBlank()) {
+    public ActividadCultivo registrarActividad(String tipo, String descripcion,
+                                               LocalDate fecha, Long siembraId) {
+        siembraUseCase.buscarSiembraPorId(siembraId);
+        if (descripcion == null || descripcion.isBlank())
             throw new BusinessException("La descripción de la actividad es obligatoria.");
-        }
-        if (actividad.getFecha() == null) {
+        if (fecha == null)
             throw new BusinessException("La fecha de la actividad es obligatoria.");
-        }
+
+        ActividadCultivo actividad = new ActividadCultivo(
+                null, TipoActividad.valueOf(tipo.toUpperCase()), descripcion, fecha, siembraId
+        );
         return actividadRepository.save(actividad);
     }
 

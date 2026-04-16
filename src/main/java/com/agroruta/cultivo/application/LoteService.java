@@ -22,11 +22,8 @@ public class LoteService implements LoteUseCase {
     }
 
     @Override
-    public Lote registrarLote(Lote lote) {
-        fincaUseCase.buscarFincaPorId(lote.getFincaId());
-        if (lote.getNombre() == null || lote.getNombre().isBlank()) {
-            throw new BusinessException("El nombre del lote es obligatorio.");
-        }
+    public Lote registrarLote(String nombre, Double area, Long fincaId) {
+        Lote lote = new Lote(null, nombre, area, fincaId);
         return loteRepository.save(lote);
     }
 

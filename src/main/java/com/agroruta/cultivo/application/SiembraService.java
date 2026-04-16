@@ -2,14 +2,12 @@ package com.agroruta.cultivo.application;
 
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
 import com.agroruta.cultivo.application.ports.in.LoteUseCase;
-import com.agroruta.cultivo.domain.EstadoCultivo;
-import com.agroruta.cultivo.domain.Lote;
-import com.agroruta.cultivo.domain.Siembra;
-import com.agroruta.cultivo.domain.SiembraRepository;
+import com.agroruta.cultivo.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,18 +22,12 @@ public class SiembraService implements SiembraUseCase {
     }
 
     @Override
-    public Siembra registrarSiembra(Siembra siembra) {
-        // Verificamos que el lote existe
-        Lote lote = loteUseCase.buscarLotePorId(siembra.getLoteId());
-
-        // Verificamos que el lote no tenga ya una siembra activa
-        if (siembraRepository.findByLoteId(siembra.getLoteId()).isPresent()) {
-            throw new BusinessException("El lote ya tiene una siembra activa.");
-        }
-
-        // Cambiamos el estado del lote a EN_CULTIVO
-        lote.iniciarCultivo();
-
+    public Siembra registrarSiembra(LocalDate fechaSiembra, Integer cantidadPlantas,
+                                    String variedad, Long loteId) {
+        Siembra siembra = new Siembra(
+                null, fechaSiembra, cantidadPlantas,
+                VariedadUchuva.valueOf(variedad.toUpperCase()), loteId
+        );
         return siembraRepository.save(siembra);
     }
 
