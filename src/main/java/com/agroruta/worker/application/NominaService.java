@@ -1,12 +1,12 @@
 package com.agroruta.worker.application;
 
-import com.agroRuta.worker.application.ports.JornalRepository;
-import com.agroRuta.worker.application.ports.NominaRepository;
-import com.agroRuta.worker.application.ports.TrabajadorRepository;
-import com.agroRuta.worker.domain.EstadoNomina;
-import com.agroRuta.worker.domain.Jornal;
-import com.agroRuta.worker.domain.Nomina;
-import com.agroRuta.worker.domain.Trabajador;
+import com.agroruta.worker.domain.JornalRepository;
+import com.agroruta.worker.domain.NominaRepository;
+import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.domain.EstadoNomina;
+import com.agroruta.worker.domain.Jornal;
+import com.agroruta.worker.domain.Nomina;
+import com.agroruta.worker.domain.Trabajador;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,11 +25,6 @@ public class NominaService {
         this.trabajadorRepository = trabajadorRepository;
     }
 
-    /**
-     * Genera la nómina de un trabajador para un período dado.
-     * Toma todos los jornales NO liquidados dentro del rango de fechas
-     * y calcula el total automáticamente.
-     */
     public Nomina generarNomina(Long trabajadorId, LocalDate periodoInicio, LocalDate periodoFin) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
                 .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + trabajadorId));
@@ -40,8 +35,8 @@ public class NominaService {
         if (jornalesPendientes.isEmpty()) {
             throw new IllegalStateException(
                     "No hay jornales pendientes de liquidar para el trabajador "
-                    + trabajador.getNombreCompleto()
-                    + " en el período indicado."
+                            + trabajador.getNombreCompleto()
+                            + " en el período indicado."
             );
         }
 
@@ -49,17 +44,12 @@ public class NominaService {
         return nominaRepository.guardar(nomina);
     }
 
-    /**
-     * Marca la nómina como pagada y liquida todos sus jornales.
-     * Este paso es previo al registro del Pago.
-     */
     public Nomina aprobarNomina(Long nominaId) {
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
                 .orElseThrow(() -> new IllegalArgumentException("Nómina no encontrada con id: " + nominaId));
 
         nomina.marcarComoPagada();
 
-        // Persistir jornales actualizados (marcados como liquidados)
         nomina.getJornales().forEach(jornalRepository::guardar);
 
         return nominaRepository.guardar(nomina);
