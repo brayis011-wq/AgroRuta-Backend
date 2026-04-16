@@ -10,8 +10,11 @@ import com.agroruta.worker.domain.Trabajador;
 import java.time.LocalDate;
 import java.util.List;
 
-public class JornalService {
+import org.springframework.stereotype.Service;
+import com.agroruta.worker.application.ports.in.JornalUseCase;
 
+@Service
+public class JornalService implements JornalUseCase {
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;
     private final ActividadRepository actividadRepository;

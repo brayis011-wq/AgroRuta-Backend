@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.NominaRepository;
 import com.agroruta.worker.domain.PagoRepository;
 import com.agroruta.worker.domain.EstadoNomina;
@@ -10,8 +11,10 @@ import com.agroruta.worker.domain.Pago;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
-public class PagoService {
+import org.springframework.stereotype.Service;
+import com.agroruta.worker.application.ports.in.PagoUseCase;
+@Service
+public class PagoService implements PagoUseCase {
 
     private final PagoRepository pagoRepository;
     private final NominaRepository nominaRepository;
