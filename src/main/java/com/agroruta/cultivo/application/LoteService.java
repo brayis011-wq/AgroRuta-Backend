@@ -4,7 +4,6 @@ import com.agroruta.cultivo.application.ports.in.FincaUseCase;
 import com.agroruta.cultivo.application.ports.in.LoteUseCase;
 import com.agroruta.cultivo.domain.Lote;
 import com.agroruta.cultivo.domain.LoteRepository;
-import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -37,5 +36,11 @@ public class LoteService implements LoteUseCase {
     public List<Lote> listarLotesPorFinca(Long fincaId) {
         fincaUseCase.buscarFincaPorId(fincaId);
         return loteRepository.findByFincaId(fincaId);
+    }
+
+    @Override
+    public void eliminarLote(Long id) {
+        buscarLotePorId(id); // valida que exista
+        loteRepository.deleteById(id);
     }
 }

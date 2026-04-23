@@ -7,4 +7,5 @@ public interface LoteUseCase {
     Lote registrarLote(String nombre, Double area, Long fincaId);
     Lote buscarLotePorId(Long id);
     List<Lote> listarLotesPorFinca(Long fincaId);
+    void eliminarLote(Long id);
 }
