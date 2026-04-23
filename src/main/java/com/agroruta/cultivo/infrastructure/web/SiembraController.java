@@ -48,4 +48,10 @@ public class SiembraController {
     public ResponseEntity<List<Siembra>> listarPorEstado(@PathVariable String estado) {
         return ResponseEntity.ok(siembraUseCase.listarSiembrasPorEstado(estado));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        siembraUseCase.eliminarSiembra(id);
+        return ResponseEntity.noContent().build();
+    }
 }

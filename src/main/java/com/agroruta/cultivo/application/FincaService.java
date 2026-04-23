@@ -3,7 +3,6 @@ package com.agroruta.cultivo.application;
 import com.agroruta.cultivo.application.ports.in.FincaUseCase;
 import com.agroruta.cultivo.domain.Finca;
 import com.agroruta.cultivo.domain.FincaRepository;
-import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -34,5 +33,11 @@ public class FincaService implements FincaUseCase {
     @Override
     public List<Finca> listarFincasPorAgricultor(Long agricultorId) {
         return fincaRepository.findByAgricultorId(agricultorId);
+    }
+
+    @Override
+    public void eliminarFinca(Long id) {
+        buscarFincaPorId(id); // valida que exista
+        fincaRepository.deleteById(id);
     }
 }

@@ -11,4 +11,5 @@ public interface SiembraUseCase {
     Siembra buscarSiembraPorLote(Long loteId);
     Siembra avanzarEtapa(Long siembraId);
     List<Siembra> listarSiembrasPorEstado(String estado);
+    void eliminarSiembra(Long id);
 }

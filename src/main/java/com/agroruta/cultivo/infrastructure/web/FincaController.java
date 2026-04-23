@@ -38,4 +38,10 @@ public class FincaController {
     public ResponseEntity<List<Finca>> listarPorAgricultor(@PathVariable Long agricultorId) {
         return ResponseEntity.ok(fincaUseCase.listarFincasPorAgricultor(agricultorId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        fincaUseCase.eliminarFinca(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -7,4 +7,5 @@ public interface FincaUseCase {
     Finca registrarFinca(String nombre, String ubicacion, Double hectareas, Long agricultorId);
     Finca buscarFincaPorId(Long id);
     List<Finca> listarFincasPorAgricultor(Long agricultorId);
+    void eliminarFinca(Long id);
 }

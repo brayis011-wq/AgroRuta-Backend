@@ -3,7 +3,6 @@ package com.agroruta.cultivo.application;
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
 import com.agroruta.cultivo.application.ports.in.LoteUseCase;
 import com.agroruta.cultivo.domain.*;
-import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -54,5 +53,11 @@ public class SiembraService implements SiembraUseCase {
     public List<Siembra> listarSiembrasPorEstado(String estado) {
         EstadoCultivo estadoCultivo = EstadoCultivo.valueOf(estado.toUpperCase());
         return siembraRepository.findByEstadoCultivo(estadoCultivo);
+    }
+
+    @Override
+    public void eliminarSiembra(Long id) {
+        buscarSiembraPorId(id); // valida que exista
+        siembraRepository.deleteById(id);
     }
 }

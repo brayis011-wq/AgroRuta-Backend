@@ -35,4 +35,10 @@ public class LoteController {
     public ResponseEntity<List<Lote>> listarPorFinca(@PathVariable Long fincaId) {
         return ResponseEntity.ok(loteUseCase.listarLotesPorFinca(fincaId));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        loteUseCase.eliminarLote(id);
+        return ResponseEntity.noContent().build();
+    }
 }
