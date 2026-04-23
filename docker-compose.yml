@@ -1,0 +1,88 @@
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: agroruta-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE}
+      MYSQL_USER:          ${MYSQL_USER}
+      MYSQL_PASSWORD:      ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - agroruta_mysql_data:/var/lib/mysql       # datos persistentes
+      - ./init-db:/docker-entrypoint-initdb.d
+    networks:
+      - agroruta-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./AgroRuta-Backend
+      dockerfile: Dockerfile
+    container_name: agroruta-backend
+    restart: unless-stopped
+    environment:
+      # Base de datos
+      SPRING_DATASOURCE_URL:      jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
+      # JPA
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${DDL_AUTO:-update}
+      SPRING_JPA_SHOW_SQL:           ${SHOW_SQL:-false}
+      # JWT
+      JWT_SECRET:     ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
+      # Perfil Spring (dev o prod)
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      # Timezone Colombia
+      TZ: America/Bogota
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - agroruta-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+
+  # Nginx también hace de reverse proxy hacia /api/
+  frontend:
+    build:
+      context: ./agroruta-frontend
+      dockerfile: Dockerfile
+    container_name: agroruta-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy   # espera que el backend esté sano
+    networks:
+      - agroruta-net
+
+
+# VOLÚMENES - Persistencia de datos
+
+volumes:
+  agroruta_mysql_data:
+    driver: local
+
+# REDES - Red interna aislada para los servicios
+
+networks:
+  agroruta-net:
+    driver: bridge
