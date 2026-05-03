@@ -6,20 +6,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Representa la liquidación de un período de trabajo para un trabajador.
- * Agrupa todos los jornales del período y calcula el total a pagar.
- *
- * La nómina se genera automáticamente a partir de los jornales
- * no liquidados del trabajador en el rango de fechas indicado.
- */
 public class Nomina {
 
     private Long id;
     private Trabajador trabajador;
     private LocalDate periodoInicio;
     private LocalDate periodoFin;
-    private List<Jornal> jornales;   // Jornales incluidos en esta liquidación
+    private List<Jornal> jornales;
     private int totalJornales;
     private BigDecimal valorTotal;
     private EstadoNomina estado;
@@ -45,10 +38,6 @@ public class Nomina {
 
     // ── Lógica de dominio ────────────────────────────────────────────────────
 
-    /**
-     * Calcula el total de jornales y el valor a pagar
-     * sumando el valorJornal (snapshot) de cada jornal registrado.
-     */
     public void calcular() {
         this.totalJornales = this.jornales.size();
         this.valorTotal = this.jornales.stream()
@@ -56,13 +45,11 @@ public class Nomina {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public void marcarComoPagada() {
+    public void aprobar() {
         if (!EstadoNomina.PENDIENTE.equals(this.estado)) {
-            throw new IllegalStateException("Solo se pueden pagar nóminas en estado PENDIENTE.");
+            throw new IllegalStateException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
         }
-        this.estado = EstadoNomina.PAGADA;
-        // Marcar todos los jornales como liquidados
-        this.jornales.forEach(Jornal::marcarComoLiquidado);
+        this.estado = EstadoNomina.APROBADA;
     }
 
     public void anular() {
@@ -70,6 +57,22 @@ public class Nomina {
             throw new IllegalStateException("No se puede anular una nómina ya pagada.");
         }
         this.estado = EstadoNomina.ANULADA;
+    }
+
+    // ✅ NUEVO
+    public void reactivar() {
+        if (!EstadoNomina.ANULADA.equals(this.estado)) {
+            throw new IllegalStateException("Solo se pueden reactivar nóminas en estado ANULADA.");
+        }
+        this.estado = EstadoNomina.PENDIENTE;
+    }
+
+    public void marcarComoPagada() {
+        if (!EstadoNomina.APROBADA.equals(this.estado)) {
+            throw new IllegalStateException("Solo se pueden pagar nóminas en estado APROBADA.");
+        }
+        this.estado = EstadoNomina.PAGADA;
+        this.jornales.forEach(Jornal::marcarComoLiquidado);
     }
 
     public boolean estaPendiente() {

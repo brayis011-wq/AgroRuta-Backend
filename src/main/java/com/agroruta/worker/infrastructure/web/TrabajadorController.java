@@ -27,6 +27,14 @@ public class TrabajadorController {
         return ResponseEntity.ok(trabajadores);
     }
 
+    // ✅ /todos ANTES de /{id} para que Spring no lo confunda con un Long
+    @GetMapping("/todos")
+    public ResponseEntity<List<TrabajadorResponse>> listarTodos() {
+        List<TrabajadorResponse> trabajadores = trabajadorUseCase.listarTodos()
+                .stream().map(TrabajadorResponse::from).toList();
+        return ResponseEntity.ok(trabajadores);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<TrabajadorResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.buscarPorId(id)));

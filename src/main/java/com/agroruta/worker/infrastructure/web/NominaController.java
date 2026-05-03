@@ -56,4 +56,16 @@ public class NominaController {
         nominaUseCase.anularNomina(id);
         return ResponseEntity.noContent().build();
     }
+
+    // ✅ NUEVO — vuelve la nómina a estado BORRADOR
+    @PatchMapping("/{id}/reactivar")
+    public ResponseEntity<NominaResponse> reactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(NominaResponse.from(nominaUseCase.reactivarNomina(id)));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        nominaUseCase.eliminarNomina(id);
+        return ResponseEntity.noContent().build();
+    }
 }
