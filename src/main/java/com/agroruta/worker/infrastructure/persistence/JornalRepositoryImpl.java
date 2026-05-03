@@ -54,6 +54,13 @@ class JornalRepositoryImpl implements JornalRepository {
         return jpa.findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(trabajadorId, inicio, fin).stream()
                 .map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
+    @Override
+    public List<Jornal> buscarDisponiblesParaNomina(Long trabajadorId, LocalDate inicio, LocalDate fin) {
+        return jpa.findDisponiblesParaNomina(trabajadorId, inicio, fin)
+                .stream()
+                .map(WorkerMapper::toDomain)
+                .collect(Collectors.toList());
+    }
 
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 }

@@ -18,5 +18,8 @@ public interface JornalRepository {
     List<Jornal> buscarNoLiquidadosPorTrabajador(Long trabajadorId);
     List<Jornal> buscarNoLiquidadosPorTrabajadorYPeriodo(Long trabajadorId, LocalDate inicio, LocalDate fin);
 
+    // ✅ NUEVO: excluye jornales que ya están en alguna nómina
+    List<Jornal> buscarDisponiblesParaNomina(Long trabajadorId, LocalDate inicio, LocalDate fin);
+
     void eliminar(Long id);
 }
