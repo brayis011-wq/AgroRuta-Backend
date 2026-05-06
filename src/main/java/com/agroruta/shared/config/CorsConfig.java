@@ -12,7 +12,9 @@ public class CorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin("http://localhost:4200");  // Angular
+        config.addAllowedOrigin("http://localhost:4200");  // Angular dev
+        config.addAllowedOrigin("http://localhost");       // Angular Docker puerto 80
+        config.addAllowedOrigin("http://localhost:80");    // Angular Docker explícito
         config.addAllowedMethod("*");
         config.addAllowedHeader("*");
         config.setAllowCredentials(true);
