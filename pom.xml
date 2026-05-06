@@ -67,11 +67,9 @@
 
 		<!-- AOP - Logging automático por capas -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-aop</artifactId>
-			<version>4.0.3</version>   <!-- ← versión explícita requerida por Docker -->
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjweaver</artifactId>
 		</dependency>
-
 		<!-- JWT -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
