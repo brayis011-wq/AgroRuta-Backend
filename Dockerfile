@@ -1,6 +1,6 @@
-# ============================================================
+
 # BACKEND - Spring Boot (Maven + Java 21)
-# ============================================================
+
 
 # STAGE 1: Compilar con Maven
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
