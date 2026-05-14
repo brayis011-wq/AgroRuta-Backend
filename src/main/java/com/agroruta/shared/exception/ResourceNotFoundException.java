@@ -4,7 +4,7 @@ public class ResourceNotFoundException extends RuntimeException {
 
     private final ErrorCode errorCode;
 
-    // ← Constructor que ya tenías antes (compatibilidad)
+    // ← Constructor
     public ResourceNotFoundException(String message) {
         super(message);
         this.errorCode = ErrorCode.RESOURCE_NOT_FOUND;

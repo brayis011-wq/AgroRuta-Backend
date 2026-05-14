@@ -1,4 +1,4 @@
-
+: bridge
 services:
   db:
     image: mysql:8.0
@@ -44,6 +44,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
       # Timezone Colombia
       TZ: America/Bogota
+      WEATHER_API_KEY: ${WEATHER_API_KEY}
     ports:
       - "8080:8080"
     depends_on:
@@ -74,7 +75,10 @@ services:
     networks:
       - agroruta-net
 
-
+weather:
+  api:
+    key: ${WEATHER_API_KEY}
+    base-url: https://api.openweathermap.org/data/2.5
 # VOLÚMENES - Persistencia de datos
 
 volumes:
@@ -85,4 +89,4 @@ volumes:
 
 networks:
   agroruta-net:
-    driver: bridge
+    driver
