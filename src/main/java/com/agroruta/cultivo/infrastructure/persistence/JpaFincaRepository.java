@@ -5,4 +5,5 @@ import java.util.List;
 
 public interface JpaFincaRepository extends JpaRepository<FincaEntity, Long> {
     List<FincaEntity> findByAgricultorId(Long agricultorId);
+    boolean existsByNombreAndAgricultorId(String nombre, Long agricultorId);
 }

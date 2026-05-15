@@ -1,0 +1,256 @@
+2026-05-14 19:23:50.437 INFO  [][][] com.agroruta.AgrorutaApplication - Starting AgrorutaApplication using Java 24 with PID 24264 (C:\Users\brayi\Documents\AgroRuta-Backend\target\classes started by brayi in C:\Users\brayi\Documents\AgroRuta-Backend)
+2026-05-14 19:23:50.441 DEBUG [][][] com.agroruta.AgrorutaApplication - Running with Spring Boot v4.0.3, Spring v7.0.5
+2026-05-14 19:23:50.442 INFO  [][][] com.agroruta.AgrorutaApplication - No active profile set, falling back to 1 default profile: "default"
+2026-05-14 19:23:50.517 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-05-14 19:23:50.518 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-05-14 19:23:50.908 INFO  [][][] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 9.0.1.Final
+2026-05-14 19:23:51.767 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-14 19:23:51.929 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 150 ms. Found 13 JPA repository interfaces.
+2026-05-14 19:23:52.935 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-05-14 19:23:52.954 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:23:52.958 INFO  [][][] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-14 19:23:52.958 INFO  [][][] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-05-14 19:23:53.013 INFO  [][][] o.s.b.w.c.servlet.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2491 ms
+2026-05-14 19:23:53.117 DEBUG [][][] c.agroruta.shared.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-05-14 19:23:53.346 INFO  [][][] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-14 19:23:53.398 INFO  [][][] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.2.4.Final
+2026-05-14 19:23:53.873 INFO  [][][] o.s.o.j.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-14 19:23:53.906 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 19:23:54.284 INFO  [][][] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@3f0181b2
+2026-05-14 19:23:54.286 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 19:23:54.378 INFO  [][][] org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/agroruta_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.46
+	Default catalog/schema: agroruta_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-14 19:23:55.705 INFO  [][][] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-14 19:23:55.942 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:23:56.118 INFO  [][][] o.s.d.jpa.repository.query.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-14 19:23:57.349 INFO  [][][] o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-05-14 19:23:57.350 WARN  [][][] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-05-14 19:23:58.040 WARN  [][][] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-14 19:23:59.100 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:23:59.121 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-05-14 19:23:59.130 INFO  [][][] com.agroruta.AgrorutaApplication - Started AgrorutaApplication in 9.388 seconds (process running for 10.15)
+2026-05-14 19:25:34.627 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-05-14 19:25:34.638 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-05-14 19:25:34.648 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:25:34.652 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-14 19:25:34.665 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-14 19:25:37.059 INFO  [][][] com.agroruta.AgrorutaApplication - Starting AgrorutaApplication using Java 24 with PID 27428 (C:\Users\brayi\Documents\AgroRuta-Backend\target\classes started by brayi in C:\Users\brayi\Documents\AgroRuta-Backend)
+2026-05-14 19:25:37.062 INFO  [][][] com.agroruta.AgrorutaApplication - No active profile set, falling back to 1 default profile: "default"
+2026-05-14 19:25:37.131 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-05-14 19:25:37.131 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-05-14 19:25:37.595 INFO  [][][] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 9.0.1.Final
+2026-05-14 19:25:38.562 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-14 19:25:38.728 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 151 ms. Found 13 JPA repository interfaces.
+2026-05-14 19:25:39.728 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-05-14 19:25:39.745 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:25:39.748 INFO  [][][] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-14 19:25:39.748 INFO  [][][] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-05-14 19:25:39.801 INFO  [][][] o.s.b.w.c.servlet.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2670 ms
+2026-05-14 19:25:40.157 INFO  [][][] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-14 19:25:40.242 INFO  [][][] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.2.4.Final
+2026-05-14 19:25:40.797 INFO  [][][] o.s.o.j.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-14 19:25:40.833 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 19:25:41.213 INFO  [][][] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@294dbe8
+2026-05-14 19:25:41.217 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 19:25:41.320 INFO  [][][] org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/agroruta_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.46
+	Default catalog/schema: agroruta_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-14 19:25:42.562 INFO  [][][] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-14 19:25:42.758 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:25:42.935 INFO  [][][] o.s.d.jpa.repository.query.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-14 19:25:44.135 INFO  [][][] o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-05-14 19:25:44.136 WARN  [][][] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-05-14 19:25:44.720 WARN  [][][] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-14 19:25:45.687 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:25:45.714 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-05-14 19:25:45.721 INFO  [][][] com.agroruta.AgrorutaApplication - Started AgrorutaApplication in 9.36 seconds (process running for 10.098)
+2026-05-14 19:26:50.774 INFO  [][][] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-14 19:26:50.776 INFO  [][][] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-05-14 19:26:50.779 INFO  [][][] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-05-14 19:26:51.469 INFO  [A977F8A1][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fincas
+2026-05-14 19:26:51.727 ERROR [A977F8A1][POST][/api/fincas] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:26:51.733 WARN  [A977F8A1][POST][/api/fincas] c.agroruta.shared.exception.GlobalExceptionHandler - [A977F8A1] Regla de negocio violada en /api/fincas: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:26:51.846 WARN  [A977F8A1][POST][/api/fincas] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.agroruta.shared.exception.BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo']
+2026-05-14 19:26:51.849 INFO  [A977F8A1][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fincas | status=422 | 380ms
+2026-05-14 19:27:09.973 INFO  [C4CE035B][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fincas
+2026-05-14 19:27:09.981 ERROR [C4CE035B][POST][/api/fincas] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:09.984 WARN  [C4CE035B][POST][/api/fincas] c.agroruta.shared.exception.GlobalExceptionHandler - [C4CE035B] Regla de negocio violada en /api/fincas: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:09.988 WARN  [C4CE035B][POST][/api/fincas] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.agroruta.shared.exception.BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo']
+2026-05-14 19:27:09.989 INFO  [C4CE035B][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fincas | status=422 | 15ms
+2026-05-14 19:27:18.724 INFO  [2048A284][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fincas
+2026-05-14 19:27:18.730 ERROR [2048A284][POST][/api/fincas] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:18.736 WARN  [2048A284][POST][/api/fincas] c.agroruta.shared.exception.GlobalExceptionHandler - [2048A284] Regla de negocio violada en /api/fincas: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:18.739 WARN  [2048A284][POST][/api/fincas] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.agroruta.shared.exception.BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo']
+2026-05-14 19:27:18.740 INFO  [2048A284][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fincas | status=422 | 16ms
+2026-05-14 19:27:19.948 INFO  [A36DEEB8][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fincas
+2026-05-14 19:27:19.956 ERROR [A36DEEB8][POST][/api/fincas] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:19.957 WARN  [A36DEEB8][POST][/api/fincas] c.agroruta.shared.exception.GlobalExceptionHandler - [A36DEEB8] Regla de negocio violada en /api/fincas: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:19.959 WARN  [A36DEEB8][POST][/api/fincas] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.agroruta.shared.exception.BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo']
+2026-05-14 19:27:19.959 INFO  [A36DEEB8][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fincas | status=422 | 11ms
+2026-05-14 19:27:32.589 INFO  [868C7564][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fincas
+2026-05-14 19:27:32.595 ERROR [868C7564][POST][/api/fincas] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:32.596 WARN  [868C7564][POST][/api/fincas] c.agroruta.shared.exception.GlobalExceptionHandler - [868C7564] Regla de negocio violada en /api/fincas: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
+2026-05-14 19:27:32.598 WARN  [868C7564][POST][/api/fincas] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.agroruta.shared.exception.BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo']
+2026-05-14 19:27:32.599 INFO  [868C7564][POST][/api/fincas] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fincas | status=422 | 10ms
+2026-05-14 19:32:59.650 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-05-14 19:32:59.659 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-05-14 19:32:59.665 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:32:59.679 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-14 19:32:59.698 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-14 19:34:01.507 INFO  [][][] com.agroruta.AgrorutaApplication - Starting AgrorutaApplication using Java 24 with PID 24872 (C:\Users\brayi\Documents\AgroRuta-Backend\target\classes started by brayi in C:\Users\brayi\Documents\AgroRuta-Backend)
+2026-05-14 19:34:01.512 INFO  [][][] com.agroruta.AgrorutaApplication - No active profile set, falling back to 1 default profile: "default"
+2026-05-14 19:34:01.580 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-05-14 19:34:01.581 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-05-14 19:34:02.045 INFO  [][][] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 9.0.1.Final
+2026-05-14 19:34:02.969 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-14 19:34:03.117 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 126 ms. Found 13 JPA repository interfaces.
+2026-05-14 19:34:04.138 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-05-14 19:34:04.153 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:34:04.156 INFO  [][][] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-14 19:34:04.156 INFO  [][][] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-05-14 19:34:04.210 INFO  [][][] o.s.b.w.c.servlet.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2629 ms
+2026-05-14 19:34:04.527 INFO  [][][] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-14 19:34:04.589 INFO  [][][] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.2.4.Final
+2026-05-14 19:34:05.152 INFO  [][][] o.s.o.j.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-14 19:34:05.197 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 19:34:05.571 INFO  [][][] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@8ac53f5
+2026-05-14 19:34:05.573 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 19:34:05.671 INFO  [][][] org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/agroruta_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.46
+	Default catalog/schema: agroruta_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-14 19:34:07.072 INFO  [][][] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-14 19:34:07.263 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:34:07.426 INFO  [][][] o.s.d.jpa.repository.query.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-14 19:34:08.663 INFO  [][][] o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-05-14 19:34:08.664 WARN  [][][] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-05-14 19:34:09.202 WARN  [][][] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-14 19:34:10.100 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:34:10.121 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-05-14 19:34:10.131 INFO  [][][] com.agroruta.AgrorutaApplication - Started AgrorutaApplication in 9.323 seconds (process running for 9.994)
+2026-05-14 19:36:55.142 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-05-14 19:36:55.152 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-05-14 19:36:55.161 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:36:55.167 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-14 19:36:55.182 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-05-14 19:36:59.684 INFO  [][][] com.agroruta.AgrorutaApplication - Starting AgrorutaApplication using Java 24 with PID 25916 (C:\Users\brayi\Documents\AgroRuta-Backend\target\classes started by brayi in C:\Users\brayi\Documents\AgroRuta-Backend)
+2026-05-14 19:36:59.688 INFO  [][][] com.agroruta.AgrorutaApplication - No active profile set, falling back to 1 default profile: "default"
+2026-05-14 19:36:59.758 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-05-14 19:36:59.758 INFO  [][][] o.s.b.d.env.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-05-14 19:37:00.185 INFO  [][][] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 9.0.1.Final
+2026-05-14 19:37:01.094 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-14 19:37:01.246 INFO  [][][] o.s.d.r.config.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 133 ms. Found 13 JPA repository interfaces.
+2026-05-14 19:37:02.403 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-05-14 19:37:02.421 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:37:02.426 INFO  [][][] org.apache.catalina.core.StandardService - Starting service [Tomcat]
+2026-05-14 19:37:02.426 INFO  [][][] org.apache.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/11.0.18]
+2026-05-14 19:37:02.480 INFO  [][][] o.s.b.w.c.servlet.WebApplicationContextInitializer - Root WebApplicationContext: initialization completed in 2722 ms
+2026-05-14 19:37:02.822 INFO  [][][] org.hibernate.orm.jpa - HHH008540: Processing PersistenceUnitInfo [name: default]
+2026-05-14 19:37:02.900 INFO  [][][] org.hibernate.orm.core - HHH000001: Hibernate ORM core version 7.2.4.Final
+2026-05-14 19:37:03.407 INFO  [][][] o.s.o.j.persistenceunit.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-14 19:37:03.440 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-05-14 19:37:03.845 INFO  [][][] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@357a382d
+2026-05-14 19:37:03.847 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-05-14 19:37:03.941 INFO  [][][] org.hibernate.orm.connections.pooling - HHH10001005: Database info:
+	Database JDBC URL [jdbc:mysql://localhost:3306/agroruta_db]
+	Database driver: MySQL Connector/J
+	Database dialect: MySQLDialect
+	Database version: 8.0.46
+	Default catalog/schema: agroruta_db/undefined
+	Autocommit mode: undefined/unknown
+	Isolation level: REPEATABLE_READ [default REPEATABLE_READ]
+	JDBC fetch size: none
+	Pool: DataSourceConnectionProvider
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-05-14 19:37:05.262 INFO  [][][] org.hibernate.orm.core - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-14 19:37:06.051 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:37:06.238 INFO  [][][] o.s.d.jpa.repository.query.QueryEnhancerFactories - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-05-14 19:37:07.598 INFO  [][][] o.s.s.c.a.a.c.InitializeAuthenticationProviderBeanManagerConfigurer$InitializeAuthenticationProviderManagerConfigurer - Global AuthenticationManager configured with AuthenticationProvider bean with name authenticationProvider
+2026-05-14 19:37:07.599 WARN  [][][] o.s.s.c.a.a.c.InitializeUserDetailsBeanManagerConfigurer$InitializeUserDetailsManagerConfigurer - Global AuthenticationManager configured with an AuthenticationProvider bean. UserDetailsService beans will not be used by Spring Security for automatically configuring username/password login. Consider removing the AuthenticationProvider bean. Alternatively, consider using the UserDetailsService in a manually instantiated DaoAuthenticationProvider. If the current configuration is intentional, to turn off this warning, increase the logging level of 'org.springframework.security.config.annotation.authentication.configuration.InitializeUserDetailsBeanManagerConfigurer' to ERROR
+2026-05-14 19:37:08.137 WARN  [][][] o.s.b.j.a.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-14 19:37:09.120 INFO  [][][] org.apache.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-05-14 19:37:09.143 INFO  [][][] org.springframework.boot.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/'
+2026-05-14 19:37:09.153 INFO  [][][] com.agroruta.AgrorutaApplication - Started AgrorutaApplication in 10.173 seconds (process running for 10.82)
+2026-05-14 19:46:59.606 INFO  [][][] o.a.c.core.ContainerBase.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-14 19:46:59.607 INFO  [][][] org.springframework.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-05-14 19:46:59.611 INFO  [][][] org.springframework.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2026-05-14 19:47:00.290 INFO  [9103421F][POST][/api/fumigaciones] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fumigaciones
+2026-05-14 19:47:00.740 INFO  [9103421F][POST][/api/fumigaciones] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fumigaciones | status=201 | 451ms
+2026-05-14 19:47:02.426 INFO  [83B0985A][POST][/api/fumigaciones] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fumigaciones
+2026-05-14 19:47:02.475 INFO  [83B0985A][POST][/api/fumigaciones] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fumigaciones | status=201 | 49ms
+2026-05-14 19:47:03.866 INFO  [B29269A6][POST][/api/fumigaciones] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/fumigaciones
+2026-05-14 19:47:03.902 INFO  [B29269A6][POST][/api/fumigaciones] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/fumigaciones | status=201 | 36ms
+2026-05-14 19:47:12.300 INFO  [76C820CA][GET][/api/fincas/7] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/7
+2026-05-14 19:47:12.345 INFO  [76C820CA][GET][/api/fincas/7] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/7 | status=200 | 45ms
+2026-05-14 19:47:12.368 INFO  [6347EC72][GET][/api/lotes/finca/7] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/finca/7
+2026-05-14 19:47:12.397 INFO  [6347EC72][GET][/api/lotes/finca/7] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/finca/7 | status=200 | 29ms
+2026-05-14 19:47:13.015 INFO  [C9B72A3A][GET][/api/fincas/agricultor/1] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/agricultor/1
+2026-05-14 19:47:13.038 INFO  [C9B72A3A][GET][/api/fincas/agricultor/1] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/agricultor/1 | status=200 | 23ms
+2026-05-14 19:47:13.613 INFO  [BCA078A7][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/4
+2026-05-14 19:47:13.628 INFO  [BCA078A7][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/4 | status=200 | 15ms
+2026-05-14 19:47:13.641 INFO  [BB5B7411][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/finca/4
+2026-05-14 19:47:13.655 INFO  [BB5B7411][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/finca/4 | status=200 | 14ms
+2026-05-14 19:47:14.479 INFO  [65A7520D][GET][/api/fincas/agricultor/1] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/agricultor/1
+2026-05-14 19:47:14.490 INFO  [65A7520D][GET][/api/fincas/agricultor/1] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/agricultor/1 | status=200 | 11ms
+2026-05-14 19:47:14.845 INFO  [BAC86731][GET][/api/fincas/7] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/7
+2026-05-14 19:47:14.864 INFO  [BAC86731][GET][/api/fincas/7] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/7 | status=200 | 19ms
+2026-05-14 19:47:14.877 INFO  [81C86679][GET][/api/lotes/finca/7] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/finca/7
+2026-05-14 19:47:14.896 INFO  [81C86679][GET][/api/lotes/finca/7] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/finca/7 | status=200 | 19ms
+2026-05-14 19:47:15.307 INFO  [2BE0C666][GET][/api/fincas/agricultor/1] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/agricultor/1
+2026-05-14 19:47:15.326 INFO  [2BE0C666][GET][/api/fincas/agricultor/1] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/agricultor/1 | status=200 | 19ms
+2026-05-14 19:47:15.686 INFO  [64A15DB2][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/4
+2026-05-14 19:47:15.718 INFO  [64A15DB2][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/4 | status=200 | 32ms
+2026-05-14 19:47:15.731 INFO  [F17AC652][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/finca/4
+2026-05-14 19:47:15.757 INFO  [F17AC652][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/finca/4 | status=200 | 26ms
+2026-05-14 19:47:17.216 INFO  [C92AD5D0][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/4
+2026-05-14 19:47:17.242 INFO  [C92AD5D0][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/4 | status=200 | 26ms
+2026-05-14 19:47:28.434 INFO  [B63ED65D][POST][/api/lotes] com.agroruta.shared.logging.RequestLoggingFilter - → POST /api/lotes
+2026-05-14 19:47:28.508 INFO  [B63ED65D][POST][/api/lotes] com.agroruta.shared.logging.RequestLoggingFilter - ← POST /api/lotes | status=201 | 74ms
+2026-05-14 19:47:28.543 INFO  [27CF5B34][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/4
+2026-05-14 19:47:28.558 INFO  [27CF5B34][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/4 | status=200 | 15ms
+2026-05-14 19:47:28.570 INFO  [C73F0680][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/finca/4
+2026-05-14 19:47:28.587 INFO  [C73F0680][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/finca/4 | status=200 | 17ms
+2026-05-14 19:47:29.189 INFO  [D51D16B0][GET][/api/lotes/2] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/2
+2026-05-14 19:47:29.209 INFO  [D51D16B0][GET][/api/lotes/2] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/2 | status=200 | 21ms
+2026-05-14 19:47:29.226 INFO  [DCA6C69A][GET][/api/siembras/lote/2] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/siembras/lote/2
+2026-05-14 19:47:29.241 ERROR [DCA6C69A][GET][/api/siembras/lote/2] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorLote() lanzó ResourceNotFoundException: No hay siembra activa en el lote: 2
+2026-05-14 19:47:29.245 WARN  [DCA6C69A][GET][/api/siembras/lote/2] c.agroruta.shared.exception.GlobalExceptionHandler - [DCA6C69A] Recurso no encontrado en /api/siembras/lote/2: No hay siembra activa en el lote: 2
+2026-05-14 19:47:29.254 WARN  [DCA6C69A][GET][/api/siembras/lote/2] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.agroruta.shared.exception.ResourceNotFoundException: No hay siembra activa en el lote: 2]
+2026-05-14 19:47:29.255 INFO  [DCA6C69A][GET][/api/siembras/lote/2] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/siembras/lote/2 | status=404 | 29ms
+2026-05-14 19:47:39.805 INFO  [9A625553][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/fincas/4
+2026-05-14 19:47:39.829 INFO  [9A625553][GET][/api/fincas/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/fincas/4 | status=200 | 25ms
+2026-05-14 19:47:39.847 INFO  [4EC02052][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - → GET /api/lotes/finca/4
+2026-05-14 19:47:39.875 INFO  [4EC02052][GET][/api/lotes/finca/4] com.agroruta.shared.logging.RequestLoggingFilter - ← GET /api/lotes/finca/4 | status=200 | 28ms
+2026-05-14 19:49:59.653 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-05-14 19:49:59.665 INFO  [][][] org.springframework.boot.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-05-14 19:49:59.674 INFO  [][][] o.s.orm.jpa.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-05-14 19:49:59.681 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-05-14 19:49:59.693 INFO  [][][] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

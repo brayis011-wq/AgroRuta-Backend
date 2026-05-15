@@ -24,7 +24,10 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         SiembraEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
     }
-
+    @Override
+    public boolean existsByLoteId(Long loteId) {
+        return jpaRepository.existsByLoteId(loteId);
+    }
     @Override
     public Optional<Siembra> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);

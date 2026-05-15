@@ -8,4 +8,5 @@ public interface FincaRepository {
     Optional<Finca> findById(Long id);
     List<Finca> findByAgricultorId(Long agricultorId);
     void deleteById(Long id);
+    boolean existsByNombreAndAgricultorId(String nombre, Long agricultorId);  // ← nuevo
 }

@@ -4,6 +4,7 @@ import com.agroruta.cultivo.application.ports.in.CosechaUseCase;
 import com.agroruta.cultivo.application.ports.in.SiembraUseCase;
 import com.agroruta.cultivo.domain.*;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ErrorCode;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -24,6 +25,16 @@ public class CosechaService implements CosechaUseCase {
     @Override
     public Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg,
                                     String calidad, String observaciones, Long siembraId) {
+
+        siembraUseCase.buscarSiembraPorId(siembraId);
+
+        if (cosechaRepository.existsByFechaAndSiembraId(fecha, siembraId)) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    String.format("Ya existe una cosecha registrada el '%s' para esta siembra.", fecha)
+            );
+        }
+
         Cosecha cosecha = new Cosecha(
                 null, fecha, cantidadKg,
                 CalidadCosecha.valueOf(calidad.toUpperCase()), observaciones, siembraId

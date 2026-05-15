@@ -42,7 +42,10 @@ public class LoteRepositoryImpl implements LoteRepository {
     public boolean existsSiembraActivaEnLote(Long loteId) {
         return jpaSiembraRepository.findByLoteId(loteId).isPresent();
     }
-
+    @Override
+    public boolean existsByNombreAndFincaId(String nombre, Long fincaId) {
+        return jpaRepository.existsByNombreAndFincaId(nombre, fincaId);
+    }
     @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);

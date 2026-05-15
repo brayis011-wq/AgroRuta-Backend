@@ -5,7 +5,8 @@ import com.agroruta.cultivo.application.ports.in.LoteUseCase;
 import com.agroruta.cultivo.domain.*;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
-
+import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.BusinessException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -23,6 +24,16 @@ public class SiembraService implements SiembraUseCase {
     @Override
     public Siembra registrarSiembra(LocalDate fechaSiembra, Integer cantidadPlantas,
                                     String variedad, Long loteId) {
+
+        loteUseCase.buscarLotePorId(loteId);
+
+        if (siembraRepository.existsByLoteId(loteId)) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    "El lote ya tiene una siembra registrada. Un lote solo puede tener una siembra activa."
+            );
+        }
+
         Siembra siembra = new Siembra(
                 null, fechaSiembra, cantidadPlantas,
                 VariedadUchuva.valueOf(variedad.toUpperCase()), loteId

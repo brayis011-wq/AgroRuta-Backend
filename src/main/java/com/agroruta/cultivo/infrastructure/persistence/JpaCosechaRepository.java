@@ -2,6 +2,8 @@ package com.agroruta.cultivo.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.time.LocalDate;
 import java.util.List;
 
 public interface JpaCosechaRepository extends JpaRepository<CosechaEntity, Long> {
@@ -9,4 +11,6 @@ public interface JpaCosechaRepository extends JpaRepository<CosechaEntity, Long>
 
     @Query("SELECT SUM(c.cantidadKg) FROM CosechaEntity c WHERE c.siembraId = :siembraId")
     Double sumCantidadKgBySiembraId(Long siembraId);
+
+    boolean existsByFechaAndSiembraId(LocalDate fecha, Long siembraId);  // ← nuevo
 }

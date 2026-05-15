@@ -27,6 +27,9 @@ public class FumigacionService implements FumigacionUseCase {
     public Fumigacion registrarFumigacion(LocalDate fecha, String producto, Double dosis,
                                           String unidadMedida, Double areaAplicada,
                                           String observaciones, Long siembraId) {
+
+        siembraUseCase.buscarSiembraPorId(siembraId);  // ← solo esto
+
         Fumigacion fumigacion = new Fumigacion(
                 null, fecha, producto, dosis,
                 UnidadMedida.valueOf(unidadMedida.toUpperCase()),
