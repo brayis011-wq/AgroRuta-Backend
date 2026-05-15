@@ -31,6 +31,14 @@ class CargoRepositoryImpl implements CargoRepository {
     @Override public List<Cargo> listarActivos() {
         return jpa.findByActivoTrue().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
+    @Override
+    public boolean existsByNombre(String nombre) {
+        return jpa.existsByNombre(nombre);
+    }
 
+    @Override
+    public boolean existsByNombreAndIdNot(String nombre, Long id) {
+        return jpa.existsByNombreAndIdNot(nombre, id);
+    }
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 }

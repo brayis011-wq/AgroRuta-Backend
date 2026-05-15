@@ -4,7 +4,12 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name = "cargos")
+@Table(name = "cargos", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_cargo_nombre",
+                columnNames = {"nombre"}
+        )
+})
 public class CargoEntity {
 
     @Id

@@ -6,4 +6,6 @@ import java.util.List;
 
 interface JpaCargoRepository extends JpaRepository<CargoEntity, Long> {
     List<CargoEntity> findByActivoTrue();
+    boolean existsByNombre(String nombre);
+    boolean existsByNombreAndIdNot(String nombre, Long id);
 }

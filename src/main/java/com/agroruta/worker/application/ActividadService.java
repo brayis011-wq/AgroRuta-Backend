@@ -1,5 +1,8 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.ActividadRepository;
 import com.agroruta.worker.domain.Actividad;
 
@@ -16,14 +19,34 @@ public class ActividadService implements ActividadUseCase {
         this.actividadRepository = actividadRepository;
     }
 
+    @Override
     public Actividad crearActividad(String nombre, String descripcion) {
+
+        if (actividadRepository.existsByNombre(nombre)) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    String.format("Ya existe una actividad con el nombre '%s'.", nombre)
+            );
+        }
+
         Actividad actividad = new Actividad(null, nombre, descripcion);
         return actividadRepository.guardar(actividad);
     }
 
+    @Override
     public Actividad actualizarActividad(Long id, String nombre, String descripcion) {
+
         Actividad actividad = actividadRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Actividad", id));
+
+        // Valida que el nuevo nombre no lo tenga otra actividad distinta
+        if (actividadRepository.existsByNombreAndIdNot(nombre, id)) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    String.format("Ya existe otra actividad con el nombre '%s'.", nombre)
+            );
+        }
+
         actividad.setNombre(nombre);
         actividad.setDescripcion(descripcion);
         return actividadRepository.guardar(actividad);

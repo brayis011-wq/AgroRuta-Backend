@@ -3,7 +3,12 @@ package com.agroruta.worker.infrastructure.persistence;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "actividades")
+@Table(name = "actividades", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_actividad_nombre",
+                columnNames = {"nombre"}
+        )
+})
 public class ActividadEntity {
 
     @Id

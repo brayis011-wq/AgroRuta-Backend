@@ -9,4 +9,6 @@ public interface CargoRepository {
     List<Cargo> listarTodos();
     List<Cargo> listarActivos();
     void eliminar(Long id);
+    boolean existsByNombre(String nombre);
+    boolean existsByNombreAndIdNot(String nombre, Long id);
 }

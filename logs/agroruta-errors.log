@@ -4,3 +4,5 @@
 2026-05-14 19:27:19.956 ERROR [A36DEEB8] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
 2026-05-14 19:27:32.595 ERROR [868C7564] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
 2026-05-14 19:47:29.241 ERROR [DCA6C69A] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorLote() lanzó ResourceNotFoundException: No hay siembra activa en el lote: 2
+2026-05-14 19:50:18.328 ERROR [998C5EBA] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorId() lanzó ResourceNotFoundException: Siembra no encontrada con ID: 9999
+2026-05-14 19:50:18.329 ERROR [998C5EBA] c.agroruta.cultivo.application.FumigacionService - ✗ registrarFumigacion() lanzó ResourceNotFoundException: Siembra no encontrada con ID: 9999

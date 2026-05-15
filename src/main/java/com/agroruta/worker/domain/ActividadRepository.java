@@ -9,4 +9,6 @@ public interface ActividadRepository {
     List<Actividad> listarTodas();
     List<Actividad> listarActivas();
     void eliminar(Long id);
+    boolean existsByNombre(String nombre);                    // ← nuevo
+    boolean existsByNombreAndIdNot(String nombre, Long id);  // ← nuevo
 }
