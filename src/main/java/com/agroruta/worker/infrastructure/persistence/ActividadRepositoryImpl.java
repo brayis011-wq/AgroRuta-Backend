@@ -19,7 +19,15 @@ class ActividadRepositoryImpl implements ActividadRepository {
     @Override public Actividad guardar(Actividad actividad) {
         return WorkerMapper.toDomain(jpa.save(WorkerMapper.toEntity(actividad)));
     }
+    @Override
+    public boolean existsByNombre(String nombre) {
+        return jpa.existsByNombre(nombre);
+    }
 
+    @Override
+    public boolean existsByNombreAndIdNot(String nombre, Long id) {
+        return jpa.existsByNombreAndIdNot(nombre, id);
+    }
     @Override public Optional<Actividad> buscarPorId(Long id) {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }

@@ -6,4 +6,6 @@ import java.util.List;
 
 interface JpaActividadRepository extends JpaRepository<ActividadEntity, Long> {
     List<ActividadEntity> findByActivaTrue();
+    boolean existsByNombre(String nombre);                        // ← nuevo
+    boolean existsByNombreAndIdNot(String nombre, Long id);      // ← para validar en actualización
 }
