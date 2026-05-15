@@ -1,5 +1,6 @@
 package com.agroruta.cultivo.domain;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -8,4 +9,5 @@ public interface ActividadCultivoRepository {
     Optional<ActividadCultivo> findById(Long id);
     List<ActividadCultivo> findBySiembraId(Long siembraId);
     void deleteById(Long id);
+    boolean existsByTipoAndFechaAndSiembraId(TipoActividad tipo, LocalDate fecha, Long siembraId);  // ← nuevo
 }

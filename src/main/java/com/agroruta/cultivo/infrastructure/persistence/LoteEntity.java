@@ -4,7 +4,12 @@ import com.agroruta.cultivo.domain.EstadoLote;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "lotes")
+@Table(name = "lotes", uniqueConstraints = {
+        @UniqueConstraint(
+                name = "uk_lote_nombre_finca",
+                columnNames = {"nombre", "fincaId"}
+        )
+})
 public class LoteEntity {
 
     @Id

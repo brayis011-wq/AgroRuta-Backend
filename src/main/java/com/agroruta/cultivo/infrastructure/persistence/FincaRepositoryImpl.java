@@ -40,6 +40,11 @@ public class FincaRepositoryImpl implements FincaRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public boolean existsByNombreAndAgricultorId(String nombre, Long agricultorId) {
+        return jpaRepository.existsByNombreAndAgricultorId(nombre, agricultorId);
+    }
+
     private FincaEntity toEntity(Finca finca) {
         FincaEntity entity = new FincaEntity();
         entity.setId(finca.getId());

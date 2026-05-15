@@ -1,0 +1,63 @@
+<configuration>
+
+    <!-- ── Nivel por defecto si no hay perfil activo ──────────────────────── -->
+    <property name="LOG_LEVEL" value="INFO"/>
+
+    <springProfile name="dev">
+        <property name="LOG_LEVEL" value="DEBUG"/>
+    </springProfile>
+    <springProfile name="prod">
+        <property name="LOG_LEVEL" value="INFO"/>
+    </springProfile>
+
+    <!-- ── Consola ───────────────────────────────────────────────────────── -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss} %-5level [%X{traceId}] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ── Archivo general (rota diario, guarda 30 días) ─────────────────── -->
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/agroruta.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/agroruta.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId}][%X{httpMethod}][%X{requestUri}] %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ── Archivo solo errores (guarda 60 días) ─────────────────────────── -->
+    <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/agroruta-errors.log</file>
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/agroruta-errors.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+            <maxHistory>60</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId}] %logger{50} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- ── Tu paquete ────────────────────────────────────────────────────── -->
+    <logger name="com.agroruta" level="${LOG_LEVEL}" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+        <appender-ref ref="FILE_ERROR"/>
+    </logger>
+
+    <!-- ── Spring en INFO para no saturar ───────────────────────────────── -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

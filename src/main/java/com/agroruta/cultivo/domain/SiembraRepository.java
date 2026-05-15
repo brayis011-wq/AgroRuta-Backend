@@ -9,4 +9,5 @@ public interface SiembraRepository {
     Optional<Siembra> findByLoteId(Long loteId);
     List<Siembra> findByEstadoCultivo(EstadoCultivo estado);
     void deleteById(Long id);
+    boolean existsByLoteId(Long loteId);   // ← nuevo
 }

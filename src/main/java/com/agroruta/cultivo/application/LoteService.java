@@ -6,7 +6,8 @@ import com.agroruta.cultivo.domain.Lote;
 import com.agroruta.cultivo.domain.LoteRepository;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
-
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ErrorCode;
 import java.util.List;
 
 @Service
@@ -22,6 +23,16 @@ public class LoteService implements LoteUseCase {
 
     @Override
     public Lote registrarLote(String nombre, Double area, Long fincaId) {
+
+        fincaUseCase.buscarFincaPorId(fincaId);
+
+        if (loteRepository.existsByNombreAndFincaId(nombre, fincaId)) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    String.format("Ya existe un lote con el nombre '%s' en esta finca.", nombre)
+            );
+        }
+
         Lote lote = new Lote(null, nombre, area, fincaId);
         return loteRepository.save(lote);
     }

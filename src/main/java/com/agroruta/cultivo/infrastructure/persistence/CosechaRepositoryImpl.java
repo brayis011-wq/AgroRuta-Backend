@@ -4,6 +4,7 @@ import com.agroruta.cultivo.domain.Cosecha;
 import com.agroruta.cultivo.domain.CosechaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,7 +35,10 @@ public class CosechaRepositoryImpl implements CosechaRepository {
         return jpaRepository.findBySiembraId(siembraId)
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
-
+    @Override
+    public boolean existsByFechaAndSiembraId(LocalDate fecha, Long siembraId) {
+        return jpaRepository.existsByFechaAndSiembraId(fecha, siembraId);
+    }
     @Override
     public Double totalKgBySiembraId(Long siembraId) {
         return jpaRepository.sumCantidadKgBySiembraId(siembraId);

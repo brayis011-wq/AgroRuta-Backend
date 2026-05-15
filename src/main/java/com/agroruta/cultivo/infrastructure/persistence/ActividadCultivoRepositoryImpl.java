@@ -2,8 +2,10 @@ package com.agroruta.cultivo.infrastructure.persistence;
 
 import com.agroruta.cultivo.domain.ActividadCultivo;
 import com.agroruta.cultivo.domain.ActividadCultivoRepository;
+import com.agroruta.cultivo.domain.TipoActividad;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -23,7 +25,10 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         ActividadCultivoEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
     }
-
+    @Override
+    public boolean existsByTipoAndFechaAndSiembraId(TipoActividad tipo, LocalDate fecha, Long siembraId) {
+        return jpaRepository.existsByTipoAndFechaAndSiembraId(tipo, fecha, siembraId);
+    }
     @Override
     public Optional<ActividadCultivo> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);

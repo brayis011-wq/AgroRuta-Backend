@@ -8,5 +8,6 @@ public interface LoteRepository {
     Optional<Lote> findById(Long id);
     List<Lote> findByFincaId(Long fincaId);
     boolean existsSiembraActivaEnLote(Long loteId);
+    boolean existsByNombreAndFincaId(String nombre, Long fincaId);  // ← nuevo
     void deleteById(Long id);
 }
