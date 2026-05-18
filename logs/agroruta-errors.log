@@ -6,3 +6,4 @@
 2026-05-14 19:47:29.241 ERROR [DCA6C69A] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorLote() lanzó ResourceNotFoundException: No hay siembra activa en el lote: 2
 2026-05-14 19:50:18.328 ERROR [998C5EBA] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorId() lanzó ResourceNotFoundException: Siembra no encontrada con ID: 9999
 2026-05-14 19:50:18.329 ERROR [998C5EBA] c.agroruta.cultivo.application.FumigacionService - ✗ registrarFumigacion() lanzó ResourceNotFoundException: Siembra no encontrada con ID: 9999
+2026-05-14 20:04:17.138 ERROR [F9E0E4C4] com.agroruta.worker.application.ActividadService - ✗ crearActividad() lanzó BusinessException: Ya existe una actividad con el nombre 'fumigar'.
