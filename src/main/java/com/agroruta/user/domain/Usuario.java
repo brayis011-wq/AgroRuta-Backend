@@ -1,33 +1,29 @@
 package com.agroruta.user.domain;
-
 import java.time.LocalDateTime;
-
 public class Usuario {
-
     private Long id;
     private String nombre;
     private String email;
     private String password;
     private Rol rol;
-
-    // Atributos profesionales para gestión de estado y auditoría
+    private String telefono;    // NUEVO
+    private String fotoPerfil;  // NUEVO
     private boolean activo;
     private LocalDateTime fechaCreacion;
 
-    public Usuario(Long id, String nombre, String email, String password, Rol rol) {
+    public Usuario(Long id, String nombre, String email,
+                   String password, Rol rol) {
         this.id = id;
         this.nombre = nombre;
         this.email = email;
         this.password = password;
         this.rol = rol;
-        this.activo = true; // Por defecto, un usuario nuevo nace activo
-        this.fechaCreacion = LocalDateTime.now(); // Registramos cuándo se creó
+        this.activo = true;
+        this.fechaCreacion = LocalDateTime.now();
     }
 
     public Usuario() {
     }
-
-    // --- LÓGICA DE NEGOCIO (Comportamiento del Dominio) ---
 
     public void desactivar() {
         this.activo = false;
@@ -41,23 +37,67 @@ public class Usuario {
         return activo;
     }
 
-    // --- GETTERS Y SETTERS BÁSICOS ---
+    public Long getId() {
+        return id;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getEmail() {
+        return email;
+    }
 
-    public Rol getRol() { return rol; }
-    public void setRol(Rol rol) { this.rol = rol; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-    public LocalDateTime getFechaCreacion() { return fechaCreacion; }
-    public void setFechaCreacion(LocalDateTime fechaCreacion) { this.fechaCreacion = fechaCreacion; }
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public Rol getRol() {
+        return rol;
+    }
+
+    public void setRol(Rol rol) {
+        this.rol = rol;
+    }
+
+    public String getTelefono() {
+        return telefono;
+    }
+
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
+
+    public String getFotoPerfil() {
+        return fotoPerfil;
+    }
+
+    public void setFotoPerfil(String fotoPerfil) {
+        this.fotoPerfil = fotoPerfil;
+    }
+
+    public LocalDateTime getFechaCreacion() {
+        return fechaCreacion;
+    }
+
+    public void setFechaCreacion(LocalDateTime f) {
+        this.fechaCreacion = f;
+    }
 }
