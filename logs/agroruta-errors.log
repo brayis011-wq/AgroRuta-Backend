@@ -1,9 +1,2 @@
-2026-05-14 19:26:51.727 ERROR [A977F8A1] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
-2026-05-14 19:27:09.981 ERROR [C4CE035B] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
-2026-05-14 19:27:18.730 ERROR [2048A284] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
-2026-05-14 19:27:19.956 ERROR [A36DEEB8] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
-2026-05-14 19:27:32.595 ERROR [868C7564] com.agroruta.cultivo.application.FincaService - ✗ registrarFinca() lanzó BusinessException: Ya tienes una finca registrada con el nombre 'Finca el triunfo'
-2026-05-14 19:47:29.241 ERROR [DCA6C69A] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorLote() lanzó ResourceNotFoundException: No hay siembra activa en el lote: 2
-2026-05-14 19:50:18.328 ERROR [998C5EBA] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorId() lanzó ResourceNotFoundException: Siembra no encontrada con ID: 9999
-2026-05-14 19:50:18.329 ERROR [998C5EBA] c.agroruta.cultivo.application.FumigacionService - ✗ registrarFumigacion() lanzó ResourceNotFoundException: Siembra no encontrada con ID: 9999
-2026-05-14 20:04:17.138 ERROR [F9E0E4C4] com.agroruta.worker.application.ActividadService - ✗ crearActividad() lanzó BusinessException: Ya existe una actividad con el nombre 'fumigar'.
+2026-05-19 15:05:38.199 ERROR [2BDFBC98] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorLote() lanzó ResourceNotFoundException: No hay siembra activa en el lote: 2
+2026-05-19 15:05:46.360 ERROR [BACC58B0] com.agroruta.cultivo.application.SiembraService - ✗ buscarSiembraPorLote() lanzó ResourceNotFoundException: No hay siembra activa en el lote: 2

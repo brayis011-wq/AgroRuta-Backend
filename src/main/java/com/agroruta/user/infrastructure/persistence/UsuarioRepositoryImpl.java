@@ -57,7 +57,9 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
                 domain.getPassword(),
                 domain.getRol(),
                 domain.isActivo(),
-                domain.getFechaCreacion()
+                domain.getFechaCreacion(),
+                domain.getTelefono(),       // NUEVO
+                domain.getFotoPerfil()      // NUEVO
         );
     }
 
@@ -69,11 +71,12 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
                 entity.getPassword(),
                 entity.getRol()
         );
-        // Seteamos los campos adicionales
         if (!entity.isActivo()) {
             usuario.desactivar();
         }
         usuario.setFechaCreacion(entity.getFechaCreacion());
+        usuario.setTelefono(entity.getTelefono());      // NUEVO
+        usuario.setFotoPerfil(entity.getFotoPerfil());  // NUEVO
         return usuario;
     }
 }
