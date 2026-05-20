@@ -31,6 +31,9 @@ public class FincaEntity {
     @Column(nullable = false)
     private LocalDateTime fechaRegistro;
 
+    private Double centroideLat;
+    private Double centroideLng;
+
     public FincaEntity() {}
 
     public Long getId() { return id; }
@@ -50,4 +53,10 @@ public class FincaEntity {
 
     public LocalDateTime getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+
+    public Double getCentroideLat() { return centroideLat; }
+    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
+
+    public Double getCentroideLng() { return centroideLng; }
+    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
 }

@@ -8,4 +8,5 @@ public interface FincaUseCase {
     Finca buscarFincaPorId(Long id);
     List<Finca> listarFincasPorAgricultor(Long agricultorId);
     void eliminarFinca(Long id);
+    Finca actualizarCentroideFinca(Long fincaId, Double lat, Double lng);
 }

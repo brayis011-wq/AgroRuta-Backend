@@ -29,6 +29,12 @@ public class LoteEntity {
     @Column(nullable = false)
     private Long fincaId;
 
+    @Column(columnDefinition = "TEXT")
+    private String coordenadas;
+
+    private Double centroideLat;
+    private Double centroideLng;
+
     public LoteEntity() {}
 
     public Long getId() { return id; }
@@ -45,4 +51,13 @@ public class LoteEntity {
 
     public Long getFincaId() { return fincaId; }
     public void setFincaId(Long fincaId) { this.fincaId = fincaId; }
+
+    public String getCoordenadas() { return coordenadas; }
+    public void setCoordenadas(String coordenadas) { this.coordenadas = coordenadas; }
+
+    public Double getCentroideLat() { return centroideLat; }
+    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
+
+    public Double getCentroideLng() { return centroideLng; }
+    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
 }

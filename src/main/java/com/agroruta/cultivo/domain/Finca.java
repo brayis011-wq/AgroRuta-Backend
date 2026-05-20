@@ -10,6 +10,8 @@ public class Finca {
     private Double hectareas;
     private Long agricultorId;
     private LocalDateTime fechaRegistro;
+    private Double centroideLat;
+    private Double centroideLng;
 
     public Finca() {}
 
@@ -20,6 +22,15 @@ public class Finca {
         this.hectareas = hectareas;
         this.agricultorId = agricultorId;
         this.fechaRegistro = LocalDateTime.now();
+    }
+
+    public void actualizarCentroide(Double centroideLat, Double centroideLng) {
+        this.centroideLat = centroideLat;
+        this.centroideLng = centroideLng;
+    }
+
+    public boolean tieneCentroide() {
+        return this.centroideLat != null && this.centroideLng != null;
     }
 
     public Long getId() { return id; }
@@ -39,4 +50,10 @@ public class Finca {
 
     public LocalDateTime getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+
+    public Double getCentroideLat() { return centroideLat; }
+    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
+
+    public Double getCentroideLng() { return centroideLng; }
+    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
 }

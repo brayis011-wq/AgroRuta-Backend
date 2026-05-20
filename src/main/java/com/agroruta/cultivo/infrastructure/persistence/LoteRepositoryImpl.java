@@ -42,10 +42,12 @@ public class LoteRepositoryImpl implements LoteRepository {
     public boolean existsSiembraActivaEnLote(Long loteId) {
         return jpaSiembraRepository.findByLoteId(loteId).isPresent();
     }
+
     @Override
     public boolean existsByNombreAndFincaId(String nombre, Long fincaId) {
         return jpaRepository.existsByNombreAndFincaId(nombre, fincaId);
     }
+
     @Override
     public void deleteById(Long id) {
         jpaRepository.deleteById(id);
@@ -58,6 +60,9 @@ public class LoteRepositoryImpl implements LoteRepository {
         entity.setArea(lote.getArea());
         entity.setEstado(lote.getEstado());
         entity.setFincaId(lote.getFincaId());
+        entity.setCoordenadas(lote.getCoordenadas());
+        entity.setCentroideLat(lote.getCentroideLat());
+        entity.setCentroideLng(lote.getCentroideLng());
         return entity;
     }
 
@@ -68,6 +73,9 @@ public class LoteRepositoryImpl implements LoteRepository {
         lote.setArea(entity.getArea());
         lote.setEstado(entity.getEstado());
         lote.setFincaId(entity.getFincaId());
+        lote.setCoordenadas(entity.getCoordenadas());
+        lote.setCentroideLat(entity.getCentroideLat());
+        lote.setCentroideLng(entity.getCentroideLng());
         return lote;
     }
 }
