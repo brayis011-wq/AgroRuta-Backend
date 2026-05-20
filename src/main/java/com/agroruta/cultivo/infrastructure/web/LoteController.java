@@ -2,6 +2,7 @@ package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.LoteUseCase;
 import com.agroruta.cultivo.domain.Lote;
+import com.agroruta.cultivo.infrastructure.web.dto.ActualizarGeometriaLoteRequest;
 import com.agroruta.cultivo.infrastructure.web.dto.LoteRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,5 +41,19 @@ public class LoteController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         loteUseCase.eliminarLote(id);
         return ResponseEntity.noContent().build();
+    }
+    @PatchMapping("/{id}/geometria")
+    public ResponseEntity<Lote> actualizarGeometria(
+            @PathVariable Long id,
+            @RequestBody ActualizarGeometriaLoteRequest request) {
+
+        Lote lote = loteUseCase.actualizarGeometriaLote(
+                id,
+                request.coordenadas(),
+                request.area(),
+                request.centroideLat(),
+                request.centroideLng()
+        );
+        return ResponseEntity.ok(lote);
     }
 }

@@ -7,6 +7,9 @@ public class Lote {
     private Double area;
     private EstadoLote estado;
     private Long fincaId;
+    private String coordenadas;
+    private Double centroideLat;
+    private Double centroideLng;
 
     public Lote() {}
 
@@ -18,7 +21,6 @@ public class Lote {
         this.estado = EstadoLote.DISPONIBLE;
     }
 
-    // Lógica de negocio
     public void iniciarCultivo() {
         if (this.estado != EstadoLote.DISPONIBLE) {
             throw new IllegalStateException("El lote no está disponible para iniciar un cultivo.");
@@ -26,12 +28,22 @@ public class Lote {
         this.estado = EstadoLote.EN_CULTIVO;
     }
 
-    public void ponerEnDescanso() {
-        this.estado = EstadoLote.EN_DESCANSO;
+    public void ponerEnDescanso() { this.estado = EstadoLote.EN_DESCANSO; }
+    public void disponibilizar()  { this.estado = EstadoLote.DISPONIBLE; }
+
+    public void actualizarGeometria(String coordenadas, Double area,
+                                    Double centroideLat, Double centroideLng) {
+        if (coordenadas == null || coordenadas.isBlank()) {
+            throw new IllegalArgumentException("Las coordenadas del lote no pueden estar vacías.");
+        }
+        this.coordenadas  = coordenadas;
+        this.area         = area;
+        this.centroideLat = centroideLat;
+        this.centroideLng = centroideLng;
     }
 
-    public void disponibilizar() {
-        this.estado = EstadoLote.DISPONIBLE;
+    public boolean tieneGeometria() {
+        return this.coordenadas != null && !this.coordenadas.isBlank();
     }
 
     public Long getId() { return id; }
@@ -48,4 +60,13 @@ public class Lote {
 
     public Long getFincaId() { return fincaId; }
     public void setFincaId(Long fincaId) { this.fincaId = fincaId; }
+
+    public String getCoordenadas() { return coordenadas; }
+    public void setCoordenadas(String coordenadas) { this.coordenadas = coordenadas; }
+
+    public Double getCentroideLat() { return centroideLat; }
+    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
+
+    public Double getCentroideLng() { return centroideLng; }
+    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
 }

@@ -2,6 +2,7 @@ package com.agroruta.cultivo.infrastructure.web;
 
 import com.agroruta.cultivo.application.ports.in.FincaUseCase;
 import com.agroruta.cultivo.domain.Finca;
+import com.agroruta.cultivo.infrastructure.web.dto.ActualizarCentroideFincaRequest;
 import com.agroruta.cultivo.infrastructure.web.dto.FincaRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,5 +44,15 @@ public class FincaController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         fincaUseCase.eliminarFinca(id);
         return ResponseEntity.noContent().build();
+    }
+    @PatchMapping("/{id}/centroide")
+    public ResponseEntity<Finca> actualizarCentroide(
+            @PathVariable Long id,
+            @RequestBody ActualizarCentroideFincaRequest request) {
+
+        Finca finca = fincaUseCase.actualizarCentroideFinca(
+                id, request.centroideLat(), request.centroideLng()
+        );
+        return ResponseEntity.ok(finca);
     }
 }

@@ -36,7 +36,14 @@ public class LoteService implements LoteUseCase {
         Lote lote = new Lote(null, nombre, area, fincaId);
         return loteRepository.save(lote);
     }
-
+    @Override
+    public Lote actualizarGeometriaLote(Long loteId, String coordenadas,
+                                        Double area, Double centroideLat,
+                                        Double centroideLng) {
+        Lote lote = buscarLotePorId(loteId);
+        lote.actualizarGeometria(coordenadas, area, centroideLat, centroideLng);
+        return loteRepository.save(lote);
+    }
     @Override
     public Lote buscarLotePorId(Long id) {
         return loteRepository.findById(id)

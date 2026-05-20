@@ -8,4 +8,7 @@ public interface LoteUseCase {
     Lote buscarLotePorId(Long id);
     List<Lote> listarLotesPorFinca(Long fincaId);
     void eliminarLote(Long id);
+    Lote actualizarGeometriaLote(Long loteId, String coordenadas,
+                                 Double area, Double centroideLat, Double centroideLng);
+
 }

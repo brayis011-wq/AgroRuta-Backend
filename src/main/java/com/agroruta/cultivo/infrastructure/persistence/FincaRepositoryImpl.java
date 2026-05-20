@@ -53,6 +53,8 @@ public class FincaRepositoryImpl implements FincaRepository {
         entity.setHectareas(finca.getHectareas());
         entity.setAgricultorId(finca.getAgricultorId());
         entity.setFechaRegistro(finca.getFechaRegistro());
+        entity.setCentroideLat(finca.getCentroideLat());
+        entity.setCentroideLng(finca.getCentroideLng());
         return entity;
     }
 
@@ -64,6 +66,8 @@ public class FincaRepositoryImpl implements FincaRepository {
         finca.setHectareas(entity.getHectareas());
         finca.setAgricultorId(entity.getAgricultorId());
         finca.setFechaRegistro(entity.getFechaRegistro());
+        finca.setCentroideLat(entity.getCentroideLat());
+        finca.setCentroideLng(entity.getCentroideLng());
         return finca;
     }
 }

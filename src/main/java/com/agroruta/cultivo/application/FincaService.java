@@ -23,7 +23,7 @@ public class FincaService implements FincaUseCase {
     public Finca registrarFinca(String nombre, String ubicacion,
                                 Double hectareas, Long agricultorId) {
 
-        // ✅ Valida duplicado ANTES de intentar guardar
+
         if (fincaRepository.existsByNombreAndAgricultorId(nombre, agricultorId)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_ALREADY_EXISTS,
@@ -50,5 +50,11 @@ public class FincaService implements FincaUseCase {
     public void eliminarFinca(Long id) {
         buscarFincaPorId(id);
         fincaRepository.deleteById(id);
+    }
+    @Override
+    public Finca actualizarCentroideFinca(Long fincaId, Double lat, Double lng) {
+        Finca finca = buscarFincaPorId(fincaId);
+        finca.actualizarCentroide(lat, lng);
+        return fincaRepository.save(finca);
     }
 }
