@@ -2,8 +2,8 @@ package com.agroruta.report.infrastructure.adapters;
 
 import com.agroruta.report.application.ports.out.CropQueryPort;
 import com.agroruta.report.domain.CropDetail;
-import com.agroruta.cultivo.infrastructure.persistence.JpaCosechaRepository;
-import com.agroruta.cultivo.infrastructure.persistence.JpaSiembraRepository;
+import com.agroruta.crop.infrastructure.persistence.JpaCosechaRepository;
+import com.agroruta.crop.infrastructure.persistence.JpaSiembraRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;

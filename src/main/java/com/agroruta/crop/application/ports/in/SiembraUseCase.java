@@ -1,0 +1,15 @@
+package com.agroruta.crop.application.ports.in;
+
+import com.agroruta.crop.domain.Siembra;
+import java.time.LocalDate;
+import java.util.List;
+
+public interface SiembraUseCase {
+    Siembra registrarSiembra(LocalDate fechaSiembra, Integer cantidadPlantas,
+                             String variedad, Long loteId);
+    Siembra buscarSiembraPorId(Long id);
+    Siembra buscarSiembraPorLote(Long loteId);
+    Siembra avanzarEtapa(Long siembraId);
+    List<Siembra> listarSiembrasPorEstado(String estado);
+    void eliminarSiembra(Long id);
+}
