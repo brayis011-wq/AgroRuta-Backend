@@ -20,7 +20,7 @@ import java.util.List;
 
  */
 @RestController
-@RequestMapping("/agricultural-inputs")
+@RequestMapping("/api/agricultural-inputs")  // 👈 agrega /api/
 @CrossOrigin(origins = "${app.cors.allowed-origins}")
 public class AgriculturalInputController {
 
