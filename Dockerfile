@@ -1,6 +1,4 @@
-
 # BACKEND - Spring Boot (Maven + Java 21)
-
 
 # STAGE 1: Compilar con Maven
 FROM maven:3.9.6-eclipse-temurin-21 AS builder
@@ -15,7 +13,10 @@ FROM eclipse-temurin:21-jre-alpine
 RUN addgroup -S agroruta && adduser -S agroruta -G agroruta
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
-RUN chown agroruta:agroruta app.jar
+
+# ✅ Crear logs y asignar todo a agroruta ANTES de cambiar de usuario
+RUN mkdir -p /app/logs && chown -R agroruta:agroruta /app
+
 USER agroruta
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
