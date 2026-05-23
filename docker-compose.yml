@@ -1,5 +1,5 @@
-: bridge
 services:
+
   db:
     image: mysql:8.0
     container_name: agroruta-db
@@ -12,7 +12,7 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - agroruta_mysql_data:/var/lib/mysql       # datos persistentes
+      - agroruta_mysql_data:/var/lib/mysql
       - ./init-db:/docker-entrypoint-initdb.d
     networks:
       - agroruta-net
@@ -30,21 +30,17 @@ services:
     container_name: agroruta-backend
     restart: unless-stopped
     environment:
-      # Base de datos
-      SPRING_DATASOURCE_URL:      jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
-      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER}
-      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD}
-      # JPA
+      SPRING_DATASOURCE_URL:         jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
+      SPRING_DATASOURCE_USERNAME:    ${MYSQL_USER}
+      SPRING_DATASOURCE_PASSWORD:    ${MYSQL_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: ${DDL_AUTO:-update}
       SPRING_JPA_SHOW_SQL:           ${SHOW_SQL:-false}
-      # JWT
-      JWT_SECRET:     ${JWT_SECRET}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}
-      # Perfil Spring (dev o prod)
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
-      # Timezone Colombia
-      TZ: America/Bogota
-      WEATHER_API_KEY: ${WEATHER_API_KEY}
+      JWT_SECRET:                    ${JWT_SECRET}
+      JWT_EXPIRATION:                ${JWT_EXPIRATION:-86400000}
+      SPRING_PROFILES_ACTIVE:        ${SPRING_PROFILE:-prod}
+      TZ:                            America/Bogota
+      WEATHER_API_KEY:               ${WEATHER_API_KEY}
+      APP_CORS_ALLOWED_ORIGINS:      http://localhost   # 👈 fix CORS
     ports:
       - "8080:8080"
     depends_on:
@@ -59,8 +55,6 @@ services:
       retries: 3
       start_period: 60s
 
-
-  # Nginx también hace de reverse proxy hacia /api/
   frontend:
     build:
       context: ./agroruta-frontend
@@ -71,22 +65,14 @@ services:
       - "80:80"
     depends_on:
       backend:
-        condition: service_healthy   # espera que el backend esté sano
+        condition: service_healthy
     networks:
       - agroruta-net
-
-weather:
-  api:
-    key: ${WEATHER_API_KEY}
-    base-url: https://api.openweathermap.org/data/2.5
-# VOLÚMENES - Persistencia de datos
 
 volumes:
   agroruta_mysql_data:
     driver: local
 
-# REDES - Red interna aislada para los servicios
-
 networks:
   agroruta-net:
-    driver
+    driver: bridge
