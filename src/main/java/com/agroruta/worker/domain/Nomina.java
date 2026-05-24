@@ -1,11 +1,15 @@
 package com.agroruta.worker.domain;
 
+import lombok.Getter;
+import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Getter
+@Setter
 public class Nomina {
 
     private Long id;
@@ -36,8 +40,6 @@ public class Nomina {
         calcular();
     }
 
-    // ── Lógica de dominio ────────────────────────────────────────────────────
-
     public void calcular() {
         this.totalJornales = this.jornales.size();
         this.valorTotal = this.jornales.stream()
@@ -59,7 +61,6 @@ public class Nomina {
         this.estado = EstadoNomina.ANULADA;
     }
 
-    // ✅ NUEVO
     public void reactivar() {
         if (!EstadoNomina.ANULADA.equals(this.estado)) {
             throw new IllegalStateException("Solo se pueden reactivar nóminas en estado ANULADA.");
@@ -79,38 +80,8 @@ public class Nomina {
         return EstadoNomina.PENDIENTE.equals(this.estado);
     }
 
+    // Sobreescribe el getter de Lombok para proteger la lista
     public List<Jornal> getJornales() {
         return Collections.unmodifiableList(jornales);
     }
-
-    // ── Getters & Setters ────────────────────────────────────────────────────
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public Trabajador getTrabajador() { return trabajador; }
-    public void setTrabajador(Trabajador trabajador) { this.trabajador = trabajador; }
-
-    public LocalDate getPeriodoInicio() { return periodoInicio; }
-    public void setPeriodoInicio(LocalDate periodoInicio) { this.periodoInicio = periodoInicio; }
-
-    public LocalDate getPeriodoFin() { return periodoFin; }
-    public void setPeriodoFin(LocalDate periodoFin) { this.periodoFin = periodoFin; }
-
-    public void setJornales(List<Jornal> jornales) { this.jornales = jornales; }
-
-    public int getTotalJornales() { return totalJornales; }
-    public void setTotalJornales(int totalJornales) { this.totalJornales = totalJornales; }
-
-    public BigDecimal getValorTotal() { return valorTotal; }
-    public void setValorTotal(BigDecimal valorTotal) { this.valorTotal = valorTotal; }
-
-    public EstadoNomina getEstado() { return estado; }
-    public void setEstado(EstadoNomina estado) { this.estado = estado; }
-
-    public LocalDate getFechaGeneracion() { return fechaGeneracion; }
-    public void setFechaGeneracion(LocalDate fechaGeneracion) { this.fechaGeneracion = fechaGeneracion; }
-
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
 }
