@@ -180,10 +180,21 @@
 			</plugin>
 
 			<!-- JACOCO - Cobertura de pruebas -->
+			<!-- JACOCO - Cobertura de pruebas -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.12</version>
+				<configuration>
+					<excludes>
+						<exclude>**/dto/**</exclude>
+						<exclude>**/entity/**</exclude>
+						<exclude>**/config/**</exclude>
+						<exclude>**/exception/**</exclude>
+						<exclude>**/*Application.class</exclude>
+						<exclude>**/mapper/**</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
 						<goals>
