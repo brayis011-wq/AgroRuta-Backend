@@ -2,64 +2,60 @@ package com.agroruta.crop.domain;
 
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ActividadCultivoTest {
 
-    private static final LocalDate FECHA = LocalDate.of(2026, 4, 1);
-
     @Test
-    void constructorCompleto_asignaTodosLosCampos() {
+    void deberiaCrearActividadConConstructorCompleto() {
+        LocalDate fecha = LocalDate.of(2026, 1, 15);
+
         ActividadCultivo actividad = new ActividadCultivo(
-                1L, TipoActividad.RIEGO, "Riego inicial", FECHA, 10L
-        );
-//verificar que cada campo quede bien asignado
-        assertThat(actividad.getId()).isEqualTo(1L);
-        assertThat(actividad.getTipo()).isEqualTo(TipoActividad.RIEGO);
-        assertThat(actividad.getDescripcion()).isEqualTo("Riego inicial");
-        assertThat(actividad.getFecha()).isEqualTo(FECHA);
-        assertThat(actividad.getSiembraId()).isEqualTo(10L);
+                1L, TipoActividad.RIEGO, "Riego por goteo", fecha, 10L);
+
+        assertEquals(1L, actividad.getId());
+        assertEquals(TipoActividad.RIEGO, actividad.getTipo());
+        assertEquals("Riego por goteo", actividad.getDescripcion());
+        assertEquals(fecha, actividad.getFecha());
+        assertEquals(10L, actividad.getSiembraId());
     }
 
     @Test
-    void constructorVacio_dejaTodosLosCamposNulos() {
+    void deberiaCrearActividadVaciaConConstructorPorDefecto() {
         ActividadCultivo actividad = new ActividadCultivo();
 
-        assertThat(actividad.getId()).isNull();
-        assertThat(actividad.getTipo()).isNull();
-        assertThat(actividad.getDescripcion()).isNull();
-        assertThat(actividad.getFecha()).isNull();
-        assertThat(actividad.getSiembraId()).isNull();
+        assertNull(actividad.getId());
+        assertNull(actividad.getTipo());
+        assertNull(actividad.getDescripcion());
+        assertNull(actividad.getFecha());
+        assertNull(actividad.getSiembraId());
     }
 
     @Test
-    void setters_modificanCadaCampoIndependientemente() {
+    void deberiaModificarCamposConSetters() {
         ActividadCultivo actividad = new ActividadCultivo();
+        LocalDate fecha = LocalDate.of(2026, 3, 10);
 
-        actividad.setId(5L);
-        actividad.setTipo(TipoActividad.DESHIERBE);
-        actividad.setDescripcion("Deshierbe manual");
-        actividad.setFecha(FECHA);
-        actividad.setSiembraId(20L);
+        actividad.setId(2L);
+        actividad.setTipo(TipoActividad.PODA);
+        actividad.setDescripcion("Poda de formación");
+        actividad.setFecha(fecha);
+        actividad.setSiembraId(5L);
 
-        assertThat(actividad.getId()).isEqualTo(5L);
-        assertThat(actividad.getTipo()).isEqualTo(TipoActividad.DESHIERBE);
-        assertThat(actividad.getDescripcion()).isEqualTo("Deshierbe manual");
-        assertThat(actividad.getFecha()).isEqualTo(FECHA);
-        assertThat(actividad.getSiembraId()).isEqualTo(20L);
+        assertEquals(2L, actividad.getId());
+        assertEquals(TipoActividad.PODA, actividad.getTipo());
+        assertEquals("Poda de formación", actividad.getDescripcion());
+        assertEquals(fecha, actividad.getFecha());
+        assertEquals(5L, actividad.getSiembraId());
     }
 
     @Test
-    void setter_sobreescribeValorPrevio() {
-        ActividadCultivo actividad = new ActividadCultivo(
-                1L, TipoActividad.RIEGO, "Riego", FECHA, 10L
-        );
+    void deberiaSoportarTodosLosTiposDeActividad() {
+        for (TipoActividad tipo : TipoActividad.values()) {
+            ActividadCultivo actividad = new ActividadCultivo(
+                    1L, tipo, "descripción", LocalDate.now(), 1L);
 
-        actividad.setDescripcion("Descripción actualizada");
-        actividad.setTipo(TipoActividad.PODA);  // ← este sí existe
-
-        assertThat(actividad.getDescripcion()).isEqualTo("Descripción actualizada");
-        assertThat(actividad.getTipo()).isEqualTo(TipoActividad.PODA);
+            assertEquals(tipo, actividad.getTipo());
+        }
     }
 }

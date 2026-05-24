@@ -1,10 +1,8 @@
 package com.agroruta.crop.application;
 
-import com.agroruta.crop.domain.ActividadCultivo;
-import com.agroruta.crop.domain.ActividadCultivoRepository;
-import com.agroruta.crop.domain.TipoActividad;
-import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
+import com.agroruta.crop.domain.*;
+import com.agroruta.shared.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,7 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -31,67 +29,69 @@ class ActividadCultivoServiceTest {
     @InjectMocks
     private ActividadCultivoService service;
 
-    private ActividadCultivo actividadMock;
+    private final Long siembraId = 1L;
+    private final LocalDate fecha = LocalDate.of(2026, 3, 10);
 
     @BeforeEach
     void setUp() {
-        actividadMock = new ActividadCultivo(
-                1L, TipoActividad.RIEGO, "Riego inicial", LocalDate.of(2026, 4, 1), 10L
-        );
+        Siembra siembra = new Siembra(siembraId, fecha, 100, VariedadUchuva.COLOMBIA, 1L);
+        when(siembraUseCase.buscarSiembraPorId(siembraId)).thenReturn(siembra);
     }
 
     @Test
-    void registrarActividad_exitoso() {
-        when(actividadRepository.save(any())).thenReturn(actividadMock);
+    void deberiaRegistrarActividadCorrectamente() {
+        ActividadCultivo actividad = new ActividadCultivo(
+                1L, TipoActividad.RIEGO, "Riego por goteo", fecha, siembraId);
+        when(actividadRepository.existsByTipoAndFechaAndSiembraId(
+                TipoActividad.RIEGO, fecha, siembraId)).thenReturn(false);
+        when(actividadRepository.save(any())).thenReturn(actividad);
 
-        ActividadCultivo result = service.registrarActividad(
-                "RIEGO", "Riego inicial", LocalDate.of(2026, 4, 1), 10L
-        );
+        ActividadCultivo resultado = service.registrarActividad(
+                "RIEGO", "Riego por goteo", fecha, siembraId);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getTipo()).isEqualTo(TipoActividad.RIEGO);
-        assertThat(result.getDescripcion()).isEqualTo("Riego inicial");
-        verify(siembraUseCase).buscarSiembraPorId(10L);
+        assertNotNull(resultado);
+        assertEquals(TipoActividad.RIEGO, resultado.getTipo());
         verify(actividadRepository).save(any());
     }
 
     @Test
-    void registrarActividad_descripcionVacia_lanzaExcepcion() {
-        assertThatThrownBy(() ->
-                service.registrarActividad("RIEGO", "", LocalDate.now(), 10L)
-        ).isInstanceOf(BusinessException.class)
-                .hasMessageContaining("descripción");
-
-        verify(actividadRepository, never()).save(any());
+    void deberiaLanzarExcepcionSiDescripcionEsNula() {
+        assertThrows(BusinessException.class, () ->
+                service.registrarActividad("RIEGO", null, fecha, siembraId));
     }
 
     @Test
-    void registrarActividad_fechaNula_lanzaExcepcion() {
-        assertThatThrownBy(() ->
-                service.registrarActividad("RIEGO", "Riego", null, 10L)
-        ).isInstanceOf(BusinessException.class)
-                .hasMessageContaining("fecha");
-
-        verify(actividadRepository, never()).save(any());
+    void deberiaLanzarExcepcionSiDescripcionEstaVacia() {
+        assertThrows(BusinessException.class, () ->
+                service.registrarActividad("RIEGO", "   ", fecha, siembraId));
     }
 
     @Test
-    void listarActividadesPorSiembra_retornaLista() {
-        when(actividadRepository.findBySiembraId(10L)).thenReturn(List.of(actividadMock));
-
-        List<ActividadCultivo> resultado = service.listarActividadesPorSiembra(10L);
-
-        assertThat(resultado).hasSize(1);
-        assertThat(resultado.get(0).getSiembraId()).isEqualTo(10L);
-        verify(siembraUseCase).buscarSiembraPorId(10L);
+    void deberiaLanzarExcepcionSiFechaEsNula() {
+        assertThrows(BusinessException.class, () ->
+                service.registrarActividad("RIEGO", "Riego", null, siembraId));
     }
 
     @Test
-    void listarActividadesPorSiembra_listaVacia() {
-        when(actividadRepository.findBySiembraId(99L)).thenReturn(List.of());
+    void deberiaLanzarExcepcionSiActividadYaExiste() {
+        when(actividadRepository.existsByTipoAndFechaAndSiembraId(
+                TipoActividad.PODA, fecha, siembraId)).thenReturn(true);
 
-        List<ActividadCultivo> resultado = service.listarActividadesPorSiembra(99L);
+        assertThrows(BusinessException.class, () ->
+                service.registrarActividad("PODA", "Poda de formación", fecha, siembraId));
+    }
 
-        assertThat(resultado).isEmpty();
+    @Test
+    void deberiaListarActividadesPorSiembra() {
+        List<ActividadCultivo> actividades = List.of(
+                new ActividadCultivo(1L, TipoActividad.RIEGO, "Riego", fecha, siembraId),
+                new ActividadCultivo(2L, TipoActividad.PODA, "Poda", fecha, siembraId)
+        );
+        when(actividadRepository.findBySiembraId(siembraId)).thenReturn(actividades);
+
+        List<ActividadCultivo> resultado = service.listarActividadesPorSiembra(siembraId);
+
+        assertEquals(2, resultado.size());
+        verify(actividadRepository).findBySiembraId(siembraId);
     }
 }

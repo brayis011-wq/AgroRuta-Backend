@@ -16,7 +16,7 @@ public class AgriculturalInput {
     private MeasurementUnit unidadSugerida;
     private Double dosisSugerida;
     private Integer reentradaHoras;
-    @Setter private Boolean activo;
+    @Setter private boolean activo;       // ← Boolean → boolean
     @Setter private LocalDateTime creadoEn;
 
     public static AgriculturalInput create(
