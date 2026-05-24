@@ -2,7 +2,9 @@ package com.agroruta.configuration.infrastructure.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
+@Data
 public class UpdateProfileRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
@@ -13,11 +15,4 @@ public class UpdateProfileRequest {
     private String telefono;
 
     private String fotoPerfil;
-
-    public String getNombre()           { return nombre; }
-    public void setNombre(String n)     { this.nombre = n; }
-    public String getTelefono()         { return telefono; }
-    public void setTelefono(String t)   { this.telefono = t; }
-    public String getFotoPerfil()       { return fotoPerfil; }
-    public void setFotoPerfil(String f) { this.fotoPerfil = f; }
 }

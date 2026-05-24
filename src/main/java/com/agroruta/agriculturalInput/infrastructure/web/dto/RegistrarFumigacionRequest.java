@@ -1,6 +1,7 @@
 package com.agroruta.agriculturalInput.infrastructure.web.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.Data;
 import java.time.LocalDate;
 
 /**
@@ -13,6 +14,7 @@ import java.time.LocalDate;
  * el nombre que se mostrará en reportes históricos, incluso si el insumo
  * del catálogo es eliminado en el futuro.
  */
+@Data
 public class RegistrarFumigacionRequest {
 
     @NotNull(message = "La fecha es obligatoria")
@@ -44,30 +46,4 @@ public class RegistrarFumigacionRequest {
 
     @NotNull(message = "El ID de siembra es obligatorio")
     private Long siembraId;
-
-    // ── Getters & Setters ─────────────────────────────────────────────────────
-
-    public LocalDate getFecha()                         { return fecha; }
-    public void setFecha(LocalDate fecha)               { this.fecha = fecha; }
-
-    public String getProducto()                         { return producto; }
-    public void setProducto(String producto)            { this.producto = producto; }
-
-    public Long getAgriculturalInputId()                { return agriculturalInputId; }
-    public void setAgriculturalInputId(Long id)         { this.agriculturalInputId = id; }
-
-    public Double getDosis()                            { return dosis; }
-    public void setDosis(Double dosis)                  { this.dosis = dosis; }
-
-    public String getUnidadMedida()                     { return unidadMedida; }
-    public void setUnidadMedida(String u)               { this.unidadMedida = u; }
-
-    public Double getAreaAplicada()                     { return areaAplicada; }
-    public void setAreaAplicada(Double a)               { this.areaAplicada = a; }
-
-    public String getObservaciones()                    { return observaciones; }
-    public void setObservaciones(String o)              { this.observaciones = o; }
-
-    public Long getSiembraId()                          { return siembraId; }
-    public void setSiembraId(Long id)                   { this.siembraId = id; }
 }
