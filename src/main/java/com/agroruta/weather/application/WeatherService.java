@@ -1,8 +1,8 @@
 // com/agroruta/weather/application/WeatherService.java
 package com.agroruta.weather.application;
 
-import com.agroruta.weather.application.ports.in.WeatherUseCase;
-import com.agroruta.weather.application.ports.out.WeatherApiPort;
+import com.agroruta.weather.application.port.in.WeatherUseCase;
+import com.agroruta.weather.application.port.out.WeatherApiPort;
 import com.agroruta.weather.domain.Weather;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

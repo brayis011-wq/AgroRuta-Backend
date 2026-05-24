@@ -1,4 +1,4 @@
-package com.agroruta.weather.infrastructure.external;
+package com.agroruta.weather.infrastructure;
 
 import com.agroruta.weather.application.port.out.WeatherApiPort;
 import com.agroruta.weather.domain.Weather;
