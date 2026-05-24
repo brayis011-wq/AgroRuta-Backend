@@ -1,11 +1,9 @@
 package com.agroruta.agriculturalInput.infrastructure.web.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.Data;
 
-/**
- * DTO de entrada para crear o actualizar un insumo agrícola.
- * Contiene las validaciones de la capa web; el dominio no las conoce.
- */
+@Data
 public class AgriculturalInputRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
@@ -33,21 +31,4 @@ public class AgriculturalInputRequest {
     @NotNull(message = "Las horas de reentrada son obligatorias")
     @Min(value = 0, message = "Las horas de reentrada no pueden ser negativas")
     private Integer reentradaHoras;
-
-    // ── Getters & Setters ─────────────────────────────────────────────────────
-
-    public String getNombre()                      { return nombre; }
-    public void setNombre(String nombre)           { this.nombre = nombre; }
-
-    public String getTipo()                        { return tipo; }
-    public void setTipo(String tipo)               { this.tipo = tipo; }
-
-    public String getUnidadSugerida()              { return unidadSugerida; }
-    public void setUnidadSugerida(String u)        { this.unidadSugerida = u; }
-
-    public Double getDosisSugerida()               { return dosisSugerida; }
-    public void setDosisSugerida(Double d)         { this.dosisSugerida = d; }
-
-    public Integer getReentradaHoras()             { return reentradaHoras; }
-    public void setReentradaHoras(Integer r)       { this.reentradaHoras = r; }
 }
