@@ -1,7 +1,13 @@
 package com.agroruta.crop.domain;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import java.time.LocalDate;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class Cosecha {
 
     private Long id;
@@ -10,8 +16,6 @@ public class Cosecha {
     private CalidadCosecha calidad;
     private String observaciones;
     private Long siembraId;
-
-    public Cosecha() {}
 
     public Cosecha(Long id, LocalDate fecha, Double cantidadKg,
                    CalidadCosecha calidad, String observaciones, Long siembraId) {
@@ -22,22 +26,4 @@ public class Cosecha {
         this.observaciones = observaciones;
         this.siembraId = siembraId;
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
-
-    public Double getCantidadKg() { return cantidadKg; }
-    public void setCantidadKg(Double cantidadKg) { this.cantidadKg = cantidadKg; }
-
-    public CalidadCosecha getCalidad() { return calidad; }
-    public void setCalidad(CalidadCosecha calidad) { this.calidad = calidad; }
-
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
-
-    public Long getSiembraId() { return siembraId; }
-    public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }
 }
