@@ -1,6 +1,6 @@
 package com.agroruta.weather.infrastructure.web;
 
-import com.agroruta.weather.application.ports.in.WeatherUseCase;
+import com.agroruta.weather.application.port.in.WeatherUseCase;
 import com.agroruta.weather.domain.Weather;
 import com.agroruta.weather.infrastructure.web.dto.WeatherResponseDto;
 import lombok.RequiredArgsConstructor;

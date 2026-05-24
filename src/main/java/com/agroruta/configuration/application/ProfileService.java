@@ -1,4 +1,4 @@
-package com.agroruta.configuration.application.service;
+package com.agroruta.configuration.application;
 
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
