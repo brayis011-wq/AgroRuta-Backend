@@ -1,7 +1,13 @@
 package com.agroruta.worker.infrastructure.persistence;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "actividades", uniqueConstraints = {
         @UniqueConstraint(
@@ -23,19 +29,4 @@ public class ActividadEntity {
 
     @Column(nullable = false)
     private boolean activa;
-
-    public ActividadEntity() {}
-
-    // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-
-    public boolean isActiva() { return activa; }
-    public void setActiva(boolean activa) { this.activa = activa; }
 }
