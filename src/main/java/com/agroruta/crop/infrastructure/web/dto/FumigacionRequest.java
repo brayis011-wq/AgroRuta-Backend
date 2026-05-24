@@ -1,39 +1,16 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
+import lombok.Data;
 import java.time.LocalDate;
 
+@Data
 public class FumigacionRequest {
-
     private LocalDate fecha;
     private String producto;
-    private Long agriculturalInputId; // null si fue entrada manual
+    private Long agriculturalInputId;
     private Double dosis;
     private String unidadMedida;
     private Double areaAplicada;
     private String observaciones;
     private Long siembraId;
-
-    public LocalDate getFecha()                        { return fecha; }
-    public void setFecha(LocalDate fecha)              { this.fecha = fecha; }
-
-    public String getProducto()                        { return producto; }
-    public void setProducto(String producto)           { this.producto = producto; }
-
-    public Long getAgriculturalInputId()               { return agriculturalInputId; }
-    public void setAgriculturalInputId(Long id)        { this.agriculturalInputId = id; }
-
-    public Double getDosis()                           { return dosis; }
-    public void setDosis(Double dosis)                 { this.dosis = dosis; }
-
-    public String getUnidadMedida()                    { return unidadMedida; }
-    public void setUnidadMedida(String unidadMedida)   { this.unidadMedida = unidadMedida; }
-
-    public Double getAreaAplicada()                    { return areaAplicada; }
-    public void setAreaAplicada(Double areaAplicada)   { this.areaAplicada = areaAplicada; }
-
-    public String getObservaciones()                   { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
-
-    public Long getSiembraId()                         { return siembraId; }
-    public void setSiembraId(Long siembraId)           { this.siembraId = siembraId; }
 }
