@@ -1,5 +1,12 @@
 package com.agroruta.crop.domain;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
 public class Lote {
 
     private Long id;
@@ -10,8 +17,6 @@ public class Lote {
     private String coordenadas;
     private Double centroideLat;
     private Double centroideLng;
-
-    public Lote() {}
 
     public Lote(Long id, String nombre, Double area, Long fincaId) {
         this.id = id;
@@ -45,28 +50,4 @@ public class Lote {
     public boolean tieneGeometria() {
         return this.coordenadas != null && !this.coordenadas.isBlank();
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    public Double getArea() { return area; }
-    public void setArea(Double area) { this.area = area; }
-
-    public EstadoLote getEstado() { return estado; }
-    public void setEstado(EstadoLote estado) { this.estado = estado; }
-
-    public Long getFincaId() { return fincaId; }
-    public void setFincaId(Long fincaId) { this.fincaId = fincaId; }
-
-    public String getCoordenadas() { return coordenadas; }
-    public void setCoordenadas(String coordenadas) { this.coordenadas = coordenadas; }
-
-    public Double getCentroideLat() { return centroideLat; }
-    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
-
-    public Double getCentroideLng() { return centroideLng; }
-    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
 }
