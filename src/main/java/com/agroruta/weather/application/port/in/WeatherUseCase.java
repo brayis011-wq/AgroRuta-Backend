@@ -1,5 +1,5 @@
 // com/agroruta/weather/application/ports/in/WeatherUseCase.java
-package com.agroruta.weather.application.ports.in;
+package com.agroruta.weather.application.port.in;
 
 import com.agroruta.weather.domain.Weather;
 
