@@ -3,23 +3,29 @@ package com.agroruta.crop.infrastructure.web;
 import com.agroruta.crop.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.domain.TipoActividad;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class ActividadCultivoControllerTest {
+
+    private MockMvc mockMvc;
 
     @Mock
     private ActividadCultivoUseCase actividadUseCase;
@@ -27,41 +33,48 @@ class ActividadCultivoControllerTest {
     @InjectMocks
     private ActividadCultivoController controller;
 
-    private ActividadCultivo actividadMock;
-
     @BeforeEach
     void setUp() {
-        actividadMock = new ActividadCultivo(
-                1L, TipoActividad.RIEGO, "Riego inicial", LocalDate.of(2026, 4, 1), 10L
+        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+    }
+
+    @Test
+    void deberiaRegistrarActividadYRetornar201() throws Exception {
+        ActividadCultivo actividad = new ActividadCultivo(
+                1L, TipoActividad.RIEGO, "Riego matutino", LocalDate.now(), 10L
         );
+        when(actividadUseCase.registrarActividad(any(), any(), any(), anyLong()))
+                .thenReturn(actividad);
+
+        String body = """
+                {
+                    "tipo": "RIEGO",
+                    "descripcion": "Riego matutino",
+                    "fecha": "%s",
+                    "siembraId": 10
+                }
+                """.formatted(LocalDate.now());
+
+        mockMvc.perform(post("/api/actividades")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.tipo").value("RIEGO"));
     }
 
     @Test
-    void registrar_retorna201() {
-        when(actividadUseCase.registrarActividad(any(), any(), any(), any()))
-                .thenReturn(actividadMock);
+    void deberiaListarActividadesPorSiembra() throws Exception {
+        List<ActividadCultivo> actividades = List.of(
+                new ActividadCultivo(1L, TipoActividad.RIEGO, "Riego matutino", LocalDate.now(), 10L),
+                new ActividadCultivo(2L, TipoActividad.OTRO, "Fumigación preventiva", LocalDate.now(), 10L)
+        );
+        when(actividadUseCase.listarActividadesPorSiembra(10L)).thenReturn(actividades);
 
-        var req = new com.agroruta.crop.infrastructure.web.dto.ActividadRequest();
-        req.setTipo("RIEGO");
-        req.setDescripcion("Riego inicial");
-        req.setFecha(LocalDate.of(2026, 4, 1));
-        req.setSiembraId(10L);
-
-        ResponseEntity<ActividadCultivo> response = controller.registrar(req);
-
-        assertThat(response.getStatusCode().value()).isEqualTo(201);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDescripcion()).isEqualTo("Riego inicial");
-    }
-
-    @Test
-    void listarPorSiembra_retorna200() {
-        when(actividadUseCase.listarActividadesPorSiembra(10L))
-                .thenReturn(List.of(actividadMock));
-
-        ResponseEntity<List<ActividadCultivo>> response = controller.listarPorSiembra(10L);
-
-        assertThat(response.getStatusCode().value()).isEqualTo(200);
-        assertThat(response.getBody()).hasSize(1);
+        mockMvc.perform(get("/api/actividades/siembra/10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].tipo").value("RIEGO"))
+                .andExpect(jsonPath("$[1].tipo").value("OTRO"));
     }
 }
