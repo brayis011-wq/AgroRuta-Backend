@@ -17,12 +17,32 @@
 		<java.version>21</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<!-- SonarQube -->
 		<sonar.projectKey>AgroRuta-Backend</sonar.projectKey>
 		<sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-		<sonar.exclusions>src/test/**/*</sonar.exclusions>
-		<sonar.coverage.exclusions>src/test/**/*</sonar.coverage.exclusions>
+
+		<!-- Excluir del análisis estático: solo clases sin lógica testeable -->
+		<sonar.exclusions>
+			src/test/**/*,
+			**/dto/**,
+			**/entity/**,
+			**/mapper/**,
+			**/*Application.java
+		</sonar.exclusions>
+
+		<!-- Excluir de cobertura: las mismas que JaCoCo no instrumenta -->
+		<sonar.coverage.exclusions>
+			src/test/**/*,
+			**/dto/**,
+			**/entity/**,
+			**/mapper/**,
+			**/*Application.java
+		</sonar.coverage.exclusions>
+
 		<sonar.test.inclusions>src/test/**/*</sonar.test.inclusions>
 		<sonar.cpd.exclusions>src/test/**/*</sonar.cpd.exclusions>
+
 		<sonar.issue.ignore.multicriteria>e1</sonar.issue.ignore.multicriteria>
 		<sonar.issue.ignore.multicriteria.e1.ruleKey>*</sonar.issue.ignore.multicriteria.e1.ruleKey>
 		<sonar.issue.ignore.multicriteria.e1.resourceKey>src/test/**/*</sonar.issue.ignore.multicriteria.e1.resourceKey>
