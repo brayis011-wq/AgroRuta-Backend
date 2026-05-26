@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(request -> {
                     CorsConfiguration config = new CorsConfiguration();
                     config.addAllowedOrigin("http://localhost:4200");
+                    config.addAllowedOrigin("http://agroruta-frontend");
                     config.addAllowedMethod("*");
                     config.addAllowedHeader("*");
                     config.setAllowCredentials(true);
@@ -43,6 +44,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/weather/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()   // ← AGREGAR ESTA LÍNEA
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
