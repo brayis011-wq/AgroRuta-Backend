@@ -210,7 +210,7 @@
 				<version>3.11.0.3922</version>
 			</plugin>
 
-			<!-- JACOCO - Cobertura de pruebas -->
+
 			<!-- JACOCO - Cobertura de pruebas -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
@@ -221,7 +221,6 @@
 						<exclude>**/dto/**</exclude>
 						<exclude>**/entity/**</exclude>
 						<exclude>**/config/**</exclude>
-						<exclude>**/exception/**</exclude>
 						<exclude>**/*Application.class</exclude>
 						<exclude>**/mapper/**</exclude>
 					</excludes>
