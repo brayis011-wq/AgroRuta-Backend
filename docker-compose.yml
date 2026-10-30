@@ -30,6 +30,7 @@ services:
     container_name: agroruta-backend
     restart: unless-stopped
     environment:
+      BACKUP_SSL_ARG: --skip-ssl
       SPRING_DATASOURCE_URL:         jdbc:mysql://db:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Bogota
       SPRING_DATASOURCE_USERNAME:    ${MYSQL_USER}
       SPRING_DATASOURCE_PASSWORD:    ${MYSQL_PASSWORD}
@@ -41,6 +42,7 @@ services:
       TZ:                            America/Bogota
       WEATHER_API_KEY:               ${WEATHER_API_KEY}
       APP_CORS_ALLOWED_ORIGINS:      http://localhost   # 👈 fix CORS
+
     ports:
       - "8080:8080"
     depends_on:
