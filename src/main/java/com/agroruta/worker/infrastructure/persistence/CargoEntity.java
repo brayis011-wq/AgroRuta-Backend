@@ -12,8 +12,8 @@ import java.math.BigDecimal;
 @Entity
 @Table(name = "cargos", uniqueConstraints = {
         @UniqueConstraint(
-                name = "uk_cargo_nombre",
-                columnNames = {"nombre"}
+                name = "uk_cargo_nombre_agricultor",
+                columnNames = {"nombre", "agricultor_id"}
         )
 })
 public class CargoEntity {
@@ -33,4 +33,9 @@ public class CargoEntity {
 
     @Column(nullable = false)
     private boolean activo;
+
+    // Nullable a propósito: ddl-auto=update puede agregar la columna sobre filas
+    // existentes. Se rellena con el SQL de migración.
+    @Column(name = "agricultor_id")
+    private Long agricultorId;
 }

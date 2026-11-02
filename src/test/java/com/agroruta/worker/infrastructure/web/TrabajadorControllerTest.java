@@ -3,6 +3,9 @@ package com.agroruta.worker.infrastructure.web;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.domain.*;
 import com.agroruta.worker.infrastructure.web.dto.TrabajadorRequest;
@@ -18,6 +21,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -50,6 +55,11 @@ class TrabajadorControllerTest {
                 "3001234567", "Calle 1", FECHA_INGRESO,
                 TipoContrato.JORNAL, cargoBase
         );
+    }
+
+    private Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
     }
 
     private TrabajadorRequest buildRequest() {
@@ -87,7 +97,8 @@ class TrabajadorControllerTest {
         void debeRetornar200ConTrabajadoresActivos() {
             when(trabajadorUseCase.listarActivos()).thenReturn(List.of(trabajadorBase));
 
-            ResponseEntity<List<TrabajadorResponse>> response = trabajadorController.listar();
+            ResponseEntity<List<TrabajadorResponse>> response =
+                    trabajadorController.listar(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -103,7 +114,8 @@ class TrabajadorControllerTest {
         void debeRetornar200ConListaVaciaDeActivos() {
             when(trabajadorUseCase.listarActivos()).thenReturn(List.of());
 
-            ResponseEntity<List<TrabajadorResponse>> response = trabajadorController.listar();
+            ResponseEntity<List<TrabajadorResponse>> response =
+                    trabajadorController.listar(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isEmpty());
@@ -123,7 +135,8 @@ class TrabajadorControllerTest {
         void debeRetornar200ConTodosLosTrabajadores() {
             when(trabajadorUseCase.listarTodos()).thenReturn(List.of(trabajadorBase));
 
-            ResponseEntity<List<TrabajadorResponse>> response = trabajadorController.listarTodos();
+            ResponseEntity<List<TrabajadorResponse>> response =
+                    trabajadorController.listarTodos(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -137,7 +150,8 @@ class TrabajadorControllerTest {
         void debeRetornar200ConListaVacia() {
             when(trabajadorUseCase.listarTodos()).thenReturn(List.of());
 
-            ResponseEntity<List<TrabajadorResponse>> response = trabajadorController.listarTodos();
+            ResponseEntity<List<TrabajadorResponse>> response =
+                    trabajadorController.listarTodos(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isEmpty());
@@ -515,6 +529,40 @@ class TrabajadorControllerTest {
 
             assertEquals(ErrorCode.INVALID_OPERATION, ex.getErrorCode());
             verify(trabajadorUseCase, times(1)).reactivarTrabajador(1L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Alcance por agricultor
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("Alcance por agricultor")
+    class AlcancePorAgricultor {
+
+        @Test
+        @DisplayName("listar() de un agricultor solo consulta sus trabajadores activos")
+        void listarSoloSusActivos() {
+            when(trabajadorUseCase.listarActivosDe(5L)).thenReturn(List.of(trabajadorBase));
+
+            ResponseEntity<List<TrabajadorResponse>> response =
+                    trabajadorController.listar(auth(5L, Rol.Agricultor));
+
+            assertEquals(1, response.getBody().size());
+            verify(trabajadorUseCase).listarActivosDe(5L);
+            verify(trabajadorUseCase, never()).listarActivos();
+        }
+
+        @Test
+        @DisplayName("listarTodos() de un agricultor solo consulta sus trabajadores")
+        void listarTodosSoloLosSuyos() {
+            when(trabajadorUseCase.listarTodosDe(5L)).thenReturn(List.of(trabajadorBase));
+
+            ResponseEntity<List<TrabajadorResponse>> response =
+                    trabajadorController.listarTodos(auth(5L, Rol.Agricultor));
+
+            assertEquals(1, response.getBody().size());
+            verify(trabajadorUseCase).listarTodosDe(5L);
+            verify(trabajadorUseCase, never()).listarTodos();
         }
     }
 }

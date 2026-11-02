@@ -5,6 +5,7 @@ import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.infrastructure.web.dto.ActividadRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class ActividadCultivoController {
     }
 
     @PostMapping
+    @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
     public ResponseEntity<ActividadCultivo> registrar(@RequestBody ActividadRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 actividadUseCase.registrarActividad(
@@ -30,6 +32,7 @@ public class ActividadCultivoController {
     }
 
     @GetMapping("/siembra/{siembraId}")
+    @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<ActividadCultivo>> listarPorSiembra(@PathVariable Long siembraId) {
         return ResponseEntity.ok(actividadUseCase.listarActividadesPorSiembra(siembraId));
     }

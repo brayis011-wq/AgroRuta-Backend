@@ -1,4 +1,3 @@
-
 package com.agroruta.shared.exception;
 
 import com.agroruta.shared.logging.MdcKeys;
@@ -9,6 +8,8 @@ import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -141,6 +142,44 @@ public class GlobalExceptionHandler {
                 MDC.get(MdcKeys.TRACE_ID)
         );
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(error);
+    }
+
+    // ── 403: autenticado pero sin permiso sobre el recurso ───────────────────
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleAccessDenied(
+            AccessDeniedException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Acceso denegado en {} {}",
+                MDC.get(MdcKeys.TRACE_ID),
+                req.getMethod(),
+                req.getRequestURI());
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.FORBIDDEN.value(),
+                ErrorCode.ACCESS_DENIED,
+                "No tienes permiso para acceder a este recurso",
+                MDC.get(MdcKeys.TRACE_ID)
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    // ── 401: credenciales inválidas / usuario deshabilitado ──────────────────
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuthentication(
+            AuthenticationException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Fallo de autenticación en {} {}",
+                MDC.get(MdcKeys.TRACE_ID),
+                req.getMethod(),
+                req.getRequestURI());
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.UNAUTHORIZED.value(),
+                ErrorCode.AUTHENTICATION_FAILED,
+                "Credenciales inválidas",
+                MDC.get(MdcKeys.TRACE_ID)
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     // ── Error genérico — catch-all con stacktrace completo ───────────────────

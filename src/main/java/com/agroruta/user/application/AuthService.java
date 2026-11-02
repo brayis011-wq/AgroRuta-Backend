@@ -14,8 +14,14 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 @Service
 public class AuthService {
+
+    /** Roles que una persona puede elegir al auto-registrarse. Administrador NUNCA. */
+    private static final Set<Rol> ROLES_AUTOREGISTRO = EnumSet.of(Rol.Agricultor, Rol.Trabajador);
 
     private final RegistrarUsuarioUseCase registrarUsuarioUseCase;
     private final BuscarUsuarioUseCase buscarUsuarioUseCase;
@@ -41,7 +47,7 @@ public class AuthService {
                 request.getNombre(),
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
-                Rol.valueOf(request.getRol())
+                resolverRolAutoRegistro(request.getRol())
         );
 
         Usuario guardado = registrarUsuarioUseCase.registrar(usuario);
@@ -63,7 +69,6 @@ public class AuthService {
                         request.getEmail(),
                         request.getPassword()
                 )
-
         );
 
         Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
@@ -77,5 +82,21 @@ public class AuthService {
                 usuario.getNombre(),
                 usuario.getRol().name()
         );
+    }
+
+    private Rol resolverRolAutoRegistro(String rolSolicitado) {
+        if (rolSolicitado == null || rolSolicitado.isBlank()) {
+            return Rol.Agricultor;
+        }
+        Rol rol;
+        try {
+            rol = Rol.valueOf(rolSolicitado.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Rol no válido. Opciones: Agricultor, Trabajador");
+        }
+        if (!ROLES_AUTOREGISTRO.contains(rol)) {
+            throw new IllegalArgumentException("No es posible registrarse con el rol " + rol.name());
+        }
+        return rol;
     }
 }

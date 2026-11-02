@@ -6,16 +6,22 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-
+import org.springframework.test.util.ReflectionTestUtils;
 import java.lang.reflect.Field;
 import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("CorsConfig")
 class CorsConfigTest {
 
-    private final CorsConfig config = new CorsConfig();
+    private final CorsConfig config = crearConfig();
+
+    private static CorsConfig crearConfig() {
+        CorsConfig c = new CorsConfig();
+        ReflectionTestUtils.setField(c, "allowedOrigins",
+                "http://localhost:4200,http://localhost,http://localhost:80");
+        return c;
+    }
 
     @Test
     @DisplayName("corsFilter() debe retornar una instancia no nula")

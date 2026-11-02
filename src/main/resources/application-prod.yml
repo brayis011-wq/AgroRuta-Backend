@@ -9,7 +9,8 @@ management:
       base-path: /actuator
   endpoint:
     health:
-      show-details: always
+      show-details: when_authorized
+      roles: Administrador
     prometheus:
       enabled: true
   metrics:

@@ -16,6 +16,9 @@ public class Cargo {
     private BigDecimal valorJornal;
     private boolean activo;
 
+    /** Id del usuario (agricultor) dueño de este cargo. */
+    private Long agricultorId;
+
     public Cargo(Long id, String nombre, String descripcion, BigDecimal valorJornal, boolean activo) {
         this.id = id;
         this.nombre = nombre;

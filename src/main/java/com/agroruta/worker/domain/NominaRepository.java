@@ -11,6 +11,7 @@ public interface NominaRepository {
     List<Nomina> buscarPorTrabajador(Long trabajadorId);
     List<Nomina> buscarPorTrabajadorYEstado(Long trabajadorId, EstadoNomina estado);
     List<Nomina> buscarPorPeriodo(LocalDate inicio, LocalDate fin);
+    List<Nomina> listarPorAgricultor(Long agricultorId);
     List<Nomina> listarTodas();
     void eliminar(Long id);
 }
