@@ -6,6 +6,7 @@ import com.agroruta.report.domain.CropReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,17 @@ public class GenerateCropReportService implements GenerateCropReportUseCase {
         return new CropReport(
                 LocalDateTime.now(),
                 cropQueryPort.getAllCropDetails()
+        );
+    }
+
+    @Override
+    public CropReport generateFor(Long agricultorId) {
+        if (agricultorId == null) {
+            return new CropReport(LocalDateTime.now(), List.of());
+        }
+        return new CropReport(
+                LocalDateTime.now(),
+                cropQueryPort.getCropDetailsByAgricultor(agricultorId)
         );
     }
 }
