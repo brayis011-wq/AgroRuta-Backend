@@ -33,4 +33,6 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
         GROUP BY p.nomina.trabajador.id, p.nomina.trabajador.nombre, p.nomina.trabajador.apellido
         """)
     List<WorkerPayrollDetail> findDetailPerWorker();
+    @Query("SELECT p FROM PagoEntity p WHERE p.nomina.trabajador.agricultorId = :agricultorId")
+    List<PagoEntity> findByAgricultorId(@Param("agricultorId") Long agricultorId);
 }

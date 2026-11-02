@@ -10,4 +10,6 @@ interface JpaTrabajadorRepository extends JpaRepository<TrabajadorEntity, Long> 
     Optional<TrabajadorEntity> findByCedula(String cedula);
     boolean existsByCedula(String cedula);
     List<TrabajadorEntity> findByEstado(EstadoTrabajador estado);
+    List<TrabajadorEntity> findByAgricultorId(Long agricultorId);
+    List<TrabajadorEntity> findByAgricultorIdAndEstado(Long agricultorId, EstadoTrabajador estado);
 }

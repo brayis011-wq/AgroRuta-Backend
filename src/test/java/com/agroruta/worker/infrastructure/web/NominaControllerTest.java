@@ -3,6 +3,9 @@ package com.agroruta.worker.infrastructure.web;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.domain.*;
 import com.agroruta.worker.infrastructure.web.dto.NominaRequest;
@@ -17,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,6 +62,11 @@ class NominaControllerTest {
 
         Jornal jornal = new Jornal(1L, FECHA, trabajadorBase, 10L, "Maíz", "Sin observaciones");
         nominaBase = new Nomina(1L, trabajadorBase, INICIO, FIN, List.of(jornal));
+    }
+
+    private Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
     }
 
     private NominaRequest request() {
@@ -208,7 +218,8 @@ class NominaControllerTest {
         void debeRetornar200ConTodasLasNominas() {
             when(nominaUseCase.listarTodas()).thenReturn(List.of(nominaBase));
 
-            ResponseEntity<List<NominaResponse>> response = nominaController.listarTodas();
+            ResponseEntity<List<NominaResponse>> response =
+                    nominaController.listarTodas(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -221,7 +232,8 @@ class NominaControllerTest {
         void debeRetornar200ConListaVacia() {
             when(nominaUseCase.listarTodas()).thenReturn(List.of());
 
-            ResponseEntity<List<NominaResponse>> response = nominaController.listarTodas();
+            ResponseEntity<List<NominaResponse>> response =
+                    nominaController.listarTodas(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isEmpty());
@@ -434,6 +446,27 @@ class NominaControllerTest {
 
             assertEquals(ErrorCode.INVALID_OPERATION, ex.getErrorCode());
             verify(nominaUseCase, times(1)).eliminarNomina(1L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Alcance por agricultor
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("Alcance por agricultor")
+    class AlcancePorAgricultor {
+
+        @Test
+        @DisplayName("listarTodas() de un agricultor solo consulta sus nóminas")
+        void listarTodasSoloLasSuyas() {
+            when(nominaUseCase.listarTodasDe(5L)).thenReturn(List.of(nominaBase));
+
+            ResponseEntity<List<NominaResponse>> response =
+                    nominaController.listarTodas(auth(5L, Rol.Agricultor));
+
+            assertEquals(1, response.getBody().size());
+            verify(nominaUseCase).listarTodasDe(5L);
+            verify(nominaUseCase, never()).listarTodas();
         }
     }
 }

@@ -62,4 +62,9 @@ public class PagoService implements PagoUseCase {
     public List<Pago> listarTodos() {
         return pagoRepository.listarTodos();
     }
+    @Override
+    public List<Pago> listarTodosDe(Long agricultorId) {
+        if (agricultorId == null) return List.of();
+        return pagoRepository.listarPorAgricultor(agricultorId);
+    }
 }

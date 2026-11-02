@@ -10,6 +10,8 @@ public interface TrabajadorRepository {
     Optional<Trabajador> buscarPorCedula(String cedula);
     List<Trabajador> listarTodos();
     List<Trabajador> listarActivos();
+    List<Trabajador> listarTodosPorAgricultor(Long agricultorId);
+    List<Trabajador> listarActivosPorAgricultor(Long agricultorId);
     void eliminar(Long id);
     boolean existePorCedula(String cedula);
 }

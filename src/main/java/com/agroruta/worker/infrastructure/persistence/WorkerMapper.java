@@ -15,7 +15,9 @@ public class WorkerMapper {
 
     public static Cargo toDomain(CargoEntity e) {
         if (e == null) return null;
-        return new Cargo(e.getId(), e.getNombre(), e.getDescripcion(), e.getValorJornal(), e.isActivo());
+        Cargo c = new Cargo(e.getId(), e.getNombre(), e.getDescripcion(), e.getValorJornal(), e.isActivo());
+        c.setAgricultorId(e.getAgricultorId());
+        return c;
     }
 
     public static CargoEntity toEntity(Cargo d) {
@@ -26,6 +28,7 @@ public class WorkerMapper {
         e.setDescripcion(d.getDescripcion());
         e.setValorJornal(d.getValorJornal());
         e.setActivo(d.isActivo());
+        e.setAgricultorId(d.getAgricultorId());
         return e;
     }
 
@@ -58,6 +61,7 @@ public class WorkerMapper {
                 e.getTipoContrato(), toDomain(e.getCargo())
         );
         t.setEstado(e.getEstado());
+        t.setAgricultorId(e.getAgricultorId());
         return t;
     }
 
@@ -74,6 +78,7 @@ public class WorkerMapper {
         e.setEstado(d.getEstado());
         e.setTipoContrato(d.getTipoContrato());
         e.setCargo(toEntity(d.getCargo()));
+        e.setAgricultorId(d.getAgricultorId());
         return e;
     }
 

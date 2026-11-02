@@ -16,4 +16,5 @@ public interface NominaUseCase {
     List<Nomina> listarPendientesPorTrabajador(Long trabajadorId);
     List<Nomina> listarPorPeriodo(LocalDate inicio, LocalDate fin);
     List<Nomina> listarTodas();
+    List<Nomina> listarTodasDe(Long agricultorId);
 }

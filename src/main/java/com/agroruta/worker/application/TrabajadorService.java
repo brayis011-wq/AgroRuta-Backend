@@ -1,16 +1,17 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
-import com.agroruta.worker.domain.CargoRepository;
-import com.agroruta.worker.domain.TrabajadorRepository;
 import com.agroruta.worker.domain.Cargo;
+import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
+import com.agroruta.worker.domain.TrabajadorRepository;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.springframework.stereotype.Service;
-import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
+
 @Service
 public class TrabajadorService implements TrabajadorUseCase {
 
@@ -38,6 +39,8 @@ public class TrabajadorService implements TrabajadorUseCase {
                 null, nombre, apellido, cedula,
                 telefono, direccion, fechaIngreso, tipoContrato, cargo
         );
+        // El dueño es siempre el usuario autenticado, nunca un valor enviado por el cliente
+        trabajador.setAgricultorId(CurrentUser.idActual());
 
         return trabajadorRepository.guardar(trabajador);
     }
@@ -100,5 +103,15 @@ public class TrabajadorService implements TrabajadorUseCase {
 
     public List<Trabajador> listarTodos() {
         return trabajadorRepository.listarTodos();
+    }
+
+    public List<Trabajador> listarActivosDe(Long agricultorId) {
+        if (agricultorId == null) return List.of();
+        return trabajadorRepository.listarActivosPorAgricultor(agricultorId);
+    }
+
+    public List<Trabajador> listarTodosDe(Long agricultorId) {
+        if (agricultorId == null) return List.of();
+        return trabajadorRepository.listarTodosPorAgricultor(agricultorId);
     }
 }

@@ -3,8 +3,12 @@ package com.agroruta.worker.application;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.domain.CargoRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -38,12 +44,17 @@ class CargoServiceTest {
         cargoBase = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
     }
 
+    @AfterEach
+    void limpiarContextoDeSeguridad() {
+        SecurityContextHolder.clearContext();
+    }
+
     // ── crearCargo ────────────────────────────────────────────────────────
 
     @Test
     @DisplayName("crearCargo debe guardar y retornar el cargo cuando el nombre no existe")
     void crearCargo_nombreNuevo_debeGuardarYRetornar() {
-        when(cargoRepository.existsByNombre("Operario")).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorId("Operario", null)).thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(cargoBase);
 
         Cargo resultado = cargoService.crearCargo("Operario", "Cargo base", new BigDecimal("80000"));
@@ -57,7 +68,7 @@ class CargoServiceTest {
     @DisplayName("crearCargo debe crear el cargo con activo en true")
     void crearCargo_debeCrearConActivoEnTrue() {
         Cargo nuevo = new Cargo(null, "Supervisor", "Desc", new BigDecimal("120000"), true);
-        when(cargoRepository.existsByNombre("Supervisor")).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorId("Supervisor", null)).thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(nuevo);
 
         Cargo resultado = cargoService.crearCargo("Supervisor", "Desc", new BigDecimal("120000"));
@@ -68,7 +79,7 @@ class CargoServiceTest {
     @Test
     @DisplayName("crearCargo debe lanzar BusinessException cuando el nombre ya existe")
     void crearCargo_nombreDuplicado_debeLanzarBusinessException() {
-        when(cargoRepository.existsByNombre("Operario")).thenReturn(true);
+        when(cargoRepository.existsByNombreAndAgricultorId("Operario", null)).thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
@@ -80,13 +91,29 @@ class CargoServiceTest {
         verifyNoMoreInteractions(cargoRepository);
     }
 
+    @Test
+    @DisplayName("crearCargo debe asignar como dueño al usuario autenticado")
+    void crearCargo_debeAsignarAgricultorAutenticado() {
+        CustomUserDetails d = new CustomUserDetails(
+                new Usuario(7L, "Dueño", "d@d.com", "pw", Rol.Agricultor));
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities()));
+
+        when(cargoRepository.existsByNombreAndAgricultorId("Operario", 7L)).thenReturn(false);
+        when(cargoRepository.guardar(any(Cargo.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Cargo resultado = cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"));
+
+        assertEquals(7L, resultado.getAgricultorId());
+    }
+
     // ── actualizarCargo ───────────────────────────────────────────────────
 
     @Test
     @DisplayName("actualizarCargo debe modificar y guardar cuando el id existe y el nombre es único")
     void actualizarCargo_idExisteNombreUnico_debeActualizarYGuardar() {
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
-        when(cargoRepository.existsByNombreAndIdNot("Supervisor", 1L)).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", null, 1L)).thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(cargoBase);
 
         Cargo resultado = cargoService.actualizarCargo(1L, "Supervisor", "Nueva desc", new BigDecimal("120000"));
@@ -114,7 +141,7 @@ class CargoServiceTest {
     @DisplayName("actualizarCargo debe lanzar BusinessException cuando el nombre pertenece a otro cargo")
     void actualizarCargo_nombreDuplicadoEnOtro_debeLanzarBusinessException() {
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
-        when(cargoRepository.existsByNombreAndIdNot("Supervisor", 1L)).thenReturn(true);
+        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", null, 1L)).thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
@@ -124,6 +151,19 @@ class CargoServiceTest {
         assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Supervisor"));
         verify(cargoRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("actualizarCargo valida el nombre contra los cargos del dueño del cargo")
+    void actualizarCargo_validaNombreContraElDuenoDelCargo() {
+        cargoBase.setAgricultorId(7L);
+        when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
+        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", 7L, 1L)).thenReturn(false);
+        when(cargoRepository.guardar(any(Cargo.class))).thenReturn(cargoBase);
+
+        cargoService.actualizarCargo(1L, "Supervisor", "Desc", new BigDecimal("120000"));
+
+        verify(cargoRepository).existsByNombreAndAgricultorIdAndIdNot("Supervisor", 7L, 1L);
     }
 
     // ── desactivarCargo ───────────────────────────────────────────────────
@@ -208,6 +248,26 @@ class CargoServiceTest {
         List<Cargo> resultado = cargoService.listarActivos();
 
         assertTrue(resultado.isEmpty());
+    }
+
+    // ── listarActivosDe (por agricultor) ──────────────────────────────────
+
+    @Test
+    @DisplayName("listarActivosDe debe consultar solo los cargos del agricultor")
+    void listarActivosDe_debeFiltrarPorAgricultor() {
+        when(cargoRepository.listarActivosPorAgricultor(7L)).thenReturn(List.of(cargoBase));
+
+        List<Cargo> resultado = cargoService.listarActivosDe(7L);
+
+        assertEquals(1, resultado.size());
+        verify(cargoRepository).listarActivosPorAgricultor(7L);
+    }
+
+    @Test
+    @DisplayName("listarActivosDe con id nulo devuelve lista vacía sin consultar")
+    void listarActivosDe_conIdNulo_debeRetornarVacio() {
+        assertTrue(cargoService.listarActivosDe(null).isEmpty());
+        verifyNoInteractions(cargoRepository);
     }
 
     // ── listarTodos ───────────────────────────────────────────────────────

@@ -18,4 +18,6 @@ interface JpaNominaRepository extends JpaRepository<NominaEntity, Long> {
     List<NominaEntity> findByPeriodo(
             @Param("inicio") LocalDate inicio,
             @Param("fin") LocalDate fin);
+    @Query("SELECT n FROM NominaEntity n WHERE n.trabajador.agricultorId = :agricultorId")
+    List<NominaEntity> findByAgricultorId(@Param("agricultorId") Long agricultorId);
 }

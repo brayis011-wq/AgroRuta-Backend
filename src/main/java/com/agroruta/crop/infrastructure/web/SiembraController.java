@@ -5,6 +5,7 @@ import com.agroruta.crop.domain.Siembra;
 import com.agroruta.crop.infrastructure.web.dto.SiembraRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class SiembraController {
     }
 
     @PostMapping
+    @PreAuthorize("@ownership.lotePropio(#req.loteId, authentication)")
     public ResponseEntity<Siembra> registrar(@RequestBody SiembraRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 siembraUseCase.registrarSiembra(
@@ -30,26 +32,32 @@ public class SiembraController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<Siembra> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(siembraUseCase.buscarSiembraPorId(id));
     }
 
     @GetMapping("/lote/{loteId}")
+    @PreAuthorize("@ownership.lotePropio(#loteId, authentication)")
     public ResponseEntity<Siembra> buscarPorLote(@PathVariable Long loteId) {
         return ResponseEntity.ok(siembraUseCase.buscarSiembraPorLote(loteId));
     }
 
     @PutMapping("/{id}/avanzar-etapa")
+    @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<Siembra> avanzarEtapa(@PathVariable Long id) {
         return ResponseEntity.ok(siembraUseCase.avanzarEtapa(id));
     }
 
+    // Devuelve siembras de TODOS los usuarios: solo administrador
     @GetMapping("/estado/{estado}")
+    @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<Siembra>> listarPorEstado(@PathVariable String estado) {
         return ResponseEntity.ok(siembraUseCase.listarSiembrasPorEstado(estado));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         siembraUseCase.eliminarSiembra(id);
         return ResponseEntity.noContent().build();
