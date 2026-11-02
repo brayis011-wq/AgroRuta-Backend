@@ -27,7 +27,15 @@ public interface TrabajadorUseCase {
 
     Trabajador buscarPorId(Long id);
 
+    /** Todos los activos (uso del Administrador). */
     List<Trabajador> listarActivos();
 
+    /** Todos, de cualquier estado (uso del Administrador). */
     List<Trabajador> listarTodos();
+
+    /** Activos de un agricultor. Si agricultorId es null devuelve lista vacía. */
+    List<Trabajador> listarActivosDe(Long agricultorId);
+
+    /** Todos los de un agricultor. Si agricultorId es null devuelve lista vacía. */
+    List<Trabajador> listarTodosDe(Long agricultorId);
 }

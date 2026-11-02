@@ -17,4 +17,5 @@ public interface PagoUseCase {
     List<Pago> historialPorTrabajador(Long trabajadorId);
 
     List<Pago> listarTodos();
+    List<Pago> listarTodosDe(Long agricultorId);
 }

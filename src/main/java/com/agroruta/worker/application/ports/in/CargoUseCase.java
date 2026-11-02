@@ -14,7 +14,11 @@ public interface CargoUseCase {
 
     Cargo buscarPorId(Long id);
 
+    /** Todos los cargos activos (uso del Administrador). */
     List<Cargo> listarActivos();
+
+    /** Cargos activos de un agricultor. Si agricultorId es null devuelve lista vacía. */
+    List<Cargo> listarActivosDe(Long agricultorId);
 
     List<Cargo> listarTodos();
 }

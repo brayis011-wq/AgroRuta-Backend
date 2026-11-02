@@ -233,4 +233,21 @@ class PagoServiceTest {
 
         assertTrue(pagoService.listarTodos().isEmpty());
     }
+    // ── listarTodosDe (por agricultor) ────────────────────────────────────
+
+    @Test
+    @DisplayName("listarTodosDe debe consultar solo los pagos del agricultor")
+    void listarTodosDe_debeFiltrarPorAgricultor() {
+        when(pagoRepository.listarPorAgricultor(7L)).thenReturn(List.of(mock(Pago.class)));
+
+        assertEquals(1, pagoService.listarTodosDe(7L).size());
+        verify(pagoRepository).listarPorAgricultor(7L);
+    }
+
+    @Test
+    @DisplayName("listarTodosDe con id nulo devuelve lista vacía sin consultar")
+    void listarTodosDe_conIdNulo_debeRetornarVacio() {
+        assertTrue(pagoService.listarTodosDe(null).isEmpty());
+        verify(pagoRepository, never()).listarPorAgricultor(any());
+    }
 }

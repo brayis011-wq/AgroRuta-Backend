@@ -1,6 +1,5 @@
 package com.agroruta.worker.infrastructure.persistence;
 
-
 import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.Trabajador;
 import com.agroruta.worker.domain.TrabajadorRepository;
@@ -35,6 +34,16 @@ class TrabajadorRepositoryImpl implements TrabajadorRepository {
 
     @Override public List<Trabajador> listarActivos() {
         return jpa.findByEstado(EstadoTrabajador.ACTIVO).stream()
+                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override public List<Trabajador> listarTodosPorAgricultor(Long agricultorId) {
+        return jpa.findByAgricultorId(agricultorId).stream()
+                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override public List<Trabajador> listarActivosPorAgricultor(Long agricultorId) {
+        return jpa.findByAgricultorIdAndEstado(agricultorId, EstadoTrabajador.ACTIVO).stream()
                 .map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 

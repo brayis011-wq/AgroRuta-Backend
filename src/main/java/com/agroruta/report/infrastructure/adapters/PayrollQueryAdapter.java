@@ -23,4 +23,15 @@ public class PayrollQueryAdapter implements PayrollQueryPort {
     public List<WorkerPayrollDetail> getDetailPerWorker() {
         return jpaPagoRepository.findDetailPerWorker();
     }
+
+    @Override
+    public BigDecimal getTotalAccumulatedByAgricultor(Long agricultorId) {
+        BigDecimal total = jpaPagoRepository.sumMontoByAgricultorId(agricultorId);
+        return total != null ? total : BigDecimal.ZERO;
+    }
+
+    @Override
+    public List<WorkerPayrollDetail> getDetailPerWorkerByAgricultor(Long agricultorId) {
+        return jpaPagoRepository.findDetailPerWorkerByAgricultorId(agricultorId);
+    }
 }

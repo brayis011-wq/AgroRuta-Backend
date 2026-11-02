@@ -33,4 +33,25 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
         GROUP BY p.nomina.trabajador.id, p.nomina.trabajador.nombre, p.nomina.trabajador.apellido
         """)
     List<WorkerPayrollDetail> findDetailPerWorker();
+
+    @Query("SELECT SUM(p.monto) FROM PagoEntity p WHERE p.nomina.trabajador.agricultorId = :agricultorId")
+    BigDecimal sumMontoByAgricultorId(@Param("agricultorId") Long agricultorId);
+
+    @Query("""
+        SELECT new com.agroruta.report.domain.WorkerPayrollDetail(
+            p.nomina.trabajador.id,
+            CONCAT(p.nomina.trabajador.nombre, ' ', p.nomina.trabajador.apellido),
+            CAST(COUNT(p) AS int),
+            SUM(p.monto),
+            MIN(p.nomina.periodoInicio),
+            MAX(p.nomina.periodoFin),
+            CAST(SUM(p.nomina.totalJornales) AS int)
+        )
+        FROM PagoEntity p
+        WHERE p.nomina.trabajador.agricultorId = :agricultorId
+        GROUP BY p.nomina.trabajador.id, p.nomina.trabajador.nombre, p.nomina.trabajador.apellido
+        """)
+    List<WorkerPayrollDetail> findDetailPerWorkerByAgricultorId(@Param("agricultorId") Long agricultorId);
+    @Query("SELECT p FROM PagoEntity p WHERE p.nomina.trabajador.agricultorId = :agricultorId")
+    List<PagoEntity> findByAgricultorId(@Param("agricultorId") Long agricultorId);
 }

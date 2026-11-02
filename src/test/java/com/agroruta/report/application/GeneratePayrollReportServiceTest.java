@@ -28,6 +28,7 @@ import static org.mockito.Mockito.*;
  *  - workerDetails se propaga sin modificaciones.
  *  - Los dos métodos del puerto se invocan exactamente una vez.
  *  - Casos borde: acumulado cero, lista vacía, múltiples trabajadores.
+ *  - generateFor: solo consulta los pagos del agricultor; con id nulo devuelve vacío.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GeneratePayrollReportService")
@@ -176,6 +177,42 @@ class GeneratePayrollReportServiceTest {
             assertThat(resultado.periodoInicio()).isEqualTo(LocalDate.of(2025, 2, 1));
             assertThat(resultado.periodoFin()).isEqualTo(LocalDate.of(2025, 2, 28));
             assertThat(resultado.totalJornales()).isEqualTo(18);
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // generateFor(agricultorId)
+    // ═════════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("generateFor(agricultorId)")
+    class GenerateFor {
+
+        @Test
+        @DisplayName("debería consultar solo los pagos del agricultor")
+        void deberiaConsultarSoloLosDelAgricultor() {
+            List<WorkerPayrollDetail> detalles =
+                    List.of(detalleMock(1L, "Carlos López", new BigDecimal("1500000")));
+            when(payrollQueryPort.getTotalAccumulatedByAgricultor(7L))
+                    .thenReturn(new BigDecimal("1500000"));
+            when(payrollQueryPort.getDetailPerWorkerByAgricultor(7L)).thenReturn(detalles);
+
+            PayrollReport reporte = service.generateFor(7L);
+
+            assertThat(reporte.totalAccumulated()).isEqualByComparingTo("1500000");
+            assertThat(reporte.workerDetails()).containsExactlyElementsOf(detalles);
+            verify(payrollQueryPort).getTotalAccumulatedByAgricultor(7L);
+            verify(payrollQueryPort).getDetailPerWorkerByAgricultor(7L);
+            verifyNoMoreInteractions(payrollQueryPort);
+        }
+
+        @Test
+        @DisplayName("con id nulo debería devolver un reporte en cero sin consultar")
+        void conIdNuloDeberiaDevolverVacio() {
+            PayrollReport reporte = service.generateFor(null);
+
+            assertThat(reporte.totalAccumulated()).isEqualByComparingTo(BigDecimal.ZERO);
+            assertThat(reporte.workerDetails()).isEmpty();
+            verifyNoInteractions(payrollQueryPort);
         }
     }
 }

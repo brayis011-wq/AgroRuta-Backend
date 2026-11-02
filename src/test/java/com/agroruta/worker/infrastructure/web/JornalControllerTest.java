@@ -3,6 +3,9 @@ package com.agroruta.worker.infrastructure.web;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.domain.Actividad;
 import com.agroruta.worker.domain.Cargo;
@@ -22,6 +25,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,6 +63,11 @@ class JornalControllerTest {
         );
 
         jornalBase = new Jornal(1L, FECHA, trabajadorBase, 10L, "Maíz", "Sin observaciones");
+    }
+
+    private Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
     }
 
     private JornalRequest request() {
@@ -237,7 +247,7 @@ class JornalControllerTest {
             when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of(jornalBase));
 
             ResponseEntity<List<JornalResponse>> response =
-                    jornalController.porCultivo(10L, null, null);
+                    jornalController.porCultivo(10L, null, null, auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -255,7 +265,7 @@ class JornalControllerTest {
                     .thenReturn(List.of(jornalBase));
 
             ResponseEntity<List<JornalResponse>> response =
-                    jornalController.porCultivo(10L, inicio, fin);
+                    jornalController.porCultivo(10L, inicio, fin, auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -270,9 +280,60 @@ class JornalControllerTest {
             when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of());
 
             ResponseEntity<List<JornalResponse>> response =
-                    jornalController.porCultivo(10L, null, null);
+                    jornalController.porCultivo(10L, null, null, auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertTrue(response.getBody().isEmpty());
+        }
+
+        @Test
+        @DisplayName("Un agricultor solo ve los jornales de sus propios trabajadores")
+        void agricultorSoloVeLosDeSusTrabajadores() {
+            trabajadorBase.setAgricultorId(5L);
+            Trabajador ajeno = new Trabajador(
+                    2L, "Ana", "Gómez", "987654321",
+                    "3009876543", "Calle 2", LocalDate.of(2020, 1, 1),
+                    TipoContrato.JORNAL, cargoBase
+            );
+            ajeno.setAgricultorId(6L);
+            Jornal jornalAjeno = new Jornal(2L, FECHA, ajeno, 10L, "Maíz", "De otro usuario");
+            when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of(jornalBase, jornalAjeno));
+
+            ResponseEntity<List<JornalResponse>> response =
+                    jornalController.porCultivo(10L, null, null, auth(5L, Rol.Agricultor));
+
+            assertEquals(1, response.getBody().size());
+            assertEquals(1L, response.getBody().get(0).id);
+        }
+
+        @Test
+        @DisplayName("El Administrador ve los jornales de todos los usuarios")
+        void administradorVeTodos() {
+            trabajadorBase.setAgricultorId(5L);
+            Trabajador ajeno = new Trabajador(
+                    2L, "Ana", "Gómez", "987654321",
+                    "3009876543", "Calle 2", LocalDate.of(2020, 1, 1),
+                    TipoContrato.JORNAL, cargoBase
+            );
+            ajeno.setAgricultorId(6L);
+            Jornal jornalAjeno = new Jornal(2L, FECHA, ajeno, 10L, "Maíz", "De otro usuario");
+            when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of(jornalBase, jornalAjeno));
+
+            ResponseEntity<List<JornalResponse>> response =
+                    jornalController.porCultivo(10L, null, null, auth(99L, Rol.Administrador));
+
+            assertEquals(2, response.getBody().size());
+        }
+
+        @Test
+        @DisplayName("Un usuario sin id no ve jornales aunque haya trabajadores sin dueño")
+        void usuarioSinIdNoVeNada() {
+            // trabajadorBase queda con agricultorId null (dato antiguo sin migrar)
+            when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of(jornalBase));
+
+            ResponseEntity<List<JornalResponse>> response =
+                    jornalController.porCultivo(10L, null, null, auth(null, Rol.Agricultor));
+
             assertTrue(response.getBody().isEmpty());
         }
     }

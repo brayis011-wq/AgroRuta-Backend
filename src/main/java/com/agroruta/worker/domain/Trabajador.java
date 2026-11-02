@@ -21,6 +21,9 @@ public class Trabajador {
     private TipoContrato tipoContrato;
     private Cargo cargo;
 
+    /** Id del usuario (agricultor) dueño de este trabajador. */
+    private Long agricultorId;
+
     public Trabajador(Long id, String nombre, String apellido, String cedula,
                       String telefono, String direccion, LocalDate fechaIngreso,
                       TipoContrato tipoContrato, Cargo cargo) {

@@ -15,6 +15,10 @@ public enum ErrorCode {
     INVALID_ARGUMENT("AGR-020", "Argumento inválido"),
     VALIDATION_FAILED("AGR-021", "Error de validación"),
 
+    // Seguridad
+    ACCESS_DENIED("AGR-030", "Acceso denegado"),
+    AUTHENTICATION_FAILED("AGR-031", "Credenciales inválidas"),
+
     // Sistema
     INTERNAL_ERROR("AGR-500", "Error interno del servidor"),
     EXTERNAL_SERVICE_ERROR("AGR-501", "Error en servicio externo");

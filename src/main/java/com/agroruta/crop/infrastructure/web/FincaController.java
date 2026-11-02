@@ -6,6 +6,7 @@ import com.agroruta.crop.infrastructure.web.dto.ActualizarCentroideFincaRequest;
 import com.agroruta.crop.infrastructure.web.dto.FincaRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +22,7 @@ public class FincaController {
     }
 
     @PostMapping
+    @PreAuthorize("@ownership.esAgricultor(#req.agricultorId, authentication)")
     public ResponseEntity<Finca> registrar(@RequestBody FincaRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 fincaUseCase.registrarFinca(
@@ -31,21 +33,26 @@ public class FincaController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<Finca> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(fincaUseCase.buscarFincaPorId(id));
     }
 
     @GetMapping("/agricultor/{agricultorId}")
+    @PreAuthorize("@ownership.esAgricultor(#agricultorId, authentication)")
     public ResponseEntity<List<Finca>> listarPorAgricultor(@PathVariable Long agricultorId) {
         return ResponseEntity.ok(fincaUseCase.listarFincasPorAgricultor(agricultorId));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         fincaUseCase.eliminarFinca(id);
         return ResponseEntity.noContent().build();
     }
+
     @PatchMapping("/{id}/centroide")
+    @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<Finca> actualizarCentroide(
             @PathVariable Long id,
             @RequestBody ActualizarCentroideFincaRequest request) {

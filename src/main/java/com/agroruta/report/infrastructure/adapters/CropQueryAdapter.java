@@ -4,6 +4,7 @@ import com.agroruta.report.application.ports.out.CropQueryPort;
 import com.agroruta.report.domain.CropDetail;
 import com.agroruta.crop.infrastructure.persistence.JpaCosechaRepository;
 import com.agroruta.crop.infrastructure.persistence.JpaSiembraRepository;
+import com.agroruta.crop.infrastructure.persistence.SiembraEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
@@ -19,7 +20,16 @@ public class CropQueryAdapter implements CropQueryPort {
 
     @Override
     public List<CropDetail> getAllCropDetails() {
-        return jpaSiembraRepository.findAll().stream()
+        return toDetails(jpaSiembraRepository.findAll());
+    }
+
+    @Override
+    public List<CropDetail> getCropDetailsByAgricultor(Long agricultorId) {
+        return toDetails(jpaSiembraRepository.findByAgricultorId(agricultorId));
+    }
+
+    private List<CropDetail> toDetails(List<SiembraEntity> siembras) {
+        return siembras.stream()
                 .map(siembra -> new CropDetail(
                         siembra.getId(),
                         siembra.getVariedad().name(),

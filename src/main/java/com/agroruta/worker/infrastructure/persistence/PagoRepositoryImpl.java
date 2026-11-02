@@ -36,4 +36,8 @@ class PagoRepositoryImpl implements PagoRepository {
     @Override public List<Pago> listarTodos() {
         return jpa.findAll().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
+    @Override public List<Pago> listarPorAgricultor(Long agricultorId) {
+        return jpa.findByAgricultorId(agricultorId).stream()
+                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
 }

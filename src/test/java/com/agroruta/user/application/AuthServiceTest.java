@@ -106,24 +106,66 @@ class AuthServiceTest {
     }
 
     @Test
-    void registrarDeberiaConvertirElRolCorrectamente() {
+    void registrarDeberiaPermitirRolTrabajador() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(Rol.Trabajador.name());
+
+        Usuario usuarioTrabajador = new Usuario(2L, NOMBRE, EMAIL, PASSWORD_ENCODED, Rol.Trabajador);
+        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
+        when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioTrabajador);
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        authService.registrar(request);
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(registrarUsuarioUseCase).registrar(captor.capture());
+        assertEquals(Rol.Trabajador, captor.getValue().getRol());
+    }
+
+    @Test
+    void registrarDeberiaAsignarAgricultorSiNoSeIndicaRol() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(null);
+
+        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
+        when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        authService.registrar(request);
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(registrarUsuarioUseCase).registrar(captor.capture());
+        assertEquals(Rol.Agricultor, captor.getValue().getRol());
+    }
+
+    @Test
+    void registrarDeberiaRechazarRolAdministrador() {
         RegisterRequest request = new RegisterRequest();
         request.setNombre(NOMBRE);
         request.setEmail(EMAIL);
         request.setPassword(PASSWORD);
         request.setRol(Rol.Administrador.name());
 
-        Usuario usuarioAdmin = new Usuario(2L, NOMBRE, EMAIL, PASSWORD_ENCODED, Rol.Administrador);
-        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
-        when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioAdmin);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        assertThrows(IllegalArgumentException.class, () -> authService.registrar(request));
+        verify(registrarUsuarioUseCase, never()).registrar(any(Usuario.class));
+    }
 
-        AuthResponse response = authService.registrar(request);
+    @Test
+    void registrarDeberiaRechazarRolInexistente() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol("SuperUsuario");
 
-        assertEquals(Rol.Administrador.name(), response.getRol());
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(registrarUsuarioUseCase).registrar(captor.capture());
-        assertEquals(Rol.Administrador, captor.getValue().getRol());
+        assertThrows(IllegalArgumentException.class, () -> authService.registrar(request));
+        verify(registrarUsuarioUseCase, never()).registrar(any(Usuario.class));
     }
 
     @Test
@@ -166,8 +208,8 @@ class AuthServiceTest {
     }
 
     @Test
-    void registrarDeberiaCubrirTodosLosRoles() {
-        for (Rol rol : Rol.values()) {
+    void registrarDeberiaCubrirLosRolesPermitidos() {
+        for (Rol rol : new Rol[]{Rol.Agricultor, Rol.Trabajador}) {
             RegisterRequest request = new RegisterRequest();
             request.setNombre(NOMBRE);
             request.setEmail(EMAIL);

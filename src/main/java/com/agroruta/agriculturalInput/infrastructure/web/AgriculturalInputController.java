@@ -76,7 +76,7 @@ public class AgriculturalInputController {
 
     // ── POST /api/v1/agricultural-inputs ─────────────────────────────────────
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<AgriculturalInputResponse> create(
             @Valid @RequestBody AgriculturalInputRequest request) {
 
@@ -89,7 +89,7 @@ public class AgriculturalInputController {
 
     // ── PUT /api/v1/agricultural-inputs/{id} ─────────────────────────────────
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<AgriculturalInputResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody AgriculturalInputRequest request) {
@@ -102,7 +102,7 @@ public class AgriculturalInputController {
 
     // ── DELETE /api/v1/agricultural-inputs/{id} ───────────────────────────────
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         deleteUseCase.delete(id);
         return ResponseEntity.noContent().build();

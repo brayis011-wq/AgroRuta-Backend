@@ -10,4 +10,5 @@ public interface PagoRepository {
     Optional<Pago> buscarPorNomina(Long nominaId);
     List<Pago> buscarPorTrabajador(Long trabajadorId);
     List<Pago> listarTodos();
+    List<Pago> listarPorAgricultor(Long agricultorId);
 }
