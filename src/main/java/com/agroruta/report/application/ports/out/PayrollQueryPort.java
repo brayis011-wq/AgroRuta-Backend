@@ -7,4 +7,6 @@ import java.util.List;
 public interface PayrollQueryPort {
     BigDecimal getTotalAccumulated();
     List<WorkerPayrollDetail> getDetailPerWorker();
+    BigDecimal getTotalAccumulatedByAgricultor(Long agricultorId);
+    List<WorkerPayrollDetail> getDetailPerWorkerByAgricultor(Long agricultorId);
 }

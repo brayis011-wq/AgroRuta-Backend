@@ -46,4 +46,8 @@ class NominaRepositoryImpl implements NominaRepository {
     }
 
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
+    @Override public List<Nomina> listarPorAgricultor(Long agricultorId) {
+        return jpa.findByAgricultorId(agricultorId).stream()
+                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
 }

@@ -3,6 +3,7 @@ package com.agroruta.worker.application;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.Cargo;
 
@@ -23,7 +24,10 @@ public class CargoService implements CargoUseCase {
     @Override
     public Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal) {
 
-        if (cargoRepository.existsByNombre(nombre)) {
+        // El dueño es siempre el usuario autenticado, nunca un valor enviado por el cliente
+        Long agricultorId = CurrentUser.idActual();
+
+        if (cargoRepository.existsByNombreAndAgricultorId(nombre, agricultorId)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_ALREADY_EXISTS,
                     String.format("Ya existe un cargo con el nombre '%s'.", nombre)
@@ -31,6 +35,7 @@ public class CargoService implements CargoUseCase {
         }
 
         Cargo cargo = new Cargo(null, nombre, descripcion, valorJornal, true);
+        cargo.setAgricultorId(agricultorId);
         return cargoRepository.guardar(cargo);
     }
 
@@ -40,7 +45,7 @@ public class CargoService implements CargoUseCase {
         Cargo cargo = cargoRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", id));
 
-        if (cargoRepository.existsByNombreAndIdNot(nombre, id)) {
+        if (cargoRepository.existsByNombreAndAgricultorIdAndIdNot(nombre, cargo.getAgricultorId(), id)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_ALREADY_EXISTS,
                     String.format("Ya existe otro cargo con el nombre '%s'.", nombre)
@@ -68,6 +73,11 @@ public class CargoService implements CargoUseCase {
 
     public List<Cargo> listarActivos() {
         return cargoRepository.listarActivos();
+    }
+
+    public List<Cargo> listarActivosDe(Long agricultorId) {
+        if (agricultorId == null) return List.of();
+        return cargoRepository.listarActivosPorAgricultor(agricultorId);
     }
 
     public List<Cargo> listarTodos() {

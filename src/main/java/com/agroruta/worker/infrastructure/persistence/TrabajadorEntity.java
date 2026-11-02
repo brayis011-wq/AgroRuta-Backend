@@ -43,6 +43,11 @@ public class TrabajadorEntity {
     @JoinColumn(name = "cargo_id", nullable = false)
     private CargoEntity cargo;
 
+    // Nullable a propósito: permite que ddl-auto=update agregue la columna
+    // sobre filas existentes. Se rellena con el SQL de migración.
+    @Column(name = "agricultor_id")
+    private Long agricultorId;
+
     public TrabajadorEntity() {}
 
     // Getters & Setters
@@ -75,4 +80,7 @@ public class TrabajadorEntity {
 
     public CargoEntity getCargo() { return cargo; }
     public void setCargo(CargoEntity cargo) { this.cargo = cargo; }
+
+    public Long getAgricultorId() { return agricultorId; }
+    public void setAgricultorId(Long agricultorId) { this.agricultorId = agricultorId; }
 }

@@ -3,6 +3,9 @@ package com.agroruta.worker.infrastructure.web;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.CargoUseCase;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.infrastructure.web.dto.CargoRequest;
@@ -17,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -43,6 +48,11 @@ class CargoControllerTest {
         cargoBase = new Cargo(1L, "Operario", "Cargo operario", new BigDecimal("80000"), true);
     }
 
+    private Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
+    }
+
     private CargoRequest request(String nombre, String descripcion, BigDecimal valorJornal) {
         CargoRequest req = new CargoRequest();
         req.nombre = nombre;
@@ -67,7 +77,8 @@ class CargoControllerTest {
             );
             when(cargoUseCase.listarActivos()).thenReturn(activos);
 
-            ResponseEntity<List<CargoResponse>> response = cargoController.listar();
+            ResponseEntity<List<CargoResponse>> response =
+                    cargoController.listar(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -82,7 +93,8 @@ class CargoControllerTest {
         void debeRetornar200ConListaVacia() {
             when(cargoUseCase.listarActivos()).thenReturn(List.of());
 
-            ResponseEntity<List<CargoResponse>> response = cargoController.listar();
+            ResponseEntity<List<CargoResponse>> response =
+                    cargoController.listar(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -272,6 +284,27 @@ class CargoControllerTest {
 
             assertTrue(ex.getMessage().contains("99"));
             verify(cargoUseCase, times(1)).desactivarCargo(99L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Alcance por agricultor
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("Alcance por agricultor")
+    class AlcancePorAgricultor {
+
+        @Test
+        @DisplayName("listar() de un agricultor solo consulta sus cargos activos")
+        void listarSoloSusCargos() {
+            when(cargoUseCase.listarActivosDe(5L)).thenReturn(List.of(cargoBase));
+
+            ResponseEntity<List<CargoResponse>> response =
+                    cargoController.listar(auth(5L, Rol.Agricultor));
+
+            assertEquals(1, response.getBody().size());
+            verify(cargoUseCase).listarActivosDe(5L);
+            verify(cargoUseCase, never()).listarActivos();
         }
     }
 }

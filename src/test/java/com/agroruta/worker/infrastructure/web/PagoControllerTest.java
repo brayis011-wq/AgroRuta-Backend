@@ -3,6 +3,9 @@ package com.agroruta.worker.infrastructure.web;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.*;
 import com.agroruta.worker.infrastructure.web.dto.PagoRequest;
@@ -17,6 +20,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -64,6 +69,11 @@ class PagoControllerTest {
                 new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-001"
         );
         pagoBase.setObservaciones("Pago mensual");
+    }
+
+    private Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
     }
 
     private PagoRequest request() {
@@ -256,7 +266,8 @@ class PagoControllerTest {
         void debeRetornar200ConTodosLosPagos() {
             when(pagoUseCase.listarTodos()).thenReturn(List.of(pagoBase));
 
-            ResponseEntity<List<PagoResponse>> response = pagoController.listarTodos();
+            ResponseEntity<List<PagoResponse>> response =
+                    pagoController.listarTodos(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -269,11 +280,33 @@ class PagoControllerTest {
         void debeRetornar200ConListaVacia() {
             when(pagoUseCase.listarTodos()).thenReturn(List.of());
 
-            ResponseEntity<List<PagoResponse>> response = pagoController.listarTodos();
+            ResponseEntity<List<PagoResponse>> response =
+                    pagoController.listarTodos(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isEmpty());
             verify(pagoUseCase, times(1)).listarTodos();
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Alcance por agricultor
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("Alcance por agricultor")
+    class AlcancePorAgricultor {
+
+        @Test
+        @DisplayName("listarTodos() de un agricultor solo consulta sus pagos")
+        void listarTodosSoloLosSuyos() {
+            when(pagoUseCase.listarTodosDe(5L)).thenReturn(List.of(pagoBase));
+
+            ResponseEntity<List<PagoResponse>> response =
+                    pagoController.listarTodos(auth(5L, Rol.Agricultor));
+
+            assertEquals(1, response.getBody().size());
+            verify(pagoUseCase).listarTodosDe(5L);
+            verify(pagoUseCase, never()).listarTodos();
         }
     }
 }

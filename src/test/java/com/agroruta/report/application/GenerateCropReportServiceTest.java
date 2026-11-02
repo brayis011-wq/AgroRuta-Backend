@@ -26,6 +26,7 @@ import static org.mockito.Mockito.*;
  *  - generatedAt se genera en el momento de la llamada (no nulo, no futuro).
  *  - La lista de detalles se propaga tal cual desde el puerto.
  *  - Casos borde: lista vacía, un elemento, múltiples elementos.
+ *  - generateFor: solo consulta los cultivos del agricultor; con id nulo devuelve vacío.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GenerateCropReportService")
@@ -156,6 +157,36 @@ class GenerateCropReportServiceTest {
             assertThat(resultado.diasDesdeSiembra()).isEqualTo(300L);
             assertThat(resultado.totalKgCosechado()).isEqualTo(1200.75);
             assertThat(resultado.totalCosechas()).isEqualTo(8);
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    // generateFor(agricultorId)
+    // ═════════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("generateFor(agricultorId)")
+    class GenerateFor {
+
+        @Test
+        @DisplayName("debería consultar solo los cultivos del agricultor")
+        void deberiaConsultarSoloLosDelAgricultor() {
+            List<CropDetail> detalles = List.of(detalleMock(1L, "AURORA"));
+            when(cropQueryPort.getCropDetailsByAgricultor(7L)).thenReturn(detalles);
+
+            CropReport reporte = service.generateFor(7L);
+
+            assertThat(reporte.cropDetails()).containsExactlyElementsOf(detalles);
+            verify(cropQueryPort).getCropDetailsByAgricultor(7L);
+            verifyNoMoreInteractions(cropQueryPort);
+        }
+
+        @Test
+        @DisplayName("con id nulo debería devolver un reporte vacío sin consultar")
+        void conIdNuloDeberiaDevolverVacio() {
+            CropReport reporte = service.generateFor(null);
+
+            assertThat(reporte.cropDetails()).isEmpty();
+            verifyNoInteractions(cropQueryPort);
         }
     }
 }

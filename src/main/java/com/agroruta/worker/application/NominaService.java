@@ -128,4 +128,9 @@ public class NominaService implements NominaUseCase {
     public List<Nomina> listarTodas() {
         return nominaRepository.listarTodas();
     }
+    @Override
+    public List<Nomina> listarTodasDe(Long agricultorId) {
+        if (agricultorId == null) return List.of();
+        return nominaRepository.listarPorAgricultor(agricultorId);
+    }
 }

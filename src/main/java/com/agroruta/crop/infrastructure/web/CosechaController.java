@@ -5,6 +5,7 @@ import com.agroruta.crop.domain.Cosecha;
 import com.agroruta.crop.infrastructure.web.dto.CosechaRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class CosechaController {
     }
 
     @PostMapping
+    @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
     public ResponseEntity<Cosecha> registrar(@RequestBody CosechaRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 cosechaUseCase.registrarCosecha(
@@ -30,11 +32,13 @@ public class CosechaController {
     }
 
     @GetMapping("/siembra/{siembraId}")
+    @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<Cosecha>> listarPorSiembra(@PathVariable Long siembraId) {
         return ResponseEntity.ok(cosechaUseCase.listarCosechasPorSiembra(siembraId));
     }
 
     @GetMapping("/siembra/{siembraId}/total-kg")
+    @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<Double> totalKgCosechado(@PathVariable Long siembraId) {
         return ResponseEntity.ok(cosechaUseCase.totalKgCosechado(siembraId));
     }

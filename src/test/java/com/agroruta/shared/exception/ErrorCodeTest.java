@@ -11,9 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ErrorCodeTest {
 
     @Test
-    @DisplayName("debe contener exactamente 8 códigos definidos")
-    void shouldContainExactlyEightCodes() {
-        assertThat(ErrorCode.values()).hasSize(8);
+    @DisplayName("debe contener exactamente 10 códigos definidos")
+    void shouldContainExactlyTenCodes() {
+        assertThat(ErrorCode.values()).hasSize(10);
     }
 
     @ParameterizedTest(name = "{0} debe tener code y defaultMessage no nulos ni vacíos")
@@ -77,6 +77,18 @@ class ErrorCodeTest {
     @DisplayName("VALIDATION_FAILED debe tener code AGR-021")
     void validationFailedShouldHaveCorrectCode() {
         assertThat(ErrorCode.VALIDATION_FAILED.getCode()).isEqualTo("AGR-021");
+    }
+
+    @Test
+    @DisplayName("ACCESS_DENIED debe tener code AGR-030")
+    void accessDeniedShouldHaveCorrectCode() {
+        assertThat(ErrorCode.ACCESS_DENIED.getCode()).isEqualTo("AGR-030");
+    }
+
+    @Test
+    @DisplayName("AUTHENTICATION_FAILED debe tener code AGR-031")
+    void authenticationFailedShouldHaveCorrectCode() {
+        assertThat(ErrorCode.AUTHENTICATION_FAILED.getCode()).isEqualTo("AGR-031");
     }
 
     @Test

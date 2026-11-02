@@ -418,4 +418,21 @@ class NominaServiceTest {
 
         assertTrue(nominaService.listarTodas().isEmpty());
     }
+    // ── listarTodasDe (por agricultor) ────────────────────────────────────
+
+    @Test
+    @DisplayName("listarTodasDe debe consultar solo las nóminas del agricultor")
+    void listarTodasDe_debeFiltrarPorAgricultor() {
+        when(nominaRepository.listarPorAgricultor(7L)).thenReturn(List.of(mock(Nomina.class)));
+
+        assertEquals(1, nominaService.listarTodasDe(7L).size());
+        verify(nominaRepository).listarPorAgricultor(7L);
+    }
+
+    @Test
+    @DisplayName("listarTodasDe con id nulo devuelve lista vacía sin consultar")
+    void listarTodasDe_conIdNulo_debeRetornarVacio() {
+        assertTrue(nominaService.listarTodasDe(null).isEmpty());
+        verify(nominaRepository, never()).listarPorAgricultor(any());
+    }
 }

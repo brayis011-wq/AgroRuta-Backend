@@ -7,6 +7,9 @@ import com.agroruta.report.domain.CropReport;
 import com.agroruta.report.domain.PayrollReport;
 import com.agroruta.report.domain.WorkerPayrollDetail;
 import com.agroruta.report.infrastructure.pdf.PdfReportService;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -16,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -51,11 +56,19 @@ class ReportControllerTest {
     private PayrollReport payrollReportEjemplo;
     private CropReport cropReportEjemplo;
     private byte[] pdfBytes;
+    private Authentication admin;
+
+    private Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
+    }
 
     @BeforeEach
     void configurar() {
 
         mockMvc = MockMvcBuilders.standaloneSetup(reportController).build();
+
+        admin = auth(99L, Rol.Administrador);
 
         pdfBytes = new byte[]{0x25, 0x50, 0x44, 0x46};
 
@@ -106,6 +119,7 @@ class ReportControllerTest {
                     .thenReturn(pdfBytes);
 
             mockMvc.perform(get("/api/reports/payroll")
+                            .principal(admin)
                             .accept(MediaType.APPLICATION_PDF))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -131,7 +145,7 @@ class ReportControllerTest {
                     .thenThrow(new RuntimeException("Error generando reporte"));
 
             assertThatThrownBy(() ->
-                    mockMvc.perform(get("/api/reports/payroll")))
+                    mockMvc.perform(get("/api/reports/payroll").principal(admin)))
                     .hasRootCauseInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Error generando reporte");
         }
@@ -152,6 +166,7 @@ class ReportControllerTest {
                     .thenReturn(pdfBytes);
 
             mockMvc.perform(get("/api/reports/crops")
+                            .principal(admin)
                             .accept(MediaType.APPLICATION_PDF))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_PDF))
@@ -177,7 +192,7 @@ class ReportControllerTest {
                     .thenThrow(new RuntimeException("Error generando reporte"));
 
             assertThatThrownBy(() ->
-                    mockMvc.perform(get("/api/reports/crops")))
+                    mockMvc.perform(get("/api/reports/crops").principal(admin)))
                     .hasRootCauseInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Error generando reporte");
         }
@@ -195,6 +210,7 @@ class ReportControllerTest {
                     .thenReturn(payrollReportEjemplo);
 
             mockMvc.perform(get("/api/reports/payroll/preview")
+                            .principal(admin)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -212,7 +228,7 @@ class ReportControllerTest {
                     .thenThrow(new RuntimeException("Error preview payroll"));
 
             assertThatThrownBy(() ->
-                    mockMvc.perform(get("/api/reports/payroll/preview")))
+                    mockMvc.perform(get("/api/reports/payroll/preview").principal(admin)))
                     .hasRootCauseInstanceOf(RuntimeException.class);
         }
     }
@@ -229,6 +245,7 @@ class ReportControllerTest {
                     .thenReturn(cropReportEjemplo);
 
             mockMvc.perform(get("/api/reports/crops/preview")
+                            .principal(admin)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
@@ -246,8 +263,43 @@ class ReportControllerTest {
                     .thenThrow(new RuntimeException("Error preview crop"));
 
             assertThatThrownBy(() ->
-                    mockMvc.perform(get("/api/reports/crops/preview")))
+                    mockMvc.perform(get("/api/reports/crops/preview").principal(admin)))
                     .hasRootCauseInstanceOf(RuntimeException.class);
+        }
+    }
+
+    @Nested
+    @DisplayName("Alcance por agricultor")
+    class AlcancePorAgricultor {
+
+        @Test
+        @DisplayName("Un agricultor recibe solo su reporte de nómina")
+        void agricultorUsaGenerateForEnPayroll() throws Exception {
+
+            when(generatePayrollReport.generateFor(5L)).thenReturn(payrollReportEjemplo);
+
+            mockMvc.perform(get("/api/reports/payroll/preview")
+                            .principal(auth(5L, Rol.Agricultor))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+
+            verify(generatePayrollReport).generateFor(5L);
+            verify(generatePayrollReport, never()).generate();
+        }
+
+        @Test
+        @DisplayName("Un agricultor recibe solo su reporte de cultivos")
+        void agricultorUsaGenerateForEnCrops() throws Exception {
+
+            when(generateCropReport.generateFor(5L)).thenReturn(cropReportEjemplo);
+
+            mockMvc.perform(get("/api/reports/crops/preview")
+                            .principal(auth(5L, Rol.Agricultor))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+
+            verify(generateCropReport).generateFor(5L);
+            verify(generateCropReport, never()).generate();
         }
     }
 
