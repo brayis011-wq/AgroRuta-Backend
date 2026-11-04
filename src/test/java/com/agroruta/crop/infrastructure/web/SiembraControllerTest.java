@@ -3,7 +3,7 @@ package com.agroruta.crop.infrastructure.web;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Siembra;
-import com.agroruta.crop.domain.VariedadUchuva;
+import com.agroruta.crop.domain.Variedades;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,15 +48,15 @@ class SiembraControllerTest {
 
     @Test
     void deberiaRegistrarSiembraYRetornar201() throws Exception {
-        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, VariedadUchuva.COLOMBIA, 3L);
-        when(siembraUseCase.registrarSiembra(any(), anyInt(), anyString(), anyLong()))
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
+        when(siembraUseCase.registrarSiembra(any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(siembra);
 
         String body = """
                 {
                     "fechaSiembra": "%s",
                     "cantidadPlantas": 500,
-                    "variedad": "COLOMBIA",
+                    "variedadId": 1,
                     "loteId": 3
                 }
                 """.formatted(FECHA_SIEMBRA);
@@ -67,22 +67,22 @@ class SiembraControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.cantidadPlantas").value(500))
-                .andExpect(jsonPath("$.variedad").value("COLOMBIA"))
+                .andExpect(jsonPath("$.variedad").value("Colombia"))
                 .andExpect(jsonPath("$.estadoCultivo").value("GERMINACION"))
                 .andExpect(jsonPath("$.loteId").value(3));
     }
 
     @Test
     void deberiaRegistrarSiembraConVariedadKenya() throws Exception {
-        Siembra siembra = new Siembra(2L, FECHA_SIEMBRA, 300, VariedadUchuva.KENYA, 4L);
-        when(siembraUseCase.registrarSiembra(any(), anyInt(), anyString(), anyLong()))
+        Siembra siembra = new Siembra(2L, FECHA_SIEMBRA, 300, Variedades.KENYA, 4L);
+        when(siembraUseCase.registrarSiembra(any(), anyInt(), anyLong(), anyLong()))
                 .thenReturn(siembra);
 
         String body = """
                 {
                     "fechaSiembra": "%s",
                     "cantidadPlantas": 300,
-                    "variedad": "KENYA",
+                    "variedadId": 3,
                     "loteId": 4
                 }
                 """.formatted(FECHA_SIEMBRA);
@@ -92,7 +92,7 @@ class SiembraControllerTest {
                         .content(body))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(2L))
-                .andExpect(jsonPath("$.variedad").value("KENYA"))
+                .andExpect(jsonPath("$.variedad").value("Kenya"))
                 .andExpect(jsonPath("$.estadoCultivo").value("GERMINACION"));
     }
 
@@ -102,13 +102,13 @@ class SiembraControllerTest {
 
     @Test
     void deberiaBuscarSiembraPorIdYRetornar200() throws Exception {
-        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, VariedadUchuva.COLOMBIA, 3L);
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         when(siembraUseCase.buscarSiembraPorId(1L)).thenReturn(siembra);
 
         mockMvc.perform(get("/api/siembras/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.variedad").value("COLOMBIA"))
+                .andExpect(jsonPath("$.variedad").value("Colombia"))
                 .andExpect(jsonPath("$.estadoCultivo").value("GERMINACION"))
                 .andExpect(jsonPath("$.loteId").value(3));
     }
@@ -119,14 +119,14 @@ class SiembraControllerTest {
 
     @Test
     void deberiaBuscarSiembraPorLoteYRetornar200() throws Exception {
-        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, VariedadUchuva.COLOMBIA, 3L);
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         when(siembraUseCase.buscarSiembraPorLote(3L)).thenReturn(siembra);
 
         mockMvc.perform(get("/api/siembras/lote/3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.loteId").value(3))
-                .andExpect(jsonPath("$.variedad").value("COLOMBIA"));
+                .andExpect(jsonPath("$.variedad").value("Colombia"));
     }
 
     // ──────────────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ class SiembraControllerTest {
 
     @Test
     void deberiaAvanzarEtapaDeGerminacionACrecimiento() throws Exception {
-        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, VariedadUchuva.COLOMBIA, 3L);
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
         when(siembraUseCase.avanzarEtapa(1L)).thenReturn(siembra);
 
@@ -147,7 +147,7 @@ class SiembraControllerTest {
 
     @Test
     void deberiaAvanzarEtapaHastaProduccion() throws Exception {
-        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, VariedadUchuva.GIGANTE, 3L);
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L);
         siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
         siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
         when(siembraUseCase.avanzarEtapa(1L)).thenReturn(siembra);
@@ -160,7 +160,7 @@ class SiembraControllerTest {
 
     @Test
     void deberiaAvanzarEtapaHastaFinalizado() throws Exception {
-        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, VariedadUchuva.KENYA, 3L);
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.KENYA, 3L);
         siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
         siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
         siembra.avanzarEtapa();  // PRODUCCION  → COSECHA
@@ -179,8 +179,8 @@ class SiembraControllerTest {
 
     @Test
     void deberiaListarSiembrasPorEstado() throws Exception {
-        Siembra s1 = new Siembra(1L, FECHA_SIEMBRA,                500, VariedadUchuva.COLOMBIA, 3L);
-        Siembra s2 = new Siembra(2L, FECHA_SIEMBRA.plusDays(10), 200, VariedadUchuva.GIGANTE,  4L);
+        Siembra s1 = new Siembra(1L, FECHA_SIEMBRA,                500, Variedades.COLOMBIA, 3L);
+        Siembra s2 = new Siembra(2L, FECHA_SIEMBRA.plusDays(10), 200, Variedades.GIGANTE,  4L);
         when(siembraUseCase.listarSiembrasPorEstado("GERMINACION")).thenReturn(List.of(s1, s2));
 
         mockMvc.perform(get("/api/siembras/estado/GERMINACION"))

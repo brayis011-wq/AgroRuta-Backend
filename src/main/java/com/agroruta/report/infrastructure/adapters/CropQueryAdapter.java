@@ -32,7 +32,7 @@ public class CropQueryAdapter implements CropQueryPort {
         return siembras.stream()
                 .map(siembra -> new CropDetail(
                         siembra.getId(),
-                        siembra.getVariedad().name(),
+                        nombreCultivo(siembra),
                         siembra.getEstadoCultivo().name(),
                         siembra.getFechaSiembra(),
                         ChronoUnit.DAYS.between(siembra.getFechaSiembra(), LocalDate.now()),
@@ -40,5 +40,11 @@ public class CropQueryAdapter implements CropQueryPort {
                         jpaCosechaRepository.countBySiembraId(siembra.getId())
                 ))
                 .toList();
+    }
+
+    /** "Café · Castillo"; las siembras antiguas solo tienen la variedad */
+    private static String nombreCultivo(SiembraEntity s) {
+        String tipo = s.getTipoCultivo();
+        return (tipo == null || tipo.isBlank()) ? s.getVariedad() : tipo + " · " + s.getVariedad();
     }
 }

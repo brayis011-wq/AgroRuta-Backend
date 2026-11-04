@@ -2,7 +2,6 @@ package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Siembra;
-import com.agroruta.crop.domain.VariedadUchuva;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +32,7 @@ class SiembraRepositoryImplTest {
     private static final Long          LOTE_ID          = 15L;
     private static final LocalDate     FECHA_SIEMBRA    = LocalDate.of(2024, 3, 1);
     private static final Integer       CANTIDAD_PLANTAS = 200;
-    private static final VariedadUchuva VARIEDAD        = VariedadUchuva.COLOMBIA;
+    private static final String        VARIEDAD         = "Colombia";
     private static final EstadoCultivo  ESTADO          = EstadoCultivo.CRECIMIENTO;
 
     private SiembraEntity entityGuardada;
@@ -83,7 +82,7 @@ class SiembraRepositoryImplTest {
         verify(jpaRepository).save(argThat(entity ->
                 entity.getFechaSiembra()   .equals(FECHA_SIEMBRA)   &&
                         entity.getCantidadPlantas().equals(CANTIDAD_PLANTAS) &&
-                        entity.getVariedad()       == VARIEDAD               &&
+                        VARIEDAD.equals(entity.getVariedad())              &&
                         entity.getEstadoCultivo()  == ESTADO                 &&
                         entity.getLoteId()         .equals(LOTE_ID)
         ));
@@ -166,7 +165,7 @@ class SiembraRepositoryImplTest {
         entity2.setId(2L);
         entity2.setFechaSiembra(FECHA_SIEMBRA.plusDays(10));
         entity2.setCantidadPlantas(150);
-        entity2.setVariedad(VariedadUchuva.GIGANTE);
+        entity2.setVariedad("Gigante");
         entity2.setEstadoCultivo(ESTADO);
         entity2.setLoteId(16L);
 
@@ -177,7 +176,7 @@ class SiembraRepositoryImplTest {
 
         assertEquals(2,                    resultado.size());
         assertEquals(ID,                   resultado.get(0).getId());
-        assertEquals(VariedadUchuva.GIGANTE, resultado.get(1).getVariedad());
+        assertEquals("Gigante", resultado.get(1).getVariedad());
         assertEquals(ESTADO,               resultado.get(1).getEstadoCultivo());
     }
 
@@ -269,11 +268,11 @@ class SiembraRepositoryImplTest {
         }
     }
 
-    // ── Mapeo toDomain – todas las VariedadUchuva ─────────────────
+    // ── Mapeo toDomain – todas las variedades ─────────────────
 
     @Test
     void deberiaMapearCorrectamenteTodosLosValoresDeVariedad() {
-        for (VariedadUchuva variedad : VariedadUchuva.values()) {
+        for (String variedad : List.of("Colombia", "Gigante", "Kenya")) {
             SiembraEntity entity = new SiembraEntity();
             entity.setId(ID);
             entity.setFechaSiembra(FECHA_SIEMBRA);

@@ -34,7 +34,7 @@ class ActividadCultivoServiceTest {
 
     @BeforeEach
     void setUp() {
-        Siembra siembra = new Siembra(siembraId, fecha, 100, VariedadUchuva.COLOMBIA, 1L);
+        Siembra siembra = new Siembra(siembraId, fecha, 100, Variedades.COLOMBIA, 1L);
         when(siembraUseCase.buscarSiembraPorId(siembraId)).thenReturn(siembra);
     }
 
