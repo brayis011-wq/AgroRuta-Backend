@@ -57,7 +57,7 @@ public class CultivoPortAdapter implements CultivoPort {
                 s.getId(), f.getAgricultorId(),
                 f.getId(), f.getNombre(),
                 l.getId(), l.getNombre(),
-                s.getVariedad() != null ? s.getVariedad().name() : null,
+                s.getTipoCultivo(), s.getVariedad(),
                 s.getEstadoCultivo() != null ? s.getEstadoCultivo().name() : null);
     }
 }

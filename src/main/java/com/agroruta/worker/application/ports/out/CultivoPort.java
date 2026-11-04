@@ -18,7 +18,7 @@ public interface CultivoPort {
     record CultivoInfo(Long id, Long agricultorId,
                        Long fincaId, String fincaNombre,
                        Long loteId, String loteNombre,
-                       String variedad, String estado) {
+                       String tipoCultivo, String variedad, String estado) {
 
         public boolean finalizado() {
             return "FINALIZADO".equals(estado);

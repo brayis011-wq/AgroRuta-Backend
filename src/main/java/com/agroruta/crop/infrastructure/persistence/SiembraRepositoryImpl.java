@@ -55,6 +55,8 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         entity.setFechaSiembra(siembra.getFechaSiembra());
         entity.setCantidadPlantas(siembra.getCantidadPlantas());
         entity.setVariedad(siembra.getVariedad());
+        entity.setTipoCultivo(siembra.getTipoCultivo());
+        entity.setVariedadId(siembra.getVariedadId());
         entity.setEstadoCultivo(siembra.getEstadoCultivo());
         entity.setLoteId(siembra.getLoteId());
         return entity;
@@ -66,6 +68,8 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         siembra.setFechaSiembra(entity.getFechaSiembra());
         siembra.setCantidadPlantas(entity.getCantidadPlantas());
         siembra.setVariedad(entity.getVariedad());
+        siembra.setTipoCultivo(entity.getTipoCultivo());
+        siembra.setVariedadId(entity.getVariedadId());
         siembra.setEstadoCultivo(entity.getEstadoCultivo());
         siembra.setLoteId(entity.getLoteId());
         return siembra;
