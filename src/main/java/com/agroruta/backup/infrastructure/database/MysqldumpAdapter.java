@@ -19,7 +19,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Ejecuta mysqldump / mysql como procesos externos.
- * Requiere el cliente instalado en la imagen (apk add mariadb-client).
+ * Requiere el cliente de MySQL 8 (en Docker se instala con apt: mysql-client).
+ * Las opciones del dump son compatibles con MySQL 8 y con TiDB.
  * La contraseña se pasa por la variable de entorno MYSQL_PWD (nunca por argumentos).
  */
 @Component
@@ -57,9 +58,12 @@ public class MysqldumpAdapter implements DatabaseDumpPort {
                 "--port=" + port,
                 "--user=" + username,
                 "--single-transaction",
-                "--routines",
-                "--triggers",
-                "--no-tablespaces"));
+                "--no-tablespaces",
+                // Compatibilidad con TiDB (también funcionan con MySQL 8):
+                "--column-statistics=0",   // TiDB no tiene information_schema.COLUMN_STATISTICS
+                "--set-gtid-purged=OFF",   // TiDB no usa GTID
+                "--skip-triggers",         // TiDB no soporta triggers (la app no los usa)
+                "--skip-add-locks"));      // evita LOCK TABLES al restaurar
         addSslArg(command);
         command.add("--result-file=" + target);
         command.add(database);
