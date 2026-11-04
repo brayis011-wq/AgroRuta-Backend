@@ -42,6 +42,15 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").hasRole("Administrador")
                         .requestMatchers("/api/backups/**").hasRole("Administrador")
                         .requestMatchers("/api/admin/**").hasRole("Administrador")
+                        // Portal del trabajador: solo el rol Trabajador
+                        .requestMatchers("/api/portal/**").hasRole("Trabajador")
+                        // Pantallas de gestión: agricultores y administrador (el trabajador no gestiona nada)
+                        .requestMatchers(
+                                "/api/fincas/**", "/api/lotes/**", "/api/siembras/**", "/api/cosechas/**",
+                                "/api/fumigaciones/**", "/api/actividades/**", "/api/agricultural-inputs/**",
+                                "/api/trabajadores/**", "/api/cargos/**", "/api/jornales/**", "/api/nominas/**",
+                                "/api/pagos/**", "/api/worker/**", "/api/reports/**"
+                        ).hasAnyRole("Agricultor", "Administrador")
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
