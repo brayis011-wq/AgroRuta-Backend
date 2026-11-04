@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -88,12 +89,12 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("registrarJornal debe lanzar IllegalArgumentException cuando el trabajador no existe")
-    void registrarJornal_trabajadorInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("registrarJornal debe lanzar ResourceNotFoundException cuando el trabajador no existe")
+    void registrarJornal_trabajadorInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.registrarJornal(
                         99L, 10L, "Cultivo A", fecha, List.of(), "Obs")
         );
@@ -118,13 +119,13 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("registrarJornal debe lanzar IllegalArgumentException cuando una actividad no existe")
-    void registrarJornal_actividadInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("registrarJornal debe lanzar ResourceNotFoundException cuando una actividad no existe")
+    void registrarJornal_actividadInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.registrarJornal(
                         1L, 10L, "Cultivo A", fecha, List.of(99L), "Obs")
         );
@@ -162,12 +163,12 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("agregarActividad debe lanzar IllegalArgumentException cuando el jornal no existe")
-    void agregarActividad_jornalInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("agregarActividad debe lanzar ResourceNotFoundException cuando el jornal no existe")
+    void agregarActividad_jornalInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.agregarActividad(99L, 1L)
         );
 
@@ -176,13 +177,13 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("agregarActividad debe lanzar IllegalArgumentException cuando la actividad no existe")
-    void agregarActividad_actividadInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("agregarActividad debe lanzar ResourceNotFoundException cuando la actividad no existe")
+    void agregarActividad_actividadInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.agregarActividad(1L, 99L)
         );
 
@@ -222,12 +223,12 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("removerActividad debe lanzar IllegalArgumentException cuando el jornal no existe")
-    void removerActividad_jornalInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("removerActividad debe lanzar ResourceNotFoundException cuando el jornal no existe")
+    void removerActividad_jornalInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.removerActividad(99L, 1L)
         );
 
@@ -236,13 +237,13 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("removerActividad debe lanzar IllegalArgumentException cuando la actividad no existe")
-    void removerActividad_actividadInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("removerActividad debe lanzar ResourceNotFoundException cuando la actividad no existe")
+    void removerActividad_actividadInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.removerActividad(1L, 99L)
         );
 
@@ -280,12 +281,12 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId debe lanzar IllegalArgumentException cuando el id no existe")
-    void buscarPorId_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("buscarPorId debe lanzar ResourceNotFoundException cuando el id no existe")
+    void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.buscarPorId(99L)
         );
 

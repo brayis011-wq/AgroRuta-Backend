@@ -1,5 +1,6 @@
 package com.agroruta.backup.application;
 
+import com.agroruta.backup.domain.BackupFailedException;
 import com.agroruta.backup.application.ports.in.CreateBackupUseCase;
 import com.agroruta.backup.application.ports.in.DeleteBackupUseCase;
 import com.agroruta.backup.application.ports.in.DownloadBackupUseCase;
@@ -107,7 +108,7 @@ public class BackupService implements CreateBackupUseCase,
         dumpPort.dump(storage.pathOf(name));
 
         Backup backup = storage.findByName(name)
-                .orElseThrow(() -> new IllegalStateException("El backup no se generó correctamente: " + name));
+                .orElseThrow(() -> new BackupFailedException("El backup no se generó correctamente: " + name));
 
         log.info("Backup {} creado: {} ({} bytes)", type, backup.name(), backup.sizeBytes());
 

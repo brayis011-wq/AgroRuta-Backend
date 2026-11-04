@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.ActividadCultivo;
@@ -33,7 +34,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
         if (fecha == null)
             throw new BusinessException("La fecha de la actividad es obligatoria.");
 
-        TipoActividad tipoActividad = TipoActividad.valueOf(tipo.toUpperCase());
+        TipoActividad tipoActividad = EnumParser.parse(TipoActividad.class, tipo, "tipo de actividad");
 
         if (actividadRepository.existsByTipoAndFechaAndSiembraId(tipoActividad, fecha, siembraId)) {
             throw new BusinessException(

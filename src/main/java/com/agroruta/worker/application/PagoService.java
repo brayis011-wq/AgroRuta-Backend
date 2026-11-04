@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.NominaRepository;
@@ -44,7 +45,7 @@ public class PagoService implements PagoUseCase {
                               String observaciones) {
 
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + nominaId));
 
         boolean aprobada = EstadoNomina.APROBADA.equals(nomina.getEstado());
@@ -81,7 +82,7 @@ public class PagoService implements PagoUseCase {
     @Override
     public Pago buscarPorId(Long id) {
         return pagoRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Pago no encontrado con id: " + id));
     }
 

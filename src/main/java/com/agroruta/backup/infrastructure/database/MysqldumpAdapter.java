@@ -1,5 +1,6 @@
 package com.agroruta.backup.infrastructure.database;
 
+import com.agroruta.backup.domain.BackupFailedException;
 import com.agroruta.backup.application.ports.out.DatabaseDumpPort;
 import com.agroruta.backup.config.BackupProperties;
 import org.slf4j.Logger;
@@ -107,18 +108,18 @@ public class MysqldumpAdapter implements DatabaseDumpPort {
 
             if (!finished) {
                 process.destroyForcibly();
-                throw new IllegalStateException("Tiempo de espera agotado ejecutando " + command.get(0));
+                throw new BackupFailedException("Tiempo de espera agotado ejecutando " + command.get(0));
             }
             if (process.exitValue() != 0) {
                 String output = Files.readString(logFile);
                 log.error("{} terminó con código {}: {}", command.get(0), process.exitValue(), output);
-                throw new IllegalStateException("Falló la ejecución de " + command.get(0));
+                throw new BackupFailedException("Falló la ejecución de " + command.get(0));
             }
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudo ejecutar " + command.get(0), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new IllegalStateException("Operación de backup interrumpida", e);
+            throw new BackupFailedException("Operación de backup interrumpida", e);
         } finally {
             deleteQuietly(logFile);
         }
