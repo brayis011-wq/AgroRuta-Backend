@@ -1,6 +1,9 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.worker.application.ports.out.CultivoPort;
+import com.agroruta.worker.application.ports.out.CultivoPort.CultivoInfo;
 import com.agroruta.worker.domain.ActividadRepository;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.TrabajadorRepository;
@@ -10,6 +13,7 @@ import com.agroruta.worker.domain.Trabajador;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
@@ -19,13 +23,16 @@ public class JornalService implements JornalUseCase {
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;
     private final ActividadRepository actividadRepository;
+    private final CultivoPort cultivoPort;
 
     public JornalService(JornalRepository jornalRepository,
                          TrabajadorRepository trabajadorRepository,
-                         ActividadRepository actividadRepository) {
+                         ActividadRepository actividadRepository,
+                         CultivoPort cultivoPort) {
         this.jornalRepository = jornalRepository;
         this.trabajadorRepository = trabajadorRepository;
         this.actividadRepository = actividadRepository;
+        this.cultivoPort = cultivoPort;
     }
 
     public Jornal registrarJornal(Long trabajadorId, Long cultivoId, String nombreCultivo,
@@ -38,7 +45,18 @@ public class JornalService implements JornalUseCase {
             throw new IllegalStateException("El trabajador " + trabajador.getNombreCompleto() + " no está activo.");
         }
 
-        Jornal jornal = new Jornal(null, fecha, trabajador, cultivoId, nombreCultivo, observaciones);
+        // El cultivo debe existir, seguir activo y estar en una finca del mismo agricultor.
+        // El nombre se toma del cultivo real (lote · finca), no de lo que envíe el cliente.
+        CultivoInfo cultivo = cultivoPort.buscar(cultivoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Cultivo no encontrado con id: " + cultivoId));
+        if (!Objects.equals(cultivo.agricultorId(), trabajador.getAgricultorId())) {
+            throw new BusinessException("El cultivo no pertenece a tus fincas.");
+        }
+        if (cultivo.finalizado()) {
+            throw new BusinessException("El cultivo de " + cultivo.nombre() + " ya está finalizado.");
+        }
+
+        Jornal jornal = new Jornal(null, fecha, trabajador, cultivoId, cultivo.nombre(), observaciones);
 
         for (Long actividadId : actividadIds) {
             Actividad actividad = actividadRepository.buscarPorId(actividadId)
@@ -90,5 +108,9 @@ public class JornalService implements JornalUseCase {
 
     public List<Jornal> listarPorCultivoYPeriodo(Long cultivoId, LocalDate inicio, LocalDate fin) {
         return jornalRepository.buscarPorCultivoYPeriodo(cultivoId, inicio, fin);
+    }
+
+    public List<CultivoInfo> cultivosDisponibles(Long agricultorId) {
+        return cultivoPort.activosDelAgricultor(agricultorId);
     }
 }

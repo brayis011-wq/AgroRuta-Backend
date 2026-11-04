@@ -19,6 +19,7 @@ public class JornalRequest {
     @Positive(message = "El cultivo no es válido")
     public Long cultivoId;
 
+    // Opcional y se ignora: el backend toma el nombre del cultivo real (lote · finca).
     @Size(max = 150, message = "El nombre del cultivo no puede superar 150 caracteres")
     public String nombreCultivo;
 

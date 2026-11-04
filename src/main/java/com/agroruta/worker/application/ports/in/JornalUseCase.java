@@ -1,5 +1,6 @@
 package com.agroruta.worker.application.ports.in;
 
+import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.domain.Jornal;
 
 import java.time.LocalDate;
@@ -23,4 +24,7 @@ public interface JornalUseCase {
     List<Jornal> listarPorCultivo(Long cultivoId);
 
     List<Jornal> listarPorCultivoYPeriodo(Long cultivoId, LocalDate inicio, LocalDate fin);
+
+    /** Cultivos activos del agricultor, para elegir en qué cultivo se trabajó. */
+    List<CultivoPort.CultivoInfo> cultivosDisponibles(Long agricultorId);
 }
