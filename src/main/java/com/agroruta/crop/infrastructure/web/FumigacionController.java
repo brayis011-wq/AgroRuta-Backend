@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
 import com.agroruta.crop.domain.Fumigacion;
 import com.agroruta.crop.infrastructure.web.dto.FumigacionRequest;
@@ -22,7 +23,7 @@ public class FumigacionController {
 
     @PostMapping
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
-    public ResponseEntity<Fumigacion> registrar(@RequestBody FumigacionRequest req) {
+    public ResponseEntity<Fumigacion> registrar(@Valid @RequestBody FumigacionRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 fumigacionUseCase.registrarFumigacion(
                         req.getFecha(),

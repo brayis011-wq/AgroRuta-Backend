@@ -15,6 +15,7 @@ import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -270,10 +271,22 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
-        @DisplayName("debe retornar el mensaje de validación fijo")
-        void shouldReturnFixedValidationMessage() {
-            MethodArgumentNotValidException ex = buildValidationException(
-                    List.of(fieldError("campo", "error")));
+        @DisplayName("debe usar el primer error de campo como mensaje")
+        void shouldUseFirstFieldErrorAsMessage() {
+            MethodArgumentNotValidException ex = buildValidationException(List.of(
+                    fieldError("email", "El correo no tiene un formato válido"),
+                    fieldError("password", "La contraseña debe tener entre 8 y 72 caracteres")));
+
+            ErrorResponse body = handler.handleValidation(ex, request).getBody();
+
+            assertThat(body).isNotNull();
+            assertThat(body.getMessage()).isEqualTo("El correo no tiene un formato válido");
+        }
+
+        @Test
+        @DisplayName("debe usar el mensaje genérico si no hay errores de campo")
+        void shouldUseGenericMessageWhenNoFieldErrors() {
+            MethodArgumentNotValidException ex = buildValidationException(List.of());
 
             ErrorResponse body = handler.handleValidation(ex, request).getBody();
 
@@ -345,6 +358,27 @@ class GlobalExceptionHandlerTest {
             when(fe.getField()).thenReturn(field);
             when(fe.getDefaultMessage()).thenReturn(message);
             return fe;
+        }
+    }
+
+    // ── handleNotReadable ────────────────────────────────────────────────────
+    @Nested
+    @DisplayName("handleNotReadable")
+    class HandleNotReadable {
+
+        @Test
+        @DisplayName("debe retornar 400 sin exponer el detalle del parser")
+        void shouldReturnBadRequestWithoutParserDetails() {
+            HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
+            when(ex.getMostSpecificCause()).thenReturn(
+                    new IllegalArgumentException("Cannot deserialize value of type `MetodoPago` from String \"BITCOIN\""));
+
+            ResponseEntity<ErrorResponse> response = handler.handleNotReadable(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.VALIDATION_FAILED.getCode());
+            assertThat(response.getBody().getMessage()).doesNotContain("MetodoPago", "BITCOIN");
         }
     }
 

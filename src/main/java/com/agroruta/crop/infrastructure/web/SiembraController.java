@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.Siembra;
 import com.agroruta.crop.infrastructure.web.dto.SiembraRequest;
@@ -22,7 +23,7 @@ public class SiembraController {
 
     @PostMapping
     @PreAuthorize("@ownership.lotePropio(#req.loteId, authentication)")
-    public ResponseEntity<Siembra> registrar(@RequestBody SiembraRequest req) {
+    public ResponseEntity<Siembra> registrar(@Valid @RequestBody SiembraRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 siembraUseCase.registrarSiembra(
                         req.getFechaSiembra(), req.getCantidadPlantas(),

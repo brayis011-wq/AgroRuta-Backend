@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.domain.Jornal;
@@ -26,7 +27,7 @@ public class JornalController {
 
     @PostMapping
     @PreAuthorize("@ownership.trabajadorPropio(#req.trabajadorId, authentication)")
-    public ResponseEntity<JornalResponse> registrar(@RequestBody JornalRequest req) {
+    public ResponseEntity<JornalResponse> registrar(@Valid @RequestBody JornalRequest req) {
         JornalResponse response = JornalResponse.from(
                 jornalUseCase.registrarJornal(
                         req.trabajadorId, req.cultivoId, req.nombreCultivo,

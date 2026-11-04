@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.Pago;
@@ -25,7 +26,7 @@ public class PagoController {
 
     @PostMapping
     @PreAuthorize("@ownership.nominaPropia(#req.nominaId, authentication)")
-    public ResponseEntity<PagoResponse> registrar(@RequestBody PagoRequest req) {
+    public ResponseEntity<PagoResponse> registrar(@Valid @RequestBody PagoRequest req) {
         PagoResponse response = PagoResponse.from(
                 pagoUseCase.registrarPago(
                         req.nominaId, req.monto, req.metodoPago, req.comprobante, req.observaciones
