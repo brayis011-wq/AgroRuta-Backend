@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -87,12 +89,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("registrarTrabajador debe lanzar IllegalArgumentException cuando la cédula ya existe")
-    void registrarTrabajador_cedulaDuplicada_debeLanzarIllegalArgumentException() {
+    @DisplayName("registrarTrabajador debe lanzar BusinessException cuando la cédula ya existe")
+    void registrarTrabajador_cedulaDuplicada_debeLanzarBusinessException() {
         when(trabajadorRepository.existePorCedula("123456")).thenReturn(true);
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        BusinessException ex = assertThrows(
+                BusinessException.class,
                 () -> trabajadorService.registrarTrabajador(
                         "Carlos", "Pérez", "123456", "3001234567", "Calle 1",
                         LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L)
@@ -103,13 +105,13 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("registrarTrabajador debe lanzar IllegalArgumentException cuando el cargo no existe")
-    void registrarTrabajador_cargoInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("registrarTrabajador debe lanzar ResourceNotFoundException cuando el cargo no existe")
+    void registrarTrabajador_cargoInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.existePorCedula("999999")).thenReturn(false);
         when(cargoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.registrarTrabajador(
                         "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
                         LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 99L)
@@ -141,12 +143,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("actualizarTrabajador debe lanzar IllegalArgumentException cuando el id no existe")
-    void actualizarTrabajador_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("actualizarTrabajador debe lanzar ResourceNotFoundException cuando el id no existe")
+    void actualizarTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.actualizarTrabajador(
                         99L, "Nombre", "Apellido", "Tel", "Dir", TipoContrato.JORNAL)
         );
@@ -186,12 +188,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("cambiarCargo debe lanzar IllegalArgumentException cuando el trabajador no existe")
-    void cambiarCargo_trabajadorInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("cambiarCargo debe lanzar ResourceNotFoundException cuando el trabajador no existe")
+    void cambiarCargo_trabajadorInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.cambiarCargo(99L, 2L)
         );
 
@@ -200,13 +202,13 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("cambiarCargo debe lanzar IllegalArgumentException cuando el cargo no existe")
-    void cambiarCargo_cargoInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("cambiarCargo debe lanzar ResourceNotFoundException cuando el cargo no existe")
+    void cambiarCargo_cargoInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(cargoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.cambiarCargo(1L, 99L)
         );
 
@@ -230,12 +232,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("desactivarTrabajador debe lanzar IllegalArgumentException cuando el id no existe")
-    void desactivarTrabajador_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("desactivarTrabajador debe lanzar ResourceNotFoundException cuando el id no existe")
+    void desactivarTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.desactivarTrabajador(99L)
         );
 
@@ -258,12 +260,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("suspenderTrabajador debe lanzar IllegalArgumentException cuando el id no existe")
-    void suspenderTrabajador_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("suspenderTrabajador debe lanzar ResourceNotFoundException cuando el id no existe")
+    void suspenderTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.suspenderTrabajador(99L)
         );
 
@@ -298,12 +300,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("reactivarTrabajador debe lanzar IllegalArgumentException cuando el id no existe")
-    void reactivarTrabajador_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("reactivarTrabajador debe lanzar ResourceNotFoundException cuando el id no existe")
+    void reactivarTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.reactivarTrabajador(99L)
         );
 
@@ -326,12 +328,12 @@ class TrabajadorServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId debe lanzar IllegalArgumentException cuando el id no existe")
-    void buscarPorId_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("buscarPorId debe lanzar ResourceNotFoundException cuando el id no existe")
+    void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> trabajadorService.buscarPorId(99L)
         );
 

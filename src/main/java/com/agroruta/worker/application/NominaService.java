@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.NominaRepository;
 import com.agroruta.worker.domain.TrabajadorRepository;
@@ -33,7 +34,7 @@ public class NominaService implements NominaUseCase {
     @Override
     public Nomina generarNomina(Long trabajadorId, LocalDate periodoInicio, LocalDate periodoFin) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Trabajador no encontrado con id: " + trabajadorId));
 
         List<Jornal> jornalesDisponibles = jornalRepository
@@ -57,7 +58,7 @@ public class NominaService implements NominaUseCase {
     @Override
     public Nomina aprobarNomina(Long nominaId) {
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + nominaId));
         nomina.aprobar();
         return nominaRepository.guardar(nomina);
@@ -66,7 +67,7 @@ public class NominaService implements NominaUseCase {
     @Override
     public void anularNomina(Long nominaId) {
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + nominaId));
         nomina.anular();
         nominaRepository.guardar(nomina);
@@ -75,7 +76,7 @@ public class NominaService implements NominaUseCase {
     @Override
     public Nomina reactivarNomina(Long nominaId) {
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + nominaId));
 
         if (!EstadoNomina.ANULADA.equals(nomina.getEstado())) {
@@ -90,7 +91,7 @@ public class NominaService implements NominaUseCase {
     @Override
     public void eliminarNomina(Long nominaId) {
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + nominaId));
 
         if (!EstadoNomina.PENDIENTE.equals(nomina.getEstado())) {
@@ -104,7 +105,7 @@ public class NominaService implements NominaUseCase {
     @Override
     public Nomina buscarPorId(Long id) {
         return nominaRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + id));
     }
 

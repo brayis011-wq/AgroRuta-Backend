@@ -1,5 +1,6 @@
 package com.agroruta.configuration.infrastructure.persistence;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.configuration.domain.Perfil;
 import com.agroruta.configuration.domain.ProfileRepository;
 import com.agroruta.user.infrastructure.persistence.JpaUsuarioRepository;
@@ -32,7 +33,7 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     @Override
     public Perfil guardar(Perfil perfil) {
         UsuarioEntity entity = jpaUsuarioRepository.findById(perfil.getId())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         entity.setNombre(perfil.getNombre());
         entity.setTelefono(perfil.getTelefono());
@@ -44,7 +45,7 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     @Override
     public void cambiarPassword(Long id, String nuevaPasswordEncriptada) {
         UsuarioEntity entity = jpaUsuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         entity.setPassword(nuevaPasswordEncriptada);
         jpaUsuarioRepository.save(entity);
@@ -54,7 +55,7 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     public String obtenerPasswordHash(Long id) {
         return jpaUsuarioRepository.findById(id)
                 .map(UsuarioEntity::getPassword)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
 
     private Perfil toDomain(UsuarioEntity entity) {

@@ -1,5 +1,6 @@
 package com.agroruta.configuration.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
 import com.agroruta.configuration.application.ports.in.UpdateProfileUseCase;
@@ -26,7 +27,7 @@ public class ProfileService implements GetProfileUseCase,
     @Override
     public Perfil obtenerPorEmail(String email) {
         return perfilRepository.buscarPorEmail(email)
-                .orElseThrow(() -> new RuntimeException("Perfil no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado"));
     }
 
     @Override
@@ -34,7 +35,7 @@ public class ProfileService implements GetProfileUseCase,
     public Perfil actualizar(Long id, String nombre,
                              String telefono, String fotoPerfil) {
         Perfil perfil = perfilRepository.buscarPorId(id)
-                .orElseThrow(() -> new RuntimeException("Perfil no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado"));
 
         perfil.actualizarDatos(nombre, telefono, fotoPerfil);
         return perfilRepository.guardar(perfil);
@@ -47,7 +48,7 @@ public class ProfileService implements GetProfileUseCase,
         String hashActual = perfilRepository.obtenerPasswordHash(id);
 
         if (!passwordEncoder.matches(passwordActual, hashActual)) {
-            throw new RuntimeException("La contraseña actual es incorrecta");
+            throw new IllegalArgumentException("La contraseña actual es incorrecta");
         }
 
         perfilRepository.cambiarPassword(id, passwordEncoder.encode(nuevaPassword));

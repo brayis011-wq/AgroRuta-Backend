@@ -18,7 +18,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.List;
 
@@ -563,6 +568,106 @@ class GlobalExceptionHandlerTest {
 
             assertThat(body).isNotNull();
             assertThat(body.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        }
+    }
+
+    // ── Códigos HTTP correctos por tipo de error ────────────────────────────
+    @Nested
+    @DisplayName("Mapeo de códigos HTTP")
+    class StatusMapping {
+
+        @Test
+        @DisplayName("BusinessException de duplicado debe retornar 409 CONFLICT")
+        void duplicateBusinessExceptionShouldReturn409() {
+            BusinessException ex = new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS, "Ya existe un trabajador con cédula: 123");
+
+            ResponseEntity<ErrorResponse> response = handler.handleBusiness(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getBody().getMessage()).contains("123");
+        }
+
+        @Test
+        @DisplayName("IllegalStateException de AgroRuta debe retornar 409 con su mensaje")
+        void ownIllegalStateShouldReturn409() {
+            IllegalStateException ex =
+                    new IllegalStateException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+
+            ResponseEntity<ErrorResponse> response = handler.handleIllegalState(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.INVALID_OPERATION.getCode());
+            assertThat(response.getBody().getMessage()).contains("PENDIENTE");
+        }
+
+        @Test
+        @DisplayName("IllegalStateException de una librería debe retornar 500 sin exponer el mensaje")
+        void libraryIllegalStateShouldReturn500() {
+            IllegalStateException ex = new IllegalStateException("detalle interno de hibernate");
+            ex.setStackTrace(new StackTraceElement[]{
+                    new StackTraceElement("org.hibernate.Session", "flush", "Session.java", 10)});
+
+            ResponseEntity<ErrorResponse> response = handler.handleIllegalState(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getBody().getMessage()).doesNotContain("hibernate");
+        }
+
+        @Test
+        @DisplayName("Parámetro con tipo inválido debe retornar 400")
+        void typeMismatchShouldReturn400() {
+            MethodArgumentTypeMismatchException ex = mock(MethodArgumentTypeMismatchException.class);
+            when(ex.getName()).thenReturn("id");
+
+            ResponseEntity<ErrorResponse> response = handler.handleTypeMismatch(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().getMessage()).contains("'id'");
+        }
+
+        @Test
+        @DisplayName("Parámetro obligatorio ausente debe retornar 400")
+        void missingParamShouldReturn400() {
+            MissingServletRequestParameterException ex =
+                    new MissingServletRequestParameterException("inicio", "LocalDate");
+
+            ResponseEntity<ErrorResponse> response = handler.handleMissingParam(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody().getMessage()).contains("inicio");
+        }
+
+        @Test
+        @DisplayName("Ruta inexistente debe retornar 404")
+        void noResourceShouldReturn404() {
+            NoResourceFoundException ex = mock(NoResourceFoundException.class);
+
+            ResponseEntity<ErrorResponse> response = handler.handleNoResource(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+            assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.RESOURCE_NOT_FOUND.getCode());
+        }
+
+        @Test
+        @DisplayName("Método HTTP no soportado debe retornar 405")
+        void methodNotSupportedShouldReturn405() {
+            HttpRequestMethodNotSupportedException ex = new HttpRequestMethodNotSupportedException("PUT");
+
+            ResponseEntity<ErrorResponse> response = handler.handleMethodNotSupported(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED);
+            assertThat(response.getBody().getMessage()).contains("PUT");
+        }
+
+        @Test
+        @DisplayName("Content-Type no soportado debe retornar 415")
+        void mediaTypeShouldReturn415() {
+            HttpMediaTypeNotSupportedException ex = new HttpMediaTypeNotSupportedException("text/plain");
+
+            ResponseEntity<ErrorResponse> response = handler.handleMediaType(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNSUPPORTED_MEDIA_TYPE);
         }
     }
 

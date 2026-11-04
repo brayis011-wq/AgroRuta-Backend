@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.ActividadRepository;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.TrabajadorRepository;
@@ -31,7 +32,7 @@ public class JornalService implements JornalUseCase {
                                   LocalDate fecha, List<Long> actividadIds, String observaciones) {
 
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + trabajadorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + trabajadorId));
 
         if (!trabajador.estaActivo()) {
             throw new IllegalStateException("El trabajador " + trabajador.getNombreCompleto() + " no está activo.");
@@ -41,7 +42,7 @@ public class JornalService implements JornalUseCase {
 
         for (Long actividadId : actividadIds) {
             Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                    .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + actividadId));
+                    .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
             jornal.agregarActividad(actividad);
         }
 
@@ -50,10 +51,10 @@ public class JornalService implements JornalUseCase {
 
     public Jornal agregarActividad(Long jornalId, Long actividadId) {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
-                .orElseThrow(() -> new IllegalArgumentException("Jornal no encontrado con id: " + jornalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
 
         Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + actividadId));
+                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
 
         jornal.agregarActividad(actividad);
         return jornalRepository.guardar(jornal);
@@ -61,10 +62,10 @@ public class JornalService implements JornalUseCase {
 
     public Jornal removerActividad(Long jornalId, Long actividadId) {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
-                .orElseThrow(() -> new IllegalArgumentException("Jornal no encontrado con id: " + jornalId));
+                .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
 
         Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + actividadId));
+                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
 
         jornal.removerActividad(actividad);
         return jornalRepository.guardar(jornal);
@@ -72,7 +73,7 @@ public class JornalService implements JornalUseCase {
 
     public Jornal buscarPorId(Long id) {
         return jornalRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Jornal no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + id));
     }
 
     public List<Jornal> listarPorTrabajador(Long trabajadorId) {

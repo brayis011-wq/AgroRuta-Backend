@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.CosechaUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
@@ -37,7 +38,7 @@ public class CosechaService implements CosechaUseCase {
 
         Cosecha cosecha = new Cosecha(
                 null, fecha, cantidadKg,
-                CalidadCosecha.valueOf(calidad.toUpperCase()), observaciones, siembraId
+                EnumParser.parse(CalidadCosecha.class, calidad, "calidad"), observaciones, siembraId
         );
         return cosechaRepository.save(cosecha);
     }

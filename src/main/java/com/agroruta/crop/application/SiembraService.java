@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.*;
@@ -36,7 +37,7 @@ public class SiembraService implements SiembraUseCase {
 
         Siembra siembra = new Siembra(
                 null, fechaSiembra, cantidadPlantas,
-                VariedadUchuva.valueOf(variedad.toUpperCase()), loteId
+                EnumParser.parse(VariedadUchuva.class, variedad, "variedad"), loteId
         );
         return siembraRepository.save(siembra);
     }
@@ -62,7 +63,7 @@ public class SiembraService implements SiembraUseCase {
 
     @Override
     public List<Siembra> listarSiembrasPorEstado(String estado) {
-        EstadoCultivo estadoCultivo = EstadoCultivo.valueOf(estado.toUpperCase());
+        EstadoCultivo estadoCultivo = EnumParser.parse(EstadoCultivo.class, estado, "estado");
         return siembraRepository.findByEstadoCultivo(estadoCultivo);
     }
 

@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -111,12 +112,12 @@ class PagoServiceTest {
     }
 
     @Test
-    @DisplayName("registrarPago debe lanzar IllegalArgumentException cuando la nómina no existe")
-    void registrarPago_nominaInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("registrarPago debe lanzar ResourceNotFoundException cuando la nómina no existe")
+    void registrarPago_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> pagoService.registrarPago(
                         99L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
         );
@@ -232,12 +233,12 @@ class PagoServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId debe lanzar IllegalArgumentException cuando el id no existe")
-    void buscarPorId_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("buscarPorId debe lanzar ResourceNotFoundException cuando el id no existe")
+    void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(pagoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> pagoService.buscarPorId(99L)
         );
 

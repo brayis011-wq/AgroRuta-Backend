@@ -140,12 +140,12 @@ class ActividadServiceTest {
     }
 
     @Test
-    @DisplayName("desactivarActividad debe lanzar IllegalArgumentException cuando el id no existe")
-    void desactivarActividad_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("desactivarActividad debe lanzar ResourceNotFoundException cuando el id no existe")
+    void desactivarActividad_idInexistente_debeLanzarResourceNotFoundException() {
         when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> actividadService.desactivarActividad(99L)
         );
 
@@ -168,12 +168,12 @@ class ActividadServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId debe lanzar IllegalArgumentException cuando el id no existe")
-    void buscarPorId_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("buscarPorId debe lanzar ResourceNotFoundException cuando el id no existe")
+    void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> actividadService.buscarPorId(99L)
         );
 
