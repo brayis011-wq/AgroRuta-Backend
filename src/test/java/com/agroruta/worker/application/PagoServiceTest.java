@@ -24,6 +24,7 @@ class PagoServiceTest {
 
     @Mock private PagoRepository   pagoRepository;
     @Mock private NominaRepository nominaRepository;
+    @Mock private JornalRepository jornalRepository;
 
     @InjectMocks
     private PagoService pagoService;
@@ -32,6 +33,7 @@ class PagoServiceTest {
     private Trabajador trabajador;
     private Jornal     jornal;
     private Nomina     nominaPagada;
+    private Nomina     nominaAprobada;
     private Nomina     nominaPendiente;
     private Pago       pagoBase;
 
@@ -51,6 +53,11 @@ class PagoServiceTest {
         nominaPagada.aprobar();
         nominaPagada.marcarComoPagada();
 
+        nominaAprobada = new Nomina(3L, trabajador,
+                LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30),
+                List.of(new Jornal(2L, LocalDate.of(2024, 6, 12), trabajador, 10L, "Cultivo A", "")));
+        nominaAprobada.aprobar();
+
         nominaPendiente = new Nomina(2L, trabajador,
                 LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30),
                 List.of(jornal));
@@ -62,7 +69,7 @@ class PagoServiceTest {
     // ── registrarPago ─────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("registrarPago debe crear y guardar el pago cuando la nómina está PAGADA y sin pago previo")
+    @DisplayName("registrarPago acepta nóminas PAGADA sin pago (flujo anterior) sin cambiar su estado")
     void registrarPago_datosValidos_debeCrearYGuardar() {
         when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPagada));
         when(pagoRepository.buscarPorNomina(1L)).thenReturn(Optional.empty());
@@ -119,8 +126,8 @@ class PagoServiceTest {
     }
 
     @Test
-    @DisplayName("registrarPago debe lanzar IllegalStateException cuando la nómina no está en estado PAGADA")
-    void registrarPago_nominaNoEnEstadoPagada_debeLanzarIllegalStateException() {
+    @DisplayName("registrarPago debe lanzar IllegalStateException cuando la nómina está PENDIENTE")
+    void registrarPago_nominaPendiente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(2L)).thenReturn(Optional.of(nominaPendiente));
 
         IllegalStateException ex = assertThrows(
@@ -129,7 +136,7 @@ class PagoServiceTest {
                         2L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
         );
 
-        assertTrue(ex.getMessage().contains("PAGADA"));
+        assertTrue(ex.getMessage().contains("APROBADA"));
         verify(pagoRepository, never()).guardar(any());
     }
 
@@ -161,6 +168,53 @@ class PagoServiceTest {
 
         assertNull(resultado.getObservaciones());
         verify(pagoRepository).guardar(any(Pago.class));
+    }
+
+    @Test
+    @DisplayName("registrarPago sobre nómina APROBADA debe dejarla PAGADA y liquidar sus jornales")
+    void registrarPago_nominaAprobada_debePagarYLiquidar() {
+        when(nominaRepository.buscarPorId(3L)).thenReturn(Optional.of(nominaAprobada));
+        when(pagoRepository.buscarPorNomina(3L)).thenReturn(Optional.empty());
+        when(pagoRepository.guardar(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Pago resultado = pagoService.registrarPago(
+                3L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "TRX-1", null);
+
+        assertEquals(EstadoNomina.PAGADA, nominaAprobada.getEstado());
+        nominaAprobada.getJornales().forEach(j -> assertTrue(j.isLiquidado()));
+        verify(jornalRepository, times(1)).guardar(any(Jornal.class));
+        verify(nominaRepository).guardar(nominaAprobada);
+        assertEquals(MetodoPago.TRANSFERENCIA, resultado.getMetodoPago());
+    }
+
+    @Test
+    @DisplayName("registrarPago sobre nómina PAGADA (flujo anterior) no vuelve a liquidar jornales")
+    void registrarPago_nominaPagadaSinPago_noCambiaEstado() {
+        when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPagada));
+        when(pagoRepository.buscarPorNomina(1L)).thenReturn(Optional.empty());
+        when(pagoRepository.guardar(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        pagoService.registrarPago(1L, new BigDecimal("80000"), MetodoPago.EFECTIVO, null, null);
+
+        verifyNoInteractions(jornalRepository);
+        verify(nominaRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("registrarPago debe rechazar un monto distinto al total y dejar la nómina APROBADA")
+    void registrarPago_montoDistinto_debeLanzarIllegalArgumentException() {
+        when(nominaRepository.buscarPorId(3L)).thenReturn(Optional.of(nominaAprobada));
+        when(pagoRepository.buscarPorNomina(3L)).thenReturn(Optional.empty());
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> pagoService.registrarPago(
+                        3L, new BigDecimal("50000"), MetodoPago.EFECTIVO, null, null));
+
+        assertTrue(ex.getMessage().contains("valor total"));
+        assertEquals(EstadoNomina.APROBADA, nominaAprobada.getEstado());
+        verify(pagoRepository, never()).guardar(any());
+        verifyNoInteractions(jornalRepository);
     }
 
     // ── buscarPorId ───────────────────────────────────────────────────────
