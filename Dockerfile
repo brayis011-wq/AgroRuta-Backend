@@ -8,14 +8,19 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# STAGE 2: Imagen final ligera solo con el JAR
-FROM eclipse-temurin:21-jre-alpine
-RUN addgroup -S agroruta && adduser -S agroruta -G agroruta
+# STAGE 2: Imagen final con el JAR y el cliente de MySQL
+# Base Ubuntu (no Alpine) para tener el cliente oficial de MySQL 8:
+# en Alpine solo existe el de MariaDB, que genera dumps que TiDB no siempre acepta.
+FROM eclipse-temurin:21-jre
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends mysql-client wget ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd --system agroruta && useradd --system --gid agroruta --create-home agroruta
 WORKDIR /app
 COPY --from=builder /app/target/*.jar app.jar
 
-# ✅ Crear logs y asignar todo a agroruta ANTES de cambiar de usuario
-RUN mkdir -p /app/logs && chown -R agroruta:agroruta /app
+# Crear logs y backups y asignar todo a agroruta ANTES de cambiar de usuario
+RUN mkdir -p /app/logs /app/backups && chown -R agroruta:agroruta /app
 
 USER agroruta
 EXPOSE 8080
