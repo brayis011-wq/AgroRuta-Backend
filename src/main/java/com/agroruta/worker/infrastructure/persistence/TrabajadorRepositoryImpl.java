@@ -28,6 +28,14 @@ class TrabajadorRepositoryImpl implements TrabajadorRepository {
         return jpa.findByCedula(cedula).map(WorkerMapper::toDomain);
     }
 
+    @Override public Optional<Trabajador> buscarPorCedulaNormalizada(String cedula) {
+        return jpa.findByCedulaNormalizada(cedula).stream().findFirst().map(WorkerMapper::toDomain);
+    }
+
+    @Override public Optional<Trabajador> buscarPorUsuarioId(Long usuarioId) {
+        return jpa.findFirstByUsuarioId(usuarioId).map(WorkerMapper::toDomain);
+    }
+
     @Override public List<Trabajador> listarTodos() {
         return jpa.findAll().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }

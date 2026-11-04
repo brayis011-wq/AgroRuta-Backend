@@ -1,5 +1,6 @@
 package com.agroruta.user.application;
 
+import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.application.ports.out.TokenPort;
@@ -41,6 +42,9 @@ class AuthServiceTest {
 
     @Mock
     private AuthenticationManager authenticationManager;
+
+    @Mock
+    private VinculoTrabajadorPort vinculoTrabajador;
 
     @InjectMocks
     private AuthService authService;
@@ -112,6 +116,7 @@ class AuthServiceTest {
         request.setEmail(EMAIL);
         request.setPassword(PASSWORD);
         request.setRol(Rol.Trabajador.name());
+        request.setCedula("1052334120");
 
         Usuario usuarioTrabajador = new Usuario(2L, NOMBRE, EMAIL, PASSWORD_ENCODED, Rol.Trabajador);
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
@@ -123,6 +128,55 @@ class AuthServiceTest {
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(registrarUsuarioUseCase).registrar(captor.capture());
         assertEquals(Rol.Trabajador, captor.getValue().getRol());
+        verify(vinculoTrabajador).validarCedulaDisponible("1052334120");
+        verify(vinculoTrabajador).solicitarAcceso(2L, NOMBRE, EMAIL, "1052334120");
+    }
+
+    @Test
+    void registrarTrabajadorSinCedulaDeberiaFallar() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(Rol.Trabajador.name());
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> authService.registrar(request));
+
+        assertTrue(ex.getMessage().contains("cédula"));
+        verifyNoInteractions(registrarUsuarioUseCase, vinculoTrabajador);
+    }
+
+    @Test
+    void registrarTrabajadorConCedulaNoRegistradaNoCreaLaCuenta() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(Rol.Trabajador.name());
+        request.setCedula("999999");
+        doThrow(new com.agroruta.shared.exception.BusinessException("Ningún agricultor ha registrado esta cédula."))
+                .when(vinculoTrabajador).validarCedulaDisponible("999999");
+
+        assertThrows(com.agroruta.shared.exception.BusinessException.class, () -> authService.registrar(request));
+
+        verifyNoInteractions(registrarUsuarioUseCase);
+    }
+
+    @Test
+    void registrarAgricultorNoUsaLaCedula() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(Rol.Agricultor.name());
+        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
+        when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        authService.registrar(request);
+
+        verifyNoInteractions(vinculoTrabajador);
     }
 
     @Test
@@ -215,6 +269,7 @@ class AuthServiceTest {
             request.setEmail(EMAIL);
             request.setPassword(PASSWORD);
             request.setRol(rol.name());
+            request.setCedula("1052334120");
 
             Usuario usuario = new Usuario(ID, NOMBRE, EMAIL, PASSWORD_ENCODED, rol);
             when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
