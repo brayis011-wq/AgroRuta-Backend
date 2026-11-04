@@ -16,15 +16,18 @@ public class SiembraService implements SiembraUseCase {
 
     private final SiembraRepository siembraRepository;
     private final LoteUseCase loteUseCase;
+    private final CatalogoCultivoRepository catalogo;
 
-    public SiembraService(SiembraRepository siembraRepository, LoteUseCase loteUseCase) {
+    public SiembraService(SiembraRepository siembraRepository, LoteUseCase loteUseCase,
+                          CatalogoCultivoRepository catalogo) {
         this.siembraRepository = siembraRepository;
         this.loteUseCase = loteUseCase;
+        this.catalogo = catalogo;
     }
 
     @Override
     public Siembra registrarSiembra(LocalDate fechaSiembra, Integer cantidadPlantas,
-                                    String variedad, Long loteId) {
+                                    Long variedadId, Long loteId) {
 
         loteUseCase.buscarLotePorId(loteId);
 
@@ -35,10 +38,15 @@ public class SiembraService implements SiembraUseCase {
             );
         }
 
-        Siembra siembra = new Siembra(
-                null, fechaSiembra, cantidadPlantas,
-                EnumParser.parse(VariedadUchuva.class, variedad, "variedad"), loteId
-        );
+        VariedadCultivo variedad = catalogo.buscarVariedad(variedadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variedad no encontrada con ID: " + variedadId));
+        if (!variedad.isActivo() || !variedad.isTipoCultivoActivo()) {
+            throw new BusinessException(
+                    "La variedad " + variedad.getNombre() + " de " + variedad.getTipoCultivoNombre()
+                            + " ya no está disponible para nuevas siembras.");
+        }
+
+        Siembra siembra = new Siembra(null, fechaSiembra, cantidadPlantas, variedad, loteId);
         return siembraRepository.save(siembra);
     }
 

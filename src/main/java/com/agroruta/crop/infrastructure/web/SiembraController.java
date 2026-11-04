@@ -27,7 +27,7 @@ public class SiembraController {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 siembraUseCase.registrarSiembra(
                         req.getFechaSiembra(), req.getCantidadPlantas(),
-                        req.getVariedad(), req.getLoteId()
+                        req.getVariedadId(), req.getLoteId()
                 )
         );
     }

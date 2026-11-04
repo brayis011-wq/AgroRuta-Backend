@@ -343,7 +343,7 @@ class JornalControllerTest {
     @DisplayName("cultivosDisponibles() devuelve los cultivos activos del usuario autenticado")
     void cultivosDisponibles_usaElUsuarioAutenticado() {
         CultivoPort.CultivoInfo info = new CultivoPort.CultivoInfo(
-                10L, 5L, 3L, "La Esperanza", 4L, "Lote 2", "COLOMBIA", "PRODUCCION");
+                10L, 5L, 3L, "La Esperanza", 4L, "Lote 2", "Uchuva", "Colombia", "PRODUCCION");
         when(jornalUseCase.cultivosDisponibles(5L)).thenReturn(List.of(info));
 
         ResponseEntity<List<CultivoPort.CultivoInfo>> response =
