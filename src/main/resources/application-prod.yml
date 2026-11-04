@@ -29,3 +29,12 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       pool-name: AgroRuta-HikariPool
+
+# ──────────────────────────────────────────
+# SWAGGER - apagado en produccion
+# ──────────────────────────────────────────
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
