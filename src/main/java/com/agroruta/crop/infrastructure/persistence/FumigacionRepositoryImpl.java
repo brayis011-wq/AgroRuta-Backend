@@ -40,6 +40,11 @@ public class FumigacionRepositoryImpl implements FumigacionRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public void deleteBySiembraId(Long siembraId) {
+        jpaRepository.deleteBySiembraId(siembraId);
+    }
+
     private FumigacionEntity toEntity(Fumigacion fumigacion) {
         FumigacionEntity entity = new FumigacionEntity();
         entity.setId(fumigacion.getId());

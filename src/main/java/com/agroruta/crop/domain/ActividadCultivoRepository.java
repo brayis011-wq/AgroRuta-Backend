@@ -9,5 +9,6 @@ public interface ActividadCultivoRepository {
     Optional<ActividadCultivo> findById(Long id);
     List<ActividadCultivo> findBySiembraId(Long siembraId);
     void deleteById(Long id);
+    void deleteBySiembraId(Long siembraId);
     boolean existsByTipoAndFechaAndSiembraId(TipoActividad tipo, LocalDate fecha, Long siembraId);  // ← nuevo
 }

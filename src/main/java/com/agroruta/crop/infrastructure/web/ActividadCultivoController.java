@@ -32,6 +32,28 @@ public class ActividadCultivoController {
         );
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("@ownership.actividadPropia(#id, authentication)")
+    public ResponseEntity<ActividadCultivo> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(actividadUseCase.buscarActividadPorId(id));
+    }
+
+    /** La siembra del cuerpo se ignora */
+    @PutMapping("/{id}")
+    @PreAuthorize("@ownership.actividadPropia(#id, authentication)")
+    public ResponseEntity<ActividadCultivo> actualizar(@PathVariable Long id,
+                                                       @Valid @RequestBody ActividadRequest req) {
+        return ResponseEntity.ok(actividadUseCase.actualizarActividad(
+                id, req.getTipo(), req.getDescripcion(), req.getFecha()));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@ownership.actividadPropia(#id, authentication)")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        actividadUseCase.eliminarActividad(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/siembra/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<ActividadCultivo>> listarPorSiembra(@PathVariable Long siembraId) {

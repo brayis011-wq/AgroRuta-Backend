@@ -1,6 +1,7 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -19,4 +20,7 @@ public interface JpaCosechaRepository extends JpaRepository<CosechaEntity, Long>
     // nuevo — cuenta cosechas por siembra
     @Query("SELECT COUNT(c) FROM CosechaEntity c WHERE c.siembraId = :siembraId")
     int countBySiembraId(@Param("siembraId") Long siembraId);
+
+    @Transactional
+    void deleteBySiembraId(Long siembraId);
 }

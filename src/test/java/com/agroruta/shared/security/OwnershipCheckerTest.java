@@ -1,5 +1,8 @@
 package com.agroruta.shared.security;
 
+import com.agroruta.crop.domain.CalidadCosecha;
+import com.agroruta.crop.domain.Cosecha;
+import com.agroruta.crop.domain.CosechaRepository;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.domain.FincaRepository;
 import com.agroruta.crop.domain.Lote;
@@ -46,6 +49,7 @@ class OwnershipCheckerTest {
     @Mock private JornalRepository jornalRepository;
     @Mock private NominaRepository nominaRepository;
     @Mock private PagoRepository pagoRepository;
+    @Mock private CosechaRepository cosechaRepository;
 
     @InjectMocks private OwnershipChecker ownership;
 
@@ -147,6 +151,22 @@ class OwnershipCheckerTest {
 
         assertThat(ownership.pagoPropio(70L, auth(1L, Rol.Agricultor))).isTrue();
         assertThat(ownership.pagoPropio(70L, auth(2L, Rol.Agricultor))).isFalse();
+    }
+
+    @Test
+    @DisplayName("cosechaPropia: sube por siembra, lote y finca hasta el dueño")
+    void cosechaPropia() {
+        when(cosechaRepository.findById(80L)).thenReturn(Optional.of(
+                new Cosecha(80L, LocalDate.of(2026, 5, 1), 20.0, CalidadCosecha.PRIMERA, null, 30L)));
+        Siembra siembra = new Siembra();
+        siembra.setId(30L);
+        siembra.setLoteId(20L);
+        when(siembraRepository.findById(30L)).thenReturn(Optional.of(siembra));
+        when(loteRepository.findById(20L)).thenReturn(Optional.of(new Lote(20L, "L", 1.0, 10L)));
+        when(fincaRepository.findById(10L)).thenReturn(Optional.of(new Finca(10L, "F", "U", 5.0, 1L)));
+
+        assertThat(ownership.cosechaPropia(80L, auth(1L, Rol.Agricultor))).isTrue();
+        assertThat(ownership.cosechaPropia(80L, auth(2L, Rol.Agricultor))).isFalse();
     }
 
     @Test

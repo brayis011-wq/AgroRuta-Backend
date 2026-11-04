@@ -32,6 +32,27 @@ public class CosechaController {
         );
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("@ownership.cosechaPropia(#id, authentication)")
+    public ResponseEntity<Cosecha> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(cosechaUseCase.buscarCosechaPorId(id));
+    }
+
+    /** La siembra del cuerpo se ignora: una cosecha no cambia de siembra */
+    @PutMapping("/{id}")
+    @PreAuthorize("@ownership.cosechaPropia(#id, authentication)")
+    public ResponseEntity<Cosecha> actualizar(@PathVariable Long id, @Valid @RequestBody CosechaRequest req) {
+        return ResponseEntity.ok(cosechaUseCase.actualizarCosecha(
+                id, req.getFecha(), req.getCantidadKg(), req.getCalidad(), req.getObservaciones()));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@ownership.cosechaPropia(#id, authentication)")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        cosechaUseCase.eliminarCosecha(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/siembra/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<Cosecha>> listarPorSiembra(@PathVariable Long siembraId) {

@@ -38,6 +38,28 @@ public class FumigacionController {
         );
     }
 
+    @GetMapping("/{id}")
+    @PreAuthorize("@ownership.fumigacionPropia(#id, authentication)")
+    public ResponseEntity<Fumigacion> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(fumigacionUseCase.buscarFumigacionPorId(id));
+    }
+
+    /** La siembra del cuerpo se ignora */
+    @PutMapping("/{id}")
+    @PreAuthorize("@ownership.fumigacionPropia(#id, authentication)")
+    public ResponseEntity<Fumigacion> actualizar(@PathVariable Long id, @Valid @RequestBody FumigacionRequest req) {
+        return ResponseEntity.ok(fumigacionUseCase.actualizarFumigacion(
+                id, req.getFecha(), req.getProducto(), req.getAgriculturalInputId(), req.getDosis(),
+                req.getUnidadMedida(), req.getAreaAplicada(), req.getObservaciones()));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@ownership.fumigacionPropia(#id, authentication)")
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        fumigacionUseCase.eliminarFumigacion(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/siembra/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<Fumigacion>> listarPorSiembra(@PathVariable Long siembraId) {

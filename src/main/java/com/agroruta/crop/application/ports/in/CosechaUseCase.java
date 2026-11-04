@@ -9,4 +9,8 @@ public interface CosechaUseCase {
                              String calidad, String observaciones, Long siembraId);
     List<Cosecha> listarCosechasPorSiembra(Long siembraId);
     Double totalKgCosechado(Long siembraId);
+    Cosecha buscarCosechaPorId(Long id);
+    Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
+                              String calidad, String observaciones);
+    void eliminarCosecha(Long id);
 }

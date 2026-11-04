@@ -10,5 +10,6 @@ public interface CosechaRepository {
     List<Cosecha> findBySiembraId(Long siembraId);
     Double totalKgBySiembraId(Long siembraId);
     void deleteById(Long id);
+    void deleteBySiembraId(Long siembraId);
     boolean existsByFechaAndSiembraId(LocalDate fecha, Long siembraId);  // ← nuevo
 }

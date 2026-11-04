@@ -74,6 +74,29 @@ class SiembraTest {
     }
 
     @Test
+    void retrocederDesdeFinalizadoReabreLaTemporada() {
+        Siembra siembra = new Siembra(1L, LocalDate.of(2026, 1, 1), 100, Variedades.COLOMBIA, 1L);
+        siembra.finalizar(LocalDate.of(2026, 6, 1));
+        assertFalse(siembra.estaActiva());
+        assertEquals(LocalDate.of(2026, 6, 1), siembra.getFechaFin());
+
+        siembra.retrocederEtapa();
+
+        assertTrue(siembra.estaActiva());
+        assertEquals(EstadoCultivo.COSECHA, siembra.getEstadoCultivo());
+        assertNull(siembra.getFechaFin());
+    }
+
+    @Test
+    void noSeRetrocedeDesdeGerminacionNiSeFinalizaDosVeces() {
+        Siembra siembra = new Siembra(1L, LocalDate.of(2026, 1, 1), 100, Variedades.COLOMBIA, 1L);
+        assertThrows(IllegalStateException.class, siembra::retrocederEtapa);
+
+        siembra.finalizar(LocalDate.of(2026, 2, 1));
+        assertThrows(IllegalStateException.class, () -> siembra.finalizar(LocalDate.of(2026, 2, 2)));
+    }
+
+    @Test
     void deberiaSoportarTodasLasVariedades() {
         for (VariedadCultivo variedad : Variedades.TODAS) {
             Siembra siembra = new Siembra(1L, LocalDate.now(), 100, variedad, 1L);

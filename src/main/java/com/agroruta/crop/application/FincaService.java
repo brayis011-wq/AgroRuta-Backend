@@ -52,6 +52,19 @@ public class FincaService implements FincaUseCase {
         fincaRepository.deleteById(id);
     }
     @Override
+    public Finca actualizarFinca(Long id, String nombre, String ubicacion, Double hectareas) {
+        Finca finca = buscarFincaPorId(id);
+        boolean cambiaNombre = nombre != null && !nombre.trim().equalsIgnoreCase(finca.getNombre());
+        if (cambiaNombre && fincaRepository.existsByNombreAndAgricultorId(nombre.trim(), finca.getAgricultorId())) {
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    String.format("Ya tienes una finca registrada con el nombre '%s'", nombre.trim()));
+        }
+        finca.editar(nombre, ubicacion, hectareas);
+        return fincaRepository.save(finca);
+    }
+
+    @Override
     public Finca actualizarCentroideFinca(Long fincaId, Double lat, Double lng) {
         Finca finca = buscarFincaPorId(fincaId);
         finca.actualizarCentroide(lat, lng);

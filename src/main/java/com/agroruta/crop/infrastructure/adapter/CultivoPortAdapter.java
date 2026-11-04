@@ -44,8 +44,7 @@ public class CultivoPortAdapter implements CultivoPort {
         if (agricultorId == null) return cultivos;
         for (Finca finca : fincaRepository.findByAgricultorId(agricultorId)) {
             for (Lote lote : loteRepository.findByFincaId(finca.getId())) {
-                siembraRepository.findByLoteId(lote.getId())
-                        .filter(s -> s.getEstadoCultivo() != EstadoCultivo.FINALIZADO)
+                siembraRepository.findActivaByLoteId(lote.getId())
                         .ifPresent(s -> cultivos.add(info(s, lote, finca)));
             }
         }

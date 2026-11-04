@@ -45,6 +45,11 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public void deleteBySiembraId(Long siembraId) {
+        jpaRepository.deleteBySiembraId(siembraId);
+    }
+
     private ActividadCultivoEntity toEntity(ActividadCultivo actividad) {
         ActividadCultivoEntity entity = new ActividadCultivoEntity();
         entity.setId(actividad.getId());

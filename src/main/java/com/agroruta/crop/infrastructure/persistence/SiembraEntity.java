@@ -32,8 +32,12 @@ public class SiembraEntity {
     @Column(nullable = false)
     private EstadoCultivo estadoCultivo;
 
-    @Column(nullable = false, unique = true)
+    // Ya no es único: un lote guarda todas sus temporadas (solo una activa a la vez)
+    @Column(nullable = false)
     private Long loteId;
+
+    @Column(name = "fecha_fin")
+    private LocalDate fechaFin;
 
     public SiembraEntity() {}
 
@@ -60,4 +64,7 @@ public class SiembraEntity {
 
     public Long getLoteId() { return loteId; }
     public void setLoteId(Long loteId) { this.loteId = loteId; }
+
+    public LocalDate getFechaFin() { return fechaFin; }
+    public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
 }

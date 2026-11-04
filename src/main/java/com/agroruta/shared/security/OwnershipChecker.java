@@ -1,6 +1,9 @@
 package com.agroruta.shared.security;
 
+import com.agroruta.crop.domain.ActividadCultivoRepository;
+import com.agroruta.crop.domain.CosechaRepository;
 import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.domain.FumigacionRepository;
 import com.agroruta.crop.domain.LoteRepository;
 import com.agroruta.crop.domain.SiembraRepository;
 import com.agroruta.worker.domain.CargoRepository;
@@ -14,7 +17,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Verifica que el usuario autenticado sea dueño del recurso solicitado.
- * Crop:   Finca (agricultorId) -> Lote (fincaId) -> Siembra (loteId).
+ * Crop:   Finca (agricultorId) -> Lote (fincaId) -> Siembra (loteId) -> Cosecha, Fumigación, Actividad.
  * Worker: Trabajador y Cargo (agricultorId); Jornal, Nómina -> Trabajador; Pago -> Nómina.
  * Se usa desde @PreAuthorize("@ownership.xxx(#id, authentication)").
  * Si el recurso no existe o no es del usuario, devuelve false (403).
@@ -31,6 +34,9 @@ public class OwnershipChecker {
     private final NominaRepository nominaRepository;
     private final PagoRepository pagoRepository;
     private final CargoRepository cargoRepository;
+    private final CosechaRepository cosechaRepository;
+    private final FumigacionRepository fumigacionRepository;
+    private final ActividadCultivoRepository actividadCultivoRepository;
 
     public OwnershipChecker(FincaRepository fincaRepository,
                             LoteRepository loteRepository,
@@ -39,7 +45,10 @@ public class OwnershipChecker {
                             JornalRepository jornalRepository,
                             NominaRepository nominaRepository,
                             PagoRepository pagoRepository,
-                            CargoRepository cargoRepository) {
+                            CargoRepository cargoRepository,
+                            CosechaRepository cosechaRepository,
+                            FumigacionRepository fumigacionRepository,
+                            ActividadCultivoRepository actividadCultivoRepository) {
         this.fincaRepository = fincaRepository;
         this.loteRepository = loteRepository;
         this.siembraRepository = siembraRepository;
@@ -48,6 +57,9 @@ public class OwnershipChecker {
         this.nominaRepository = nominaRepository;
         this.pagoRepository = pagoRepository;
         this.cargoRepository = cargoRepository;
+        this.cosechaRepository = cosechaRepository;
+        this.fumigacionRepository = fumigacionRepository;
+        this.actividadCultivoRepository = actividadCultivoRepository;
     }
 
     /** El agricultorId recibido debe ser el del usuario autenticado. */
@@ -81,6 +93,30 @@ public class OwnershipChecker {
         if (CurrentUser.id(auth) == null || siembraId == null) return false;
         return siembraRepository.findById(siembraId)
                 .map(s -> lotePropio(s.getLoteId(), auth))
+                .orElse(false);
+    }
+
+    public boolean cosechaPropia(Long cosechaId, Authentication auth) {
+        if (CurrentUser.esAdmin(auth)) return true;
+        if (CurrentUser.id(auth) == null || cosechaId == null) return false;
+        return cosechaRepository.findById(cosechaId)
+                .map(c -> siembraPropia(c.getSiembraId(), auth))
+                .orElse(false);
+    }
+
+    public boolean fumigacionPropia(Long fumigacionId, Authentication auth) {
+        if (CurrentUser.esAdmin(auth)) return true;
+        if (CurrentUser.id(auth) == null || fumigacionId == null) return false;
+        return fumigacionRepository.findById(fumigacionId)
+                .map(f -> siembraPropia(f.getSiembraId(), auth))
+                .orElse(false);
+    }
+
+    public boolean actividadPropia(Long actividadId, Authentication auth) {
+        if (CurrentUser.esAdmin(auth)) return true;
+        if (CurrentUser.id(auth) == null || actividadId == null) return false;
+        return actividadCultivoRepository.findById(actividadId)
+                .map(a -> siembraPropia(a.getSiembraId(), auth))
                 .orElse(false);
     }
 

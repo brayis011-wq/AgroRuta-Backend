@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Lote;
 import com.agroruta.crop.domain.LoteRepository;
 import org.springframework.stereotype.Repository;
@@ -40,7 +41,7 @@ public class LoteRepositoryImpl implements LoteRepository {
 
     @Override
     public boolean existsSiembraActivaEnLote(Long loteId) {
-        return jpaSiembraRepository.findByLoteId(loteId).isPresent();
+        return jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(loteId, EstadoCultivo.FINALIZADO);
     }
 
     @Override

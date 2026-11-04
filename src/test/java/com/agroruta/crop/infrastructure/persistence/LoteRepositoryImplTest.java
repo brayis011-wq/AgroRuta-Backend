@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Lote;
 import org.junit.jupiter.api.BeforeEach;
@@ -229,27 +230,28 @@ class LoteRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiExisteSiembraActivaEnElLote() {
-        SiembraEntity siembraEntity = new SiembraEntity();
-        when(jpaSiembraRepository.findByLoteId(ID))
-                .thenReturn(Optional.of(siembraEntity));
+        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(true);
 
         assertTrue(repository.existsSiembraActivaEnLote(ID));
     }
 
     @Test
     void deberiaRetornarFalseSiNoExisteSiembraActivaEnElLote() {
-        when(jpaSiembraRepository.findByLoteId(ID)).thenReturn(Optional.empty());
+        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(false);
 
         assertFalse(repository.existsSiembraActivaEnLote(ID));
     }
 
     @Test
     void existsSiembraActivaDeberiaDelegarAlJpaSiembraConElLoteIdCorrecto() {
-        when(jpaSiembraRepository.findByLoteId(ID)).thenReturn(Optional.empty());
+        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(false);
 
         repository.existsSiembraActivaEnLote(ID);
 
-        verify(jpaSiembraRepository, times(1)).findByLoteId(ID);
+        verify(jpaSiembraRepository, times(1)).existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO);
         verifyNoInteractions(jpaRepository);
     }
 

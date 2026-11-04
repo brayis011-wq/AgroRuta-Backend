@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface JpaSiembraRepository extends JpaRepository<SiembraEntity, Long> {
-    Optional<SiembraEntity> findByLoteId(Long loteId);
+    Optional<SiembraEntity> findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(
+            Long loteId, EstadoCultivo estadoCultivo);
+    List<SiembraEntity> findByLoteIdOrderByFechaSiembraDescIdDesc(Long loteId);
+    boolean existsByLoteIdAndEstadoCultivoNot(Long loteId, EstadoCultivo estadoCultivo);
     List<SiembraEntity> findByEstadoCultivo(EstadoCultivo estadoCultivo);
-    boolean existsByLoteId(Long loteId);   // ← nuevo
 
     @Query("""
         SELECT s FROM SiembraEntity s
