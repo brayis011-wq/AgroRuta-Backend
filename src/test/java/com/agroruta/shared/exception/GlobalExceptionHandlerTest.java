@@ -661,6 +661,16 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
+        @DisplayName("Cuenta desactivada debe retornar 401 con mensaje claro")
+        void disabledShouldReturn401() {
+            ResponseEntity<ErrorResponse> response = handler.handleDisabled(
+                    new org.springframework.security.authentication.DisabledException("disabled"), request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+            assertThat(response.getBody().getMessage()).contains("desactivada");
+        }
+
+        @Test
         @DisplayName("Content-Type no soportado debe retornar 415")
         void mediaTypeShouldReturn415() {
             HttpMediaTypeNotSupportedException ex = new HttpMediaTypeNotSupportedException("text/plain");
