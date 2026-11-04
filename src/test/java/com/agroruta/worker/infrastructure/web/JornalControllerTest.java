@@ -7,6 +7,7 @@ import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
+import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.domain.Actividad;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.domain.EstadoTrabajador;
@@ -336,6 +337,20 @@ class JornalControllerTest {
 
             assertTrue(response.getBody().isEmpty());
         }
+    }
+
+    @Test
+    @DisplayName("cultivosDisponibles() devuelve los cultivos activos del usuario autenticado")
+    void cultivosDisponibles_usaElUsuarioAutenticado() {
+        CultivoPort.CultivoInfo info = new CultivoPort.CultivoInfo(
+                10L, 5L, 3L, "La Esperanza", 4L, "Lote 2", "COLOMBIA", "PRODUCCION");
+        when(jornalUseCase.cultivosDisponibles(5L)).thenReturn(List.of(info));
+
+        ResponseEntity<List<CultivoPort.CultivoInfo>> response =
+                jornalController.cultivosDisponibles(auth(5L, Rol.Agricultor));
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Lote 2 · La Esperanza", response.getBody().get(0).nombre());
     }
 
     // ══════════════════════════════════════════════════════════════════════

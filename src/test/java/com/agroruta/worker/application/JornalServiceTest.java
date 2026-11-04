@@ -1,6 +1,9 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.worker.application.ports.out.CultivoPort;
+import com.agroruta.worker.application.ports.out.CultivoPort.CultivoInfo;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +29,7 @@ class JornalServiceTest {
     @Mock private JornalRepository     jornalRepository;
     @Mock private TrabajadorRepository trabajadorRepository;
     @Mock private ActividadRepository  actividadRepository;
+    @Mock private CultivoPort          cultivoPort;
 
     @InjectMocks
     private JornalService jornalService;
@@ -57,6 +61,69 @@ class JornalServiceTest {
         fecha = LocalDate.of(2024, 6, 15);
 
         jornalBase = new Jornal(1L, fecha, trabajadorActivo, 10L, "Cultivo A", "Sin observaciones");
+
+        // El cultivo 10 existe y está en una finca del mismo agricultor (7) que el trabajador
+        trabajadorActivo.setAgricultorId(7L);
+        lenient().when(cultivoPort.buscar(10L)).thenReturn(Optional.of(cultivo(7L, "PRODUCCION")));
+    }
+
+    private static CultivoInfo cultivo(Long agricultorId, String estado) {
+        return new CultivoInfo(10L, agricultorId, 3L, "La Esperanza", 4L, "Lote 2", "COLOMBIA", estado);
+    }
+
+    // ── validación del cultivo ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("registrarJornal guarda el nombre real del cultivo e ignora el que envía el cliente")
+    void registrarJornal_usaNombreRealDelCultivo() {
+        when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
+        when(jornalRepository.guardar(any(Jornal.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Jornal resultado = jornalService.registrarJornal(
+                1L, 10L, "cualquier cosa", fecha, List.of(), "Obs");
+
+        assertEquals("Lote 2 · La Esperanza", resultado.getNombreCultivo());
+    }
+
+    @Test
+    @DisplayName("registrarJornal rechaza un cultivo que no existe")
+    void registrarJornal_cultivoInexistente_debeLanzar404() {
+        when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
+        when(cultivoPort.buscar(555L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> jornalService.registrarJornal(1L, 555L, null, fecha, List.of(), null));
+        verifyNoInteractions(jornalRepository);
+    }
+
+    @Test
+    @DisplayName("registrarJornal rechaza un cultivo de otro agricultor")
+    void registrarJornal_cultivoAjeno_debeLanzarBusinessException() {
+        when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
+        when(cultivoPort.buscar(10L)).thenReturn(Optional.of(cultivo(8L, "PRODUCCION")));
+
+        assertThrows(BusinessException.class,
+                () -> jornalService.registrarJornal(1L, 10L, null, fecha, List.of(), null));
+        verifyNoInteractions(jornalRepository);
+    }
+
+    @Test
+    @DisplayName("registrarJornal rechaza un cultivo finalizado")
+    void registrarJornal_cultivoFinalizado_debeLanzarBusinessException() {
+        when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
+        when(cultivoPort.buscar(10L)).thenReturn(Optional.of(cultivo(7L, "FINALIZADO")));
+
+        BusinessException ex = assertThrows(BusinessException.class,
+                () -> jornalService.registrarJornal(1L, 10L, null, fecha, List.of(), null));
+        assertTrue(ex.getMessage().contains("finalizado"));
+    }
+
+    @Test
+    @DisplayName("cultivosDisponibles delega en el puerto de cultivos")
+    void cultivosDisponibles_delegaEnPuerto() {
+        when(cultivoPort.activosDelAgricultor(7L)).thenReturn(List.of(cultivo(7L, "CRECIMIENTO")));
+
+        assertEquals(1, jornalService.cultivosDisponibles(7L).size());
     }
 
     // ── registrarJornal ───────────────────────────────────────────────────
