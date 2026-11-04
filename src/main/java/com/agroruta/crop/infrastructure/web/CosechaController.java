@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.CosechaUseCase;
 import com.agroruta.crop.domain.Cosecha;
 import com.agroruta.crop.infrastructure.web.dto.CosechaRequest;
@@ -22,7 +23,7 @@ public class CosechaController {
 
     @PostMapping
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
-    public ResponseEntity<Cosecha> registrar(@RequestBody CosechaRequest req) {
+    public ResponseEntity<Cosecha> registrar(@Valid @RequestBody CosechaRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 cosechaUseCase.registrarCosecha(
                         req.getFecha(), req.getCantidadKg(),

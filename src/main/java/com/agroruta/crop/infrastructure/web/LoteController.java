@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.Lote;
 import com.agroruta.crop.infrastructure.web.dto.ActualizarGeometriaLoteRequest;
@@ -23,7 +24,7 @@ public class LoteController {
 
     @PostMapping
     @PreAuthorize("@ownership.fincaPropia(#req.fincaId, authentication)")
-    public ResponseEntity<Lote> registrar(@RequestBody LoteRequest req) {
+    public ResponseEntity<Lote> registrar(@Valid @RequestBody LoteRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 loteUseCase.registrarLote(req.getNombre(), req.getArea(), req.getFincaId())
         );
@@ -52,7 +53,7 @@ public class LoteController {
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
     public ResponseEntity<Lote> actualizarGeometria(
             @PathVariable Long id,
-            @RequestBody ActualizarGeometriaLoteRequest request) {
+            @Valid @RequestBody ActualizarGeometriaLoteRequest request) {
 
         Lote lote = loteUseCase.actualizarGeometriaLote(
                 id,

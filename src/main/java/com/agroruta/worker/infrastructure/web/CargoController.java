@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.CargoUseCase;
 import com.agroruta.worker.domain.Cargo;
@@ -38,7 +39,7 @@ public class CargoController {
     }
 
     @PostMapping
-    public ResponseEntity<CargoResponse> crear(@RequestBody CargoRequest req) {
+    public ResponseEntity<CargoResponse> crear(@Valid @RequestBody CargoRequest req) {
         CargoResponse response = CargoResponse.from(
                 cargoUseCase.crearCargo(req.nombre, req.descripcion, req.valorJornal)
         );
@@ -48,7 +49,7 @@ public class CargoController {
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.cargoPropio(#id, authentication)")
     public ResponseEntity<CargoResponse> actualizar(@PathVariable Long id,
-                                                    @RequestBody CargoRequest req) {
+                                                    @Valid @RequestBody CargoRequest req) {
         CargoResponse response = CargoResponse.from(
                 cargoUseCase.actualizarCargo(id, req.nombre, req.descripcion, req.valorJornal)
         );

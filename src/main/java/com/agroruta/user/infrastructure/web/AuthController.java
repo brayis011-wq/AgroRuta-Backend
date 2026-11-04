@@ -1,5 +1,6 @@
 package com.agroruta.user.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.user.application.AuthService;
 import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.infrastructure.web.dto.LoginRequest;
@@ -18,12 +19,12 @@ public class AuthController {
     }
 
     @PostMapping("/registro")
-    public ResponseEntity<AuthResponse> registro(@RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.registrar(request));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
     }
 }

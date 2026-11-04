@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.domain.Nomina;
@@ -25,7 +26,7 @@ public class NominaController {
 
     @PostMapping("/generar")
     @PreAuthorize("@ownership.trabajadorPropio(#req.trabajadorId, authentication)")
-    public ResponseEntity<NominaResponse> generar(@RequestBody NominaRequest req) {
+    public ResponseEntity<NominaResponse> generar(@Valid @RequestBody NominaRequest req) {
         NominaResponse response = NominaResponse.from(
                 nominaUseCase.generarNomina(req.trabajadorId, req.periodoInicio, req.periodoFin)
         );
