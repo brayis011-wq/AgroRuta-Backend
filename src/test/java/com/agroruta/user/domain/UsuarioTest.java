@@ -67,4 +67,15 @@ class UsuarioTest {
         assertNull(usuario.getNombre());
         assertFalse(usuario.isActivo());
     }
+
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("cambiarRol asigna el nuevo rol y rechaza null")
+    void cambiarRol() {
+        Usuario u = new Usuario(1L, "Ana", "ana@agroruta.com", "hash", Rol.Trabajador);
+
+        u.cambiarRol(Rol.Agricultor);
+
+        org.junit.jupiter.api.Assertions.assertEquals(Rol.Agricultor, u.getRol());
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> u.cambiarRol(null));
+    }
 }

@@ -419,4 +419,31 @@ class JwtAuthenticationFilterTest {
             assertThat(body.toString()).contains("Token inválido");
         }
     }
+
+    @Nested
+    @DisplayName("Cuenta desactivada")
+    class CuentaDesactivada {
+
+        @Test
+        @DisplayName("responde 401 aunque el token sea válido")
+        void respondeConStatus401() throws Exception {
+            StringWriter body = new StringWriter();
+            when(response.getWriter()).thenReturn(new PrintWriter(body));
+            when(request.getHeader("Authorization")).thenReturn(BEARER);
+            when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
+            UserDetails desactivado = User.builder()
+                    .username(EMAIL).password("hashed-pwd")
+                    .authorities(Collections.emptyList())
+                    .disabled(true)
+                    .build();
+            when(userDetailsService.loadUserByUsername(EMAIL)).thenReturn(desactivado);
+
+            filter.doFilterInternal(request, response, filterChain);
+
+            verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            verifyNoInteractions(filterChain);
+            assertThat(body.toString()).contains("desactivada");
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        }
+    }
 }
