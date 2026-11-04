@@ -130,29 +130,27 @@ class NominaServiceTest {
     // ── aprobarNomina ─────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("aprobarNomina debe cambiar estado a PAGADA y persistir jornales liquidados")
-    void aprobarNomina_nominaPendiente_debeAprobarPagarYPersistirJornales() {
+    @DisplayName("aprobarNomina debe dejar la nómina APROBADA, no PAGADA")
+    void aprobarNomina_nominaPendiente_debeQuedarAprobada() {
         when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPendiente));
         when(nominaRepository.guardar(any(Nomina.class))).thenReturn(nominaPendiente);
 
         Nomina resultado = nominaService.aprobarNomina(1L);
 
         assertNotNull(resultado);
-        assertEquals(EstadoNomina.PAGADA, resultado.getEstado());
-        verify(jornalRepository, times(nominaPendiente.getJornales().size()))
-                .guardar(any(Jornal.class));
+        assertEquals(EstadoNomina.APROBADA, resultado.getEstado());
         verify(nominaRepository).guardar(nominaPendiente);
     }
 
     @Test
-    @DisplayName("aprobarNomina debe marcar todos los jornales como liquidados")
-    void aprobarNomina_debeMarcarJornalesComoLiquidados() {
+    @DisplayName("aprobarNomina no debe liquidar jornales (eso ocurre al registrar el pago)")
+    void aprobarNomina_noDebeLiquidarJornales() {
         when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPendiente));
         when(nominaRepository.guardar(any(Nomina.class))).thenReturn(nominaPendiente);
 
         nominaService.aprobarNomina(1L);
 
-        nominaPendiente.getJornales().forEach(j -> assertTrue(j.isLiquidado()));
+        verifyNoInteractions(jornalRepository);
     }
 
     @Test
