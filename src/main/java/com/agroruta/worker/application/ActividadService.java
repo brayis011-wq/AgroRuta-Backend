@@ -54,14 +54,14 @@ public class ActividadService implements ActividadUseCase {
 
     public void desactivarActividad(Long id) {
         Actividad actividad = actividadRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + id));
         actividad.desactivar();
         actividadRepository.guardar(actividad);
     }
 
     public Actividad buscarPorId(Long id) {
         return actividadRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Actividad no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + id));
     }
 
     public List<Actividad> listarActivas() {

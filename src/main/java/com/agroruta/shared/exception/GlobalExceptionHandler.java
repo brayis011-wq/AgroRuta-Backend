@@ -12,9 +12,14 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -72,13 +77,18 @@ public class GlobalExceptionHandler {
                 req.getRequestURI(),
                 ex.getMessage());
 
+        // Un duplicado es un conflicto (409); el resto de reglas de negocio, 422.
+        HttpStatus status = ex.getErrorCode() == ErrorCode.RESOURCE_ALREADY_EXISTS
+                ? HttpStatus.CONFLICT
+                : HttpStatus.UNPROCESSABLE_ENTITY;
+
         ErrorResponse error = ErrorResponse.of(
-                HttpStatus.UNPROCESSABLE_ENTITY.value(),   // 422 — correcto para reglas de negocio
+                status.value(),
                 ex.getErrorCode(),
                 ex.getMessage(),
                 MDC.get(MdcKeys.TRACE_ID)
         );
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
+        return ResponseEntity.status(status).body(error);
     }
 
     // ── Validación de Bean Validation (@Valid) ───────────────────────────────
@@ -150,6 +160,90 @@ public class GlobalExceptionHandler {
                 MDC.get(MdcKeys.TRACE_ID)
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // ── Estado inválido para la operación (p. ej. aprobar una nómina ya pagada) ──
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(
+            IllegalStateException ex, HttpServletRequest req) {
+
+        // Solo las de nuestro código son reglas de estado; las de librerías son fallos internos.
+        if (!lanzadaPorAgroRuta(ex)) {
+            return handleGeneral(ex, req);
+        }
+
+        log.warn("[{}] Operación no permitida en el estado actual en {}: {}",
+                MDC.get(MdcKeys.TRACE_ID),
+                req.getRequestURI(),
+                ex.getMessage());
+
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                ErrorCode.INVALID_OPERATION,
+                ex.getMessage(),
+                MDC.get(MdcKeys.TRACE_ID)
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    // ── Parámetro con tipo inválido (p. ej. /api/fincas/abc) ─────────────────
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Parámetro '{}' inválido en {}: {}",
+                MDC.get(MdcKeys.TRACE_ID), ex.getName(), req.getRequestURI(), ex.getValue());
+
+        return simple(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ARGUMENT,
+                "El parámetro '" + ex.getName() + "' no tiene un valor válido.");
+    }
+
+    // ── Falta un parámetro obligatorio en la URL ─────────────────────────────
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParam(
+            MissingServletRequestParameterException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Falta el parámetro '{}' en {}",
+                MDC.get(MdcKeys.TRACE_ID), ex.getParameterName(), req.getRequestURI());
+
+        return simple(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ARGUMENT,
+                "Falta el parámetro obligatorio '" + ex.getParameterName() + "'.");
+    }
+
+    // ── Ruta inexistente ─────────────────────────────────────────────────────
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNoResource(
+            NoResourceFoundException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Ruta no encontrada: {} {}",
+                MDC.get(MdcKeys.TRACE_ID), req.getMethod(), req.getRequestURI());
+
+        return simple(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND,
+                "La ruta solicitada no existe.");
+    }
+
+    // ── Método HTTP no soportado (p. ej. PUT donde solo hay PATCH) ───────────
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(
+            HttpRequestMethodNotSupportedException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Método {} no soportado en {}",
+                MDC.get(MdcKeys.TRACE_ID), ex.getMethod(), req.getRequestURI());
+
+        return simple(HttpStatus.METHOD_NOT_ALLOWED, ErrorCode.INVALID_OPERATION,
+                "El método " + ex.getMethod() + " no está permitido en esta ruta.");
+    }
+
+    // ── Content-Type no soportado ────────────────────────────────────────────
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMediaType(
+            HttpMediaTypeNotSupportedException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Content-Type no soportado en {}: {}",
+                MDC.get(MdcKeys.TRACE_ID), req.getRequestURI(), ex.getContentType());
+
+        return simple(HttpStatus.UNSUPPORTED_MEDIA_TYPE, ErrorCode.INVALID_ARGUMENT,
+                "Tipo de contenido no soportado. Envía application/json.");
     }
 
     // ── Servicio externo falló ───────────────────────────────────────────────
@@ -228,5 +322,16 @@ public class GlobalExceptionHandler {
                 MDC.get(MdcKeys.TRACE_ID)
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    private static boolean lanzadaPorAgroRuta(Throwable ex) {
+        StackTraceElement[] trace = ex.getStackTrace();
+        return trace.length > 0 && trace[0].getClassName().startsWith("com.agroruta.");
+    }
+
+    private ResponseEntity<ErrorResponse> simple(HttpStatus status, ErrorCode code, String message) {
+        ErrorResponse error = ErrorResponse.of(
+                status.value(), code, message, MDC.get(MdcKeys.TRACE_ID));
+        return ResponseEntity.status(status).body(error);
     }
 }

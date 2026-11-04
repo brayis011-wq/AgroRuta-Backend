@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.Fumigacion;
@@ -34,7 +35,7 @@ public class FumigacionService implements FumigacionUseCase {
 
         siembraUseCase.buscarSiembraPorId(siembraId);
 
-        UnidadMedida unidad = UnidadMedida.valueOf(unidadMedida.toUpperCase());
+        UnidadMedida unidad = EnumParser.parse(UnidadMedida.class, unidadMedida, "unidad de medida");
 
         /*
          * Se elige el factory method según si el usuario seleccionó un insumo
