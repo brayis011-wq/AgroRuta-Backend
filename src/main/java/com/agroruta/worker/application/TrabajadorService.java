@@ -96,6 +96,22 @@ public class TrabajadorService implements TrabajadorUseCase {
         trabajadorRepository.guardar(trabajador);
     }
 
+    @Override
+    public Trabajador aprobarAcceso(Long id) {
+        Trabajador trabajador = trabajadorRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
+        trabajador.aprobarAcceso();
+        return trabajadorRepository.guardar(trabajador);
+    }
+
+    @Override
+    public Trabajador rechazarAcceso(Long id) {
+        Trabajador trabajador = trabajadorRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
+        trabajador.rechazarAcceso();
+        return trabajadorRepository.guardar(trabajador);
+    }
+
     public Trabajador buscarPorId(Long id) {
         return trabajadorRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));

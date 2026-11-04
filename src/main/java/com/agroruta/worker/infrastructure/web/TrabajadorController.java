@@ -101,4 +101,18 @@ public class TrabajadorController {
         trabajadorUseCase.reactivarTrabajador(id);
         return ResponseEntity.noContent().build();
     }
+
+    // ── Acceso al portal del trabajador ──────────────────────────────────────
+
+    @PatchMapping("/{id}/acceso/aprobar")
+    @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
+    public ResponseEntity<TrabajadorResponse> aprobarAcceso(@PathVariable Long id) {
+        return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.aprobarAcceso(id)));
+    }
+
+    @PatchMapping("/{id}/acceso/rechazar")
+    @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
+    public ResponseEntity<TrabajadorResponse> rechazarAcceso(@PathVariable Long id) {
+        return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.rechazarAcceso(id)));
+    }
 }

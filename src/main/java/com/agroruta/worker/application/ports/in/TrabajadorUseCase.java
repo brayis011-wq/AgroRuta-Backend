@@ -38,4 +38,10 @@ public interface TrabajadorUseCase {
 
     /** Todos los de un agricultor. Si agricultorId es null devuelve lista vacía. */
     List<Trabajador> listarTodosDe(Long agricultorId);
+
+    /** El agricultor confirma que la cuenta que pidió acceso es de este trabajador. */
+    Trabajador aprobarAcceso(Long id);
+
+    /** El agricultor rechaza la solicitud o retira el acceso. */
+    Trabajador rechazarAcceso(Long id);
 }

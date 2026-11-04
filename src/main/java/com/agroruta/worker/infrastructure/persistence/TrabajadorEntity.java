@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import com.agroruta.worker.domain.EstadoAccesoPortal;
 import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.TipoContrato;
 import jakarta.persistence.*;
@@ -48,6 +49,20 @@ public class TrabajadorEntity {
     @Column(name = "agricultor_id")
     private Long agricultorId;
 
+    // Acceso al portal del trabajador (todas nullable: ddl-auto=update las agrega sin romper filas viejas)
+    @Column(name = "usuario_id")
+    private Long usuarioId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "acceso_estado", length = 20)
+    private EstadoAccesoPortal accesoEstado;
+
+    @Column(name = "acceso_nombre", length = 100)
+    private String accesoNombre;
+
+    @Column(name = "acceso_email", length = 150)
+    private String accesoEmail;
+
     public TrabajadorEntity() {}
 
     // Getters & Setters
@@ -83,4 +98,16 @@ public class TrabajadorEntity {
 
     public Long getAgricultorId() { return agricultorId; }
     public void setAgricultorId(Long agricultorId) { this.agricultorId = agricultorId; }
+
+    public Long getUsuarioId() { return usuarioId; }
+    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
+
+    public EstadoAccesoPortal getAccesoEstado() { return accesoEstado; }
+    public void setAccesoEstado(EstadoAccesoPortal accesoEstado) { this.accesoEstado = accesoEstado; }
+
+    public String getAccesoNombre() { return accesoNombre; }
+    public void setAccesoNombre(String accesoNombre) { this.accesoNombre = accesoNombre; }
+
+    public String getAccesoEmail() { return accesoEmail; }
+    public void setAccesoEmail(String accesoEmail) { this.accesoEmail = accesoEmail; }
 }

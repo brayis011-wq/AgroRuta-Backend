@@ -62,6 +62,10 @@ public class WorkerMapper {
         );
         t.setEstado(e.getEstado());
         t.setAgricultorId(e.getAgricultorId());
+        t.setUsuarioId(e.getUsuarioId());
+        t.setAccesoEstado(e.getAccesoEstado());
+        t.setAccesoNombre(e.getAccesoNombre());
+        t.setAccesoEmail(e.getAccesoEmail());
         return t;
     }
 
@@ -79,6 +83,10 @@ public class WorkerMapper {
         e.setTipoContrato(d.getTipoContrato());
         e.setCargo(toEntity(d.getCargo()));
         e.setAgricultorId(d.getAgricultorId());
+        e.setUsuarioId(d.getUsuarioId());
+        e.setAccesoEstado(d.getAccesoEstado());
+        e.setAccesoNombre(d.getAccesoNombre());
+        e.setAccesoEmail(d.getAccesoEmail());
         return e;
     }
 
