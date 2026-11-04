@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -345,6 +346,77 @@ class JwtAuthenticationFilterTest {
             filter.doFilterInternal(request, response, filterChain);
 
             verifyNoInteractions(filterChain);
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Rutas de autenticación: el token se ignora (login con sesión vieja)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("Rutas /api/auth/** (shouldNotFilter)")
+    class RutasDeAutenticacion {
+
+        @Test
+        @DisplayName("no filtra /api/auth/login, para que un token vencido no bloquee el login")
+        void noFiltraLogin() {
+            when(request.getContextPath()).thenReturn("");
+            when(request.getRequestURI()).thenReturn("/api/auth/login");
+
+            assertThat(filter.shouldNotFilter(request)).isTrue();
+        }
+
+        @Test
+        @DisplayName("no filtra /api/auth/registro")
+        void noFiltraRegistro() {
+            when(request.getContextPath()).thenReturn("");
+            when(request.getRequestURI()).thenReturn("/api/auth/registro");
+
+            assertThat(filter.shouldNotFilter(request)).isTrue();
+        }
+
+        @Test
+        @DisplayName("respeta el context path de la aplicación")
+        void respetaContextPath() {
+            when(request.getContextPath()).thenReturn("/agroruta");
+            when(request.getRequestURI()).thenReturn("/agroruta/api/auth/login");
+
+            assertThat(filter.shouldNotFilter(request)).isTrue();
+        }
+
+        @Test
+        @DisplayName("sí filtra las demás rutas de la API")
+        void filtraRutasProtegidas() {
+            when(request.getContextPath()).thenReturn("");
+            when(request.getRequestURI()).thenReturn("/api/fincas/1");
+
+            assertThat(filter.shouldNotFilter(request)).isFalse();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Token de un usuario que ya no existe
+    // ═══════════════════════════════════════════════════════════════════════
+
+    @Nested
+    @DisplayName("Usuario del token eliminado")
+    class UsuarioEliminado {
+
+        @Test
+        @DisplayName("responde 401 en vez de 500")
+        void respondeConStatus401() throws Exception {
+            StringWriter body = new StringWriter();
+            when(response.getWriter()).thenReturn(new PrintWriter(body));
+            when(request.getHeader("Authorization")).thenReturn(BEARER);
+            when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
+            when(userDetailsService.loadUserByUsername(EMAIL))
+                    .thenThrow(new UsernameNotFoundException("no existe"));
+
+            filter.doFilterInternal(request, response, filterChain);
+
+            verify(response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            verifyNoInteractions(filterChain);
+            assertThat(body.toString()).contains("Token inválido");
         }
     }
 }

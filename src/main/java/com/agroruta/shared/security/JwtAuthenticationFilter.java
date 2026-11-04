@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,6 +29,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(JwtService jwtService, @Lazy UserDetailsService userDetailsService) {
         this.jwtService = jwtService;
         this.userDetailsService = userDetailsService;
+    }
+
+    /**
+     * Login y registro no usan el token: si el navegador manda uno vencido de una sesión
+     * anterior, se ignora para que el usuario pueda volver a entrar sin borrar nada a mano.
+     */
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String contextPath = request.getContextPath() == null ? "" : request.getContextPath();
+        String uri = request.getRequestURI() == null ? "" : request.getRequestURI();
+        String path = uri.startsWith(contextPath) ? uri.substring(contextPath.length()) : uri;
+        return path.startsWith("/api/auth/");
     }
 
     @Override
@@ -86,6 +99,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (JwtException ex) {
             // Token malformado, firma inválida, etc.
+            sendUnauthorizedResponse(response, "Token inválido");
+
+        } catch (UsernameNotFoundException ex) {
+            // Token bien firmado pero de un usuario que ya no existe
             sendUnauthorizedResponse(response, "Token inválido");
         }
     }
