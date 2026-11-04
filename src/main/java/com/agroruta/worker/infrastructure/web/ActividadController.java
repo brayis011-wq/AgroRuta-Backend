@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.worker.application.ports.in.ActividadUseCase;
 import com.agroruta.worker.infrastructure.web.dto.ActividadRequest;
 import com.agroruta.worker.infrastructure.web.dto.ActividadResponse;
@@ -27,7 +28,7 @@ public class ActividadController {
     }
 
     @PostMapping
-    public ResponseEntity<ActividadResponse> crear(@RequestBody ActividadRequest req) {
+    public ResponseEntity<ActividadResponse> crear(@Valid @RequestBody ActividadRequest req) {
         ActividadResponse response = ActividadResponse.from(
                 actividadUseCase.crearActividad(req.nombre, req.descripcion)
         );
@@ -36,7 +37,7 @@ public class ActividadController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ActividadResponse> actualizar(@PathVariable Long id,
-                                                        @RequestBody ActividadRequest req) {
+                                                        @Valid @RequestBody ActividadRequest req) {
         ActividadResponse response = ActividadResponse.from(
                 actividadUseCase.actualizarActividad(id, req.nombre, req.descripcion)
         );

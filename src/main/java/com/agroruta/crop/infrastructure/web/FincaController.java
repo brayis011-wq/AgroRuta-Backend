@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.infrastructure.web.dto.ActualizarCentroideFincaRequest;
@@ -23,7 +24,7 @@ public class FincaController {
 
     @PostMapping
     @PreAuthorize("@ownership.esAgricultor(#req.agricultorId, authentication)")
-    public ResponseEntity<Finca> registrar(@RequestBody FincaRequest req) {
+    public ResponseEntity<Finca> registrar(@Valid @RequestBody FincaRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 fincaUseCase.registrarFinca(
                         req.getNombre(), req.getUbicacion(),
@@ -55,7 +56,7 @@ public class FincaController {
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<Finca> actualizarCentroide(
             @PathVariable Long id,
-            @RequestBody ActualizarCentroideFincaRequest request) {
+            @Valid @RequestBody ActualizarCentroideFincaRequest request) {
 
         Finca finca = fincaUseCase.actualizarCentroideFinca(
                 id, request.centroideLat(), request.centroideLng()

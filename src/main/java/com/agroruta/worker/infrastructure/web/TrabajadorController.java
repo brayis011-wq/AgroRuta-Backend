@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.domain.Trabajador;
@@ -50,7 +51,7 @@ public class TrabajadorController {
     // El cargo asignado debe pertenecer al usuario autenticado
     @PostMapping
     @PreAuthorize("@ownership.cargoPropio(#req.cargoId, authentication)")
-    public ResponseEntity<TrabajadorResponse> registrar(@RequestBody TrabajadorRequest req) {
+    public ResponseEntity<TrabajadorResponse> registrar(@Valid @RequestBody TrabajadorRequest req) {
         TrabajadorResponse response = TrabajadorResponse.from(
                 trabajadorUseCase.registrarTrabajador(
                         req.nombre, req.apellido, req.cedula, req.telefono,
@@ -63,7 +64,7 @@ public class TrabajadorController {
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
     public ResponseEntity<TrabajadorResponse> actualizar(@PathVariable Long id,
-                                                         @RequestBody TrabajadorUpdateRequest req) {
+                                                         @Valid @RequestBody TrabajadorUpdateRequest req) {
         TrabajadorResponse response = TrabajadorResponse.from(
                 trabajadorUseCase.actualizarTrabajador(
                         id, req.nombre, req.apellido, req.telefono, req.direccion, req.tipoContrato
