@@ -52,6 +52,11 @@ public class CustomUserDetails implements UserDetails {
     public Long getId() {
         return usuario.getId();
     }
+
+    /** Nombre para mostrar (p. ej. en el encabezado de los reportes) */
+    public String getNombre() {
+        return usuario.getNombre();
+    }
     @Override
     public boolean isEnabled() {
         // Usamos el atributo 'activo' que creamos en tu dominio para el borrado lógico

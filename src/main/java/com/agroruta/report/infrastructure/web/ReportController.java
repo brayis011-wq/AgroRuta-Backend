@@ -26,17 +26,17 @@ public class ReportController {
 
     @GetMapping(value = "/payroll", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> payrollReport(Authentication authentication) {
-        byte[] pdf = pdfReportService.generatePayrollPdf(payroll(authentication));
+        byte[] pdf = pdfReportService.generatePayrollPdf(payroll(authentication), CurrentUser.nombre(authentication));
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=payroll-report.pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reporte-nomina.pdf\"")
                 .body(pdf);
     }
 
     @GetMapping(value = "/crops", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> cropReport(Authentication authentication) {
-        byte[] pdf = pdfReportService.generateCropPdf(crops(authentication));
+        byte[] pdf = pdfReportService.generateCropPdf(crops(authentication), CurrentUser.nombre(authentication));
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=crop-report.pdf")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reporte-cultivos.pdf\"")
                 .body(pdf);
     }
 
