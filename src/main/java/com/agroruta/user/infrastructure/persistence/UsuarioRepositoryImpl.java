@@ -1,5 +1,6 @@
 package com.agroruta.user.infrastructure.persistence;
 
+import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.domain.UsuarioRepository;
 import org.springframework.stereotype.Repository;
@@ -44,6 +45,18 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
         return jpaRepository.findByActivoTrue().stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Usuario> findAll() {
+        return jpaRepository.findAllByOrderByIdAsc().stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long countActivosPorRol(Rol rol) {
+        return jpaRepository.countByRolAndActivoTrue(rol);
     }
 
     // --- MÉTODOS AUXILIARES PARA MAPEAR (Convertir) ---

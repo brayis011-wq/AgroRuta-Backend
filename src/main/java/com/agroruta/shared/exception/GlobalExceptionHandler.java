@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
@@ -282,6 +283,18 @@ public class GlobalExceptionHandler {
                 MDC.get(MdcKeys.TRACE_ID)
         );
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+    }
+
+    // ── 401: cuenta desactivada por un administrador ─────────────────────────
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(
+            DisabledException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Intento de login con cuenta desactivada en {}",
+                MDC.get(MdcKeys.TRACE_ID), req.getRequestURI());
+
+        return simple(HttpStatus.UNAUTHORIZED, ErrorCode.AUTHENTICATION_FAILED,
+                "Tu cuenta está desactivada. Contacta al administrador.");
     }
 
     // ── 401: credenciales inválidas / usuario deshabilitado ──────────────────

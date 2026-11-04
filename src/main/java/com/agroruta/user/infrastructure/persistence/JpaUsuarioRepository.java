@@ -1,5 +1,6 @@
 package com.agroruta.user.infrastructure.persistence;
 
+import com.agroruta.user.domain.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
@@ -12,4 +13,8 @@ public interface JpaUsuarioRepository extends JpaRepository<UsuarioEntity, Long>
 
     // Busca todos los usuarios donde la columna 'activo' sea true
     List<UsuarioEntity> findByActivoTrue();
+
+    List<UsuarioEntity> findAllByOrderByIdAsc();
+
+    long countByRolAndActivoTrue(Rol rol);
 }
