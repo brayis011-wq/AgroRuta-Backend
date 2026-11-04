@@ -50,17 +50,16 @@ public class NominaService implements NominaUseCase {
         return nominaRepository.guardar(nomina);
     }
 
+    /**
+     * Solo aprueba: PENDIENTE → APROBADA.
+     * La nómina pasa a PAGADA cuando se registra el pago (PagoService.registrarPago).
+     */
     @Override
     public Nomina aprobarNomina(Long nominaId) {
         Nomina nomina = nominaRepository.buscarPorId(nominaId)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Nómina no encontrada con id: " + nominaId));
-        nomina.aprobar();           // PENDIENTE → APROBADA
-        nomina.marcarComoPagada();  // APROBADA  → PAGADA + marca jornales como liquidados en memoria
-
-        // ✅ Persistir cada jornal liquidado en la BD
-        nomina.getJornales().forEach(jornalRepository::guardar);
-
+        nomina.aprobar();
         return nominaRepository.guardar(nomina);
     }
 
