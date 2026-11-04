@@ -3,6 +3,7 @@ package com.agroruta.worker.infrastructure.web;
 import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
+import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.infrastructure.web.dto.JornalRequest;
 import com.agroruta.worker.infrastructure.web.dto.JornalResponse;
@@ -35,6 +36,13 @@ public class JornalController {
                 )
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    // Cultivos activos de las fincas del usuario, para el selector del formulario de jornal
+    @GetMapping("/cultivos-disponibles")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<List<CultivoPort.CultivoInfo>> cultivosDisponibles(Authentication authentication) {
+        return ResponseEntity.ok(jornalUseCase.cultivosDisponibles(CurrentUser.id(authentication)));
     }
 
     @GetMapping("/{id}")
