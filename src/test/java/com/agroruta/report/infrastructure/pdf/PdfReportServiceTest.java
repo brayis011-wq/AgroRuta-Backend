@@ -72,7 +72,7 @@ class PdfReportServiceTest {
 
             byte[] result = service.generatePayrollPdf(report);
 
-            assertThat(extraerTexto(result)).contains("4500.00");
+            assertThat(extraerTexto(result)).contains("$4.500");
         }
 
         @Test
@@ -88,7 +88,7 @@ class PdfReportServiceTest {
         void contieneTotalPagadoTrabajador() throws IOException {
             byte[] result = service.generatePayrollPdf(payrollConUnTrabajador());
 
-            assertThat(extraerTexto(result)).contains("1200.50");
+            assertThat(extraerTexto(result)).contains("$1.200,50");
         }
 
         @Test
@@ -260,6 +260,70 @@ class PdfReportServiceTest {
     private String extraerTexto(byte[] pdfBytes) throws IOException {
         try (PDDocument doc = Loader.loadPDF(pdfBytes)) {
             return new PDFTextStripper().getText(doc);
+        }
+    }
+
+    // =========================================================================
+    // Diseño nuevo
+    // =========================================================================
+
+    @Nested
+    @DisplayName("diseño del PDF")
+    class Diseno {
+
+        @Test
+        @DisplayName("muestra para quién se generó y la fecha en formato colombiano")
+        void encabezado() throws IOException {
+            String texto = extraerTexto(service.generatePayrollPdf(payrollConUnTrabajador(), "Ana Rodríguez"));
+
+            assertThat(texto).contains("Para Ana Rodríguez").contains("1 jun 2024, 10:00 a. m.");
+        }
+
+        @Test
+        @DisplayName("incluye pendiente por pagar y los meses de la gráfica")
+        void pendienteYMeses() throws IOException {
+            PayrollReport r = new PayrollReport(AHORA, new BigDecimal("900000"),
+                    List.of(trabajador(1L, "Ana Gómez", 2, new BigDecimal("900000"))),
+                    List.of(new com.agroruta.report.domain.MonthlyPayment("2024-05", new BigDecimal("400000"), 1),
+                            new com.agroruta.report.domain.MonthlyPayment("2024-06", new BigDecimal("500000"), 1)),
+                    new BigDecimal("1500000"), 3);
+
+            String texto = extraerTexto(service.generatePayrollPdf(r));
+
+            assertThat(texto).contains("Pendiente por pagar").contains("$1.500.000").contains("3 nóminas")
+                    .contains("may").contains("jun").contains("Pagos por mes");
+        }
+
+        @Test
+        @DisplayName("una tabla larga pasa a otra página y numera las páginas")
+        void paginacion() throws IOException {
+            List<WorkerPayrollDetail> muchos = new java.util.ArrayList<>();
+            for (int i = 0; i < 60; i++) muchos.add(trabajador((long) i, "Trabajador " + i, 1, new BigDecimal("1000")));
+            byte[] pdf = service.generatePayrollPdf(new PayrollReport(AHORA, new BigDecimal("60000"), muchos));
+
+            try (PDDocument doc = Loader.loadPDF(pdf)) {
+                assertThat(doc.getNumberOfPages()).isGreaterThan(1);
+            }
+            assertThat(extraerTexto(pdf)).contains("Página 1 de").contains("Trabajador 59");
+        }
+
+        @Test
+        @DisplayName("las etapas salen en español y la finca y el lote aparecen")
+        void etapasYUbicacion() throws IOException {
+            CropDetail c = new CropDetail(1L, "Café · Castillo", "PRODUCCION", LocalDate.of(2024, 1, 10),
+                    140, 860.0, 3, "Café", "Lote Alto", "El Recuerdo");
+
+            String texto = extraerTexto(service.generateCropPdf(new CropReport(AHORA, List.of(c))));
+
+            assertThat(texto).contains("Producción").contains("El Recuerdo · Lote Alto").contains("Siembras por etapa")
+                    .contains("Kg cosechados por cultivo").contains("860 kg");
+        }
+
+        @Test
+        @DisplayName("caracteres que la fuente no tiene no rompen el PDF")
+        void caracteresRaros() {
+            assertThatCode(() -> service.generatePayrollPdf(new PayrollReport(AHORA, BigDecimal.ONE,
+                    List.of(trabajador(1L, "José 🌱 → Nuñez", 1, BigDecimal.ONE))))).doesNotThrowAnyException();
         }
     }
 }

@@ -115,7 +115,7 @@ class ReportControllerTest {
             when(generatePayrollReport.generate())
                     .thenReturn(payrollReportEjemplo);
 
-            when(pdfReportService.generatePayrollPdf(payrollReportEjemplo))
+            when(pdfReportService.generatePayrollPdf(eq(payrollReportEjemplo), any()))
                     .thenReturn(pdfBytes);
 
             mockMvc.perform(get("/api/reports/payroll")
@@ -126,13 +126,13 @@ class ReportControllerTest {
                     .andExpect(content().bytes(pdfBytes))
                     .andExpect(header().string(
                             "Content-Disposition",
-                            "attachment; filename=payroll-report.pdf"
+                            "attachment; filename=\"reporte-nomina.pdf\""
                     ));
 
             verify(generatePayrollReport, times(1)).generate();
 
             verify(pdfReportService, times(1))
-                    .generatePayrollPdf(payrollReportEjemplo);
+                    .generatePayrollPdf(payrollReportEjemplo, "Nombre");
 
             verifyNoInteractions(generateCropReport);
         }
@@ -162,7 +162,7 @@ class ReportControllerTest {
             when(generateCropReport.generate())
                     .thenReturn(cropReportEjemplo);
 
-            when(pdfReportService.generateCropPdf(cropReportEjemplo))
+            when(pdfReportService.generateCropPdf(eq(cropReportEjemplo), any()))
                     .thenReturn(pdfBytes);
 
             mockMvc.perform(get("/api/reports/crops")
@@ -173,13 +173,13 @@ class ReportControllerTest {
                     .andExpect(content().bytes(pdfBytes))
                     .andExpect(header().string(
                             "Content-Disposition",
-                            "attachment; filename=crop-report.pdf"
+                            "attachment; filename=\"reporte-cultivos.pdf\""
                     ));
 
             verify(generateCropReport, times(1)).generate();
 
             verify(pdfReportService, times(1))
-                    .generateCropPdf(cropReportEjemplo);
+                    .generateCropPdf(cropReportEjemplo, "Nombre");
 
             verifyNoInteractions(generatePayrollReport);
         }
