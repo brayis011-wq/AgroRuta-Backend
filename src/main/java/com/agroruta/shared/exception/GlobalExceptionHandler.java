@@ -8,6 +8,7 @@ import org.slf4j.MDC;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -85,7 +86,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException ex, HttpServletRequest req) {
 
-        Map<String, String> fieldErrors = new HashMap<>();
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
         for (FieldError fe : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.merge(fe.getField(), fe.getDefaultMessage(),
                     (existing, newMsg) -> existing); // si hay 2 errores en un campo, queda el primero
@@ -96,13 +97,39 @@ public class GlobalExceptionHandler {
                 req.getRequestURI(),
                 fieldErrors);
 
+        // El primer error va en "message" para que el frontend lo pueda mostrar tal cual;
+        // la lista completa queda en fieldErrors.
+        String mensaje = fieldErrors.isEmpty()
+                ? "Error de validación en los datos enviados."
+                : fieldErrors.values().iterator().next();
+
         ErrorResponse error = ErrorResponse.of(
                 HttpStatus.BAD_REQUEST.value(),
                 ErrorCode.VALIDATION_FAILED,
-                "Error de validación en los datos enviados.",
+                mensaje,
                 MDC.get(MdcKeys.TRACE_ID)
         );
         error.setFieldErrors(fieldErrors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // ── Cuerpo ilegible: JSON mal formado, fecha inválida o valor de enum desconocido ──
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleNotReadable(
+            HttpMessageNotReadableException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Cuerpo de la petición ilegible en {}: {}",
+                MDC.get(MdcKeys.TRACE_ID),
+                req.getRequestURI(),
+                ex.getMostSpecificCause().getMessage());
+
+        // No se expone el detalle del parser al cliente.
+        ErrorResponse error = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                ErrorCode.VALIDATION_FAILED,
+                "El cuerpo de la petición no es válido. Revisa el formato de fechas, números y opciones.",
+                MDC.get(MdcKeys.TRACE_ID)
+        );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 

@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.infrastructure.web.dto.ActividadRequest;
@@ -22,7 +23,7 @@ public class ActividadCultivoController {
 
     @PostMapping
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
-    public ResponseEntity<ActividadCultivo> registrar(@RequestBody ActividadRequest req) {
+    public ResponseEntity<ActividadCultivo> registrar(@Valid @RequestBody ActividadRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 actividadUseCase.registrarActividad(
                         req.getTipo(), req.getDescripcion(),
