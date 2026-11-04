@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -98,12 +99,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("generarNomina debe lanzar IllegalArgumentException cuando el trabajador no existe")
-    void generarNomina_trabajadorInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("generarNomina debe lanzar ResourceNotFoundException cuando el trabajador no existe")
+    void generarNomina_trabajadorInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> nominaService.generarNomina(99L, inicio, fin)
         );
 
@@ -154,12 +155,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("aprobarNomina debe lanzar IllegalArgumentException cuando la nómina no existe")
-    void aprobarNomina_nominaInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("aprobarNomina debe lanzar ResourceNotFoundException cuando la nómina no existe")
+    void aprobarNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> nominaService.aprobarNomina(99L)
         );
 
@@ -195,12 +196,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("anularNomina debe lanzar IllegalArgumentException cuando la nómina no existe")
-    void anularNomina_nominaInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("anularNomina debe lanzar ResourceNotFoundException cuando la nómina no existe")
+    void anularNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> nominaService.anularNomina(99L)
         );
 
@@ -237,12 +238,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("reactivarNomina debe lanzar IllegalArgumentException cuando la nómina no existe")
-    void reactivarNomina_nominaInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("reactivarNomina debe lanzar ResourceNotFoundException cuando la nómina no existe")
+    void reactivarNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> nominaService.reactivarNomina(99L)
         );
 
@@ -277,12 +278,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("eliminarNomina debe lanzar IllegalArgumentException cuando la nómina no existe")
-    void eliminarNomina_nominaInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("eliminarNomina debe lanzar ResourceNotFoundException cuando la nómina no existe")
+    void eliminarNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> nominaService.eliminarNomina(99L)
         );
 
@@ -317,12 +318,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId debe lanzar IllegalArgumentException cuando el id no existe")
-    void buscarPorId_idInexistente_debeLanzarIllegalArgumentException() {
+    @DisplayName("buscarPorId debe lanzar ResourceNotFoundException cuando el id no existe")
+    void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        ResourceNotFoundException ex = assertThrows(
+                ResourceNotFoundException.class,
                 () -> nominaService.buscarPorId(99L)
         );
 

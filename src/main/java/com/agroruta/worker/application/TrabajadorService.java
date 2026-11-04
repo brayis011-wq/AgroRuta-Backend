@@ -1,5 +1,8 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.domain.Cargo;
@@ -29,11 +32,12 @@ public class TrabajadorService implements TrabajadorUseCase {
                                           LocalDate fechaIngreso, TipoContrato tipoContrato,
                                           Long cargoId) {
         if (trabajadorRepository.existePorCedula(cedula)) {
-            throw new IllegalArgumentException("Ya existe un trabajador con cédula: " + cedula);
+            throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+                    "Ya existe un trabajador con cédula: " + cedula);
         }
 
         Cargo cargo = cargoRepository.buscarPorId(cargoId)
-                .orElseThrow(() -> new IllegalArgumentException("Cargo no encontrado con id: " + cargoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cargo no encontrado con id: " + cargoId));
 
         Trabajador trabajador = new Trabajador(
                 null, nombre, apellido, cedula,
@@ -49,7 +53,7 @@ public class TrabajadorService implements TrabajadorUseCase {
                                            String telefono, String direccion,
                                            TipoContrato tipoContrato) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
 
         trabajador.setNombre(nombre);
         trabajador.setApellido(apellido);
@@ -62,10 +66,10 @@ public class TrabajadorService implements TrabajadorUseCase {
 
     public Trabajador cambiarCargo(Long trabajadorId, Long cargoId) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + trabajadorId));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + trabajadorId));
 
         Cargo nuevoCargo = cargoRepository.buscarPorId(cargoId)
-                .orElseThrow(() -> new IllegalArgumentException("Cargo no encontrado con id: " + cargoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Cargo no encontrado con id: " + cargoId));
 
         trabajador.cambiarCargo(nuevoCargo);
         return trabajadorRepository.guardar(trabajador);
@@ -73,28 +77,28 @@ public class TrabajadorService implements TrabajadorUseCase {
 
     public void desactivarTrabajador(Long id) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
         trabajador.desactivar();
         trabajadorRepository.guardar(trabajador);
     }
 
     public void suspenderTrabajador(Long id) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
         trabajador.suspender();
         trabajadorRepository.guardar(trabajador);
     }
 
     public void reactivarTrabajador(Long id) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
         trabajador.reactivar();
         trabajadorRepository.guardar(trabajador);
     }
 
     public Trabajador buscarPorId(Long id) {
         return trabajadorRepository.buscarPorId(id)
-                .orElseThrow(() -> new IllegalArgumentException("Trabajador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
     }
 
     public List<Trabajador> listarActivos() {
