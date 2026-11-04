@@ -1,6 +1,7 @@
 package com.agroruta.worker.application;
 
 import com.agroruta.worker.application.ports.in.PagoUseCase;
+import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.NominaRepository;
 import com.agroruta.worker.domain.PagoRepository;
 import com.agroruta.worker.domain.EstadoNomina;
@@ -12,18 +13,32 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class PagoService implements PagoUseCase {
 
     private final PagoRepository pagoRepository;
     private final NominaRepository nominaRepository;
+    private final JornalRepository jornalRepository;
 
-    public PagoService(PagoRepository pagoRepository, NominaRepository nominaRepository) {
+    public PagoService(PagoRepository pagoRepository,
+                       NominaRepository nominaRepository,
+                       JornalRepository jornalRepository) {
         this.pagoRepository = pagoRepository;
         this.nominaRepository = nominaRepository;
+        this.jornalRepository = jornalRepository;
     }
 
+    /**
+     * Registra el pago de una nómina APROBADA y la deja PAGADA, con sus jornales liquidados.
+     * Todo ocurre en una sola transacción: si algo falla, la nómina sigue APROBADA.
+     *
+     * Compatibilidad: las nóminas que el flujo anterior dejó PAGADA sin pago registrado
+     * también aceptan el pago, sin volver a cambiar su estado.
+     */
+    @Override
     public Pago registrarPago(Long nominaId, BigDecimal monto,
                               MetodoPago metodoPago, String comprobante,
                               String observaciones) {
@@ -32,16 +47,30 @@ public class PagoService implements PagoUseCase {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Nómina no encontrada con id: " + nominaId));
 
-        // ✅ Ahora valida PAGADA (estado correcto tras aprobar)
-        if (!EstadoNomina.PAGADA.equals(nomina.getEstado())) {
+        boolean aprobada = EstadoNomina.APROBADA.equals(nomina.getEstado());
+        boolean pagadaSinPago = EstadoNomina.PAGADA.equals(nomina.getEstado());
+        if (!aprobada && !pagadaSinPago) {
             throw new IllegalStateException(
-                    "Solo se puede registrar el pago de nóminas en estado PAGADA.");
+                    "Solo se puede registrar el pago de nóminas en estado APROBADA.");
         }
 
-        // ✅ Evitar doble pago
+        // Evitar doble pago
         pagoRepository.buscarPorNomina(nominaId).ifPresent(p -> {
             throw new IllegalStateException("Esta nómina ya tiene un pago registrado.");
         });
+
+        if (monto == null || nomina.getValorTotal() == null
+                || monto.compareTo(nomina.getValorTotal()) != 0) {
+            throw new IllegalArgumentException(
+                    "El monto debe ser igual al valor total de la nómina ("
+                            + nomina.getValorTotal() + ").");
+        }
+
+        if (aprobada) {
+            nomina.marcarComoPagada();  // APROBADA → PAGADA y jornales liquidados en memoria
+            nomina.getJornales().forEach(jornalRepository::guardar);
+            nominaRepository.guardar(nomina);
+        }
 
         Pago pago = new Pago(null, nomina, LocalDate.now(), monto, metodoPago, comprobante);
         pago.setObservaciones(observaciones);
@@ -49,16 +78,19 @@ public class PagoService implements PagoUseCase {
         return pagoRepository.guardar(pago);
     }
 
+    @Override
     public Pago buscarPorId(Long id) {
         return pagoRepository.buscarPorId(id)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Pago no encontrado con id: " + id));
     }
 
+    @Override
     public List<Pago> historialPorTrabajador(Long trabajadorId) {
         return pagoRepository.buscarPorTrabajador(trabajadorId);
     }
 
+    @Override
     public List<Pago> listarTodos() {
         return pagoRepository.listarTodos();
     }
