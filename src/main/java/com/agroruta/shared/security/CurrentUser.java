@@ -24,6 +24,14 @@ public final class CurrentUser {
         return null;
     }
 
+    /** Nombre del usuario autenticado, o null si no hay sesión. */
+    public static String nombre(Authentication auth) {
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails u) {
+            return u.getNombre();
+        }
+        return null;
+    }
+
     /** Id del usuario autenticado en el hilo actual, o null si no hay sesión. */
     public static Long idActual() {
         return id(SecurityContextHolder.getContext().getAuthentication());

@@ -149,6 +149,8 @@ class GeneratePayrollReportServiceTest {
 
             verify(payrollQueryPort, times(1)).getTotalAccumulated();
             verify(payrollQueryPort, times(1)).getDetailPerWorker();
+            verify(payrollQueryPort).getMonthlyPayments(isNull(), any());
+            verify(payrollQueryPort).getPendingPayroll(isNull());
             verifyNoMoreInteractions(payrollQueryPort);
         }
 
@@ -202,6 +204,8 @@ class GeneratePayrollReportServiceTest {
             assertThat(reporte.workerDetails()).containsExactlyElementsOf(detalles);
             verify(payrollQueryPort).getTotalAccumulatedByAgricultor(7L);
             verify(payrollQueryPort).getDetailPerWorkerByAgricultor(7L);
+            verify(payrollQueryPort).getMonthlyPayments(eq(7L), any());
+            verify(payrollQueryPort).getPendingPayroll(7L);
             verifyNoMoreInteractions(payrollQueryPort);
         }
 
@@ -213,6 +217,55 @@ class GeneratePayrollReportServiceTest {
             assertThat(reporte.totalAccumulated()).isEqualByComparingTo(BigDecimal.ZERO);
             assertThat(reporte.workerDetails()).isEmpty();
             verifyNoInteractions(payrollQueryPort);
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("datos nuevos del reporte")
+    class DatosNuevos {
+
+        @Test
+        @DisplayName("ordena a los trabajadores de mayor a menor pagado")
+        void ordenaPorTotalPagado() {
+            when(payrollQueryPort.getDetailPerWorkerByAgricultor(7L)).thenReturn(List.of(
+                    detalleMock(1L, "Poco", new BigDecimal("100")),
+                    detalleMock(2L, "Mucho", new BigDecimal("900"))));
+
+            PayrollReport reporte = service.generateFor(7L);
+
+            assertThat(reporte.workerDetails()).extracting(WorkerPayrollDetail::workerName)
+                    .containsExactly("Mucho", "Poco");
+        }
+
+        @Test
+        @DisplayName("incluye pendiente por pagar y la serie de 6 meses desde el día 1")
+        void incluyePendienteYSerie() {
+            when(payrollQueryPort.getPendingPayroll(7L))
+                    .thenReturn(new com.agroruta.report.application.ports.out.PayrollQueryPort.PendingPayroll(2, new BigDecimal("300")));
+            java.util.List<com.agroruta.report.domain.MonthlyPayment> serie =
+                    List.of(new com.agroruta.report.domain.MonthlyPayment("2026-11", new BigDecimal("50"), 1));
+            when(payrollQueryPort.getMonthlyPayments(eq(7L), any())).thenReturn(serie);
+
+            PayrollReport reporte = service.generateFor(7L);
+
+            assertThat(reporte.nominasPendientes()).isEqualTo(2);
+            assertThat(reporte.totalPendiente()).isEqualByComparingTo("300");
+            assertThat(reporte.pagosPorMes()).isEqualTo(serie);
+            org.mockito.ArgumentCaptor<java.time.LocalDate> desde = org.mockito.ArgumentCaptor.forClass(java.time.LocalDate.class);
+            verify(payrollQueryPort).getMonthlyPayments(eq(7L), desde.capture());
+            assertThat(desde.getValue().getDayOfMonth()).isEqualTo(1);
+            assertThat(desde.getValue()).isEqualTo(java.time.LocalDate.now().withDayOfMonth(1).minusMonths(5));
+        }
+
+        @Test
+        @DisplayName("sin datos del puerto no falla: pendiente en cero y serie vacía")
+        void toleraNulos() {
+            PayrollReport reporte = service.generateFor(7L);
+
+            assertThat(reporte.totalPendiente()).isEqualByComparingTo("0");
+            assertThat(reporte.pagosPorMes()).isEmpty();
+            assertThat(reporte.workerDetails()).isEmpty();
         }
     }
 }
