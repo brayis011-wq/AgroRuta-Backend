@@ -167,7 +167,7 @@ class RequestValidationTest {
             SiembraRequest r = new SiembraRequest();
             r.setFechaSiembra(LocalDate.now().plusDays(5));
             r.setCantidadPlantas(0);
-            r.setVariedad("COLOMBIA");
+            r.setVariedadId(1L);
             r.setLoteId(3L);
             assertThat(camposInvalidos(r))
                     .containsExactlyInAnyOrder("fechaSiembra", "cantidadPlantas");

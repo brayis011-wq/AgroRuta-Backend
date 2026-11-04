@@ -1,7 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.EstadoCultivo;
-import com.agroruta.crop.domain.VariedadUchuva;
 import jakarta.persistence.*;
 import java.time.LocalDate;
 
@@ -19,9 +18,15 @@ public class SiembraEntity {
     @Column(nullable = false)
     private Integer cantidadPlantas;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private VariedadUchuva variedad;
+    // Antes era un enum de uchuva; el inicializador del catálogo convierte la columna a texto
+    @Column(nullable = false, length = 80)
+    private String variedad;
+
+    @Column(name = "tipo_cultivo", length = 80)
+    private String tipoCultivo;
+
+    @Column(name = "variedad_id")
+    private Long variedadId;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -41,8 +46,14 @@ public class SiembraEntity {
     public Integer getCantidadPlantas() { return cantidadPlantas; }
     public void setCantidadPlantas(Integer cantidadPlantas) { this.cantidadPlantas = cantidadPlantas; }
 
-    public VariedadUchuva getVariedad() { return variedad; }
-    public void setVariedad(VariedadUchuva variedad) { this.variedad = variedad; }
+    public String getVariedad() { return variedad; }
+    public void setVariedad(String variedad) { this.variedad = variedad; }
+
+    public String getTipoCultivo() { return tipoCultivo; }
+    public void setTipoCultivo(String tipoCultivo) { this.tipoCultivo = tipoCultivo; }
+
+    public Long getVariedadId() { return variedadId; }
+    public void setVariedadId(Long variedadId) { this.variedadId = variedadId; }
 
     public EstadoCultivo getEstadoCultivo() { return estadoCultivo; }
     public void setEstadoCultivo(EstadoCultivo estadoCultivo) { this.estadoCultivo = estadoCultivo; }

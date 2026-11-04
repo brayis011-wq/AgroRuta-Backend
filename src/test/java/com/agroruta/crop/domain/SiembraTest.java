@@ -10,26 +10,26 @@ class SiembraTest {
     void deberiaCrearSiembraConConstructorCompleto() {
         LocalDate fecha = LocalDate.of(2026, 1, 15);
 
-        Siembra siembra = new Siembra(1L, fecha, 500, VariedadUchuva.COLOMBIA, 2L);
+        Siembra siembra = new Siembra(1L, fecha, 500, Variedades.COLOMBIA, 2L);
 
         assertEquals(1L, siembra.getId());
         assertEquals(fecha, siembra.getFechaSiembra());
         assertEquals(500, siembra.getCantidadPlantas());
-        assertEquals(VariedadUchuva.COLOMBIA, siembra.getVariedad());
+        assertEquals(Variedades.COLOMBIA.getNombre(), siembra.getVariedad());
         assertEquals(2L, siembra.getLoteId());
         assertEquals(EstadoCultivo.GERMINACION, siembra.getEstadoCultivo());
     }
 
     @Test
     void deberiaIniciarEnGerminacion() {
-        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, VariedadUchuva.COLOMBIA, 1L);
+        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, Variedades.COLOMBIA, 1L);
 
         assertEquals(EstadoCultivo.GERMINACION, siembra.getEstadoCultivo());
     }
 
     @Test
     void deberiaAvanzarDeGerminacionACrecimiento() {
-        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, VariedadUchuva.COLOMBIA, 1L);
+        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, Variedades.COLOMBIA, 1L);
 
         siembra.avanzarEtapa();
 
@@ -38,7 +38,7 @@ class SiembraTest {
 
     @Test
     void deberiaAvanzarTodasLasEtapas() {
-        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, VariedadUchuva.KENYA, 1L);
+        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, Variedades.KENYA, 1L);
 
         siembra.avanzarEtapa();
         assertEquals(EstadoCultivo.CRECIMIENTO, siembra.getEstadoCultivo());
@@ -55,7 +55,7 @@ class SiembraTest {
 
     @Test
     void deberiaLanzarExcepcionSiYaEstaFinalizado() {
-        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, VariedadUchuva.GIGANTE, 1L);
+        Siembra siembra = new Siembra(1L, LocalDate.now(), 100, Variedades.GIGANTE, 1L);
 
         siembra.avanzarEtapa(); // CRECIMIENTO
         siembra.avanzarEtapa(); // PRODUCCION
@@ -75,10 +75,10 @@ class SiembraTest {
 
     @Test
     void deberiaSoportarTodasLasVariedades() {
-        for (VariedadUchuva variedad : VariedadUchuva.values()) {
+        for (VariedadCultivo variedad : Variedades.TODAS) {
             Siembra siembra = new Siembra(1L, LocalDate.now(), 100, variedad, 1L);
 
-            assertEquals(variedad, siembra.getVariedad());
+            assertEquals(variedad.getNombre(), siembra.getVariedad());
         }
     }
 }

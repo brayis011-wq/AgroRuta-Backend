@@ -34,7 +34,7 @@ class CosechaServiceTest {
 
     @BeforeEach
     void setUp() {
-        Siembra siembra = new Siembra(siembraId, fecha, 200, VariedadUchuva.COLOMBIA, 1L);
+        Siembra siembra = new Siembra(siembraId, fecha, 200, Variedades.COLOMBIA, 1L);
         when(siembraUseCase.buscarSiembraPorId(siembraId)).thenReturn(siembra);
     }
 

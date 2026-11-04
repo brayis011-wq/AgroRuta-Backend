@@ -1,7 +1,6 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
 import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
@@ -21,9 +20,10 @@ public class SiembraRequest {
     @Max(value = 1_000_000, message = "La cantidad de plantas no puede superar 1.000.000")
     private Integer cantidadPlantas;
 
-    // El valor exacto (COLOMBIA, GIGANTE, KENYA) lo valida SiembraService.
-    @NotBlank(message = "La variedad es obligatoria")
-    private String variedad;
+    // Variedad del catálogo de cultivos; SiembraService valida que exista y esté activa.
+    @NotNull(message = "La variedad es obligatoria")
+    @Positive(message = "La variedad no es válida")
+    private Long variedadId;
 
     @NotNull(message = "El lote es obligatorio")
     @Positive(message = "El lote no es válido")

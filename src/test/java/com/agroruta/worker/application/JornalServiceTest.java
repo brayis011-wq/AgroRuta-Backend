@@ -68,7 +68,7 @@ class JornalServiceTest {
     }
 
     private static CultivoInfo cultivo(Long agricultorId, String estado) {
-        return new CultivoInfo(10L, agricultorId, 3L, "La Esperanza", 4L, "Lote 2", "COLOMBIA", estado);
+        return new CultivoInfo(10L, agricultorId, 3L, "La Esperanza", 4L, "Lote 2", "Uchuva", "Colombia", estado);
     }
 
     // ── validación del cultivo ────────────────────────────────────────────
