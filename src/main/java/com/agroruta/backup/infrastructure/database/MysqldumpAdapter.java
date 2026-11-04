@@ -57,13 +57,14 @@ public class MysqldumpAdapter implements DatabaseDumpPort {
                 "--host=" + host,
                 "--port=" + port,
                 "--user=" + username,
-                "--single-transaction",
                 "--no-tablespaces",
                 // Compatibilidad con TiDB (también funcionan con MySQL 8):
                 "--column-statistics=0",   // TiDB no tiene information_schema.COLUMN_STATISTICS
                 "--set-gtid-purged=OFF",   // TiDB no usa GTID
                 "--skip-triggers",         // TiDB no soporta triggers (la app no los usa)
                 "--skip-add-locks"));      // evita LOCK TABLES al restaurar
+        // MySQL: snapshot consistente. TiDB: no soporta los SAVEPOINT de --single-transaction.
+        command.add(properties.isSingleTransaction() ? "--single-transaction" : "--skip-lock-tables");
         addSslArg(command);
         command.add("--result-file=" + target);
         command.add(database);
