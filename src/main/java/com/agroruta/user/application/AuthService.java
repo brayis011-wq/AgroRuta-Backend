@@ -1,5 +1,7 @@
 package com.agroruta.user.application;
 
+import org.springframework.transaction.annotation.Transactional;
+import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.application.ports.out.TokenPort;
@@ -28,29 +30,48 @@ public class AuthService {
     private final TokenPort tokenPort;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final VinculoTrabajadorPort vinculoTrabajador;
 
     public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                        BuscarUsuarioUseCase buscarUsuarioUseCase,
                        TokenPort tokenPort,
                        PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager) {
+                       AuthenticationManager authenticationManager,
+                       VinculoTrabajadorPort vinculoTrabajador) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.buscarUsuarioUseCase = buscarUsuarioUseCase;
         this.tokenPort = tokenPort;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
+        this.vinculoTrabajador = vinculoTrabajador;
     }
 
+    @Transactional
     public AuthResponse registrar(RegisterRequest request) {
+        Rol rol = resolverRolAutoRegistro(request.getRol());
+
+        // Un trabajador se registra con su cédula: debe haberlo registrado antes un agricultor
+        String cedula = request.getCedula() == null ? "" : request.getCedula().trim();
+        if (rol == Rol.Trabajador) {
+            if (cedula.isEmpty()) {
+                throw new IllegalArgumentException("La cédula es obligatoria para registrarse como trabajador.");
+            }
+            vinculoTrabajador.validarCedulaDisponible(cedula);
+        }
+
         Usuario usuario = new Usuario(
                 null,
                 request.getNombre(),
                 request.getEmail(),
                 passwordEncoder.encode(request.getPassword()),
-                resolverRolAutoRegistro(request.getRol())
+                rol
         );
 
         Usuario guardado = registrarUsuarioUseCase.registrar(usuario);
+
+        if (rol == Rol.Trabajador) {
+            vinculoTrabajador.solicitarAcceso(guardado.getId(), guardado.getNombre(), guardado.getEmail(), cedula);
+        }
         CustomUserDetails userDetails = new CustomUserDetails(guardado);
         String token = tokenPort.generateToken(userDetails);
 

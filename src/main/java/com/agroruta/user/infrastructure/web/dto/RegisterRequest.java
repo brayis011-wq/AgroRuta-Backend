@@ -2,6 +2,7 @@ package com.agroruta.user.infrastructure.web.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -25,4 +26,9 @@ public class RegisterRequest {
     // Opcional: AuthService decide qué roles se permiten en el autorregistro.
     @Size(max = 20, message = "Rol no válido")
     private String rol;
+
+    // Obligatoria solo para el rol Trabajador (lo valida AuthService).
+    @Pattern(regexp = "^$|^[0-9A-Za-z.\\- ]{5,20}$",
+             message = "La cédula debe tener entre 5 y 20 caracteres (números, letras, puntos o guiones)")
+    private String cedula;
 }
