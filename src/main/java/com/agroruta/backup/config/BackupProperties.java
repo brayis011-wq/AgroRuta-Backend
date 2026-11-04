@@ -21,4 +21,11 @@ public class BackupProperties {
     /** Opción de SSL para el cliente. Vacío = comportamiento por defecto del cliente.
      *  MySQL: --ssl-mode=DISABLED | MariaDB (Docker/Alpine): --skip-ssl */
     private String sslArg = "";
+
+    /**
+     * true: dump consistente con --single-transaction (MySQL).
+     * false: sin transacción ni bloqueos, necesario en TiDB, que rechaza el
+     * "ROLLBACK TO SAVEPOINT" que usa mysqldump dentro de --single-transaction.
+     */
+    private boolean singleTransaction = true;
 }
