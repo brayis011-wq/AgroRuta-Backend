@@ -72,6 +72,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Buscamos al usuario en la base de datos
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
+                // Cuenta desactivada por un administrador: su token deja de servir de inmediato
+                if (!userDetails.isEnabled()) {
+                    sendUnauthorizedResponse(response, "Tu cuenta está desactivada");
+                    return;
+                }
+
                 // Validamos que el token sea correcto y no haya expirado
                 if (jwtService.isTokenValid(jwt, userDetails)) {
 

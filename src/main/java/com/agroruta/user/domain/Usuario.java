@@ -33,4 +33,11 @@ public class Usuario {
 
     public void desactivar() { this.activo = false; }
     public void activar()    { this.activo = true; }
+
+    public void cambiarRol(Rol nuevoRol) {
+        if (nuevoRol == null) {
+            throw new IllegalArgumentException("El rol es obligatorio.");
+        }
+        this.rol = nuevoRol;
+    }
 }
