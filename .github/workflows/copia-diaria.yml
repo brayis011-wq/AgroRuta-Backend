@@ -11,6 +11,9 @@
 #   BACKUP_PASSPHRASE   clave para cifrar la copia (guárdala: sin ella no se puede abrir)
 #
 # Para abrir una copia:  gpg --decrypt agroruta-AAAA-MM-DD.sql.gz.gpg | gunzip > copia.sql
+#
+# También guarda "esquema-AAAA-MM-DD": solo la estructura de las tablas (sin datos de nadie),
+# sin cifrar, para comparar la base de producción con las migraciones de Flyway.
 name: Copia diaria
 
 on:
@@ -42,6 +45,27 @@ jobs:
           # Una copia vacía o casi vacía es un error, no una copia
           test "$(stat -c%s "agroruta-$FECHA.sql.gz")" -gt 1024
 
+      - name: Copiar solo la estructura (sin datos)
+        env:
+          MYSQL_PWD: ${{ secrets.BACKUP_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          mysqldump --host="${{ secrets.BACKUP_DB_HOST }}" --port="${{ secrets.BACKUP_DB_PORT }}" \
+            --user="${{ secrets.BACKUP_DB_USER }}" --ssl-mode=REQUIRED \
+            --no-data --skip-comments --no-tablespaces --column-statistics=0 --set-gtid-purged=OFF \
+            --skip-triggers --skip-add-locks --skip-lock-tables \
+            "${{ secrets.BACKUP_DB_NAME }}" \
+            | sed -E 's/ AUTO_INCREMENT=[0-9]+//' > "esquema-$FECHA.sql"
+          grep -q "CREATE TABLE" "esquema-$FECHA.sql"
+
+      - name: Guardar la estructura
+        uses: actions/upload-artifact@v7
+        with:
+          name: esquema-${{ env.FECHA }}
+          path: esquema-${{ env.FECHA }}.sql
+          retention-days: 30
+          if-no-files-found: error
+
       - name: Cifrar
         env:
           PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
@@ -53,7 +77,7 @@ jobs:
           rm "agroruta-$FECHA.sql.gz"
 
       - name: Guardar la copia
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: agroruta-${{ env.FECHA }}
           path: agroruta-${{ env.FECHA }}.sql.gz.gpg
