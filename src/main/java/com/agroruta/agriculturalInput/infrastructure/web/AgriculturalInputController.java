@@ -20,8 +20,7 @@ import java.util.List;
 
  */
 @RestController
-@RequestMapping("/api/agricultural-inputs")  // 👈 agrega /api/
-@CrossOrigin(origins = "${app.cors.allowed-origins}")
+@RequestMapping("/api/agricultural-inputs")
 public class AgriculturalInputController {
 
     // Cada campo es un caso de uso independiente (respeta ISP)

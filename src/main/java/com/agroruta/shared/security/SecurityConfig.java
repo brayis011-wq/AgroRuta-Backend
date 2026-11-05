@@ -34,7 +34,8 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/v1/weather/**").permitAll()
+                        // El clima usa nuestra clave de OpenWeather: solo con sesión iniciada, para que nadie gaste la cuota desde afuera
+                        .requestMatchers("/api/v1/weather/**").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Solo el health es público (healthchecks de Docker/Render)
