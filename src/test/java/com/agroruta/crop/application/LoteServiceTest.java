@@ -1,4 +1,6 @@
 package com.agroruta.crop.application;
+
+import com.agroruta.crop.domain.EstadoLote;
 import org.mockito.quality.Strictness;
 import org.mockito.junit.jupiter.MockitoSettings;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
@@ -125,5 +127,76 @@ class LoteServiceTest {
 
         assertEquals("[[4.71,-74.07]]", resultado.getCoordenadas());
         verify(loteRepository).save(any());
+    }
+
+    // ── edición y estado ──────────────────────────────────────────────
+
+    @Test
+    void editarCambiaNombreYArea() {
+        Lote lote = new Lote(1L, "Lote A", 10.0, fincaId);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+        when(loteRepository.existsByNombreAndFincaId("Lote Norte", fincaId)).thenReturn(false);
+        when(loteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Lote resultado = service.actualizarLote(1L, "Lote Norte", 12.5);
+
+        assertEquals("Lote Norte", resultado.getNombre());
+        assertEquals(12.5, resultado.getArea());
+    }
+
+    @Test
+    void editarRechazaUnNombreQueYaUsaOtroLote() {
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(new Lote(1L, "Lote A", 10.0, fincaId)));
+        when(loteRepository.existsByNombreAndFincaId("Lote B", fincaId)).thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> service.actualizarLote(1L, "Lote B", 10.0));
+    }
+
+    @Test
+    void editarConElMismoNombreNoChocaConsigoMismo() {
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(new Lote(1L, "Lote A", 10.0, fincaId)));
+        when(loteRepository.existsByNombreAndFincaId(any(), any())).thenReturn(true);
+        when(loteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        assertEquals(8.0, service.actualizarLote(1L, "lote a", 8.0).getArea());
+    }
+
+    @Test
+    void cambiarEstadoPoneElLoteEnDescanso() {
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(new Lote(1L, "Lote A", 10.0, fincaId)));
+        when(loteRepository.existsSiembraActivaEnLote(1L)).thenReturn(false);
+        when(loteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        assertEquals(EstadoLote.EN_DESCANSO, service.cambiarEstado(1L, "en_descanso").getEstado());
+    }
+
+    @Test
+    void cambiarEstadoNoSePermiteConSiembraEnCursoNiAEnCultivo() {
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(new Lote(1L, "Lote A", 10.0, fincaId)));
+        when(loteRepository.existsSiembraActivaEnLote(1L)).thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> service.cambiarEstado(1L, "DISPONIBLE"));
+        assertThrows(BusinessException.class, () -> service.cambiarEstado(1L, "EN_CULTIVO"));
+    }
+
+    @Test
+    void ocuparYLiberarCambianElEstado() {
+        Lote lote = new Lote(1L, "Lote A", 10.0, fincaId);
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
+
+        service.ocuparLote(1L);
+        assertEquals(EstadoLote.EN_CULTIVO, lote.getEstado());
+
+        service.liberarLote(1L, EstadoLote.EN_DESCANSO);
+        assertEquals(EstadoLote.EN_DESCANSO, lote.getEstado());
+    }
+
+    @Test
+    void noSeBorraUnLoteConSiembraEnCurso() {
+        when(loteRepository.findById(1L)).thenReturn(Optional.of(new Lote(1L, "Lote A", 10.0, fincaId)));
+        when(loteRepository.existsSiembraActivaEnLote(1L)).thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> service.eliminarLote(1L));
+        verify(loteRepository, never()).deleteById(any());
     }
 }

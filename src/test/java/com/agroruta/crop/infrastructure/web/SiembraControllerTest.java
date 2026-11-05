@@ -137,7 +137,7 @@ class SiembraControllerTest {
     void deberiaAvanzarEtapaDeGerminacionACrecimiento() throws Exception {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
-        when(siembraUseCase.avanzarEtapa(1L)).thenReturn(siembra);
+        when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
         mockMvc.perform(put("/api/siembras/1/avanzar-etapa"))
                 .andExpect(status().isOk())
@@ -150,7 +150,7 @@ class SiembraControllerTest {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L);
         siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
         siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
-        when(siembraUseCase.avanzarEtapa(1L)).thenReturn(siembra);
+        when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
         mockMvc.perform(put("/api/siembras/1/avanzar-etapa"))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ class SiembraControllerTest {
         siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
         siembra.avanzarEtapa();  // PRODUCCION  → COSECHA
         siembra.avanzarEtapa();  // COSECHA     → FINALIZADO
-        when(siembraUseCase.avanzarEtapa(1L)).thenReturn(siembra);
+        when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
         mockMvc.perform(put("/api/siembras/1/avanzar-etapa"))
                 .andExpect(status().isOk())
@@ -213,5 +213,45 @@ class SiembraControllerTest {
                 .andExpect(status().isNoContent());
 
         verify(siembraUseCase).eliminarSiembra(1L);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────
+    //  Temporadas y etapas
+    // ──────────────────────────────────────────────────────────────────────
+
+    @Test
+    void avanzarEtapaAceptaLaFechaDelCambio() throws Exception {
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
+        siembra.avanzarEtapa();
+        when(siembraUseCase.avanzarEtapa(1L, LocalDate.of(2025, 3, 1))).thenReturn(siembra);
+
+        mockMvc.perform(put("/api/siembras/1/avanzar-etapa").param("fecha", "2025-03-01"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estadoCultivo").value("CRECIMIENTO"));
+    }
+
+    @Test
+    void finalizarConDescansoRetorna200() throws Exception {
+        Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
+        siembra.finalizar(LocalDate.of(2025, 9, 1));
+        when(siembraUseCase.finalizarSiembra(1L, LocalDate.of(2025, 9, 1), true)).thenReturn(siembra);
+
+        mockMvc.perform(put("/api/siembras/1/finalizar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fecha\": \"2025-09-01\", \"dejarEnDescanso\": true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.estadoCultivo").value("FINALIZADO"));
+    }
+
+    @Test
+    void historialDelLoteDevuelveTodasLasTemporadas() throws Exception {
+        when(siembraUseCase.listarHistorialPorLote(3L)).thenReturn(List.of(
+                new Siembra(2L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L),
+                new Siembra(1L, FECHA_SIEMBRA.minusYears(1), 400, Variedades.COLOMBIA, 3L)));
+
+        mockMvc.perform(get("/api/siembras/lote/3/historial"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].id").value(2));
     }
 }

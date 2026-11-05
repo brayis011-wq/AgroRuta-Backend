@@ -125,13 +125,14 @@ class SiembraRepositoryImplTest {
         assertFalse(resultado.isPresent());
     }
 
-    // ── findByLoteId ─────────────────────────────────────────────
+    // ── findActivaByLoteId / historial ───────────────────────────
 
     @Test
-    void deberiaRetornarSiembraCuandoExisteElLoteId() {
-        when(jpaRepository.findByLoteId(LOTE_ID)).thenReturn(Optional.of(entityGuardada));
+    void deberiaRetornarLaSiembraEnCursoDelLote() {
+        when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(
+                LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(Optional.of(entityGuardada));
 
-        Optional<Siembra> resultado = repository.findByLoteId(LOTE_ID);
+        Optional<Siembra> resultado = repository.findActivaByLoteId(LOTE_ID);
 
         assertTrue(resultado.isPresent());
         assertEquals(ID,      resultado.get().getId());
@@ -140,21 +141,31 @@ class SiembraRepositoryImplTest {
     }
 
     @Test
-    void deberiaRetornarVacioSiNoHaySiembraEnElLote() {
-        when(jpaRepository.findByLoteId(LOTE_ID)).thenReturn(Optional.empty());
+    void deberiaRetornarVacioSiNoHaySiembraEnCursoEnElLote() {
+        when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(
+                LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(Optional.empty());
 
-        Optional<Siembra> resultado = repository.findByLoteId(LOTE_ID);
-
-        assertFalse(resultado.isPresent());
+        assertFalse(repository.findActivaByLoteId(LOTE_ID).isPresent());
     }
 
     @Test
-    void findByLoteIdDeberiaDelegarAlJpaConElParametroCorrecto() {
-        when(jpaRepository.findByLoteId(LOTE_ID)).thenReturn(Optional.empty());
+    void deberiaRetornarTodasLasTemporadasDelLoteConSuFechaFin() {
+        SiembraEntity anterior = new SiembraEntity();
+        anterior.setId(2L);
+        anterior.setFechaSiembra(FECHA_SIEMBRA.minusYears(1));
+        anterior.setCantidadPlantas(100);
+        anterior.setVariedad("Gigante");
+        anterior.setEstadoCultivo(EstadoCultivo.FINALIZADO);
+        anterior.setLoteId(LOTE_ID);
+        anterior.setFechaFin(FECHA_SIEMBRA.minusDays(20));
+        when(jpaRepository.findByLoteIdOrderByFechaSiembraDescIdDesc(LOTE_ID))
+                .thenReturn(List.of(entityGuardada, anterior));
 
-        repository.findByLoteId(LOTE_ID);
+        List<Siembra> resultado = repository.findHistorialByLoteId(LOTE_ID);
 
-        verify(jpaRepository, times(1)).findByLoteId(LOTE_ID);
+        assertEquals(2, resultado.size());
+        assertEquals(ID, resultado.get(0).getId());
+        assertEquals(FECHA_SIEMBRA.minusDays(20), resultado.get(1).getFechaFin());
     }
 
     // ── findByEstadoCultivo ───────────────────────────────────────
@@ -200,29 +211,20 @@ class SiembraRepositoryImplTest {
         verify(jpaRepository, times(1)).findByEstadoCultivo(EstadoCultivo.PRODUCCION);
     }
 
-    // ── existsByLoteId ────────────────────────────────────────────
+    // ── existsActivaByLoteId ──────────────────────────────────────
 
     @Test
-    void deberiaRetornarTrueSiExisteSiembraEnElLote() {
-        when(jpaRepository.existsByLoteId(LOTE_ID)).thenReturn(true);
+    void deberiaRetornarTrueSiHaySiembraEnCursoEnElLote() {
+        when(jpaRepository.existsByLoteIdAndEstadoCultivoNot(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(true);
 
-        assertTrue(repository.existsByLoteId(LOTE_ID));
+        assertTrue(repository.existsActivaByLoteId(LOTE_ID));
     }
 
     @Test
-    void deberiaRetornarFalseSiNoExisteSiembraEnElLote() {
-        when(jpaRepository.existsByLoteId(LOTE_ID)).thenReturn(false);
+    void deberiaRetornarFalseSiSoloHaySiembrasFinalizadas() {
+        when(jpaRepository.existsByLoteIdAndEstadoCultivoNot(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(false);
 
-        assertFalse(repository.existsByLoteId(LOTE_ID));
-    }
-
-    @Test
-    void existsByLoteIdDeberiaDelegarAlJpaConElParametroCorrecto() {
-        when(jpaRepository.existsByLoteId(any())).thenReturn(false);
-
-        repository.existsByLoteId(LOTE_ID);
-
-        verify(jpaRepository, times(1)).existsByLoteId(LOTE_ID);
+        assertFalse(repository.existsActivaByLoteId(LOTE_ID));
     }
 
     // ── deleteById ───────────────────────────────────────────────

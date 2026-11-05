@@ -8,4 +8,5 @@ public interface FumigacionRepository {
     Optional<Fumigacion> findById(Long id);
     List<Fumigacion> findBySiembraId(Long siembraId);
     void deleteById(Long id);
+    void deleteBySiembraId(Long siembraId);
 }

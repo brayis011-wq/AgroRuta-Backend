@@ -49,6 +49,11 @@ public class CosechaRepositoryImpl implements CosechaRepository {
         jpaRepository.deleteById(id);
     }
 
+    @Override
+    public void deleteBySiembraId(Long siembraId) {
+        jpaRepository.deleteBySiembraId(siembraId);
+    }
+
     private CosechaEntity toEntity(Cosecha cosecha) {
         CosechaEntity entity = new CosechaEntity();
         entity.setId(cosecha.getId());

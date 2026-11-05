@@ -26,11 +26,20 @@ public class Lote {
         this.estado = EstadoLote.DISPONIBLE;
     }
 
+    /** Se puede sembrar en un lote disponible o en descanso, no en uno ocupado. */
     public void iniciarCultivo() {
-        if (this.estado != EstadoLote.DISPONIBLE) {
-            throw new IllegalStateException("El lote no está disponible para iniciar un cultivo.");
+        if (this.estado == EstadoLote.EN_CULTIVO) {
+            throw new IllegalStateException("El lote ya tiene un cultivo en curso.");
         }
         this.estado = EstadoLote.EN_CULTIVO;
+    }
+
+    public void editar(String nombre, Double area) {
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre del lote es obligatorio.");
+        }
+        this.nombre = nombre.trim();
+        this.area = area;
     }
 
     public void ponerEnDescanso() { this.estado = EstadoLote.EN_DESCANSO; }

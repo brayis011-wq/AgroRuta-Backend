@@ -7,6 +7,7 @@ import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,14 +25,13 @@ import static org.mockito.Mockito.*;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SiembraServiceTest {
 
-    @Mock
-    private SiembraRepository siembraRepository;
-
-    @Mock
-    private LoteUseCase loteUseCase;
-
-    @Mock
-    private CatalogoCultivoRepository catalogo;
+    @Mock private SiembraRepository siembraRepository;
+    @Mock private LoteUseCase loteUseCase;
+    @Mock private CatalogoCultivoRepository catalogo;
+    @Mock private EtapaSiembraRepository etapaRepository;
+    @Mock private CosechaRepository cosechaRepository;
+    @Mock private FumigacionRepository fumigacionRepository;
+    @Mock private ActividadCultivoRepository actividadRepository;
 
     @InjectMocks
     private SiembraService service;
@@ -44,13 +44,22 @@ class SiembraServiceTest {
         Lote lote = new Lote(loteId, "Lote A", 10.0, 1L);
         when(loteUseCase.buscarLotePorId(loteId)).thenReturn(lote);
         when(catalogo.buscarVariedad(1L)).thenReturn(Optional.of(Variedades.COLOMBIA));
+        when(siembraRepository.findActivaByLoteId(any())).thenReturn(Optional.empty());
+        when(siembraRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(etapaRepository.findUltima(any())).thenReturn(Optional.empty());
     }
+
+    private Siembra siembraEn(EstadoCultivo estado) {
+        Siembra s = new Siembra(1L, fecha, 500, Variedades.COLOMBIA, loteId);
+        s.setEstadoCultivo(estado);
+        when(siembraRepository.findById(1L)).thenReturn(Optional.of(s));
+        return s;
+    }
+
+    // ── registrar ─────────────────────────────────────────────────────
 
     @Test
     void deberiaGuardarCultivoYVariedadDelCatalogo() {
-        when(siembraRepository.existsByLoteId(loteId)).thenReturn(false);
-        when(siembraRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
         Siembra resultado = service.registrarSiembra(fecha, 500, 1L, loteId);
 
         assertEquals("Uchuva", resultado.getTipoCultivo());
@@ -60,8 +69,25 @@ class SiembraServiceTest {
     }
 
     @Test
+    void alSembrarElLoteQuedaEnCultivoYSeRegistraLaGerminacion() {
+        when(siembraRepository.save(any())).thenAnswer(inv -> {
+            Siembra s = inv.getArgument(0);
+            s.setId(7L);
+            return s;
+        });
+
+        service.registrarSiembra(fecha, 500, 1L, loteId);
+
+        verify(loteUseCase).ocuparLote(loteId);
+        ArgumentCaptor<EtapaSiembra> etapa = ArgumentCaptor.forClass(EtapaSiembra.class);
+        verify(etapaRepository).save(etapa.capture());
+        assertEquals(7L, etapa.getValue().getSiembraId());
+        assertEquals(EstadoCultivo.GERMINACION, etapa.getValue().getEtapa());
+        assertEquals(fecha, etapa.getValue().getFecha());
+    }
+
+    @Test
     void deberiaRechazarVariedadInexistente() {
-        when(siembraRepository.existsByLoteId(loteId)).thenReturn(false);
         when(catalogo.buscarVariedad(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
@@ -71,7 +97,6 @@ class SiembraServiceTest {
 
     @Test
     void deberiaRechazarVariedadDesactivada() {
-        when(siembraRepository.existsByLoteId(loteId)).thenReturn(false);
         when(catalogo.buscarVariedad(5L)).thenReturn(Optional.of(
                 new VariedadCultivo(5L, "Caturra", false, 2L, "Café", true)));
 
@@ -81,7 +106,6 @@ class SiembraServiceTest {
 
     @Test
     void deberiaRechazarCultivoDesactivado() {
-        when(siembraRepository.existsByLoteId(loteId)).thenReturn(false);
         when(catalogo.buscarVariedad(6L)).thenReturn(Optional.of(
                 new VariedadCultivo(6L, "Hass", true, 3L, "Aguacate", false)));
 
@@ -90,105 +114,246 @@ class SiembraServiceTest {
     }
 
     @Test
-    void deberiaRegistrarSiembraCorrectamente() {
-        Siembra siembra = new Siembra(1L, fecha, 500, Variedades.COLOMBIA, loteId);
-        when(siembraRepository.existsByLoteId(loteId)).thenReturn(false);
-        when(siembraRepository.save(any())).thenReturn(siembra);
+    void deberiaRechazarSiElLoteTieneUnaSiembraEnCurso() {
+        when(siembraRepository.findActivaByLoteId(loteId)).thenReturn(Optional.of(
+                new Siembra(3L, fecha, 100, Variedades.KENYA, loteId)));
 
-        Siembra resultado = service.registrarSiembra(fecha, 500, 1L, loteId);
-
-        assertNotNull(resultado);
-        assertEquals(Variedades.COLOMBIA.getNombre(), resultado.getVariedad());
-        verify(siembraRepository).save(any());
+        BusinessException ex = assertThrows(BusinessException.class, () ->
+                service.registrarSiembra(fecha, 500, 1L, loteId));
+        assertTrue(ex.getMessage().contains("en curso"));
+        verify(siembraRepository, never()).save(any());
     }
 
     @Test
-    void deberiaLanzarExcepcionSiLoteYaTieneSiembra() {
-        when(siembraRepository.existsByLoteId(loteId)).thenReturn(true);
+    void sePuedeSembrarDeNuevoCuandoLaAnteriorTermino() {
+        // findActivaByLoteId vacío: la siembra anterior está finalizada
+        Siembra resultado = service.registrarSiembra(fecha, 300, 1L, loteId);
 
-        assertThrows(BusinessException.class, () ->
-                service.registrarSiembra(fecha, 500, 1L, loteId));
+        assertNotNull(resultado);
+        assertEquals(EstadoCultivo.GERMINACION, resultado.getEstadoCultivo());
     }
+
+    // ── buscar ────────────────────────────────────────────────────────
 
     @Test
     void deberiaBuscarSiembraPorId() {
-        Siembra siembra = new Siembra(1L, fecha, 500, Variedades.KENYA, loteId);
-        when(siembraRepository.findById(1L)).thenReturn(Optional.of(siembra));
+        siembraEn(EstadoCultivo.GERMINACION);
 
-        Siembra resultado = service.buscarSiembraPorId(1L);
-
-        assertNotNull(resultado);
-        assertEquals(1L, resultado.getId());
+        assertEquals(1L, service.buscarSiembraPorId(1L).getId());
     }
 
     @Test
     void deberiaLanzarExcepcionSiSiembraNoExiste() {
         when(siembraRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.buscarSiembraPorId(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarSiembraPorId(99L));
     }
 
     @Test
-    void deberiaBuscarSiembraPorLote() {
+    void deberiaBuscarLaSiembraEnCursoDelLote() {
         Siembra siembra = new Siembra(1L, fecha, 500, Variedades.GIGANTE, loteId);
-        when(siembraRepository.findByLoteId(loteId)).thenReturn(Optional.of(siembra));
+        when(siembraRepository.findActivaByLoteId(loteId)).thenReturn(Optional.of(siembra));
 
-        Siembra resultado = service.buscarSiembraPorLote(loteId);
-
-        assertNotNull(resultado);
-        assertEquals(loteId, resultado.getLoteId());
+        assertEquals(loteId, service.buscarSiembraPorLote(loteId).getLoteId());
     }
 
     @Test
     void deberiaLanzarExcepcionSiNoHaySiembraEnLote() {
-        when(siembraRepository.findByLoteId(99L)).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.buscarSiembraPorLote(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarSiembraPorLote(99L));
     }
 
     @Test
-    void deberiaAvanzarEtapa() {
-        Siembra siembra = new Siembra(1L, fecha, 500, Variedades.COLOMBIA, loteId);
-        when(siembraRepository.findById(1L)).thenReturn(Optional.of(siembra));
-        when(siembraRepository.save(any())).thenReturn(siembra);
+    void deberiaListarElHistorialDelLote() {
+        when(siembraRepository.findHistorialByLoteId(loteId)).thenReturn(List.of(
+                new Siembra(2L, fecha, 100, Variedades.GIGANTE, loteId),
+                new Siembra(1L, fecha.minusYears(1), 100, Variedades.KENYA, loteId)));
 
-        Siembra resultado = service.avanzarEtapa(1L);
+        assertEquals(2, service.listarHistorialPorLote(loteId).size());
+    }
+
+    // ── etapas ────────────────────────────────────────────────────────
+
+    @Test
+    void deberiaAvanzarEtapaYGuardarLaFecha() {
+        siembraEn(EstadoCultivo.GERMINACION);
+        LocalDate dia = LocalDate.now().minusDays(1);
+
+        Siembra resultado = service.avanzarEtapa(1L, dia);
 
         assertEquals(EstadoCultivo.CRECIMIENTO, resultado.getEstadoCultivo());
-        verify(siembraRepository).save(any());
+        ArgumentCaptor<EtapaSiembra> etapa = ArgumentCaptor.forClass(EtapaSiembra.class);
+        verify(etapaRepository).save(etapa.capture());
+        assertEquals(EstadoCultivo.CRECIMIENTO, etapa.getValue().getEtapa());
+        assertEquals(dia, etapa.getValue().getFecha());
+        verify(loteUseCase, never()).liberarLote(any(), any());
     }
+
+    @Test
+    void sinFechaElCambioDeEtapaQuedaConLaDeHoy() {
+        siembraEn(EstadoCultivo.GERMINACION);
+
+        service.avanzarEtapa(1L, null);
+
+        ArgumentCaptor<EtapaSiembra> etapa = ArgumentCaptor.forClass(EtapaSiembra.class);
+        verify(etapaRepository).save(etapa.capture());
+        assertEquals(LocalDate.now(), etapa.getValue().getFecha());
+    }
+
+    @Test
+    void noSeAceptaUnaFechaAnteriorALaEtapaAnterior() {
+        siembraEn(EstadoCultivo.CRECIMIENTO);
+        when(etapaRepository.findUltima(1L)).thenReturn(Optional.of(
+                new EtapaSiembra(4L, 1L, EstadoCultivo.CRECIMIENTO, LocalDate.of(2026, 3, 1))));
+
+        assertThrows(BusinessException.class, () -> service.avanzarEtapa(1L, LocalDate.of(2026, 2, 1)));
+    }
+
+    @Test
+    void noSeAceptaUnaFechaFutura() {
+        siembraEn(EstadoCultivo.GERMINACION);
+
+        assertThrows(BusinessException.class, () -> service.avanzarEtapa(1L, LocalDate.now().plusDays(1)));
+    }
+
+    @Test
+    void alAvanzarDesdeCosechaSeFinalizaYElLoteQuedaDisponible() {
+        siembraEn(EstadoCultivo.COSECHA);
+
+        Siembra resultado = service.avanzarEtapa(1L, null);
+
+        assertEquals(EstadoCultivo.FINALIZADO, resultado.getEstadoCultivo());
+        assertEquals(LocalDate.now(), resultado.getFechaFin());
+        verify(loteUseCase).liberarLote(loteId, EstadoLote.DISPONIBLE);
+    }
+
+    @Test
+    void noSePuedeAvanzarUnaSiembraFinalizada() {
+        siembraEn(EstadoCultivo.FINALIZADO);
+
+        assertThrows(BusinessException.class, () -> service.avanzarEtapa(1L, null));
+    }
+
+    @Test
+    void retrocederBorraElUltimoCambioDeEtapa() {
+        siembraEn(EstadoCultivo.PRODUCCION);
+        when(etapaRepository.findUltima(1L)).thenReturn(Optional.of(
+                new EtapaSiembra(9L, 1L, EstadoCultivo.PRODUCCION, fecha.plusDays(60))));
+
+        Siembra resultado = service.retrocederEtapa(1L);
+
+        assertEquals(EstadoCultivo.CRECIMIENTO, resultado.getEstadoCultivo());
+        verify(etapaRepository).deleteById(9L);
+    }
+
+    @Test
+    void retrocederUnaFinalizadaLaReabreYOcupaElLote() {
+        Siembra s = siembraEn(EstadoCultivo.FINALIZADO);
+        s.setFechaFin(fecha.plusDays(200));
+        when(siembraRepository.existsActivaByLoteId(loteId)).thenReturn(false);
+
+        Siembra resultado = service.retrocederEtapa(1L);
+
+        assertEquals(EstadoCultivo.COSECHA, resultado.getEstadoCultivo());
+        assertNull(resultado.getFechaFin());
+        verify(loteUseCase).ocuparLote(loteId);
+    }
+
+    @Test
+    void noSeReabreSiElLoteYaTieneOtraSiembraEnCurso() {
+        siembraEn(EstadoCultivo.FINALIZADO);
+        when(siembraRepository.existsActivaByLoteId(loteId)).thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> service.retrocederEtapa(1L));
+        verify(siembraRepository, never()).save(any());
+    }
+
+    @Test
+    void noSePuedeRetrocederDesdeGerminacion() {
+        siembraEn(EstadoCultivo.GERMINACION);
+
+        assertThrows(BusinessException.class, () -> service.retrocederEtapa(1L));
+    }
+
+    @Test
+    void finalizarDejaElLoteEnDescansoSiSePide() {
+        siembraEn(EstadoCultivo.CRECIMIENTO);
+        LocalDate dia = LocalDate.now().minusDays(2);
+
+        Siembra resultado = service.finalizarSiembra(1L, dia, true);
+
+        assertEquals(EstadoCultivo.FINALIZADO, resultado.getEstadoCultivo());
+        assertEquals(dia, resultado.getFechaFin());
+        verify(loteUseCase).liberarLote(loteId, EstadoLote.EN_DESCANSO);
+    }
+
+    // ── editar ────────────────────────────────────────────────────────
+
+    @Test
+    void editarCambiaPlantasFechaYVariedad() {
+        siembraEn(EstadoCultivo.GERMINACION);
+        EtapaSiembra germinacion = new EtapaSiembra(3L, 1L, EstadoCultivo.GERMINACION, fecha);
+        when(etapaRepository.findBySiembraId(1L)).thenReturn(List.of(germinacion));
+        when(catalogo.buscarVariedad(2L)).thenReturn(Optional.of(Variedades.GIGANTE));
+
+        Siembra resultado = service.actualizarSiembra(1L, fecha.minusDays(3), 650, 2L);
+
+        assertEquals(650, resultado.getCantidadPlantas());
+        assertEquals(fecha.minusDays(3), resultado.getFechaSiembra());
+        assertEquals(Variedades.GIGANTE.getNombre(), resultado.getVariedad());
+        assertEquals(fecha.minusDays(3), germinacion.getFecha());
+        verify(etapaRepository).save(germinacion);
+    }
+
+    @Test
+    void editarNoAceptaUnaFechaDeSiembraPosteriorAUnCambioDeEtapa() {
+        siembraEn(EstadoCultivo.CRECIMIENTO);
+        when(etapaRepository.findBySiembraId(1L)).thenReturn(List.of(
+                new EtapaSiembra(3L, 1L, EstadoCultivo.GERMINACION, fecha),
+                new EtapaSiembra(4L, 1L, EstadoCultivo.CRECIMIENTO, fecha.plusDays(20))));
+
+        assertThrows(BusinessException.class, () ->
+                service.actualizarSiembra(1L, fecha.plusDays(30), null, null));
+    }
+
+    // ── otros ─────────────────────────────────────────────────────────
 
     @Test
     void deberiaListarSiembrasPorEstado() {
-        List<Siembra> siembras = List.of(
+        when(siembraRepository.findByEstadoCultivo(EstadoCultivo.GERMINACION)).thenReturn(List.of(
                 new Siembra(1L, fecha, 100, Variedades.COLOMBIA, loteId),
-                new Siembra(2L, fecha, 200, Variedades.GIGANTE, 2L)
-        );
-        when(siembraRepository.findByEstadoCultivo(EstadoCultivo.GERMINACION)).thenReturn(siembras);
+                new Siembra(2L, fecha, 200, Variedades.GIGANTE, 2L)));
 
-        List<Siembra> resultado = service.listarSiembrasPorEstado("GERMINACION");
-
-        assertEquals(2, resultado.size());
-        verify(siembraRepository).findByEstadoCultivo(EstadoCultivo.GERMINACION);
+        assertEquals(2, service.listarSiembrasPorEstado("GERMINACION").size());
     }
 
     @Test
-    void deberiaEliminarSiembra() {
-        Siembra siembra = new Siembra(1L, fecha, 500, Variedades.COLOMBIA, loteId);
-        when(siembraRepository.findById(1L)).thenReturn(Optional.of(siembra));
+    void eliminarBorraSusRegistrosYLiberaElLote() {
+        siembraEn(EstadoCultivo.PRODUCCION);
+
+        service.eliminarSiembra(1L);
+
+        verify(cosechaRepository).deleteBySiembraId(1L);
+        verify(fumigacionRepository).deleteBySiembraId(1L);
+        verify(actividadRepository).deleteBySiembraId(1L);
+        verify(etapaRepository).deleteBySiembraId(1L);
+        verify(siembraRepository).deleteById(1L);
+        verify(loteUseCase).liberarLote(loteId, EstadoLote.DISPONIBLE);
+    }
+
+    @Test
+    void eliminarUnaTemporadaTerminadaNoTocaElLote() {
+        siembraEn(EstadoCultivo.FINALIZADO);
 
         service.eliminarSiembra(1L);
 
         verify(siembraRepository).deleteById(1L);
+        verify(loteUseCase, never()).liberarLote(any(), any());
     }
 
     @Test
     void deberiaLanzarExcepcionAlEliminarSiembraInexistente() {
         when(siembraRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.eliminarSiembra(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.eliminarSiembra(99L));
     }
 }

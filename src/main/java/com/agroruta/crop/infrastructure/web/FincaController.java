@@ -45,6 +45,14 @@ public class FincaController {
         return ResponseEntity.ok(fincaUseCase.listarFincasPorAgricultor(agricultorId));
     }
 
+    /** Edita nombre, ubicación y hectáreas (el agricultor del cuerpo se ignora) */
+    @PutMapping("/{id}")
+    @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
+    public ResponseEntity<Finca> actualizar(@PathVariable Long id, @Valid @RequestBody FincaRequest req) {
+        return ResponseEntity.ok(fincaUseCase.actualizarFinca(
+                id, req.getNombre(), req.getUbicacion(), req.getHectareas()));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {

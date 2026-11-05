@@ -43,6 +43,16 @@ class LoteTest {
     }
 
     @Test
+    void sePuedeSembrarEnUnLoteEnDescanso() {
+        Lote lote = new Lote(1L, "Lote A", 10.0, 5L);
+        lote.ponerEnDescanso();
+
+        lote.iniciarCultivo();
+
+        assertEquals(EstadoLote.EN_CULTIVO, lote.getEstado());
+    }
+
+    @Test
     void deberiaPasarADescanso() {
         Lote lote = new Lote(1L, "Lote A", 10.0, 5L);
 

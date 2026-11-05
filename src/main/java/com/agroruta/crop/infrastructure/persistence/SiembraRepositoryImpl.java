@@ -25,8 +25,8 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         return toDomain(saved);
     }
     @Override
-    public boolean existsByLoteId(Long loteId) {
-        return jpaRepository.existsByLoteId(loteId);
+    public boolean existsActivaByLoteId(Long loteId) {
+        return jpaRepository.existsByLoteIdAndEstadoCultivoNot(loteId, EstadoCultivo.FINALIZADO);
     }
     @Override
     public Optional<Siembra> findById(Long id) {
@@ -34,8 +34,16 @@ public class SiembraRepositoryImpl implements SiembraRepository {
     }
 
     @Override
-    public Optional<Siembra> findByLoteId(Long loteId) {
-        return jpaRepository.findByLoteId(loteId).map(this::toDomain);
+    public Optional<Siembra> findActivaByLoteId(Long loteId) {
+        return jpaRepository
+                .findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(loteId, EstadoCultivo.FINALIZADO)
+                .map(this::toDomain);
+    }
+
+    @Override
+    public List<Siembra> findHistorialByLoteId(Long loteId) {
+        return jpaRepository.findByLoteIdOrderByFechaSiembraDescIdDesc(loteId)
+                .stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
@@ -59,6 +67,7 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         entity.setVariedadId(siembra.getVariedadId());
         entity.setEstadoCultivo(siembra.getEstadoCultivo());
         entity.setLoteId(siembra.getLoteId());
+        entity.setFechaFin(siembra.getFechaFin());
         return entity;
     }
 
@@ -72,6 +81,7 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         siembra.setVariedadId(entity.getVariedadId());
         siembra.setEstadoCultivo(entity.getEstadoCultivo());
         siembra.setLoteId(entity.getLoteId());
+        siembra.setFechaFin(entity.getFechaFin());
         return siembra;
     }
 }

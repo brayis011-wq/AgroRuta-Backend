@@ -20,4 +20,17 @@ public interface FumigacionUseCase {
                                    Long siembraId);
 
     List<Fumigacion> listarFumigacionesPorSiembra(Long siembraId);
+
+    Fumigacion buscarFumigacionPorId(Long id);
+
+    Fumigacion actualizarFumigacion(Long id,
+                                    LocalDate fecha,
+                                    String producto,
+                                    Long agriculturalInputId,
+                                    Double dosis,
+                                    String unidadMedida,
+                                    Double areaAplicada,
+                                    String observaciones);
+
+    void eliminarFumigacion(Long id);
 }
