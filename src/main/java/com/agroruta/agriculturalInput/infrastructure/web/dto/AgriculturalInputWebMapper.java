@@ -21,6 +21,7 @@ public class AgriculturalInputWebMapper {
                 .unidadSugerida(domain.getUnidadSugerida().name())
                 .dosisSugerida(domain.getDosisSugerida())
                 .reentradaHoras(domain.getReentradaHoras())
+                .diasCarencia(domain.getDiasCarencia())
                 .activo(domain.isActivo())
                 .creadoEn(domain.getCreadoEn())
                 .build();
@@ -32,7 +33,8 @@ public class AgriculturalInputWebMapper {
                 request.getTipo(),
                 request.getUnidadSugerida(),
                 request.getDosisSugerida(),
-                request.getReentradaHoras()
+                request.getReentradaHoras(),
+                request.getDiasCarencia()
         );
     }
 
@@ -42,7 +44,8 @@ public class AgriculturalInputWebMapper {
                 request.getTipo(),
                 request.getUnidadSugerida(),
                 request.getDosisSugerida(),
-                request.getReentradaHoras()
+                request.getReentradaHoras(),
+                request.getDiasCarencia()
         );
     }
 }

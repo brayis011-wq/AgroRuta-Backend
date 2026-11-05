@@ -23,6 +23,10 @@ public class Fumigacion {
     private Double areaAplicada;
     private String observaciones;
     private Long siembraId;
+    /** Días sin cosechar después de aplicar (periodo de carencia) */
+    private Integer diasCarencia;
+    /** Horas sin entrar al lote después de aplicar */
+    private Integer reentradaHoras;
 
     public static Fumigacion fromCatalog(
             LocalDate fecha,
@@ -57,6 +61,12 @@ public class Fumigacion {
 
         return fromCatalog(fecha, producto, null, dosis, unidadMedida,
                 areaAplicada, observaciones, siembraId);
+    }
+
+    public void fijarRestricciones(RestriccionesFumigacion r) {
+        if (r == null) return;
+        this.diasCarencia = r.diasCarencia();
+        this.reentradaHoras = r.reentradaHoras();
     }
 
     public boolean tieneInsumoDelCatalogo() {

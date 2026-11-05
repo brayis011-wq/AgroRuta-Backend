@@ -51,7 +51,7 @@ class FumigacionControllerTest {
         fumigacion.setId(1L);
 
         when(fumigacionUseCase.registrarFumigacion(
-                any(), anyString(), eq(7L), anyDouble(), anyString(), anyDouble(), anyString(), anyLong()
+                any(), anyString(), eq(7L), anyDouble(), anyString(), anyDouble(), anyString(), anyLong(), any()
         )).thenReturn(fumigacion);
 
         String body = """
@@ -89,7 +89,7 @@ class FumigacionControllerTest {
 
         // agriculturalInputId es null → se usa isNull() en lugar de anyLong()
         when(fumigacionUseCase.registrarFumigacion(
-                any(), anyString(), isNull(), anyDouble(), anyString(), anyDouble(), anyString(), anyLong()
+                any(), anyString(), isNull(), anyDouble(), anyString(), anyDouble(), anyString(), anyLong(), any()
         )).thenReturn(fumigacion);
 
         String body = """
@@ -125,7 +125,7 @@ class FumigacionControllerTest {
         fumigacion.setId(3L);
 
         when(fumigacionUseCase.registrarFumigacion(
-                any(), anyString(), eq(3L), anyDouble(), anyString(), anyDouble(), isNull(), anyLong()
+                any(), anyString(), eq(3L), anyDouble(), anyString(), anyDouble(), isNull(), anyLong(), any()
         )).thenReturn(fumigacion);
 
         String body = """

@@ -4,6 +4,7 @@ import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.Fumigacion;
+import com.agroruta.crop.domain.RestriccionesFumigacion;
 import com.agroruta.crop.domain.Siembra;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -34,7 +35,8 @@ public class FumigacionService implements FumigacionUseCase {
                                           String unidadMedida,
                                           Double areaAplicada,
                                           String observaciones,
-                                          Long siembraId) {
+                                          Long siembraId,
+                                          RestriccionesFumigacion restricciones) {
 
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
@@ -55,6 +57,7 @@ public class FumigacionService implements FumigacionUseCase {
                 : Fumigacion.fromManualEntry(fecha, producto,
                 dosis, unidad, areaAplicada, observaciones, siembraId);
 
+        fumigacion.fijarRestricciones(restricciones);
         return fumigacionRepository.save(fumigacion);
     }
 
@@ -67,7 +70,8 @@ public class FumigacionService implements FumigacionUseCase {
     @Override
     public Fumigacion actualizarFumigacion(Long id, LocalDate fecha, String producto,
                                            Long agriculturalInputId, Double dosis, String unidadMedida,
-                                           Double areaAplicada, String observaciones) {
+                                           Double areaAplicada, String observaciones,
+                                           RestriccionesFumigacion restricciones) {
         Fumigacion fumigacion = buscarFumigacionPorId(id);
         if (fecha != null) fumigacion.setFecha(fecha);
         if (producto != null && !producto.isBlank()) {
@@ -81,6 +85,8 @@ public class FumigacionService implements FumigacionUseCase {
         }
         if (areaAplicada != null) fumigacion.setAreaAplicada(areaAplicada);
         fumigacion.setObservaciones(observaciones);
+        // null = no se enviaron (se conservan las guardadas)
+        if (restricciones != null) fumigacion.fijarRestricciones(restricciones);
         return fumigacionRepository.save(fumigacion);
     }
 

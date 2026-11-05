@@ -16,6 +16,8 @@ public class AgriculturalInput {
     private MeasurementUnit unidadSugerida;
     private Double dosisSugerida;
     private Integer reentradaHoras;
+    /** Días entre la aplicación y la cosecha (periodo de carencia); null si no se conoce */
+    private Integer diasCarencia;
     @Setter private boolean activo;       // ← Boolean → boolean
     @Setter private LocalDateTime creadoEn;
 
@@ -25,8 +27,19 @@ public class AgriculturalInput {
             MeasurementUnit unidadSugerida,
             Double dosisSugerida,
             Integer reentradaHoras) {
+        return create(nombre, tipo, unidadSugerida, dosisSugerida, reentradaHoras, null);
+    }
+
+    public static AgriculturalInput create(
+            String nombre,
+            AgriculturalInputType tipo,
+            MeasurementUnit unidadSugerida,
+            Double dosisSugerida,
+            Integer reentradaHoras,
+            Integer diasCarencia) {
 
         AgriculturalInput input = new AgriculturalInput();
+        input.diasCarencia   = diasCarencia;
         input.nombre         = nombre;
         input.tipo           = tipo;
         input.unidadSugerida = unidadSugerida;
@@ -43,7 +56,18 @@ public class AgriculturalInput {
             MeasurementUnit unidadSugerida,
             Double dosisSugerida,
             Integer reentradaHoras) {
+        update(nombre, tipo, unidadSugerida, dosisSugerida, reentradaHoras, this.diasCarencia);
+    }
 
+    public void update(
+            String nombre,
+            AgriculturalInputType tipo,
+            MeasurementUnit unidadSugerida,
+            Double dosisSugerida,
+            Integer reentradaHoras,
+            Integer diasCarencia) {
+
+        this.diasCarencia    = diasCarencia;
         this.nombre          = nombre;
         this.tipo            = tipo;
         this.unidadSugerida  = unidadSugerida;

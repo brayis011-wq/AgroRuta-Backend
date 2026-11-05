@@ -35,6 +35,9 @@ public class AgriculturalInputEntity {
     @Column(name = "reentrada_horas", nullable = false)
     private Integer reentradaHoras;
 
+    @Column(name = "dias_carencia")
+    private Integer diasCarencia;
+
     @Column(nullable = false)
     private Boolean activo = true;
 
@@ -60,6 +63,9 @@ public class AgriculturalInputEntity {
 
     public Integer getReentradaHoras()         { return reentradaHoras; }
     public void setReentradaHoras(Integer r)   { this.reentradaHoras = r; }
+
+    public Integer getDiasCarencia()           { return diasCarencia; }
+    public void setDiasCarencia(Integer d)     { this.diasCarencia = d; }
 
     public Boolean isActivo()                  { return activo; }
     public void setActivo(Boolean activo)      { this.activo = activo; }

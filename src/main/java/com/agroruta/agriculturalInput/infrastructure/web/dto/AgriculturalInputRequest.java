@@ -31,4 +31,9 @@ public class AgriculturalInputRequest {
     @NotNull(message = "Las horas de reentrada son obligatorias")
     @Min(value = 0, message = "Las horas de reentrada no pueden ser negativas")
     private Integer reentradaHoras;
+
+    // Opcional: depende del producto y del cultivo (ver la etiqueta)
+    @Min(value = 0, message = "Los días de carencia no pueden ser negativos")
+    @Max(value = 365, message = "Los días de carencia no pueden superar 365")
+    private Integer diasCarencia;
 }
