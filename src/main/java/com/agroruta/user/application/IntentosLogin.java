@@ -49,20 +49,24 @@ public class IntentosLogin {
         registros.remove(clave(email));
     }
 
-    /** Suma un fallo; al llegar a MAX_FALLOS, bloquea el correo. */
-    public void registrarFallo(String email) {
+    /** Suma un fallo; al llegar a MAX_FALLOS, bloquea el correo. Devuelve true si este fallo lo bloqueó. */
+    public boolean registrarFallo(String email) {
         Instant ahora = reloj.instant();
         if (registros.size() > LIMPIAR_DESDE) {
             registros.values().removeIf(r -> r.vencido(ahora));
         }
-        registros.compute(clave(email), (k, r) -> {
-            Registro nuevo = (r == null || r.vencido(ahora)) ? new Registro(ahora) : r;
+        Registro r = registros.compute(clave(email), (k, anterior) -> {
+            Registro nuevo = (anterior == null || anterior.vencido(ahora)) ? new Registro(ahora) : anterior;
             nuevo.fallos++;
-            if (nuevo.fallos >= MAX_FALLOS) {
+            if (nuevo.fallos >= MAX_FALLOS && nuevo.bloqueadoHasta == null) {
                 nuevo.bloqueadoHasta = ahora.plus(BLOQUEO);
+                nuevo.recienBloqueado = true;
+            } else {
+                nuevo.recienBloqueado = false;
             }
             return nuevo;
         });
+        return r.recienBloqueado;
     }
 
     /** Inicio de sesión correcto: se olvidan los fallos. */
@@ -78,6 +82,7 @@ public class IntentosLogin {
         private final Instant primero;
         private int fallos;
         private Instant bloqueadoHasta;
+        private boolean recienBloqueado;
 
         private Registro(Instant primero) {
             this.primero = primero;

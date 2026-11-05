@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.agroruta.shared.evento.PagoRegistrado;
+import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 @Transactional
@@ -23,13 +25,16 @@ public class PagoService implements PagoUseCase {
     private final PagoRepository pagoRepository;
     private final NominaRepository nominaRepository;
     private final JornalRepository jornalRepository;
+    private final ApplicationEventPublisher eventos;
 
     public PagoService(PagoRepository pagoRepository,
                        NominaRepository nominaRepository,
-                       JornalRepository jornalRepository) {
+                       JornalRepository jornalRepository,
+                       ApplicationEventPublisher eventos) {
         this.pagoRepository = pagoRepository;
         this.nominaRepository = nominaRepository;
         this.jornalRepository = jornalRepository;
+        this.eventos = eventos;
     }
 
     /**
@@ -76,7 +81,11 @@ public class PagoService implements PagoUseCase {
         Pago pago = new Pago(null, nomina, LocalDate.now(), monto, metodoPago, comprobante);
         pago.setObservaciones(observaciones);
 
-        return pagoRepository.guardar(pago);
+        Pago guardado = pagoRepository.guardar(pago);
+        if (guardado != null && guardado.getId() != null) {
+            eventos.publishEvent(new PagoRegistrado(guardado.getId()));
+        }
+        return guardado;
     }
 
     @Override

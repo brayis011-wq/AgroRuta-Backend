@@ -1,6 +1,8 @@
 package com.agroruta.user.application;
 
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.context.ApplicationEventPublisher;
+import com.agroruta.shared.evento.CuentaBloqueada;
 import org.springframework.transaction.annotation.Transactional;
 import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
@@ -33,6 +35,7 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
     private final VinculoTrabajadorPort vinculoTrabajador;
     private final IntentosLogin intentosLogin;
+    private final ApplicationEventPublisher eventos;
 
     public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                        BuscarUsuarioUseCase buscarUsuarioUseCase,
@@ -40,7 +43,8 @@ public class AuthService {
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
                        VinculoTrabajadorPort vinculoTrabajador,
-                       IntentosLogin intentosLogin) {
+                       IntentosLogin intentosLogin,
+                       ApplicationEventPublisher eventos) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.buscarUsuarioUseCase = buscarUsuarioUseCase;
         this.tokenPort = tokenPort;
@@ -48,6 +52,7 @@ public class AuthService {
         this.authenticationManager = authenticationManager;
         this.vinculoTrabajador = vinculoTrabajador;
         this.intentosLogin = intentosLogin;
+        this.eventos = eventos;
     }
 
     @Transactional
@@ -66,7 +71,7 @@ public class AuthService {
         Usuario usuario = new Usuario(
                 null,
                 request.getNombre(),
-                request.getEmail(),
+                normalizarEmail(request.getEmail()),
                 passwordEncoder.encode(request.getPassword()),
                 rol
         );
@@ -98,7 +103,9 @@ public class AuthService {
                     )
             );
         } catch (BadCredentialsException e) {
-            intentosLogin.registrarFallo(request.getEmail());
+            if (intentosLogin.registrarFallo(request.getEmail())) {
+                eventos.publishEvent(new CuentaBloqueada(request.getEmail(), IntentosLogin.BLOQUEO.toMinutes()));
+            }
             throw e;
         }
         intentosLogin.limpiar(request.getEmail());
@@ -114,6 +121,11 @@ public class AuthService {
                 usuario.getNombre(),
                 usuario.getRol().name()
         );
+    }
+
+    /** Los correos se guardan en minúscula y sin espacios: "Ana@X.com " y "ana@x.com" son la misma cuenta. */
+    static String normalizarEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
     }
 
     private Rol resolverRolAutoRegistro(String rolSolicitado) {

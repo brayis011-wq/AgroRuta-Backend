@@ -41,6 +41,16 @@ class IntentosLoginTest {
     }
 
     @Test
+    @DisplayName("registrarFallo avisa solo en el intento que bloquea (para mandar un único correo)")
+    void avisaAlBloquear() {
+        for (int i = 1; i < IntentosLogin.MAX_FALLOS; i++) {
+            org.junit.jupiter.api.Assertions.assertFalse(intentos.registrarFallo("ana@x.com"));
+        }
+        org.junit.jupiter.api.Assertions.assertTrue(intentos.registrarFallo("ana@x.com"));
+        org.junit.jupiter.api.Assertions.assertFalse(intentos.registrarFallo("ana@x.com"));
+    }
+
+    @Test
     @DisplayName("el bloqueo no distingue mayúsculas ni espacios en el correo")
     void mismaClaveSinMayusculas() {
         fallar("Ana@X.com ", IntentosLogin.MAX_FALLOS);

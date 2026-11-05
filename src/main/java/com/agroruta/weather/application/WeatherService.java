@@ -22,4 +22,9 @@ public class WeatherService implements WeatherUseCase {
     public Weather getWeatherByCoordinates(double lat, double lon) {
         return weatherApiPort.fetchWeatherByCoordinates(lat, lon);
     }
+
+    @Override
+    public com.agroruta.weather.domain.Pronostico getPronostico24h(double lat, double lon) {
+        return weatherApiPort.fetchPronostico24h(lat, lon);
+    }
 }

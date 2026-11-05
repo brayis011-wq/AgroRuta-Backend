@@ -27,6 +27,8 @@ class TrabajadorServiceTest {
     @Mock private TrabajadorRepository trabajadorRepository;
     @Mock private CargoRepository      cargoRepository;
 
+    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+
     @InjectMocks
     private TrabajadorService trabajadorService;
 

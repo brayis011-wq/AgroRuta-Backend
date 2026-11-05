@@ -37,7 +37,12 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
 
     @Override
     public Optional<Usuario> findByEmail(String email) {
-        return jpaRepository.findByEmail(email).map(this::toDomain);
+        if (email == null) return Optional.empty();
+        String limpio = email.trim();
+        // Primero exacto; si no, sin distinguir mayúsculas (la base de producción sí las distingue)
+        return jpaRepository.findByEmail(limpio)
+                .or(() -> jpaRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(limpio))
+                .map(this::toDomain);
     }
 
     @Override

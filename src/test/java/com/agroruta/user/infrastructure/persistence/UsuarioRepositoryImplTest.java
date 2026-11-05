@@ -187,6 +187,17 @@ class UsuarioRepositoryImplTest {
             assertTrue(resultado.isEmpty());
             verify(jpaRepository, times(1)).findByEmail("noexiste@agroruta.com");
         }
+
+        @Test
+        @DisplayName("Si no está exacto, lo busca sin distinguir mayúsculas (cuentas viejas)")
+        void debeBuscarSinMayusculasSiNoHayExacto() {
+            when(jpaRepository.findByEmail("juan@agroruta.com")).thenReturn(Optional.empty());
+            when(jpaRepository.findFirstByEmailIgnoreCaseOrderByIdAsc("juan@agroruta.com")).thenReturn(Optional.of(entityBase));
+
+            Optional<Usuario> resultado = repository.findByEmail(" juan@agroruta.com ");
+
+            assertTrue(resultado.isPresent());
+        }
     }
 
     // ══════════════════════════════════════════════════════════════════════

@@ -1,0 +1,45 @@
+name: Alertas diarias
+
+# Render gratis se duerme sin visitas, así que un @Scheduled dentro del backend no correría.
+# Esta tarea lo despierta cada mañana y le pide mandar el resumen del cultivo por correo.
+on:
+  schedule:
+    - cron: '17 10 * * *' # 5:17 a. m. en Colombia (UTC-5)
+  workflow_dispatch:
+    inputs:
+      forzar:
+        description: 'Mandar aunque ya se haya mandado hoy'
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  enviar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Despertar el backend y mandar el resumen
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+          FORZAR: ${{ inputs.forzar || false }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$TAREAS_TOKEN" ]; then
+            echo "::warning::Faltan los secretos API_URL o TAREAS_TOKEN; no se manda nada."
+            exit 0
+          fi
+          API_URL="${API_URL%/}"
+          # Render puede tardar varios minutos en despertar
+          for i in $(seq 1 40); do
+            if curl -fsS --max-time 20 "$API_URL/actuator/health" > /dev/null; then
+              echo "Backend despierto"
+              break
+            fi
+            echo "Esperando al backend ($i)..."
+            sleep 10
+          done
+          curl -fsS --max-time 300 -X POST \
+            -H "X-Tarea-Token: $TAREAS_TOKEN" \
+            "$API_URL/api/tareas/alertas-diarias?forzar=$FORZAR"
+          echo

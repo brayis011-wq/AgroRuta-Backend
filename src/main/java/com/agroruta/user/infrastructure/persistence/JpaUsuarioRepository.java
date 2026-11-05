@@ -11,6 +11,9 @@ public interface JpaUsuarioRepository extends JpaRepository<UsuarioEntity, Long>
     // Spring Data JPA arma la consulta SQL automáticamente solo con leer el nombre del método
     Optional<UsuarioEntity> findByEmail(String email);
 
+    /** Para cuentas viejas guardadas con mayúsculas: si hubiera dos que solo difieren en eso, la más antigua. */
+    Optional<UsuarioEntity> findFirstByEmailIgnoreCaseOrderByIdAsc(String email);
+
     // Busca todos los usuarios donde la columna 'activo' sea true
     List<UsuarioEntity> findByActivoTrue();
 

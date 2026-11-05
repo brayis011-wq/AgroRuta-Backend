@@ -38,6 +38,8 @@ class PortalTrabajadorServiceTest {
     @Mock private NominaUseCase nominaUseCase;
     @Mock private PagoUseCase pagoUseCase;
 
+    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+
     @InjectMocks private PortalTrabajadorService service;
 
     private Trabajador luis;

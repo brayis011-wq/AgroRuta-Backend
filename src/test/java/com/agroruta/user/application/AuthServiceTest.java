@@ -49,6 +49,8 @@ class AuthServiceTest {
     @org.mockito.Spy
     private IntentosLogin intentosLogin = new IntentosLogin();
 
+    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+
     @InjectMocks
     private AuthService authService;
 
@@ -395,6 +397,7 @@ class AuthServiceTest {
         org.junit.jupiter.api.Assertions.assertEquals(
                 com.agroruta.shared.exception.ErrorCode.TOO_MANY_ATTEMPTS, e.getErrorCode());
         verify(authenticationManager, org.mockito.Mockito.times(IntentosLogin.MAX_FALLOS)).authenticate(any());
+        verify(eventos).publishEvent(new com.agroruta.shared.evento.CuentaBloqueada(EMAIL, 15));
     }
 
     @Test
@@ -408,5 +411,11 @@ class AuthServiceTest {
         authService.login(request);
 
         verify(intentosLogin).limpiar(EMAIL);
+    }
+
+    @Test
+    void normalizarEmailDeberiaQuitarEspaciosYMayusculas() {
+        org.junit.jupiter.api.Assertions.assertEquals("ana@x.com", AuthService.normalizarEmail("  Ana@X.com "));
+        org.junit.jupiter.api.Assertions.assertNull(AuthService.normalizarEmail(null));
     }
 }

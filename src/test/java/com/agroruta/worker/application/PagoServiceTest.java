@@ -27,6 +27,8 @@ class PagoServiceTest {
     @Mock private NominaRepository nominaRepository;
     @Mock private JornalRepository jornalRepository;
 
+    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+
     @InjectMocks
     private PagoService pagoService;
 

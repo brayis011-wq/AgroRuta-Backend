@@ -10,6 +10,8 @@ import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
 import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.shared.evento.AccesoPortalResuelto;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,11 +22,14 @@ public class TrabajadorService implements TrabajadorUseCase {
 
     private final TrabajadorRepository trabajadorRepository;
     private final CargoRepository cargoRepository;
+    private final ApplicationEventPublisher eventos;
 
     public TrabajadorService(TrabajadorRepository trabajadorRepository,
-                             CargoRepository cargoRepository) {
+                             CargoRepository cargoRepository,
+                             ApplicationEventPublisher eventos) {
         this.trabajadorRepository = trabajadorRepository;
         this.cargoRepository = cargoRepository;
+        this.eventos = eventos;
     }
 
     public Trabajador registrarTrabajador(String nombre, String apellido, String cedula,
@@ -101,15 +106,20 @@ public class TrabajadorService implements TrabajadorUseCase {
         Trabajador trabajador = trabajadorRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
         trabajador.aprobarAcceso();
-        return trabajadorRepository.guardar(trabajador);
+        Trabajador guardado = trabajadorRepository.guardar(trabajador);
+        eventos.publishEvent(new AccesoPortalResuelto(id, true, false));
+        return guardado;
     }
 
     @Override
     public Trabajador rechazarAcceso(Long id) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
+        boolean estabaAprobado = trabajador.tieneAccesoAprobado();
         trabajador.rechazarAcceso();
-        return trabajadorRepository.guardar(trabajador);
+        Trabajador guardado = trabajadorRepository.guardar(trabajador);
+        eventos.publishEvent(new AccesoPortalResuelto(id, false, estabaAprobado));
+        return guardado;
     }
 
     public Trabajador buscarPorId(Long id) {

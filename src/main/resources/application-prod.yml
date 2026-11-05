@@ -40,3 +40,8 @@ springdoc:
     enabled: false
   swagger-ui:
     enabled: false
+# ──────────────────────────────────────────
+# CORREOS - en producción no se escribe el contenido en el log (lleva enlaces de recuperación)
+# ──────────────────────────────────────────
+correo:
+  log-contenido: false

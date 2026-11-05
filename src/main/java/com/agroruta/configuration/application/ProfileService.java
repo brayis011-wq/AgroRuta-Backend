@@ -1,5 +1,8 @@
 package com.agroruta.configuration.application;
 
+import com.agroruta.shared.evento.ContrasenaCambiada;
+import org.springframework.context.ApplicationEventPublisher;
+
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
@@ -17,11 +20,14 @@ public class ProfileService implements GetProfileUseCase,
 
     private final ProfileRepository perfilRepository;
     private final PasswordEncoder   passwordEncoder;
+    private final ApplicationEventPublisher eventos;
 
     public ProfileService(ProfileRepository perfilRepository,
-                          PasswordEncoder passwordEncoder) {
+                          PasswordEncoder passwordEncoder,
+                          ApplicationEventPublisher eventos) {
         this.perfilRepository = perfilRepository;
         this.passwordEncoder  = passwordEncoder;
+        this.eventos          = eventos;
     }
 
     @Override
@@ -52,5 +58,6 @@ public class ProfileService implements GetProfileUseCase,
         }
 
         perfilRepository.cambiarPassword(id, passwordEncoder.encode(nuevaPassword));
+        eventos.publishEvent(new ContrasenaCambiada(id));
     }
 }

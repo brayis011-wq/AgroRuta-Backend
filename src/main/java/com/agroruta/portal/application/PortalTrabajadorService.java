@@ -18,6 +18,8 @@ import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.domain.Trabajador;
 import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.shared.evento.AccesoPortalSolicitado;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,17 +36,20 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     private final JornalUseCase jornalUseCase;
     private final NominaUseCase nominaUseCase;
     private final PagoUseCase pagoUseCase;
+    private final ApplicationEventPublisher eventos;
 
     public PortalTrabajadorService(TrabajadorRepository trabajadorRepository,
                                    UsuarioRepository usuarioRepository,
                                    JornalUseCase jornalUseCase,
                                    NominaUseCase nominaUseCase,
-                                   PagoUseCase pagoUseCase) {
+                                   PagoUseCase pagoUseCase,
+                                   ApplicationEventPublisher eventos) {
         this.trabajadorRepository = trabajadorRepository;
         this.usuarioRepository = usuarioRepository;
         this.jornalUseCase = jornalUseCase;
         this.nominaUseCase = nominaUseCase;
         this.pagoUseCase = pagoUseCase;
+        this.eventos = eventos;
     }
 
     // ── Vínculo (lo usa también el registro) ─────────────────────────────────
@@ -79,8 +84,13 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
                     trabajadorRepository.guardar(anterior);
                 });
 
+        boolean yaPendiente = usuarioId.equals(destino.getUsuarioId())
+                && destino.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE;
         destino.solicitarAcceso(usuarioId, nombre, email);
         trabajadorRepository.guardar(destino);
+        if (!yaPendiente && destino.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE) {
+            eventos.publishEvent(new AccesoPortalSolicitado(destino.getId()));
+        }
     }
 
     // ── Portal ───────────────────────────────────────────────────────────────
