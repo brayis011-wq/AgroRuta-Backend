@@ -20,4 +20,13 @@ public interface AgriculturalInputRepositoryPort {
     AgriculturalInput save(AgriculturalInput input);
 
     boolean existsById(Long id);
+
+    /** Todos los insumos, activos e inactivos, ordenados por nombre (vista del Administrador). */
+    List<AgriculturalInput> findAll();
+
+    /** Busca sin importar si está activo (para reactivarlo). */
+    Optional<AgriculturalInput> findAnyById(Long id);
+
+    /** ¿Hay otro insumo activo con este nombre (sin distinguir mayúsculas)? excluirId puede ser null. */
+    boolean existsActiveByNombre(String nombre, Long excluirId);
 }

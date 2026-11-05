@@ -13,6 +13,18 @@ public interface AgriculturalInputJpaRepository
 
     List<AgriculturalInputEntity> findByActivoTrue();
 
+    List<AgriculturalInputEntity> findByActivoTrueOrderByNombreAsc();
+
+    List<AgriculturalInputEntity> findAllByOrderByNombreAsc();
+
+    @Query("""
+            SELECT COUNT(a) > 0 FROM AgriculturalInputEntity a
+            WHERE a.activo = true
+              AND LOWER(TRIM(a.nombre)) = LOWER(:nombre)
+              AND (:excluirId IS NULL OR a.id <> :excluirId)
+            """)
+    boolean existeActivoConNombre(@Param("nombre") String nombre, @Param("excluirId") Long excluirId);
+
     Optional<AgriculturalInputEntity> findByIdAndActivoTrue(Long id);
 
     @Query("""

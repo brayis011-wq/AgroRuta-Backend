@@ -31,6 +31,7 @@ public class AgriculturalInputController {
     private final CreateAgriculturalInputUseCase   createUseCase;
     private final UpdateAgriculturalInputUseCase   updateUseCase;
     private final DeleteAgriculturalInputUseCase   deleteUseCase;
+    private final ManageAgriculturalInputStatusUseCase statusUseCase;
 
     public AgriculturalInputController(
             GetAllAgriculturalInputsUseCase  getAllUseCase,
@@ -38,13 +39,15 @@ public class AgriculturalInputController {
             GetAgriculturalInputByIdUseCase  getByIdUseCase,
             CreateAgriculturalInputUseCase   createUseCase,
             UpdateAgriculturalInputUseCase   updateUseCase,
-            DeleteAgriculturalInputUseCase   deleteUseCase) {
+            DeleteAgriculturalInputUseCase   deleteUseCase,
+            ManageAgriculturalInputStatusUseCase statusUseCase) {
         this.getAllUseCase   = getAllUseCase;
         this.searchUseCase  = searchUseCase;
         this.getByIdUseCase = getByIdUseCase;
         this.createUseCase  = createUseCase;
         this.updateUseCase  = updateUseCase;
         this.deleteUseCase  = deleteUseCase;
+        this.statusUseCase  = statusUseCase;
     }
 
     // ── GET /api/v1/agricultural-inputs ──────────────────────────────────────
@@ -63,6 +66,23 @@ public class AgriculturalInputController {
                 : getAllUseCase.getAll().stream().map(AgriculturalInputWebMapper::toResponse).toList();
 
         return ResponseEntity.ok(result);
+    }
+
+    // ── GET /api/agricultural-inputs/todos (solo Administrador) ──────────────
+    /** Catálogo completo, también los inactivos, para poder volver a activarlos. */
+    @GetMapping("/todos")
+    @PreAuthorize("hasRole('Administrador')")
+    public ResponseEntity<List<AgriculturalInputResponse>> getAllIncludingInactive() {
+        return ResponseEntity.ok(statusUseCase.getAllIncludingInactive().stream()
+                .map(AgriculturalInputWebMapper::toResponse).toList());
+    }
+
+    // ── PATCH /api/agricultural-inputs/{id}/estado?activo= (solo Administrador)
+    @PatchMapping("/{id}/estado")
+    @PreAuthorize("hasRole('Administrador')")
+    public ResponseEntity<AgriculturalInputResponse> changeStatus(
+            @PathVariable Long id, @RequestParam boolean activo) {
+        return ResponseEntity.ok(AgriculturalInputWebMapper.toResponse(statusUseCase.changeStatus(id, activo)));
     }
 
     // ── GET /api/v1/agricultural-inputs/{id} ─────────────────────────────────

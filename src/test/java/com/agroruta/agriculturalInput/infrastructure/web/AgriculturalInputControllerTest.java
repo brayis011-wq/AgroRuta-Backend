@@ -33,6 +33,7 @@ class AgriculturalInputControllerTest {
     @Mock private CreateAgriculturalInputUseCase   createUseCase;
     @Mock private UpdateAgriculturalInputUseCase   updateUseCase;
     @Mock private DeleteAgriculturalInputUseCase   deleteUseCase;
+    @Mock private ManageAgriculturalInputStatusUseCase statusUseCase;
 
     @InjectMocks
     private AgriculturalInputController controller;
@@ -243,6 +244,37 @@ class AgriculturalInputControllerTest {
             assertEquals(HttpStatus.NO_CONTENT, respuesta.getStatusCode());
             assertNull(respuesta.getBody());
             verify(deleteUseCase, times(1)).delete(1L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Vista del Administrador
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("todos y estado")
+    class TodosYEstado {
+
+        @Test
+        @DisplayName("GET /todos incluye los inactivos")
+        void todosIncluyeInactivos() {
+            inputBase.deactivate();
+            when(statusUseCase.getAllIncludingInactive()).thenReturn(List.of(inputBase));
+
+            ResponseEntity<List<AgriculturalInputResponse>> respuesta = controller.getAllIncludingInactive();
+
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+            assertEquals(Boolean.FALSE, respuesta.getBody().get(0).getActivo());
+        }
+
+        @Test
+        @DisplayName("PATCH /{id}/estado devuelve el insumo con el nuevo estado")
+        void cambiaEstado() {
+            when(statusUseCase.changeStatus(1L, false)).thenReturn(inputBase);
+
+            ResponseEntity<AgriculturalInputResponse> respuesta = controller.changeStatus(1L, false);
+
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+            verify(statusUseCase).changeStatus(1L, false);
         }
     }
 }

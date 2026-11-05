@@ -80,7 +80,7 @@ class AgriculturalInputRepositoryAdapterTest {
                     2L, "Clorpirifos", AgriculturalInputType.INSECTICIDA,
                     MeasurementUnit.ML, 1.0, 24, true
             );
-            when(jpaRepository.findByActivoTrue()).thenReturn(List.of(entityBase, otraEntity));
+            when(jpaRepository.findByActivoTrueOrderByNombreAsc()).thenReturn(List.of(entityBase, otraEntity));
 
             List<AgriculturalInput> resultado = adapter.findAllActive();
 
@@ -89,18 +89,18 @@ class AgriculturalInputRepositoryAdapterTest {
             assertEquals("Clorpirifos", resultado.get(1).getNombre());
             assertTrue(resultado.get(0).isActivo());
             assertTrue(resultado.get(1).isActivo());
-            verify(jpaRepository, times(1)).findByActivoTrue();
+            verify(jpaRepository, times(1)).findByActivoTrueOrderByNombreAsc();
         }
 
         @Test
         @DisplayName("Debe retornar lista vacía si no hay insumos activos")
         void debeRetornarListaVaciaSiNoHayActivos() {
-            when(jpaRepository.findByActivoTrue()).thenReturn(List.of());
+            when(jpaRepository.findByActivoTrueOrderByNombreAsc()).thenReturn(List.of());
 
             List<AgriculturalInput> resultado = adapter.findAllActive();
 
             assertTrue(resultado.isEmpty());
-            verify(jpaRepository, times(1)).findByActivoTrue();
+            verify(jpaRepository, times(1)).findByActivoTrueOrderByNombreAsc();
         }
     }
 
@@ -249,6 +249,45 @@ class AgriculturalInputRepositoryAdapterTest {
 
             assertFalse(resultado);
             verify(jpaRepository, times(1)).existsById(99L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Vista del Administrador
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("findAll / findAnyById / existsActiveByNombre")
+    class VistaAdministrador {
+
+        @Test
+        @DisplayName("findAll incluye inactivos")
+        void findAllIncluyeInactivos() {
+            AgriculturalInputEntity inactivo = buildEntity(3L, "Antiguo", AgriculturalInputType.HERBICIDA,
+                    MeasurementUnit.LITROS, 1.0, 0, false);
+            when(jpaRepository.findAllByOrderByNombreAsc()).thenReturn(List.of(inactivo, entityBase));
+
+            List<AgriculturalInput> resultado = adapter.findAll();
+
+            assertEquals(2, resultado.size());
+            assertFalse(resultado.get(0).isActivo());
+        }
+
+        @Test
+        @DisplayName("findAnyById encuentra también un insumo inactivo")
+        void findAnyByIdEncuentraInactivo() {
+            AgriculturalInputEntity inactivo = buildEntity(3L, "Antiguo", AgriculturalInputType.HERBICIDA,
+                    MeasurementUnit.LITROS, 1.0, 0, false);
+            when(jpaRepository.findById(3L)).thenReturn(Optional.of(inactivo));
+
+            assertTrue(adapter.findAnyById(3L).isPresent());
+        }
+
+        @Test
+        @DisplayName("existsActiveByNombre delega en la consulta")
+        void existsActiveByNombreDelega() {
+            when(jpaRepository.existeActivoConNombre("Glifosato", 1L)).thenReturn(true);
+
+            assertTrue(adapter.existsActiveByNombre("Glifosato", 1L));
         }
     }
 }

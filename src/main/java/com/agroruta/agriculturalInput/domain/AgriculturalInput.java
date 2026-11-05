@@ -77,6 +77,8 @@ public class AgriculturalInput {
 
     public void deactivate() { this.activo = false; }
 
+    public void activate() { this.activo = true; }
+
     public boolean requiresReentryPeriod() {
         return this.reentradaHoras != null && this.reentradaHoras > 0;
     }

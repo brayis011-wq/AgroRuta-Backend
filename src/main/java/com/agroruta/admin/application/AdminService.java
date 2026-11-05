@@ -15,10 +15,12 @@ import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.domain.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
+import com.agroruta.worker.domain.TrabajadorRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,17 +35,24 @@ public class AdminService implements AdministrarSistemaUseCase {
     private final FincaUseCase fincaUseCase;
     private final TrabajadorUseCase trabajadorUseCase;
     private final NominaUseCase nominaUseCase;
+    private final TrabajadorRepository trabajadorRepository;
+
+    /** Listas ordenadas por nombre, sin importar mayúsculas ni tildes al inicio */
+    private static final Comparator<Usuario> POR_NOMBRE = Comparator.comparing(
+            (Usuario u) -> u.getNombre() == null ? "" : u.getNombre(), String.CASE_INSENSITIVE_ORDER);
 
     public AdminService(UsuarioRepository usuarioRepository,
                         AdminEstadisticasPort estadisticasPort,
                         FincaUseCase fincaUseCase,
                         TrabajadorUseCase trabajadorUseCase,
-                        NominaUseCase nominaUseCase) {
+                        NominaUseCase nominaUseCase,
+                        TrabajadorRepository trabajadorRepository) {
         this.usuarioRepository = usuarioRepository;
         this.estadisticasPort = estadisticasPort;
         this.fincaUseCase = fincaUseCase;
         this.trabajadorUseCase = trabajadorUseCase;
         this.nominaUseCase = nominaUseCase;
+        this.trabajadorRepository = trabajadorRepository;
     }
 
     @Override
@@ -64,7 +73,7 @@ public class AdminService implements AdministrarSistemaUseCase {
     @Override
     @Transactional(readOnly = true)
     public List<Usuario> listarUsuarios() {
-        return usuarioRepository.findAll();
+        return usuarioRepository.findAll().stream().sorted(POR_NOMBRE).toList();
     }
 
     @Override
@@ -99,6 +108,7 @@ public class AdminService implements AdministrarSistemaUseCase {
         if (nuevoRol != Rol.Administrador) {
             exigirOtroAdministrador(usuario);
         }
+        exigirSinDatosDelRolActual(usuario);
         usuario.cambiarRol(nuevoRol);
         return usuarioRepository.save(usuario);
     }
@@ -109,6 +119,7 @@ public class AdminService implements AdministrarSistemaUseCase {
         Map<Long, ConteoAgricultor> conteos = estadisticasPort.conteosPorAgricultor();
         return usuarioRepository.findAll().stream()
                 .filter(u -> u.getRol() == Rol.Agricultor)
+                .sorted(POR_NOMBRE)
                 .map(u -> new AgricultorResumen(u, conteos.getOrDefault(u.getId(), ConteoAgricultor.VACIO)))
                 .collect(Collectors.toList());
     }
@@ -144,6 +155,29 @@ public class AdminService implements AdministrarSistemaUseCase {
         if (esAdminActivo && usuarioRepository.countActivosPorRol(Rol.Administrador) <= 1) {
             throw new BusinessException(ErrorCode.INVALID_OPERATION,
                     "Debe quedar al menos un administrador activo.");
+        }
+    }
+
+    /**
+     * Cambiar el rol no puede dejar datos huérfanos: un agricultor con fincas, trabajadores
+     * o nóminas, o un trabajador ya vinculado a una finca, conservan su rol.
+     */
+    private void exigirSinDatosDelRolActual(Usuario usuario) {
+        Long id = usuario.getId();
+        if (usuario.getRol() == Rol.Agricultor) {
+            boolean tieneDatos = !fincaUseCase.listarFincasPorAgricultor(id).isEmpty()
+                    || !trabajadorUseCase.listarTodosDe(id).isEmpty()
+                    || !nominaUseCase.listarTodasDe(id).isEmpty();
+            if (tieneDatos) {
+                throw new BusinessException(ErrorCode.INVALID_OPERATION,
+                        "No se puede cambiar el rol: este agricultor ya tiene fincas, trabajadores o nóminas. "
+                                + "Si ya no usa la cuenta, desactívala.");
+            }
+        }
+        if (usuario.getRol() == Rol.Trabajador && trabajadorRepository.buscarPorUsuarioId(id).isPresent()) {
+            throw new BusinessException(ErrorCode.INVALID_OPERATION,
+                    "No se puede cambiar el rol: esta cuenta está vinculada a un trabajador de una finca. "
+                            + "Si ya no la usa, desactívala.");
         }
     }
 

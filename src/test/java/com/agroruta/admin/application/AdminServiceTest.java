@@ -15,6 +15,7 @@ import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.domain.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
+import com.agroruta.worker.domain.TrabajadorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,6 +44,7 @@ class AdminServiceTest {
     @Mock private FincaUseCase fincaUseCase;
     @Mock private TrabajadorUseCase trabajadorUseCase;
     @Mock private NominaUseCase nominaUseCase;
+    @Mock private TrabajadorRepository trabajadorRepository;
 
     @InjectMocks private AdminService service;
 
@@ -246,5 +248,48 @@ class AdminServiceTest {
 
         assertThatThrownBy(() -> service.detalleAgricultor(4L))
                 .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    // ── cambio de rol sin dejar datos huérfanos ──────────────────────────────
+    @Test
+    @DisplayName("cambiarRol no cambia a un agricultor que ya tiene fincas")
+    void noCambiaAgricultorConFincas() {
+        when(usuarioRepository.findById(3L)).thenReturn(Optional.of(agricultor));
+        when(fincaUseCase.listarFincasPorAgricultor(3L)).thenReturn(List.of(mock(com.agroruta.crop.domain.Finca.class)));
+
+        assertThatThrownBy(() -> service.cambiarRol(1L, 3L, "Trabajador"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("agricultor ya tiene fincas");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("cambiarRol no cambia a un trabajador vinculado a una finca")
+    void noCambiaTrabajadorVinculado() {
+        when(usuarioRepository.findById(4L)).thenReturn(Optional.of(trabajador));
+        when(trabajadorRepository.buscarPorUsuarioId(4L))
+                .thenReturn(Optional.of(mock(com.agroruta.worker.domain.Trabajador.class)));
+
+        assertThatThrownBy(() -> service.cambiarRol(1L, 4L, "Agricultor"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("vinculada a un trabajador");
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("cambiarRol sí cambia a un agricultor sin datos")
+    void cambiaAgricultorSinDatos() {
+        when(usuarioRepository.findById(3L)).thenReturn(Optional.of(agricultor));
+        when(usuarioRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        assertThat(service.cambiarRol(1L, 3L, "Trabajador").getRol()).isEqualTo(Rol.Trabajador);
+    }
+
+    @Test
+    @DisplayName("listarUsuarios los devuelve ordenados por nombre")
+    void listarUsuariosOrdenados() {
+        when(usuarioRepository.findAll()).thenReturn(List.of(trabajador, admin, agricultor));
+
+        assertThat(service.listarUsuarios()).extracting(Usuario::getNombre).containsExactly("Admin", "Ana", "Luis");
     }
 }

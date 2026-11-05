@@ -28,7 +28,7 @@ public class AgriculturalInputRepositoryAdapter implements AgriculturalInputRepo
 
     @Override
     public List<AgriculturalInput> findAllActive() {
-        return jpaRepository.findByActivoTrue()
+        return jpaRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(AgriculturalInputPersistenceMapper::toDomain)
                 .toList();
@@ -58,5 +58,23 @@ public class AgriculturalInputRepositoryAdapter implements AgriculturalInputRepo
     @Override
     public boolean existsById(Long id) {
         return jpaRepository.existsById(id);
+    }
+
+    @Override
+    public List<AgriculturalInput> findAll() {
+        return jpaRepository.findAllByOrderByNombreAsc()
+                .stream()
+                .map(AgriculturalInputPersistenceMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<AgriculturalInput> findAnyById(Long id) {
+        return jpaRepository.findById(id).map(AgriculturalInputPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsActiveByNombre(String nombre, Long excluirId) {
+        return jpaRepository.existeActivoConNombre(nombre, excluirId);
     }
 }

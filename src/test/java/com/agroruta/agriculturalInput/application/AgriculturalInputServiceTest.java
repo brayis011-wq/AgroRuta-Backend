@@ -7,6 +7,7 @@ import com.agroruta.agriculturalInput.domain.AgriculturalInput;
 import com.agroruta.agriculturalInput.domain.AgriculturalInputType;
 import com.agroruta.agriculturalInput.domain.MeasurementUnit;
 import com.agroruta.agriculturalInput.domain.exception.AgriculturalInputNotFoundException;
+import com.agroruta.shared.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -299,6 +300,105 @@ class AgriculturalInputServiceTest {
 
             assertTrue(ex.getMessage().contains("99"));
             verify(repository, never()).save(any());
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Nombres repetidos y estado (vista del Administrador)
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("nombres y estado")
+    class NombresYEstado {
+
+        @Test
+        @DisplayName("create() quita espacios de más en el nombre")
+        void createLimpiaElNombre() {
+            when(repository.save(any(AgriculturalInput.class))).thenAnswer(inv -> inv.getArgument(0));
+
+            AgriculturalInput resultado = service.create(new CreateAgriculturalInputCommand(
+                    "  Mancozeb   80 WP ", "FUNGICIDA", "GRAMOS", 2.5, 24));
+
+            assertEquals("Mancozeb 80 WP", resultado.getNombre());
+            verify(repository).existsActiveByNombre("Mancozeb 80 WP", null);
+        }
+
+        @Test
+        @DisplayName("create() rechaza un nombre que ya usa otro insumo activo")
+        void createRechazaNombreRepetido() {
+            when(repository.existsActiveByNombre("Glifosato", null)).thenReturn(true);
+
+            assertThrows(BusinessException.class, () -> service.create(
+                    new CreateAgriculturalInputCommand("Glifosato", "HERBICIDA", "LITROS", 2.5, 48)));
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("update() permite dejar el mismo nombre y rechaza el de otro insumo")
+        void updateExcluyeElMismoInsumo() {
+            when(repository.findById(1L)).thenReturn(Optional.of(inputBase));
+            when(repository.existsActiveByNombre("Clorpirifos", 1L)).thenReturn(true);
+
+            assertThrows(BusinessException.class, () -> service.update(1L,
+                    new UpdateAgriculturalInputCommand("Clorpirifos", "HERBICIDA", "LITROS", 2.5, 48)));
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("create() rechaza un nombre vacío")
+        void createRechazaNombreVacio() {
+            assertThrows(IllegalArgumentException.class, () -> service.create(
+                    new CreateAgriculturalInputCommand("   ", "HERBICIDA", "LITROS", 2.5, 48)));
+        }
+
+        @Test
+        @DisplayName("getAllIncludingInactive() devuelve también los inactivos")
+        void listaTambienInactivos() {
+            inputBase.deactivate();
+            when(repository.findAll()).thenReturn(List.of(inputBase));
+
+            assertEquals(1, service.getAllIncludingInactive().size());
+            verify(repository, never()).findAllActive();
+        }
+
+        @Test
+        @DisplayName("changeStatus() vuelve a activar un insumo desactivado")
+        void reactivaUnInsumo() {
+            inputBase.deactivate();
+            when(repository.findAnyById(1L)).thenReturn(Optional.of(inputBase));
+            when(repository.save(inputBase)).thenReturn(inputBase);
+
+            AgriculturalInput resultado = service.changeStatus(1L, true);
+
+            assertTrue(resultado.isActivo());
+        }
+
+        @Test
+        @DisplayName("changeStatus() no reactiva si ya hay otro activo con el mismo nombre")
+        void noReactivaSiElNombreEstaOcupado() {
+            inputBase.deactivate();
+            when(repository.findAnyById(1L)).thenReturn(Optional.of(inputBase));
+            when(repository.existsActiveByNombre("Glifosato", 1L)).thenReturn(true);
+
+            assertThrows(BusinessException.class, () -> service.changeStatus(1L, true));
+            assertFalse(inputBase.isActivo());
+        }
+
+        @Test
+        @DisplayName("changeStatus() sin cambio no guarda nada")
+        void sinCambioNoGuarda() {
+            when(repository.findAnyById(1L)).thenReturn(Optional.of(inputBase));
+
+            service.changeStatus(1L, true);
+
+            verify(repository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("changeStatus() con id inexistente lanza AgriculturalInputNotFoundException")
+        void estadoConIdInexistente() {
+            when(repository.findAnyById(99L)).thenReturn(Optional.empty());
+
+            assertThrows(AgriculturalInputNotFoundException.class, () -> service.changeStatus(99L, false));
         }
     }
 }
