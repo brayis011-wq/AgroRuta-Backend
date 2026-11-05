@@ -1,0 +1,61 @@
+# Copia de seguridad diaria de la base de datos FUERA de Render.
+# El disco del contenedor de Render se borra en cada despliegue, así que las copias que hace
+# la app ahí pueden perderse. Esta copia se guarda cifrada como "artifact" de GitHub por 30 días.
+#
+# Secretos que hay que crear en GitHub (Settings → Secrets and variables → Actions):
+#   BACKUP_DB_HOST      host de TiDB (p. ej. gateway01.us-east-1.prod.aws.tidbcloud.com)
+#   BACKUP_DB_PORT      puerto (TiDB Cloud usa 4000)
+#   BACKUP_DB_NAME      nombre de la base
+#   BACKUP_DB_USER      usuario
+#   BACKUP_DB_PASSWORD  contraseña
+#   BACKUP_PASSPHRASE   clave para cifrar la copia (guárdala: sin ella no se puede abrir)
+#
+# Para abrir una copia:  gpg --decrypt agroruta-AAAA-MM-DD.sql.gz.gpg | gunzip > copia.sql
+name: Copia diaria
+
+on:
+  schedule:
+    - cron: '17 7 * * *'   # todos los días 2:17 a. m. hora de Colombia
+  workflow_dispatch:        # también se puede correr a mano desde la pestaña Actions
+
+jobs:
+  copia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Instalar cliente de MySQL
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq mysql-client gnupg
+
+      - name: Copiar la base
+        env:
+          MYSQL_PWD: ${{ secrets.BACKUP_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          FECHA=$(date -u +%F)
+          echo "FECHA=$FECHA" >> "$GITHUB_ENV"
+          # Mismas opciones que usa la app (compatibles con TiDB)
+          mysqldump --host="${{ secrets.BACKUP_DB_HOST }}" --port="${{ secrets.BACKUP_DB_PORT }}" \
+            --user="${{ secrets.BACKUP_DB_USER }}" --ssl-mode=REQUIRED \
+            --no-tablespaces --column-statistics=0 --set-gtid-purged=OFF \
+            --skip-triggers --skip-add-locks --skip-lock-tables \
+            "${{ secrets.BACKUP_DB_NAME }}" | gzip -9 > "agroruta-$FECHA.sql.gz"
+          # Una copia vacía o casi vacía es un error, no una copia
+          test "$(stat -c%s "agroruta-$FECHA.sql.gz")" -gt 1024
+
+      - name: Cifrar
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          test -n "$PASSPHRASE"
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$PASSPHRASE" \
+            --symmetric --cipher-algo AES256 -o "agroruta-$FECHA.sql.gz.gpg" "agroruta-$FECHA.sql.gz"
+          rm "agroruta-$FECHA.sql.gz"
+
+      - name: Guardar la copia
+        uses: actions/upload-artifact@v4
+        with:
+          name: agroruta-${{ env.FECHA }}
+          path: agroruta-${{ env.FECHA }}.sql.gz.gpg
+          retention-days: 30
+          if-no-files-found: error
