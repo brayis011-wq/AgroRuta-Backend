@@ -18,7 +18,8 @@ public class AgriculturalInputPersistenceMapper {
                 entity.getTipo(),
                 entity.getUnidadSugerida(),
                 entity.getDosisSugerida(),
-                entity.getReentradaHoras()
+                entity.getReentradaHoras(),
+                entity.getDiasCarencia()
         );
         domain.setId(entity.getId());
         domain.setActivo(entity.isActivo());
@@ -34,6 +35,7 @@ public class AgriculturalInputPersistenceMapper {
         entity.setUnidadSugerida(domain.getUnidadSugerida());
         entity.setDosisSugerida(domain.getDosisSugerida());
         entity.setReentradaHoras(domain.getReentradaHoras());
+        entity.setDiasCarencia(domain.getDiasCarencia());
         entity.setActivo(domain.isActivo());
         entity.setCreadoEn(domain.getCreadoEn());
         return entity;

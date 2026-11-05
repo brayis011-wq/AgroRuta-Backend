@@ -33,7 +33,26 @@ public class FumigacionEntity {
     @Column(nullable = false)
     private Long siembraId;
 
+    // Antes no se guardaba: el insumo elegido del catálogo se perdía
+    @Column(name = "agricultural_input_id")
+    private Long agriculturalInputId;
+
+    @Column(name = "dias_carencia")
+    private Integer diasCarencia;
+
+    @Column(name = "reentrada_horas")
+    private Integer reentradaHoras;
+
     public FumigacionEntity() {}
+
+    public Long getAgriculturalInputId() { return agriculturalInputId; }
+    public void setAgriculturalInputId(Long v) { this.agriculturalInputId = v; }
+
+    public Integer getDiasCarencia() { return diasCarencia; }
+    public void setDiasCarencia(Integer v) { this.diasCarencia = v; }
+
+    public Integer getReentradaHoras() { return reentradaHoras; }
+    public void setReentradaHoras(Integer v) { this.reentradaHoras = v; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

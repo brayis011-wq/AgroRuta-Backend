@@ -3,6 +3,7 @@ package com.agroruta.crop.infrastructure.web;
 import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
 import com.agroruta.crop.domain.Fumigacion;
+import com.agroruta.crop.domain.RestriccionesFumigacion;
 import com.agroruta.crop.infrastructure.web.dto.FumigacionRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +34,8 @@ public class FumigacionController {
                         req.getUnidadMedida(),
                         req.getAreaAplicada(),
                         req.getObservaciones(),
-                        req.getSiembraId()
+                        req.getSiembraId(),
+                        new RestriccionesFumigacion(req.getDiasCarencia(), req.getReentradaHoras())
                 )
         );
     }
@@ -50,7 +52,8 @@ public class FumigacionController {
     public ResponseEntity<Fumigacion> actualizar(@PathVariable Long id, @Valid @RequestBody FumigacionRequest req) {
         return ResponseEntity.ok(fumigacionUseCase.actualizarFumigacion(
                 id, req.getFecha(), req.getProducto(), req.getAgriculturalInputId(), req.getDosis(),
-                req.getUnidadMedida(), req.getAreaAplicada(), req.getObservaciones()));
+                req.getUnidadMedida(), req.getAreaAplicada(), req.getObservaciones(),
+                new RestriccionesFumigacion(req.getDiasCarencia(), req.getReentradaHoras())));
     }
 
     @DeleteMapping("/{id}")

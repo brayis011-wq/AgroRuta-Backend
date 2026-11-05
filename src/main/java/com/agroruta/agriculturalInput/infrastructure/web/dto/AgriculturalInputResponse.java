@@ -14,6 +14,7 @@ public class AgriculturalInputResponse {
     private String unidadSugerida;
     private Double dosisSugerida;
     private Integer reentradaHoras;
+    private Integer diasCarencia;
     private Boolean activo;
     private LocalDateTime creadoEn;
 }

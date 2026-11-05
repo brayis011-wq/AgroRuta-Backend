@@ -67,7 +67,8 @@ public class AgriculturalInputService
                 AgriculturalInputType.valueOf(command.tipo()),
                 MeasurementUnit.valueOf(command.unidadSugerida()),
                 command.dosisSugerida(),
-                command.reentradaHoras()
+                command.reentradaHoras(),
+                command.diasCarencia()
         );
         return repository.save(input);
     }
@@ -82,7 +83,8 @@ public class AgriculturalInputService
                 AgriculturalInputType.valueOf(command.tipo()),
                 MeasurementUnit.valueOf(command.unidadSugerida()),
                 command.dosisSugerida(),
-                command.reentradaHoras()
+                command.reentradaHoras(),
+                command.diasCarencia()
         );
         return repository.save(input);
     }

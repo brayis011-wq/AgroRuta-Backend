@@ -1,5 +1,7 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
@@ -37,6 +39,15 @@ public class FumigacionRequest {
 
     @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
     private String observaciones;
+
+    // Opcionales: vienen del catálogo o de la etiqueta del producto
+    @Min(value = 0, message = "Los días de carencia no pueden ser negativos")
+    @Max(value = 365, message = "Los días de carencia no pueden superar 365")
+    private Integer diasCarencia;
+
+    @Min(value = 0, message = "Las horas de reentrada no pueden ser negativas")
+    @Max(value = 720, message = "Las horas de reentrada no pueden superar 720")
+    private Integer reentradaHoras;
 
     @NotNull(message = "La siembra es obligatoria")
     @Positive(message = "La siembra no es válida")

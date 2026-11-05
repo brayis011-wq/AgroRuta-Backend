@@ -55,6 +55,9 @@ public class FumigacionRepositoryImpl implements FumigacionRepository {
         entity.setAreaAplicada(fumigacion.getAreaAplicada());
         entity.setObservaciones(fumigacion.getObservaciones());
         entity.setSiembraId(fumigacion.getSiembraId());
+        entity.setAgriculturalInputId(fumigacion.getAgriculturalInputId());
+        entity.setDiasCarencia(fumigacion.getDiasCarencia());
+        entity.setReentradaHoras(fumigacion.getReentradaHoras());
         return entity;
     }
 
@@ -68,6 +71,9 @@ public class FumigacionRepositoryImpl implements FumigacionRepository {
         fumigacion.setAreaAplicada(entity.getAreaAplicada());
         fumigacion.setObservaciones(entity.getObservaciones());
         fumigacion.setSiembraId(entity.getSiembraId());
+        fumigacion.setAgriculturalInputId(entity.getAgriculturalInputId());
+        fumigacion.setDiasCarencia(entity.getDiasCarencia());
+        fumigacion.setReentradaHoras(entity.getReentradaHoras());
         return fumigacion;
     }
 }
