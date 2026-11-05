@@ -100,8 +100,8 @@ class FlywayConfigTest {
     }
 
     @Test
-    @DisplayName("flyway() debe establecer baselineVersion='1'")
-    void flywayBeanShouldSetBaselineVersionToOne() {
+    @DisplayName("flyway() en una base sin insumos usa baselineVersion='1' para que V2 los cargue")
+    void flywayBeanShouldUseBaselineOneForNewDatabase() {
         DataSource dataSource = mock(DataSource.class);
 
         try (MockedStatic<Flyway> flywayStatic = mockStatic(Flyway.class)) {
@@ -112,6 +112,57 @@ class FlywayConfigTest {
 
             verify(fluentConfig).baselineVersion("1");
         }
+    }
+
+    @Test
+    @DisplayName("flyway() no debe tumbar la app si una migración falla")
+    void flywayBeanShouldNotThrowWhenMigrateFails() {
+        DataSource dataSource = mock(DataSource.class);
+
+        try (MockedStatic<Flyway> flywayStatic = mockStatic(Flyway.class)) {
+            FluentConfiguration fluentConfig = buildFluentConfigMock(flywayStatic);
+            Flyway flywayMock = mock(Flyway.class);
+            when(fluentConfig.load()).thenReturn(flywayMock);
+            when(flywayMock.migrate()).thenThrow(new org.flywaydb.core.api.FlywayException("falló"));
+
+            assertThat(config.flyway(dataSource)).isSameAs(flywayMock);
+        }
+    }
+
+    @Test
+    @DisplayName("db/migration debe traer V1 con todas las tablas")
+    void v1ShouldCreateAllTables() throws Exception {
+        try (var in = getClass().getResourceAsStream("/db/migration/V1__esquema_inicial.sql")) {
+            assertThat(in).isNotNull();
+            String sql = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(sql.split("CREATE TABLE IF NOT EXISTS `", -1)).hasSize(20);
+            assertThat(sql).doesNotContain("DROP TABLE");
+        }
+    }
+
+    @Test
+    @DisplayName("lineaBase() es 2 cuando la base ya tiene insumos (producción)")
+    void lineaBaseConDatos() throws Exception {
+        DataSource dataSource = mock(DataSource.class);
+        java.sql.Connection c = mock(java.sql.Connection.class);
+        java.sql.Statement st = mock(java.sql.Statement.class);
+        java.sql.ResultSet rs = mock(java.sql.ResultSet.class);
+        when(dataSource.getConnection()).thenReturn(c);
+        when(c.createStatement()).thenReturn(st);
+        when(st.executeQuery(anyString())).thenReturn(rs);
+        when(rs.next()).thenReturn(true);
+        when(rs.getLong(1)).thenReturn(71L);
+
+        assertThat(FlywayConfig.lineaBase(dataSource)).isEqualTo("2");
+    }
+
+    @Test
+    @DisplayName("lineaBase() es 1 cuando no se puede consultar la tabla")
+    void lineaBaseSinTabla() throws Exception {
+        DataSource dataSource = mock(DataSource.class);
+        when(dataSource.getConnection()).thenThrow(new java.sql.SQLException("sin tabla"));
+
+        assertThat(FlywayConfig.lineaBase(dataSource)).isEqualTo("1");
     }
 
     private FluentConfiguration buildFluentConfigMock(MockedStatic<Flyway> flywayStatic) {
