@@ -1,0 +1,33 @@
+# Corre las pruebas en cada push y en cada pull request a main.
+# Si fallan, GitHub marca el commit en rojo y (si activas la protección de rama) no deja unir el PR.
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Pruebas
+        run: ./mvnw -B -ntp test
+
+      - name: Reporte de pruebas (si algo falla)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-surefire
+          path: target/surefire-reports/
+          retention-days: 7
