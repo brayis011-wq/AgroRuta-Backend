@@ -31,9 +31,9 @@ class IntentosLoginTest {
     }
 
     @Test
-    @DisplayName("cuatro fallos no bloquean, el quinto sí")
-    void bloqueaAlQuinto() {
-        fallar("ana@x.com", 4);
+    @DisplayName("nueve fallos no bloquean, el décimo sí")
+    void bloqueaAlDecimo() {
+        fallar("ana@x.com", IntentosLogin.MAX_FALLOS - 1);
         assertDoesNotThrow(() -> intentos.exigirNoBloqueado("ana@x.com"));
 
         intentos.registrarFallo("ana@x.com");
@@ -43,14 +43,14 @@ class IntentosLoginTest {
     @Test
     @DisplayName("el bloqueo no distingue mayúsculas ni espacios en el correo")
     void mismaClaveSinMayusculas() {
-        fallar("Ana@X.com ", 5);
+        fallar("Ana@X.com ", IntentosLogin.MAX_FALLOS);
         assertThrows(BusinessException.class, () -> intentos.exigirNoBloqueado("ana@x.com"));
     }
 
     @Test
     @DisplayName("después de 15 minutos se puede volver a intentar")
     void seDesbloqueaConElTiempo() {
-        fallar("ana@x.com", 5);
+        fallar("ana@x.com", IntentosLogin.MAX_FALLOS);
         reloj.adelantar(Duration.ofMinutes(15));
         assertDoesNotThrow(() -> intentos.exigirNoBloqueado("ana@x.com"));
     }
@@ -58,7 +58,7 @@ class IntentosLoginTest {
     @Test
     @DisplayName("los fallos viejos ya no cuentan")
     void fallosViejosNoCuentan() {
-        fallar("ana@x.com", 4);
+        fallar("ana@x.com", IntentosLogin.MAX_FALLOS - 1);
         reloj.adelantar(Duration.ofMinutes(16));
         intentos.registrarFallo("ana@x.com");
         assertDoesNotThrow(() -> intentos.exigirNoBloqueado("ana@x.com"));
@@ -67,7 +67,7 @@ class IntentosLoginTest {
     @Test
     @DisplayName("un inicio de sesión correcto borra los fallos")
     void limpiarBorraLosFallos() {
-        fallar("ana@x.com", 4);
+        fallar("ana@x.com", IntentosLogin.MAX_FALLOS - 1);
         intentos.limpiar("ana@x.com");
         intentos.registrarFallo("ana@x.com");
         assertDoesNotThrow(() -> intentos.exigirNoBloqueado("ana@x.com"));
@@ -76,7 +76,7 @@ class IntentosLoginTest {
     @Test
     @DisplayName("bloquear un correo no afecta a otro")
     void correosIndependientes() {
-        fallar("ana@x.com", 5);
+        fallar("ana@x.com", IntentosLogin.MAX_FALLOS);
         assertDoesNotThrow(() -> intentos.exigirNoBloqueado("luis@x.com"));
     }
 }

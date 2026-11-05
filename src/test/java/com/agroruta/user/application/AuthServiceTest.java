@@ -378,14 +378,14 @@ class AuthServiceTest {
     // ── límite de intentos ────────────────────────────────────────
 
     @Test
-    void loginDeberiaBloquearElCorreoTrasCincoContrasenasEquivocadas() {
+    void loginDeberiaBloquearElCorreoTrasDiezContrasenasEquivocadas() {
         LoginRequest request = new LoginRequest();
         request.setEmail(EMAIL);
         request.setPassword("wrongpassword");
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < IntentosLogin.MAX_FALLOS; i++) {
             assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
                     () -> authService.login(request));
         }
@@ -394,7 +394,7 @@ class AuthServiceTest {
                 com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
         org.junit.jupiter.api.Assertions.assertEquals(
                 com.agroruta.shared.exception.ErrorCode.TOO_MANY_ATTEMPTS, e.getErrorCode());
-        verify(authenticationManager, org.mockito.Mockito.times(5)).authenticate(any());
+        verify(authenticationManager, org.mockito.Mockito.times(IntentosLogin.MAX_FALLOS)).authenticate(any());
     }
 
     @Test

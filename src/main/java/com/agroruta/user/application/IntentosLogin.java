@@ -13,14 +13,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Frena la fuerza bruta en el inicio de sesión: después de 5 contraseñas equivocadas seguidas
+ * Frena la fuerza bruta en el inicio de sesión: después de 10 contraseñas equivocadas seguidas
  * para el mismo correo, ese correo queda bloqueado 15 minutos. Se guarda en memoria (si el
  * servidor se reinicia, los contadores vuelven a cero), suficiente para una sola instancia.
  */
 @Component
 public class IntentosLogin {
 
-    static final int MAX_FALLOS = 5;
+    static final int MAX_FALLOS = 10;
     static final Duration BLOQUEO = Duration.ofMinutes(15);
     private static final int LIMPIAR_DESDE = 10_000;
 
@@ -49,7 +49,7 @@ public class IntentosLogin {
         registros.remove(clave(email));
     }
 
-    /** Suma un fallo; al quinto, bloquea el correo. */
+    /** Suma un fallo; al llegar a MAX_FALLOS, bloquea el correo. */
     public void registrarFallo(String email) {
         Instant ahora = reloj.instant();
         if (registros.size() > LIMPIAR_DESDE) {
