@@ -9,6 +9,8 @@ import org.springframework.context.annotation.DependsOn;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
@@ -34,13 +36,19 @@ public class FlywayConfig {
     @Bean
     @DependsOn("entityManagerFactory") // Hibernate primero; Flyway después
     public Flyway flyway(DataSource dataSource) {
+        String lineaBase = lineaBase(dataSource);
         Flyway flyway = Flyway.configure()
                 .dataSource(dataSource)
                 .locations("classpath:db/migration")
                 .baselineOnMigrate(true)
-                .baselineVersion(lineaBase(dataSource))
+                .baselineVersion(lineaBase)
                 .load();
 
+        try {
+            prepararHistorial(dataSource, lineaBase);
+        } catch (Exception e) {
+            log.warn("No se pudo preparar flyway_schema_history; Flyway lo intentará por su cuenta", e);
+        }
         try {
             flyway.migrate();
         } catch (RuntimeException e) {
@@ -50,6 +58,54 @@ public class FlywayConfig {
         }
         return flyway;
     }
+
+    /**
+     * TiDB no soporta "CREATE TABLE ... SELECT", que es lo que usa Flyway para crear su tabla de historial
+     * con la línea base. Por eso la creamos nosotros, con la misma estructura que usa Flyway en MySQL,
+     * y anotamos la línea base. Si la tabla ya existe no se toca.
+     */
+    static void prepararHistorial(DataSource dataSource, String lineaBase) throws SQLException {
+        try (Connection c = dataSource.getConnection()) {
+            if (existeHistorial(c)) return;
+            try (Statement st = c.createStatement()) {
+                st.execute(CREAR_HISTORIAL);
+                st.execute("CREATE INDEX `flyway_schema_history_s_idx` ON `flyway_schema_history` (`success`)");
+            }
+            try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO `flyway_schema_history` (`installed_rank`, `version`, `description`, `type`, `script`, "
+                            + "`checksum`, `installed_by`, `execution_time`, `success`) "
+                            + "VALUES (1, ?, '<< Flyway Baseline >>', 'BASELINE', '<< Flyway Baseline >>', NULL, 'agroruta', 0, 1)")) {
+                ps.setString(1, lineaBase);
+                ps.executeUpdate();
+            }
+            log.info("Creada la tabla flyway_schema_history con línea base en V{}", lineaBase);
+        }
+    }
+
+    private static boolean existeHistorial(Connection c) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() "
+                        + "AND TABLE_NAME = 'flyway_schema_history'");
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() && rs.getLong(1) > 0;
+        }
+    }
+
+    /** Misma estructura que crea Flyway 10 en MySQL */
+    static final String CREAR_HISTORIAL = """
+            CREATE TABLE `flyway_schema_history` (
+                `installed_rank` INT NOT NULL,
+                `version` VARCHAR(50),
+                `description` VARCHAR(200) NOT NULL,
+                `type` VARCHAR(20) NOT NULL,
+                `script` VARCHAR(1000) NOT NULL,
+                `checksum` INT,
+                `installed_by` VARCHAR(100) NOT NULL,
+                `installed_on` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `execution_time` INT NOT NULL,
+                `success` BOOL NOT NULL,
+                CONSTRAINT `flyway_schema_history_pk` PRIMARY KEY (`installed_rank`)
+            ) ENGINE=InnoDB""";
 
     /** Si ya hay insumos cargados, la base tiene datos y V2 no se debe repetir. */
     static String lineaBase(DataSource dataSource) {

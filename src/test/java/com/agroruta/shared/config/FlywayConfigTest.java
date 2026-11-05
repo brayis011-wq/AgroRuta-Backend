@@ -165,6 +165,49 @@ class FlywayConfigTest {
         assertThat(FlywayConfig.lineaBase(dataSource)).isEqualTo("1");
     }
 
+    @Test
+    @DisplayName("prepararHistorial() crea la tabla e inserta la línea base cuando no existe (TiDB no soporta CREATE TABLE ... SELECT)")
+    void prepararHistorialCreaTablaYLineaBase() throws Exception {
+        DataSource dataSource = mock(DataSource.class);
+        java.sql.Connection c = mock(java.sql.Connection.class);
+        java.sql.PreparedStatement consulta = mock(java.sql.PreparedStatement.class);
+        java.sql.PreparedStatement insert = mock(java.sql.PreparedStatement.class);
+        java.sql.ResultSet rs = mock(java.sql.ResultSet.class);
+        java.sql.Statement st = mock(java.sql.Statement.class);
+        when(dataSource.getConnection()).thenReturn(c);
+        when(c.prepareStatement(org.mockito.ArgumentMatchers.contains("information_schema"))).thenReturn(consulta);
+        when(c.prepareStatement(org.mockito.ArgumentMatchers.startsWith("INSERT"))).thenReturn(insert);
+        when(consulta.executeQuery()).thenReturn(rs);
+        when(rs.next()).thenReturn(true);
+        when(rs.getLong(1)).thenReturn(0L);
+        when(c.createStatement()).thenReturn(st);
+
+        FlywayConfig.prepararHistorial(dataSource, "2");
+
+        verify(st).execute(FlywayConfig.CREAR_HISTORIAL);
+        verify(insert).setString(1, "2");
+        verify(insert).executeUpdate();
+        assertThat(FlywayConfig.CREAR_HISTORIAL).doesNotContain("SELECT");
+    }
+
+    @Test
+    @DisplayName("prepararHistorial() no toca nada si la tabla ya existe")
+    void prepararHistorialNoTocaSiExiste() throws Exception {
+        DataSource dataSource = mock(DataSource.class);
+        java.sql.Connection c = mock(java.sql.Connection.class);
+        java.sql.PreparedStatement consulta = mock(java.sql.PreparedStatement.class);
+        java.sql.ResultSet rs = mock(java.sql.ResultSet.class);
+        when(dataSource.getConnection()).thenReturn(c);
+        when(c.prepareStatement(anyString())).thenReturn(consulta);
+        when(consulta.executeQuery()).thenReturn(rs);
+        when(rs.next()).thenReturn(true);
+        when(rs.getLong(1)).thenReturn(1L);
+
+        FlywayConfig.prepararHistorial(dataSource, "2");
+
+        verify(c, org.mockito.Mockito.never()).createStatement();
+    }
+
     private FluentConfiguration buildFluentConfigMock(MockedStatic<Flyway> flywayStatic) {
         FluentConfiguration fluentConfig = mock(FluentConfiguration.class);
 
