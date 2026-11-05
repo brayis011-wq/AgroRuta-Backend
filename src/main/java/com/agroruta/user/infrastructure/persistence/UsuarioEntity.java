@@ -40,7 +40,7 @@ public class UsuarioEntity {
     @Column(length = 20)
     private String telefono;
 
-    @Column(name = "foto_perfil", length = 500)
+    @Column(name = "foto_perfil", columnDefinition = "MEDIUMTEXT")
     private String fotoPerfil;
 
     public UsuarioEntity(Long id, String nombre, String email, String password,

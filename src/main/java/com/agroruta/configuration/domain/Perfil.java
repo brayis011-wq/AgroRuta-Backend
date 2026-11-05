@@ -30,6 +30,6 @@ public class Perfil {
     public void actualizarDatos(String nombre, String telefono, String fotoPerfil) {
         this.nombre     = nombre;
         this.telefono   = telefono;
-        this.fotoPerfil = fotoPerfil;
+        this.fotoPerfil = FotoPerfil.validar(fotoPerfil);
     }
 }

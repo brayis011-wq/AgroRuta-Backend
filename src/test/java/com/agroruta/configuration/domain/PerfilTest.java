@@ -124,4 +124,11 @@ class PerfilTest {
         assertEquals(Rol.Agricultor,    Rol.valueOf("Agricultor"));
         assertEquals(Rol.Trabajador,    Rol.valueOf("Trabajador"));
     }
+
+    @Test
+    @DisplayName("actualizarDatos rechaza una foto que no es imagen")
+    void actualizarDatos_rechazaFotoInvalida() {
+        assertThrows(IllegalArgumentException.class,
+                () -> perfil.actualizarDatos("Ana", "300", "data:text/html;base64,PGgxPg=="));
+    }
 }
