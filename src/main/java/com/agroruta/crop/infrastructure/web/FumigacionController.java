@@ -35,7 +35,7 @@ public class FumigacionController {
                         req.getAreaAplicada(),
                         req.getObservaciones(),
                         req.getSiembraId(),
-                        new RestriccionesFumigacion(req.getDiasCarencia(), req.getReentradaHoras())
+                        new RestriccionesFumigacion(req.getDiasCarencia(), req.getReentradaHoras(), req.getCosto())
                 )
         );
     }
@@ -53,7 +53,7 @@ public class FumigacionController {
         return ResponseEntity.ok(fumigacionUseCase.actualizarFumigacion(
                 id, req.getFecha(), req.getProducto(), req.getAgriculturalInputId(), req.getDosis(),
                 req.getUnidadMedida(), req.getAreaAplicada(), req.getObservaciones(),
-                new RestriccionesFumigacion(req.getDiasCarencia(), req.getReentradaHoras())));
+                new RestriccionesFumigacion(req.getDiasCarencia(), req.getReentradaHoras(), req.getCosto())));
     }
 
     @DeleteMapping("/{id}")

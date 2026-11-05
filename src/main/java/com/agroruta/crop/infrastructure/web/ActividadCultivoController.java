@@ -27,7 +27,7 @@ public class ActividadCultivoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 actividadUseCase.registrarActividad(
                         req.getTipo(), req.getDescripcion(),
-                        req.getFecha(), req.getSiembraId()
+                        req.getFecha(), req.getSiembraId(), req.getCosto()
                 )
         );
     }
@@ -44,7 +44,7 @@ public class ActividadCultivoController {
     public ResponseEntity<ActividadCultivo> actualizar(@PathVariable Long id,
                                                        @Valid @RequestBody ActividadRequest req) {
         return ResponseEntity.ok(actividadUseCase.actualizarActividad(
-                id, req.getTipo(), req.getDescripcion(), req.getFecha()));
+                id, req.getTipo(), req.getDescripcion(), req.getFecha(), req.getCosto()));
     }
 
     @DeleteMapping("/{id}")

@@ -58,6 +58,7 @@ public class FumigacionRepositoryImpl implements FumigacionRepository {
         entity.setAgriculturalInputId(fumigacion.getAgriculturalInputId());
         entity.setDiasCarencia(fumigacion.getDiasCarencia());
         entity.setReentradaHoras(fumigacion.getReentradaHoras());
+        entity.setCosto(fumigacion.getCosto());
         return entity;
     }
 
@@ -74,6 +75,7 @@ public class FumigacionRepositoryImpl implements FumigacionRepository {
         fumigacion.setAgriculturalInputId(entity.getAgriculturalInputId());
         fumigacion.setDiasCarencia(entity.getDiasCarencia());
         fumigacion.setReentradaHoras(entity.getReentradaHoras());
+        fumigacion.setCosto(entity.getCosto());
         return fumigacion;
     }
 }

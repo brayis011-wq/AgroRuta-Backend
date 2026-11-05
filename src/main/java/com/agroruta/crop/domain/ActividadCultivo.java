@@ -15,6 +15,8 @@ public class ActividadCultivo {
     private String descripcion;
     private LocalDate fecha;
     private Long siembraId;
+    /** Costo de materiales o servicios de la actividad (COP), aparte de los jornales */
+    private Double costo;
 
     public ActividadCultivo(Long id, TipoActividad tipo, String descripcion,
                             LocalDate fecha, Long siembraId) {

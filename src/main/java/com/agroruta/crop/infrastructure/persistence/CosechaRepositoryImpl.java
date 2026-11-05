@@ -61,6 +61,7 @@ public class CosechaRepositoryImpl implements CosechaRepository {
         entity.setCantidadKg(cosecha.getCantidadKg());
         entity.setCalidad(cosecha.getCalidad());
         entity.setObservaciones(cosecha.getObservaciones());
+        entity.setPrecioKg(cosecha.getPrecioKg());
         entity.setSiembraId(cosecha.getSiembraId());
         return entity;
     }
@@ -72,6 +73,7 @@ public class CosechaRepositoryImpl implements CosechaRepository {
         cosecha.setCantidadKg(entity.getCantidadKg());
         cosecha.setCalidad(entity.getCalidad());
         cosecha.setObservaciones(entity.getObservaciones());
+        cosecha.setPrecioKg(entity.getPrecioKg());
         cosecha.setSiembraId(entity.getSiembraId());
         return cosecha;
     }

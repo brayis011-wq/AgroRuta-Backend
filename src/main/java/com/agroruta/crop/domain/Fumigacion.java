@@ -27,6 +27,8 @@ public class Fumigacion {
     private Integer diasCarencia;
     /** Horas sin entrar al lote después de aplicar */
     private Integer reentradaHoras;
+    /** Costo del producto aplicado (COP) */
+    private Double costo;
 
     public static Fumigacion fromCatalog(
             LocalDate fecha,
@@ -67,6 +69,7 @@ public class Fumigacion {
         if (r == null) return;
         this.diasCarencia = r.diasCarencia();
         this.reentradaHoras = r.reentradaHoras();
+        this.costo = r.costo();
     }
 
     public boolean tieneInsumoDelCatalogo() {

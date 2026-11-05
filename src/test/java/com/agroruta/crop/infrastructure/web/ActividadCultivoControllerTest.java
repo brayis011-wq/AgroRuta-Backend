@@ -43,7 +43,7 @@ class ActividadCultivoControllerTest {
         ActividadCultivo actividad = new ActividadCultivo(
                 1L, TipoActividad.RIEGO, "Riego matutino", LocalDate.now(), 10L
         );
-        when(actividadUseCase.registrarActividad(any(), any(), any(), anyLong()))
+        when(actividadUseCase.registrarActividad(any(), any(), any(), anyLong(), any()))
                 .thenReturn(actividad);
 
         String body = """

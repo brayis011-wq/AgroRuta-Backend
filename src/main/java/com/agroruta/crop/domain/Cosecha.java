@@ -16,6 +16,8 @@ public class Cosecha {
     private CalidadCosecha calidad;
     private String observaciones;
     private Long siembraId;
+    /** Precio de venta por kilo (COP); null si no se registró */
+    private Double precioKg;
 
     public Cosecha(Long id, LocalDate fecha, Double cantidadKg,
                    CalidadCosecha calidad, String observaciones, Long siembraId) {

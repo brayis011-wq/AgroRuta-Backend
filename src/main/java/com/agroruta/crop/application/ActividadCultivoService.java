@@ -28,7 +28,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
 
     @Override
     public ActividadCultivo registrarActividad(String tipo, String descripcion,
-                                               LocalDate fecha, Long siembraId) {
+                                               LocalDate fecha, Long siembraId, Double costo) {
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
             throw new BusinessException("La siembra está finalizada; reábrela para registrar más actividades.");
@@ -48,6 +48,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
         ActividadCultivo actividad = new ActividadCultivo(
                 null, tipoActividad, descripcion, fecha, siembraId
         );
+        actividad.setCosto(costo);
         return actividadRepository.save(actividad);
     }
 
@@ -58,8 +59,18 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
     }
 
     @Override
-    public ActividadCultivo actualizarActividad(Long id, String tipo, String descripcion, LocalDate fecha) {
+    public ActividadCultivo actualizarActividad(Long id, String tipo, String descripcion, LocalDate fecha, Double costo) {
         ActividadCultivo actividad = buscarActividadPorId(id);
+        actividad.setCosto(costo);
+        return actualizar(actividad, tipo, descripcion, fecha);
+    }
+
+    @Override
+    public ActividadCultivo actualizarActividad(Long id, String tipo, String descripcion, LocalDate fecha) {
+        return actualizar(buscarActividadPorId(id), tipo, descripcion, fecha);
+    }
+
+    private ActividadCultivo actualizar(ActividadCultivo actividad, String tipo, String descripcion, LocalDate fecha) {
         if (descripcion == null || descripcion.isBlank())
             throw new BusinessException("La descripción de la actividad es obligatoria.");
 

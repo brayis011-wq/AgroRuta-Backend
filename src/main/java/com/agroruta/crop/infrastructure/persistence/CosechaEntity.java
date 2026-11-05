@@ -29,6 +29,9 @@ public class CosechaEntity {
 
     private String observaciones;
 
+    @Column(name = "precio_kg")
+    private Double precioKg;
+
     @Column(nullable = false)
     private Long siembraId;
 
@@ -48,6 +51,9 @@ public class CosechaEntity {
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+
+    public Double getPrecioKg() { return precioKg; }
+    public void setPrecioKg(Double precioKg) { this.precioKg = precioKg; }
 
     public Long getSiembraId() { return siembraId; }
     public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }

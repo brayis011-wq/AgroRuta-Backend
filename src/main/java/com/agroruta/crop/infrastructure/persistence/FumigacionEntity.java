@@ -43,6 +43,8 @@ public class FumigacionEntity {
     @Column(name = "reentrada_horas")
     private Integer reentradaHoras;
 
+    private Double costo;
+
     public FumigacionEntity() {}
 
     public Long getAgriculturalInputId() { return agriculturalInputId; }
@@ -50,6 +52,9 @@ public class FumigacionEntity {
 
     public Integer getDiasCarencia() { return diasCarencia; }
     public void setDiasCarencia(Integer v) { this.diasCarencia = v; }
+
+    public Double getCosto() { return costo; }
+    public void setCosto(Double v) { this.costo = v; }
 
     public Integer getReentradaHoras() { return reentradaHoras; }
     public void setReentradaHoras(Integer v) { this.reentradaHoras = v; }

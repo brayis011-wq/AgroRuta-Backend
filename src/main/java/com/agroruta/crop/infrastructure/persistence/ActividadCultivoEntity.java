@@ -30,6 +30,8 @@ public class ActividadCultivoEntity {
     @Column(nullable = false)
     private Long siembraId;
 
+    private Double costo;
+
     public ActividadCultivoEntity() {}
 
     public Long getId() { return id; }
@@ -46,4 +48,7 @@ public class ActividadCultivoEntity {
 
     public Long getSiembraId() { return siembraId; }
     public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }
+
+    public Double getCosto() { return costo; }
+    public void setCosto(Double costo) { this.costo = costo; }
 }

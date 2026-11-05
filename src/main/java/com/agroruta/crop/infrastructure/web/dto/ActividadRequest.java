@@ -1,6 +1,7 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -22,6 +23,10 @@ public class ActividadRequest {
     // Sin @PastOrPresent: una actividad puede quedar programada.
     @NotNull(message = "La fecha es obligatoria")
     private LocalDate fecha;
+
+    // Opcional: materiales o servicios de la actividad (COP), aparte de los jornales
+    @PositiveOrZero(message = "El costo no puede ser negativo")
+    private Double costo;
 
     @NotNull(message = "La siembra es obligatoria")
     @Positive(message = "La siembra no es válida")

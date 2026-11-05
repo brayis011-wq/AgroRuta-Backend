@@ -26,7 +26,7 @@ public class CosechaService implements CosechaUseCase {
 
     @Override
     public Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg,
-                                    String calidad, String observaciones, Long siembraId) {
+                                    String calidad, String observaciones, Long siembraId, Double precioKg) {
 
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
@@ -41,6 +41,7 @@ public class CosechaService implements CosechaUseCase {
                 null, fecha, cantidadKg,
                 EnumParser.parse(CalidadCosecha.class, calidad, "calidad"), observaciones, siembraId
         );
+        cosecha.setPrecioKg(precioKg);
         return cosechaRepository.save(cosecha);
     }
 
@@ -58,8 +59,20 @@ public class CosechaService implements CosechaUseCase {
 
     @Override
     public Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                                     String calidad, String observaciones) {
+                                     String calidad, String observaciones, Double precioKg) {
         Cosecha cosecha = buscarCosechaPorId(id);
+        cosecha.setPrecioKg(precioKg);
+        return aplicarCambios(cosecha, fecha, cantidadKg, calidad, observaciones);
+    }
+
+    @Override
+    public Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
+                                     String calidad, String observaciones) {
+        return aplicarCambios(buscarCosechaPorId(id), fecha, cantidadKg, calidad, observaciones);
+    }
+
+    private Cosecha aplicarCambios(Cosecha cosecha, LocalDate fecha, Double cantidadKg,
+                                   String calidad, String observaciones) {
         if (fecha != null && !fecha.equals(cosecha.getFecha())
                 && cosechaRepository.existsByFechaAndSiembraId(fecha, cosecha.getSiembraId())) {
             throw fechaRepetida(fecha);

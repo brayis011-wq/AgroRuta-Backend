@@ -55,6 +55,7 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         entity.setId(actividad.getId());
         entity.setTipo(actividad.getTipo());
         entity.setDescripcion(actividad.getDescripcion());
+        entity.setCosto(actividad.getCosto());
         entity.setFecha(actividad.getFecha());
         entity.setSiembraId(actividad.getSiembraId());
         return entity;
@@ -65,6 +66,7 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         actividad.setId(entity.getId());
         actividad.setTipo(entity.getTipo());
         actividad.setDescripcion(entity.getDescripcion());
+        actividad.setCosto(entity.getCosto());
         actividad.setFecha(entity.getFecha());
         actividad.setSiembraId(entity.getSiembraId());
         return actividad;

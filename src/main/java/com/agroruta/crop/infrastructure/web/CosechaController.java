@@ -27,7 +27,7 @@ public class CosechaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 cosechaUseCase.registrarCosecha(
                         req.getFecha(), req.getCantidadKg(),
-                        req.getCalidad(), req.getObservaciones(), req.getSiembraId()
+                        req.getCalidad(), req.getObservaciones(), req.getSiembraId(), req.getPrecioKg()
                 )
         );
     }
@@ -43,7 +43,7 @@ public class CosechaController {
     @PreAuthorize("@ownership.cosechaPropia(#id, authentication)")
     public ResponseEntity<Cosecha> actualizar(@PathVariable Long id, @Valid @RequestBody CosechaRequest req) {
         return ResponseEntity.ok(cosechaUseCase.actualizarCosecha(
-                id, req.getFecha(), req.getCantidadKg(), req.getCalidad(), req.getObservaciones()));
+                id, req.getFecha(), req.getCantidadKg(), req.getCalidad(), req.getObservaciones(), req.getPrecioKg()));
     }
 
     @DeleteMapping("/{id}")
