@@ -217,4 +217,33 @@ class JwtServiceTest {
                     .isInstanceOf(ExpiredJwtException.class);
         }
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Cambio de contraseña: cierra las sesiones anteriores
+    // ═══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("huella de la contraseña")
+    class HuellaContrasena {
+
+        @Test
+        @DisplayName("un token deja de servir cuando cambia la contraseña")
+        void tokenInvalidoTrasCambiarContrasena() {
+            String token = jwtService.generateToken(usuario);
+            UserDetails conOtraContrasena = User.builder()
+                    .username("carlos@agroruta.com")
+                    .password("otro-hash")
+                    .authorities(Collections.emptyList())
+                    .build();
+
+            assertThat(jwtService.isTokenValid(token, usuario)).isTrue();
+            assertThat(jwtService.isTokenValid(token, conOtraContrasena)).isFalse();
+        }
+
+        @Test
+        @DisplayName("la huella no deja ver el hash y es estable")
+        void huellaCortaYEstable() {
+            String h = JwtService.huella("hashed-pwd");
+            assertThat(h).hasSize(16).isEqualTo(JwtService.huella("hashed-pwd")).doesNotContain("hashed");
+        }
+    }
 }

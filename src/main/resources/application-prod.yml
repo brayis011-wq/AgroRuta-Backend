@@ -19,13 +19,15 @@ management:
       environment: prod
 
 # ──────────────────────────────────────────
-# HIKARI - Pool de conexiones (crítico en pruebas de carga)
+# HIKARI - Pool de conexiones
+# 10 alcanza para el uso normal y no agota la memoria de Render ni las conexiones de TiDB.
+# Para una prueba de carga se puede subir con las variables DB_POOL_MAX / DB_POOL_MIN.
 # ──────────────────────────────────────────
 spring:
   datasource:
     hikari:
-      maximum-pool-size: 50    # era 20
-      minimum-idle: 10         # era 5
+      maximum-pool-size: ${DB_POOL_MAX:10}
+      minimum-idle: ${DB_POOL_MIN:2}
       connection-timeout: 30000
       idle-timeout: 600000
       pool-name: AgroRuta-HikariPool

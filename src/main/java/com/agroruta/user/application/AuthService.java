@@ -1,5 +1,6 @@
 package com.agroruta.user.application;
 
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.transaction.annotation.Transactional;
 import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
@@ -31,19 +32,22 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final VinculoTrabajadorPort vinculoTrabajador;
+    private final IntentosLogin intentosLogin;
 
     public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                        BuscarUsuarioUseCase buscarUsuarioUseCase,
                        TokenPort tokenPort,
                        PasswordEncoder passwordEncoder,
                        AuthenticationManager authenticationManager,
-                       VinculoTrabajadorPort vinculoTrabajador) {
+                       VinculoTrabajadorPort vinculoTrabajador,
+                       IntentosLogin intentosLogin) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.buscarUsuarioUseCase = buscarUsuarioUseCase;
         this.tokenPort = tokenPort;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.vinculoTrabajador = vinculoTrabajador;
+        this.intentosLogin = intentosLogin;
     }
 
     @Transactional
@@ -85,12 +89,19 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        intentosLogin.exigirNoBloqueado(request.getEmail());
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (BadCredentialsException e) {
+            intentosLogin.registrarFallo(request.getEmail());
+            throw e;
+        }
+        intentosLogin.limpiar(request.getEmail());
 
         Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
         CustomUserDetails userDetails = new CustomUserDetails(usuario);

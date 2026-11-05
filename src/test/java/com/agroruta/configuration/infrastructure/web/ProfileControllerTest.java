@@ -51,6 +51,8 @@ class ProfileControllerTest {
     @Mock private GetProfileUseCase     obtenerPerfilUseCase;
     @Mock private UpdateProfileUseCase  actualizarPerfilUseCase;
     @Mock private ChangePasswordUseCase cambiarPasswordUseCase;
+    @Mock private com.agroruta.shared.security.JwtService jwtService;
+    @Mock private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
 
     @InjectMocks
     private ProfileController profileController;
@@ -210,16 +212,19 @@ class ProfileControllerTest {
         }
 
         @Test
-        @DisplayName("debería retornar 204 cuando la contraseña se cambia exitosamente")
-        void deberiaRetornar204_cuandoCambioExitoso() throws Exception {
+        @DisplayName("debería devolver un token nuevo cuando la contraseña se cambia exitosamente")
+        void deberiaDevolverTokenNuevo_cuandoCambioExitoso() throws Exception {
             when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL)).thenReturn(perfilEjemplo);
             doNothing().when(cambiarPasswordUseCase)
                     .cambiarPassword(anyLong(), anyString(), anyString());
+            when(userDetailsService.loadUserByUsername(USER_EMAIL)).thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails)).thenReturn("token-nuevo");
 
             mockMvc.perform(patch(PASSWORD_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body("secret123", "nuevoSecret456")))
-                    .andExpect(status().isNoContent());
+                    .andExpect(status().isOk())
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.token").value("token-nuevo"));
 
             verify(cambiarPasswordUseCase).cambiarPassword(1L, "secret123", "nuevoSecret456");
         }

@@ -79,9 +79,12 @@ public class GlobalExceptionHandler {
                 ex.getMessage());
 
         // Un duplicado es un conflicto (409); el resto de reglas de negocio, 422.
-        HttpStatus status = ex.getErrorCode() == ErrorCode.RESOURCE_ALREADY_EXISTS
-                ? HttpStatus.CONFLICT
-                : HttpStatus.UNPROCESSABLE_ENTITY;
+        // Demasiados intentos de inicio de sesión: 429.
+        HttpStatus status = switch (ex.getErrorCode()) {
+            case RESOURCE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
+            default -> HttpStatus.UNPROCESSABLE_ENTITY;
+        };
 
         ErrorResponse error = ErrorResponse.of(
                 status.value(),

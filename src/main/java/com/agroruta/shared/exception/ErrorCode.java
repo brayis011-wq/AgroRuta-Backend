@@ -18,6 +18,7 @@ public enum ErrorCode {
     // Seguridad
     ACCESS_DENIED("AGR-030", "Acceso denegado"),
     AUTHENTICATION_FAILED("AGR-031", "Credenciales inválidas"),
+    TOO_MANY_ATTEMPTS("AGR-032", "Demasiados intentos"),
 
     // Sistema
     INTERNAL_ERROR("AGR-500", "Error interno del servidor"),

@@ -46,6 +46,9 @@ class AuthServiceTest {
     @Mock
     private VinculoTrabajadorPort vinculoTrabajador;
 
+    @org.mockito.Spy
+    private IntentosLogin intentosLogin = new IntentosLogin();
+
     @InjectMocks
     private AuthService authService;
 
@@ -370,5 +373,40 @@ class AuthServiceTest {
 
         verifyNoInteractions(buscarUsuarioUseCase);
         verifyNoInteractions(tokenPort);
+    }
+
+    // ── límite de intentos ────────────────────────────────────────
+
+    @Test
+    void loginDeberiaBloquearElCorreoTrasCincoContrasenasEquivocadas() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail(EMAIL);
+        request.setPassword("wrongpassword");
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
+
+        for (int i = 0; i < 5; i++) {
+            assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+                    () -> authService.login(request));
+        }
+
+        com.agroruta.shared.exception.BusinessException e = assertThrows(
+                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        org.junit.jupiter.api.Assertions.assertEquals(
+                com.agroruta.shared.exception.ErrorCode.TOO_MANY_ATTEMPTS, e.getErrorCode());
+        verify(authenticationManager, org.mockito.Mockito.times(5)).authenticate(any());
+    }
+
+    @Test
+    void loginCorrectoDeberiaOlvidarLosFallosAnteriores() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
+        when(tokenPort.generateToken(any())).thenReturn(TOKEN);
+
+        authService.login(request);
+
+        verify(intentosLogin).limpiar(EMAIL);
     }
 }

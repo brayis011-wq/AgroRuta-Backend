@@ -1,5 +1,8 @@
 package com.agroruta.configuration.infrastructure.web;
 
+import com.agroruta.shared.security.JwtService;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import java.util.Map;
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
 import com.agroruta.configuration.application.ports.in.UpdateProfileUseCase;
@@ -20,13 +23,19 @@ public class ProfileController {
     private final GetProfileUseCase     obtenerPerfilUseCase;
     private final UpdateProfileUseCase  actualizarPerfilUseCase;
     private final ChangePasswordUseCase cambiarPasswordUseCase;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
     public ProfileController(GetProfileUseCase obtenerPerfilUseCase,
                              UpdateProfileUseCase actualizarPerfilUseCase,
-                             ChangePasswordUseCase cambiarPasswordUseCase) {
+                             ChangePasswordUseCase cambiarPasswordUseCase,
+                             JwtService jwtService,
+                             UserDetailsService userDetailsService) {
         this.obtenerPerfilUseCase    = obtenerPerfilUseCase;
         this.actualizarPerfilUseCase = actualizarPerfilUseCase;
         this.cambiarPasswordUseCase  = cambiarPasswordUseCase;
+        this.jwtService              = jwtService;
+        this.userDetailsService      = userDetailsService;
     }
 
     @GetMapping
@@ -58,8 +67,12 @@ public class ProfileController {
         return ResponseEntity.ok(ProfileResponse.from(actualizado));
     }
 
+    /**
+     * Cambia la contraseña. Las sesiones anteriores quedan cerradas (ver JwtService),
+     * así que se devuelve un token nuevo para que quien la cambió siga conectado.
+     */
     @PatchMapping("/password")
-    public ResponseEntity<Void> cambiarPassword(
+    public ResponseEntity<Map<String, String>> cambiarPassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request) {
 
@@ -73,6 +86,7 @@ public class ProfileController {
                 request.getNuevaPassword()
         );
 
-        return ResponseEntity.noContent().build();
+        UserDetails actualizado = userDetailsService.loadUserByUsername(userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("token", jwtService.generateToken(actualizado)));
     }
 }
