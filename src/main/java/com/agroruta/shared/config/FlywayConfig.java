@@ -3,9 +3,10 @@ package com.agroruta.shared.config;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -13,16 +14,19 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.Arrays;
 
 /**
  * Migraciones de base de datos con Flyway, en todos los entornos (local y producción).
  *
- * Por ahora Hibernate sigue creando/ajustando tablas (ddl-auto=update) y Flyway corre después:
- *  - Base nueva: Hibernate crea las tablas vacías, la línea base queda en V1 y V2 carga los insumos.
- *  - Base con datos sin historial (producción): la línea base queda en V2, así V1 y V2 no se
- *    vuelven a correr (V2 duplicaría los insumos) y desde V3 todo cambio queda registrado.
- *  - Bases locales que ya tenían historial con línea base 1: siguen igual; V1 queda debajo de su línea base.
- * Los cambios nuevos al esquema van como V3__..., V4__... en db/migration.
+ * Flyway es el dueño del esquema: corre antes que Hibernate, y Hibernate solo valida
+ * (ddl-auto=validate) que las tablas coincidan con las entidades.
+ *  - Base vacía: V1 crea las tablas y V2 carga los insumos.
+ *  - Base con tablas pero sin historial: se anota una línea base para no repetir lo que ya existe
+ *    (V2 si ya hay insumos, porque los duplicaría; V1 si no hay, para que V2 los cargue).
+ *  - Bases que ya tienen historial (producción): siguen desde donde iban.
+ * Todo cambio a una entidad necesita su migración V3__..., V4__... en db/migration;
+ * si falta, la app no arranca y el error dice qué tabla o columna no coincide.
  */
 @Configuration
 public class FlywayConfig {
@@ -33,8 +37,20 @@ public class FlywayConfig {
     static final String LINEA_BASE_NUEVA = "1";
     static final String LINEA_BASE_CON_DATOS = "2";
 
+    /** Hibernate (entityManagerFactory) espera a que Flyway termine, para validar el esquema ya migrado. */
     @Bean
-    @DependsOn("entityManagerFactory") // Hibernate primero; Flyway después
+    public static BeanFactoryPostProcessor jpaDespuesDeFlyway() {
+        return beanFactory -> {
+            if (!beanFactory.containsBeanDefinition("entityManagerFactory")) return;
+            BeanDefinition emf = beanFactory.getBeanDefinition("entityManagerFactory");
+            String[] previas = emf.getDependsOn();
+            String[] todas = previas == null ? new String[1] : Arrays.copyOf(previas, previas.length + 1);
+            todas[todas.length - 1] = "flyway";
+            emf.setDependsOn(todas);
+        };
+    }
+
+    @Bean
     public Flyway flyway(DataSource dataSource) {
         String lineaBase = lineaBase(dataSource);
         Flyway flyway = Flyway.configure()
@@ -53,8 +69,8 @@ public class FlywayConfig {
             flyway.migrate();
         } catch (RuntimeException e) {
             // Mientras Hibernate siga manejando el esquema, un fallo de Flyway no debe tumbar la app.
-            log.error("Flyway no pudo aplicar las migraciones; la app sigue con el esquema de Hibernate. "
-                    + "Revisa la tabla flyway_schema_history.", e);
+            // Si el esquema igual coincide con las entidades, la app arranca; si no, Hibernate lo dirá al validar.
+            log.error("Flyway no pudo aplicar las migraciones. Revisa la tabla flyway_schema_history.", e);
         }
         return flyway;
     }
@@ -63,6 +79,7 @@ public class FlywayConfig {
      * TiDB no soporta "CREATE TABLE ... SELECT", que es lo que usa Flyway para crear su tabla de historial
      * con la línea base. Por eso la creamos nosotros, con la misma estructura que usa Flyway en MySQL,
      * y anotamos la línea base. Si la tabla ya existe no se toca.
+     * En una base vacía no hay línea base: la tabla queda sin filas y Flyway corre desde V1.
      */
     static void prepararHistorial(DataSource dataSource, String lineaBase) throws SQLException {
         try (Connection c = dataSource.getConnection()) {
@@ -70,6 +87,10 @@ public class FlywayConfig {
             try (Statement st = c.createStatement()) {
                 st.execute(CREAR_HISTORIAL);
                 st.execute("CREATE INDEX `flyway_schema_history_s_idx` ON `flyway_schema_history` (`success`)");
+            }
+            if (contarTablas(c) <= 1) { // solo la de historial que acabamos de crear
+                log.info("Base vacía: creada la tabla flyway_schema_history; Flyway aplicará desde V1");
+                return;
             }
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO `flyway_schema_history` (`installed_rank`, `version`, `description`, `type`, `script`, "
@@ -79,6 +100,14 @@ public class FlywayConfig {
                 ps.executeUpdate();
             }
             log.info("Creada la tabla flyway_schema_history con línea base en V{}", lineaBase);
+        }
+    }
+
+    private static long contarTablas(Connection c) throws SQLException {
+        try (PreparedStatement ps = c.prepareStatement(
+                "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()");
+             ResultSet rs = ps.executeQuery()) {
+            return rs.next() ? rs.getLong(1) : 0;
         }
     }
 

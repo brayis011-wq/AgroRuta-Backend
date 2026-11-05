@@ -179,7 +179,7 @@ class FlywayConfigTest {
         when(c.prepareStatement(org.mockito.ArgumentMatchers.startsWith("INSERT"))).thenReturn(insert);
         when(consulta.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(true);
-        when(rs.getLong(1)).thenReturn(0L);
+        when(rs.getLong(1)).thenReturn(0L, 19L); // sin historial, con tablas
         when(c.createStatement()).thenReturn(st);
 
         FlywayConfig.prepararHistorial(dataSource, "2");
@@ -206,6 +206,53 @@ class FlywayConfigTest {
         FlywayConfig.prepararHistorial(dataSource, "2");
 
         verify(c, org.mockito.Mockito.never()).createStatement();
+    }
+
+    @Test
+    @DisplayName("prepararHistorial() en una base vacía crea la tabla sin línea base, para que corra V1")
+    void prepararHistorialBaseVaciaSinLineaBase() throws Exception {
+        DataSource dataSource = mock(DataSource.class);
+        java.sql.Connection c = mock(java.sql.Connection.class);
+        java.sql.PreparedStatement consulta = mock(java.sql.PreparedStatement.class);
+        java.sql.ResultSet rs = mock(java.sql.ResultSet.class);
+        java.sql.Statement st = mock(java.sql.Statement.class);
+        when(dataSource.getConnection()).thenReturn(c);
+        when(c.prepareStatement(anyString())).thenReturn(consulta);
+        when(consulta.executeQuery()).thenReturn(rs);
+        when(rs.next()).thenReturn(true);
+        when(rs.getLong(1)).thenReturn(0L, 1L); // sin historial; solo la tabla recién creada
+        when(c.createStatement()).thenReturn(st);
+
+        FlywayConfig.prepararHistorial(dataSource, "1");
+
+        verify(st).execute(FlywayConfig.CREAR_HISTORIAL);
+        verify(c, org.mockito.Mockito.never()).prepareStatement(org.mockito.ArgumentMatchers.startsWith("INSERT"));
+    }
+
+    @Test
+    @DisplayName("Hibernate espera a Flyway: entityManagerFactory queda dependiendo de flyway")
+    void jpaDependeDeFlyway() {
+        org.springframework.beans.factory.support.DefaultListableBeanFactory bf =
+                new org.springframework.beans.factory.support.DefaultListableBeanFactory();
+        org.springframework.beans.factory.support.RootBeanDefinition emf =
+                new org.springframework.beans.factory.support.RootBeanDefinition(Object.class);
+        emf.setDependsOn("dataSource");
+        bf.registerBeanDefinition("entityManagerFactory", emf);
+
+        FlywayConfig.jpaDespuesDeFlyway().postProcessBeanFactory(bf);
+
+        assertThat(bf.getBeanDefinition("entityManagerFactory").getDependsOn())
+                .containsExactly("dataSource", "flyway");
+    }
+
+    @Test
+    @DisplayName("Hibernate solo valida el esquema; las tablas las crea Flyway")
+    void hibernateSoloValida() throws Exception {
+        java.util.Properties props = new java.util.Properties();
+        try (var in = getClass().getResourceAsStream("/application.properties")) {
+            props.load(in);
+        }
+        assertThat(props.getProperty("spring.jpa.hibernate.ddl-auto")).isEqualTo("${DDL_AUTO:validate}");
     }
 
     private FluentConfiguration buildFluentConfigMock(MockedStatic<Flyway> flywayStatic) {
