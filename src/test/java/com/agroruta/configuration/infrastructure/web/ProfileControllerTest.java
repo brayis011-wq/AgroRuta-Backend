@@ -233,6 +233,8 @@ class ProfileControllerTest {
         @DisplayName("debería usar el id del perfil autenticado al cambiar la contraseña")
         void deberiaUsarIdDelPerfilAutenticado() throws Exception {
             when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL)).thenReturn(perfilEjemplo);
+            when(userDetailsService.loadUserByUsername(USER_EMAIL)).thenReturn(userDetails);
+            when(jwtService.generateToken(userDetails)).thenReturn("token-nuevo");
 
             mockMvc.perform(patch(PASSWORD_URL)
                     .contentType(MediaType.APPLICATION_JSON)

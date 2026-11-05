@@ -11,9 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ErrorCodeTest {
 
     @Test
-    @DisplayName("debe contener exactamente 10 códigos definidos")
-    void shouldContainExactlyTenCodes() {
-        assertThat(ErrorCode.values()).hasSize(10);
+    @DisplayName("debe contener exactamente 11 códigos definidos")
+    void shouldContainExactlyElevenCodes() {
+        assertThat(ErrorCode.values()).hasSize(11);
     }
 
     @ParameterizedTest(name = "{0} debe tener code y defaultMessage no nulos ni vacíos")
@@ -101,5 +101,11 @@ class ErrorCodeTest {
     @DisplayName("EXTERNAL_SERVICE_ERROR debe tener code AGR-501")
     void externalServiceErrorShouldHaveCorrectCode() {
         assertThat(ErrorCode.EXTERNAL_SERVICE_ERROR.getCode()).isEqualTo("AGR-501");
+    }
+
+    @Test
+    @DisplayName("TOO_MANY_ATTEMPTS debe tener code AGR-032")
+    void tooManyAttemptsShouldHaveCorrectCode() {
+        assertThat(ErrorCode.TOO_MANY_ATTEMPTS.getCode()).isEqualTo("AGR-032");
     }
 }
