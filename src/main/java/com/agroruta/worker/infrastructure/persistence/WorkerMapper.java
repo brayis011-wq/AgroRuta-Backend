@@ -38,6 +38,7 @@ public class WorkerMapper {
         if (e == null) return null;
         Actividad a = new Actividad(e.getId(), e.getNombre(), e.getDescripcion());
         a.setActiva(e.isActiva());
+        a.setAgricultorId(e.getAgricultorId());
         return a;
     }
 
@@ -48,6 +49,7 @@ public class WorkerMapper {
         e.setNombre(d.getNombre());
         e.setDescripcion(d.getDescripcion());
         e.setActiva(d.isActiva());
+        e.setAgricultorId(d.getAgricultorId());
         return e;
     }
 

@@ -9,12 +9,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "actividades", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_actividad_nombre",
-                columnNames = {"nombre"}
-        )
-})
+// El nombre ya no es único en toda la tabla: cada agricultor tiene sus labores (se valida en ActividadService)
+@Table(name = "actividades")
 public class ActividadEntity {
 
     @Id
@@ -29,4 +25,8 @@ public class ActividadEntity {
 
     @Column(nullable = false)
     private boolean activa;
+
+    /** null = labor común del sistema */
+    @Column(name = "agricultor_id")
+    private Long agricultorId;
 }

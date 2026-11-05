@@ -6,6 +6,7 @@ import com.agroruta.crop.domain.FincaRepository;
 import com.agroruta.crop.domain.FumigacionRepository;
 import com.agroruta.crop.domain.LoteRepository;
 import com.agroruta.crop.domain.SiembraRepository;
+import com.agroruta.worker.domain.ActividadRepository;
 import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.NominaRepository;
@@ -37,6 +38,7 @@ public class OwnershipChecker {
     private final CosechaRepository cosechaRepository;
     private final FumigacionRepository fumigacionRepository;
     private final ActividadCultivoRepository actividadCultivoRepository;
+    private final ActividadRepository actividadRepository;
 
     public OwnershipChecker(FincaRepository fincaRepository,
                             LoteRepository loteRepository,
@@ -48,7 +50,8 @@ public class OwnershipChecker {
                             CargoRepository cargoRepository,
                             CosechaRepository cosechaRepository,
                             FumigacionRepository fumigacionRepository,
-                            ActividadCultivoRepository actividadCultivoRepository) {
+                            ActividadCultivoRepository actividadCultivoRepository,
+                            ActividadRepository actividadRepository) {
         this.fincaRepository = fincaRepository;
         this.loteRepository = loteRepository;
         this.siembraRepository = siembraRepository;
@@ -60,6 +63,7 @@ public class OwnershipChecker {
         this.cosechaRepository = cosechaRepository;
         this.fumigacionRepository = fumigacionRepository;
         this.actividadCultivoRepository = actividadCultivoRepository;
+        this.actividadRepository = actividadRepository;
     }
 
     /** El agricultorId recibido debe ser el del usuario autenticado. */
@@ -121,6 +125,16 @@ public class OwnershipChecker {
     }
 
     // ── worker ───────────────────────────────────────────────────────────
+
+    /** Labor de los jornales: el agricultor solo modifica las suyas; las comunes, solo el Administrador. */
+    public boolean laborPropia(Long actividadId, Authentication auth) {
+        if (CurrentUser.esAdmin(auth)) return true;
+        Long usuarioId = CurrentUser.id(auth);
+        if (usuarioId == null || actividadId == null) return false;
+        return actividadRepository.buscarPorId(actividadId)
+                .map(a -> !a.esComun() && usuarioId.equals(a.getAgricultorId()))
+                .orElse(false);
+    }
 
     public boolean trabajadorPropio(Long trabajadorId, Authentication auth) {
         if (CurrentUser.esAdmin(auth)) return true;

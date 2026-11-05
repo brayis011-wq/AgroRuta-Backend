@@ -40,5 +40,13 @@ class ActividadRepositoryImpl implements ActividadRepository {
         return jpa.findByActivaTrue().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 
+    @Override public List<Actividad> listarActivasPara(Long agricultorId) {
+        return jpa.activasPara(agricultorId).stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override public boolean existeNombreVisible(String nombre, Long agricultorId, Long excluirId) {
+        return jpa.nombreVisible(nombre, agricultorId, excluirId);
+    }
+
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 }

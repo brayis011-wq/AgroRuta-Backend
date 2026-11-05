@@ -17,6 +17,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -42,6 +47,13 @@ class ActividadControllerTest {
         actividadBase = new Actividad(1L, "Siembra", "Actividad de siembra");
     }
 
+    private static Authentication auth(Long id, Rol rol) {
+        CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));
+        return new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities());
+    }
+
+    private static final Authentication ADMIN = auth(1L, Rol.Administrador);
+
     private ActividadRequest request(String nombre, String descripcion) {
         ActividadRequest req = new ActividadRequest();
         req.nombre = nombre;
@@ -65,7 +77,7 @@ class ActividadControllerTest {
             );
             when(actividadUseCase.listarActivas()).thenReturn(activas);
 
-            ResponseEntity<List<ActividadResponse>> response = actividadController.listar();
+            ResponseEntity<List<ActividadResponse>> response = actividadController.listar(ADMIN);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -80,7 +92,7 @@ class ActividadControllerTest {
         void debeRetornar200ConListaVacia() {
             when(actividadUseCase.listarActivas()).thenReturn(List.of());
 
-            ResponseEntity<List<ActividadResponse>> response = actividadController.listar();
+            ResponseEntity<List<ActividadResponse>> response = actividadController.listar(ADMIN);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -99,11 +111,11 @@ class ActividadControllerTest {
         @Test
         @DisplayName("Debe retornar 201 con la actividad creada")
         void debeRetornar201AlCrear() {
-            when(actividadUseCase.crearActividad("Siembra", "Actividad de siembra"))
+            when(actividadUseCase.crearActividad("Siembra", "Actividad de siembra", null))
                     .thenReturn(actividadBase);
 
             ResponseEntity<ActividadResponse> response =
-                    actividadController.crear(request("Siembra", "Actividad de siembra"));
+                    actividadController.crear(request("Siembra", "Actividad de siembra"), ADMIN);
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -111,23 +123,23 @@ class ActividadControllerTest {
             assertEquals("Siembra", response.getBody().nombre);
             assertEquals("Actividad de siembra", response.getBody().descripcion);
             assertTrue(response.getBody().activa);
-            verify(actividadUseCase, times(1)).crearActividad("Siembra", "Actividad de siembra");
+            verify(actividadUseCase, times(1)).crearActividad("Siembra", "Actividad de siembra", null);
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si el nombre ya existe")
         void debePropaglarExcepcionSiNombreDuplicado() {
-            when(actividadUseCase.crearActividad(any(), any()))
+            when(actividadUseCase.crearActividad(any(), any(), any()))
                     .thenThrow(new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Siembra ya existe"));
 
             BusinessException ex = assertThrows(
                     BusinessException.class,
-                    () -> actividadController.crear(request("Siembra", "Desc"))
+                    () -> actividadController.crear(request("Siembra", "Desc"), ADMIN)
             );
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             assertTrue(ex.getMessage().contains("Siembra"));
-            verify(actividadUseCase, times(1)).crearActividad(any(), any());
+            verify(actividadUseCase, times(1)).crearActividad(any(), any(), any());
         }
     }
 
@@ -219,6 +231,38 @@ class ActividadControllerTest {
 
             assertTrue(ex.getMessage().contains("99"));
             verify(actividadUseCase, times(1)).desactivarActividad(99L);
+        }
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Labores por agricultor
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("labores por agricultor")
+    class LaboresPorAgricultor {
+
+        @Test
+        @DisplayName("El agricultor ve las comunes y las suyas")
+        void agricultorVeComunesYSuyas() {
+            when(actividadUseCase.listarActivasPara(7L)).thenReturn(List.of(actividadBase));
+
+            ResponseEntity<List<ActividadResponse>> r = actividadController.listar(auth(7L, Rol.Agricultor));
+
+            assertEquals(1, r.getBody().size());
+            assertTrue(r.getBody().get(0).comun);
+            verify(actividadUseCase, never()).listarActivas();
+        }
+
+        @Test
+        @DisplayName("Lo que crea el agricultor queda a su nombre")
+        void agricultorCreaASuNombre() {
+            Actividad propia = new Actividad(9L, "Deshoje", "");
+            propia.setAgricultorId(7L);
+            when(actividadUseCase.crearActividad("Deshoje", "", 7L)).thenReturn(propia);
+
+            ResponseEntity<ActividadResponse> r = actividadController.crear(request("Deshoje", ""), auth(7L, Rol.Agricultor));
+
+            assertFalse(r.getBody().comun);
         }
     }
 }

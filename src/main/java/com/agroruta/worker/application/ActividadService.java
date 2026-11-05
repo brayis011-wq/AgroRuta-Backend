@@ -21,15 +21,21 @@ public class ActividadService implements ActividadUseCase {
 
     @Override
     public Actividad crearActividad(String nombre, String descripcion) {
+        return crearActividad(nombre, descripcion, null);
+    }
 
-        if (actividadRepository.existsByNombre(nombre)) {
+    @Override
+    public Actividad crearActividad(String nombre, String descripcion, Long agricultorId) {
+        String limpio = limpiar(nombre);
+        if (actividadRepository.existeNombreVisible(limpio, agricultorId, null)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    String.format("Ya existe una actividad con el nombre '%s'.", nombre)
+                    String.format("Ya existe una actividad con el nombre '%s'.", limpio)
             );
         }
 
-        Actividad actividad = new Actividad(null, nombre, descripcion);
+        Actividad actividad = new Actividad(null, limpio, descripcion);
+        actividad.setAgricultorId(agricultorId);
         return actividadRepository.guardar(actividad);
     }
 
@@ -39,15 +45,16 @@ public class ActividadService implements ActividadUseCase {
         Actividad actividad = actividadRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actividad", id));
 
-        // Valida que el nuevo nombre no lo tenga otra actividad distinta
-        if (actividadRepository.existsByNombreAndIdNot(nombre, id)) {
+        // Valida que el nuevo nombre no lo tenga otra labor que vea el mismo dueño
+        String limpio = limpiar(nombre);
+        if (actividadRepository.existeNombreVisible(limpio, actividad.getAgricultorId(), id)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    String.format("Ya existe otra actividad con el nombre '%s'.", nombre)
+                    String.format("Ya existe otra actividad con el nombre '%s'.", limpio)
             );
         }
 
-        actividad.setNombre(nombre);
+        actividad.setNombre(limpio);
         actividad.setDescripcion(descripcion);
         return actividadRepository.guardar(actividad);
     }
@@ -70,5 +77,17 @@ public class ActividadService implements ActividadUseCase {
 
     public List<Actividad> listarTodas() {
         return actividadRepository.listarTodas();
+    }
+
+    @Override
+    public List<Actividad> listarActivasPara(Long agricultorId) {
+        return actividadRepository.listarActivasPara(agricultorId);
+    }
+
+    /** Quita espacios de más: "  Poda   de  formación " → "Poda de formación" */
+    static String limpiar(String nombre) {
+        String t = nombre == null ? "" : nombre.trim().replaceAll("\\s+", " ");
+        if (t.isEmpty()) throw new IllegalArgumentException("El nombre de la actividad es obligatorio.");
+        return t;
     }
 }

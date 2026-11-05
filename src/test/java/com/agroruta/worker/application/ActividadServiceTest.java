@@ -42,7 +42,7 @@ class ActividadServiceTest {
     @Test
     @DisplayName("crearActividad debe guardar y retornar la actividad cuando el nombre no existe")
     void crearActividad_nombreNuevo_debeGuardarYRetornar() {
-        when(actividadRepository.existsByNombre("Siembra")).thenReturn(false);
+        when(actividadRepository.existeNombreVisible("Siembra", null, null)).thenReturn(false);
         when(actividadRepository.guardar(any(Actividad.class))).thenReturn(actividadBase);
 
         Actividad resultado = actividadService.crearActividad("Siembra", "Actividad de siembra");
@@ -55,7 +55,7 @@ class ActividadServiceTest {
     @Test
     @DisplayName("crearActividad debe lanzar BusinessException cuando el nombre ya existe")
     void crearActividad_nombreDuplicado_debeLanzarBusinessException() {
-        when(actividadRepository.existsByNombre("Siembra")).thenReturn(true);
+        when(actividadRepository.existeNombreVisible("Siembra", null, null)).thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
@@ -71,7 +71,7 @@ class ActividadServiceTest {
     @DisplayName("crearActividad debe crear la actividad con activa en true")
     void crearActividad_debeCrearConActivaEnTrue() {
         Actividad nueva = new Actividad(null, "Riego", "Actividad de riego");
-        when(actividadRepository.existsByNombre("Riego")).thenReturn(false);
+        when(actividadRepository.existeNombreVisible("Riego", null, null)).thenReturn(false);
         when(actividadRepository.guardar(any(Actividad.class))).thenReturn(nueva);
 
         Actividad resultado = actividadService.crearActividad("Riego", "Actividad de riego");
@@ -85,7 +85,7 @@ class ActividadServiceTest {
     @DisplayName("actualizarActividad debe modificar y guardar cuando el id existe y el nombre es único")
     void actualizarActividad_idExisteNombreUnico_debeActualizarYGuardar() {
         when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividadBase));
-        when(actividadRepository.existsByNombreAndIdNot("Cosecha", 1L)).thenReturn(false);
+        when(actividadRepository.existeNombreVisible("Cosecha", null, 1L)).thenReturn(false);
         when(actividadRepository.guardar(any(Actividad.class))).thenReturn(actividadBase);
 
         Actividad resultado = actividadService.actualizarActividad(1L, "Cosecha", "Nueva descripción");
@@ -113,7 +113,7 @@ class ActividadServiceTest {
     @DisplayName("actualizarActividad debe lanzar BusinessException cuando el nuevo nombre pertenece a otra actividad")
     void actualizarActividad_nombreDuplicadoEnOtra_debeLanzarBusinessException() {
         when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividadBase));
-        when(actividadRepository.existsByNombreAndIdNot("Cosecha", 1L)).thenReturn(true);
+        when(actividadRepository.existeNombreVisible("Cosecha", null, 1L)).thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
@@ -232,5 +232,59 @@ class ActividadServiceTest {
         List<Actividad> resultado = actividadService.listarTodas();
 
         assertTrue(resultado.isEmpty());
+    }
+
+    // ── labores por agricultor ────────────────────────────────────────────
+
+    @Test
+    @DisplayName("crearActividad con agricultor deja la labor a su nombre y revisa solo las que él ve")
+    void crearActividad_deUnAgricultor_quedaASuNombre() {
+        when(actividadRepository.existeNombreVisible("Poda de formación", 7L, null)).thenReturn(false);
+        when(actividadRepository.guardar(any(Actividad.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Actividad resultado = actividadService.crearActividad("  Poda   de formación ", "", 7L);
+
+        assertEquals("Poda de formación", resultado.getNombre());
+        assertEquals(7L, resultado.getAgricultorId());
+        assertFalse(resultado.esComun());
+    }
+
+    @Test
+    @DisplayName("crearActividad rechaza un nombre vacío")
+    void crearActividad_nombreVacio_lanzaIllegalArgument() {
+        assertThrows(IllegalArgumentException.class, () -> actividadService.crearActividad("   ", "", 7L));
+        verify(actividadRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("actualizarActividad revisa el nombre entre las labores del mismo dueño")
+    void actualizarActividad_revisaElNombreDelDueno() {
+        Actividad propia = new Actividad(5L, "Deshoje", "");
+        propia.setAgricultorId(7L);
+        when(actividadRepository.buscarPorId(5L)).thenReturn(Optional.of(propia));
+        when(actividadRepository.existeNombreVisible("Tutorado", 7L, 5L)).thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> actividadService.actualizarActividad(5L, "Tutorado", ""));
+        verify(actividadRepository, never()).guardar(any());
+    }
+
+    @Test
+    @DisplayName("listarActivasPara delega en el repositorio con el agricultor")
+    void listarActivasPara_delega() {
+        when(actividadRepository.listarActivasPara(7L)).thenReturn(List.of(actividadBase));
+
+        assertEquals(1, actividadService.listarActivasPara(7L).size());
+    }
+
+    @Test
+    @DisplayName("visiblePara: una labor común la ven todos y una propia solo su dueño")
+    void visiblePara() {
+        Actividad comun = new Actividad(1L, "Recolección", "");
+        Actividad propia = new Actividad(2L, "Deshoje", "");
+        propia.setAgricultorId(7L);
+
+        assertTrue(comun.visiblePara(9L));
+        assertTrue(propia.visiblePara(7L));
+        assertFalse(propia.visiblePara(9L));
     }
 }

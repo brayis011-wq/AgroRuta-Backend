@@ -59,9 +59,7 @@ public class JornalService implements JornalUseCase {
         Jornal jornal = new Jornal(null, fecha, trabajador, cultivoId, cultivo.nombre(), observaciones);
 
         for (Long actividadId : actividadIds) {
-            Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
-            jornal.agregarActividad(actividad);
+            jornal.agregarActividad(actividadUsable(actividadId, trabajador.getAgricultorId()));
         }
 
         return jornalRepository.guardar(jornal);
@@ -71,8 +69,7 @@ public class JornalService implements JornalUseCase {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
 
-        Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
+        Actividad actividad = actividadUsable(actividadId, jornal.getTrabajador().getAgricultorId());
 
         jornal.agregarActividad(actividad);
         return jornalRepository.guardar(jornal);
@@ -87,6 +84,16 @@ public class JornalService implements JornalUseCase {
 
         jornal.removerActividad(actividad);
         return jornalRepository.guardar(jornal);
+    }
+
+    /** La labor existe y el agricultor la puede usar (es común o es suya). */
+    private Actividad actividadUsable(Long actividadId, Long agricultorId) {
+        Actividad actividad = actividadRepository.buscarPorId(actividadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
+        if (!actividad.visiblePara(agricultorId)) {
+            throw new BusinessException("La actividad " + actividad.getNombre() + " no está disponible en tus fincas.");
+        }
+        return actividad;
     }
 
     public Jornal buscarPorId(Long id) {
