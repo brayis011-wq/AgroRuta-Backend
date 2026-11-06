@@ -147,4 +147,22 @@ class AuthControllerTest {
             verify(authService, times(1)).login(any(LoginRequest.class));
         }
     }
+
+    @Test
+    @DisplayName("verificar() confirma el correo y devuelve la sesión")
+    void verificarDevuelveSesion() {
+        when(authService.verificarCorreo("tok")).thenReturn(authResponseBase);
+        var r = authController.verificar(new com.agroruta.user.infrastructure.web.dto.VerificarRequest("tok"));
+        org.junit.jupiter.api.Assertions.assertEquals(200, r.getStatusCode().value());
+        org.junit.jupiter.api.Assertions.assertEquals(authResponseBase, r.getBody());
+    }
+
+    @Test
+    @DisplayName("reenviarVerificacion() responde lo mismo exista o no la cuenta")
+    void reenviarVerificacion() {
+        var r = authController.reenviarVerificacion(
+                new com.agroruta.user.infrastructure.web.dto.ReenviarVerificacionRequest("ana@x.com"));
+        org.junit.jupiter.api.Assertions.assertEquals(200, r.getStatusCode().value());
+        verify(authService).reenviarVerificacion("ana@x.com");
+    }
 }

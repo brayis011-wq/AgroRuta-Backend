@@ -11,9 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ErrorCodeTest {
 
     @Test
-    @DisplayName("debe contener exactamente 11 códigos definidos")
+    @DisplayName("debe contener exactamente 12 códigos definidos")
     void shouldContainExactlyElevenCodes() {
-        assertThat(ErrorCode.values()).hasSize(11);
+        assertThat(ErrorCode.values()).hasSize(12);
     }
 
     @ParameterizedTest(name = "{0} debe tener code y defaultMessage no nulos ni vacíos")

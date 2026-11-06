@@ -43,6 +43,9 @@ public class UsuarioEntity {
     @Column(name = "foto_perfil", columnDefinition = "MEDIUMTEXT")
     private String fotoPerfil;
 
+    @Column(name = "email_verificado", nullable = false)
+    private boolean emailVerificado = true;
+
     public UsuarioEntity(Long id, String nombre, String email, String password,
                          Rol rol, boolean activo, LocalDateTime fechaCreacion,
                          String telefono, String fotoPerfil) {

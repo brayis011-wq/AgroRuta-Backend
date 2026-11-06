@@ -68,7 +68,7 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
     // Pasan los datos de la clase del Dominio a la clase de la Base de Datos y viceversa
 
     private UsuarioEntity toEntity(Usuario domain) {
-        return new UsuarioEntity(
+        UsuarioEntity entity = new UsuarioEntity(
                 domain.getId(),
                 domain.getNombre(),
                 domain.getEmail(),
@@ -79,6 +79,8 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
                 domain.getTelefono(),       // NUEVO
                 domain.getFotoPerfil()      // NUEVO
         );
+        entity.setEmailVerificado(domain.isEmailVerificado());
+        return entity;
     }
 
     private Usuario toDomain(UsuarioEntity entity) {
@@ -95,6 +97,7 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
         usuario.setFechaCreacion(entity.getFechaCreacion());
         usuario.setTelefono(entity.getTelefono());      // NUEVO
         usuario.setFotoPerfil(entity.getFotoPerfil());  // NUEVO
+        usuario.setEmailVerificado(entity.isEmailVerificado());
         return usuario;
     }
 }

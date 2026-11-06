@@ -189,6 +189,15 @@ class UsuarioRepositoryImplTest {
         }
 
         @Test
+        @DisplayName("Conserva si el correo está confirmado")
+        void debeConservarEmailVerificado() {
+            entityBase.setEmailVerificado(false);
+            when(jpaRepository.findByEmail("juan@agroruta.com")).thenReturn(Optional.of(entityBase));
+
+            assertTrue(repository.findByEmail("juan@agroruta.com").map(u -> !u.isEmailVerificado()).orElse(false));
+        }
+
+        @Test
         @DisplayName("Si no está exacto, lo busca sin distinguir mayúsculas (cuentas viejas)")
         void debeBuscarSinMayusculasSiNoHayExacto() {
             when(jpaRepository.findByEmail("juan@agroruta.com")).thenReturn(Optional.empty());

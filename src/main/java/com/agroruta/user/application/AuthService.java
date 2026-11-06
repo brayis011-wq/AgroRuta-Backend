@@ -3,6 +3,9 @@ package com.agroruta.user.application;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.context.ApplicationEventPublisher;
 import com.agroruta.shared.evento.CuentaBloqueada;
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.user.application.ports.out.VerificacionCorreoPort;
 import org.springframework.transaction.annotation.Transactional;
 import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
@@ -36,6 +39,7 @@ public class AuthService {
     private final VinculoTrabajadorPort vinculoTrabajador;
     private final IntentosLogin intentosLogin;
     private final ApplicationEventPublisher eventos;
+    private final VerificacionCorreoPort verificacion;
 
     public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                        BuscarUsuarioUseCase buscarUsuarioUseCase,
@@ -44,7 +48,8 @@ public class AuthService {
                        AuthenticationManager authenticationManager,
                        VinculoTrabajadorPort vinculoTrabajador,
                        IntentosLogin intentosLogin,
-                       ApplicationEventPublisher eventos) {
+                       ApplicationEventPublisher eventos,
+                       VerificacionCorreoPort verificacion) {
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.buscarUsuarioUseCase = buscarUsuarioUseCase;
         this.tokenPort = tokenPort;
@@ -53,6 +58,7 @@ public class AuthService {
         this.vinculoTrabajador = vinculoTrabajador;
         this.intentosLogin = intentosLogin;
         this.eventos = eventos;
+        this.verificacion = verificacion;
     }
 
     @Transactional
@@ -75,11 +81,19 @@ public class AuthService {
                 passwordEncoder.encode(request.getPassword()),
                 rol
         );
+        boolean verificar = verificacion.activa();
+        usuario.setEmailVerificado(!verificar);
 
         Usuario guardado = registrarUsuarioUseCase.registrar(usuario);
 
         if (rol == Rol.Trabajador) {
             vinculoTrabajador.solicitarAcceso(guardado.getId(), guardado.getNombre(), guardado.getEmail(), cedula);
+        }
+        if (verificar) {
+            // Sin sesión hasta que confirme el correo con el enlace
+            verificacion.enviarEnlace(guardado);
+            return new AuthResponse(guardado.getId(), null, guardado.getEmail(), guardado.getNombre(),
+                    guardado.getRol().name(), true);
         }
         CustomUserDetails userDetails = new CustomUserDetails(guardado);
         String token = tokenPort.generateToken(userDetails);
@@ -111,9 +125,27 @@ public class AuthService {
         intentosLogin.limpiar(request.getEmail());
 
         Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
+        // Se revisa después de la contraseña, para no contarle a cualquiera qué cuentas faltan por confirmar
+        if (!usuario.isEmailVerificado() && verificacion.activa()) {
+            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED,
+                    "Confirma tu correo para entrar: abre el enlace que te enviamos a " + usuario.getEmail() + ".");
+        }
+        return sesion(usuario);
+    }
+
+    /** El enlace del correo de confirmación: confirma la cuenta y deja la sesión iniciada. */
+    public AuthResponse verificarCorreo(String token) {
+        return sesion(verificacion.confirmar(token));
+    }
+
+    /** Vuelve a mandar el enlace de confirmación. Responde igual exista o no la cuenta. */
+    public void reenviarVerificacion(String email) {
+        verificacion.reenviar(normalizarEmail(email));
+    }
+
+    private AuthResponse sesion(Usuario usuario) {
         CustomUserDetails userDetails = new CustomUserDetails(usuario);
         String token = tokenPort.generateToken(userDetails);
-
         return new AuthResponse(
                 usuario.getId(),
                 token,

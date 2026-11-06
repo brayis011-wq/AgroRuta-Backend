@@ -56,6 +56,17 @@ public class MensajesCorreo {
                 .para(email, "Recupera tu contraseña de AgroRuta");
     }
 
+    public Correo verificarCorreo(String nombre, String email, String token, long horas) {
+        return PlantillaCorreo.con("Confirma tu correo")
+                .resumen("Un paso más para empezar a usar AgroRuta.")
+                .parrafo("Hola " + primerNombre(nombre) + ", gracias por registrarte en AgroRuta.")
+                .parrafo("Confirma que este correo es tuyo para activar tu cuenta:")
+                .boton("Confirmar mi correo", url("/auth/verificar?token=" + token))
+                .parrafo("El enlace vence en " + horas + " horas. Si no creaste esta cuenta, ignora este correo.")
+                .pie(PIE_CUENTA)
+                .para(email, "Confirma tu correo en AgroRuta");
+    }
+
     public Correo contrasenaCambiada(String nombre, String email, LocalDateTime cuando) {
         return PlantillaCorreo.con("Tu contraseña cambió")
                 .resumen("Se cerraron las sesiones abiertas en otros equipos.")

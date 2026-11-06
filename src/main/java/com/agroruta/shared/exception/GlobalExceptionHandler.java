@@ -83,6 +83,7 @@ public class GlobalExceptionHandler {
         HttpStatus status = switch (ex.getErrorCode()) {
             case RESOURCE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
             case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
+            case EMAIL_NOT_VERIFIED -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
 

@@ -19,6 +19,8 @@ public class Usuario {
     private String fotoPerfil;
     private boolean activo;
     private LocalDateTime fechaCreacion;
+    /** Confirmó que el correo es suyo (con el enlace que le llegó). Las cuentas anteriores a la verificación cuentan como confirmadas. */
+    private boolean emailVerificado = true;
 
     public Usuario(Long id, String nombre, String email,
                    String password, Rol rol) {

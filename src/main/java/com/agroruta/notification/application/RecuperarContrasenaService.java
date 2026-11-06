@@ -105,6 +105,7 @@ public class RecuperarContrasenaService implements RecuperarContrasenaUseCase {
                         "El enlace no es válido o ya venció. Pide uno nuevo."));
 
         usuario.setPassword(passwordEncoder.encode(nuevaPassword));
+        usuario.setEmailVerificado(true); // abrir el enlace del correo también demuestra que es suyo
         usuarioRepository.save(usuario);
         r.usar(ahora);
         restablecimientos.guardar(r);

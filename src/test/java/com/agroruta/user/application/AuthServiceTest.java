@@ -51,6 +51,8 @@ class AuthServiceTest {
 
     @Mock private org.springframework.context.ApplicationEventPublisher eventos;
 
+    @Mock private com.agroruta.user.application.ports.out.VerificacionCorreoPort verificacion;
+
     @InjectMocks
     private AuthService authService;
 
@@ -417,5 +419,79 @@ class AuthServiceTest {
     void normalizarEmailDeberiaQuitarEspaciosYMayusculas() {
         org.junit.jupiter.api.Assertions.assertEquals("ana@x.com", AuthService.normalizarEmail("  Ana@X.com "));
         org.junit.jupiter.api.Assertions.assertNull(AuthService.normalizarEmail(null));
+    }
+
+    // ── confirmación del correo ───────────────────────────────────
+
+    @Test
+    void registrarConVerificacionNoDeberiaDarSesionYDeberiaMandarElEnlace() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(ROL.name());
+        when(verificacion.activa()).thenReturn(true);
+        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
+        when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+
+        AuthResponse response = authService.registrar(request);
+
+        org.junit.jupiter.api.Assertions.assertNull(response.getToken());
+        org.junit.jupiter.api.Assertions.assertTrue(response.isVerificacionPendiente());
+        org.mockito.ArgumentCaptor<Usuario> u = org.mockito.ArgumentCaptor.forClass(Usuario.class);
+        verify(verificacion).enviarEnlace(u.capture());
+        org.junit.jupiter.api.Assertions.assertFalse(u.getValue().isEmailVerificado());
+        verifyNoInteractions(tokenPort);
+    }
+
+    @Test
+    void registrarSinVerificacionDeberiaQuedarConfirmado() {
+        RegisterRequest request = new RegisterRequest();
+        request.setNombre(NOMBRE);
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setRol(ROL.name());
+        when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
+        when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        AuthResponse response = authService.registrar(request);
+
+        assertEquals(TOKEN, response.getToken());
+        org.junit.jupiter.api.Assertions.assertFalse(response.isVerificacionPendiente());
+        verify(verificacion, never()).enviarEnlace(any());
+    }
+
+    @Test
+    void loginConCorreoSinConfirmarDeberiaRechazarseDespuesDeLaContrasena() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        usuarioGuardado.setEmailVerificado(false);
+        when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
+        when(verificacion.activa()).thenReturn(true);
+
+        com.agroruta.shared.exception.BusinessException e = assertThrows(
+                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        assertEquals(com.agroruta.shared.exception.ErrorCode.EMAIL_NOT_VERIFIED, e.getErrorCode());
+        verify(authenticationManager).authenticate(any());
+        verifyNoInteractions(tokenPort);
+    }
+
+    @Test
+    void verificarCorreoDeberiaIniciarSesion() {
+        when(verificacion.confirmar("tok")).thenReturn(usuarioGuardado);
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        AuthResponse response = authService.verificarCorreo("tok");
+
+        assertEquals(TOKEN, response.getToken());
+        assertEquals(EMAIL, response.getEmail());
+    }
+
+    @Test
+    void reenviarVerificacionDeberiaNormalizarElCorreo() {
+        authService.reenviarVerificacion("  Juan@AgroRuta.com ");
+        verify(verificacion).reenviar("juan@agroruta.com");
     }
 }
