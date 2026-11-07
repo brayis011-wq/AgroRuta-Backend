@@ -10,6 +10,7 @@ import com.agroruta.shared.util.EnumParser;
 import org.springframework.stereotype.Service;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -99,12 +100,18 @@ public class LoteService implements LoteUseCase {
     }
 
     @Override
+    /**
+     * Borrado lógico: el lote deja de verse, pero sus siembras (con sus gastos e ingresos)
+     * siguen en los reportes. No se puede si tiene una siembra en curso.
+     */
     public void eliminarLote(Long id) {
-        buscarLotePorId(id); // valida que exista
+        Lote lote = buscarLotePorId(id);
+        if (lote.estaEliminado()) return;
         if (loteRepository.existsSiembraActivaEnLote(id)) {
             throw new BusinessException("El lote tiene una siembra en curso. Finalízala o elimínala antes de borrar el lote.");
         }
-        loteRepository.deleteById(id);
+        lote.eliminar(LocalDateTime.now());
+        loteRepository.save(lote);
     }
 
     private static BusinessException nombreRepetido(String nombre) {

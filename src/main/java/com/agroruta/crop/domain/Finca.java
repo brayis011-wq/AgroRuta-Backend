@@ -18,6 +18,19 @@ public class Finca {
     private LocalDateTime fechaRegistro;
     private Double centroideLat;
     private Double centroideLng;
+    /**
+     * Cuándo se eliminó (null si está vigente). El borrado es lógico: la finca deja de verse,
+     * pero sus lotes y siembras siguen en los reportes con sus gastos e ingresos.
+     */
+    private LocalDateTime eliminadoEn;
+
+    public boolean estaEliminada() {
+        return eliminadoEn != null;
+    }
+
+    public void eliminar(LocalDateTime cuando) {
+        if (eliminadoEn == null) eliminadoEn = cuando;
+    }
 
     public Finca(Long id, String nombre, String ubicacion, Double hectareas, Long agricultorId) {
         this.id = id;

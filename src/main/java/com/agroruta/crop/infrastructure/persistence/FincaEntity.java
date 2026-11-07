@@ -4,12 +4,9 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "fincas", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_finca_nombre_agricultor",
-                columnNames = {"nombre", "agricultorId"}
-        )
-})
+// El nombre no es único en la base: una finca eliminada (borrado lógico) conserva su nombre
+// y se puede crear otra igual. FincaService valida el nombre solo entre las vigentes.
+@Table(name = "fincas")
 public class FincaEntity {
 
     @Id
@@ -34,7 +31,13 @@ public class FincaEntity {
     private Double centroideLat;
     private Double centroideLng;
 
+    @Column(name = "eliminado_en")
+    private LocalDateTime eliminadoEn;
+
     public FincaEntity() {}
+
+    public LocalDateTime getEliminadoEn() { return eliminadoEn; }
+    public void setEliminadoEn(LocalDateTime eliminadoEn) { this.eliminadoEn = eliminadoEn; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

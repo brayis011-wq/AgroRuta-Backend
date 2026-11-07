@@ -3,6 +3,7 @@ package com.agroruta.crop.infrastructure.persistence;
 import com.agroruta.crop.domain.EstadoCultivo;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "siembras")
@@ -18,7 +19,6 @@ public class SiembraEntity {
     @Column(nullable = false)
     private Integer cantidadPlantas;
 
-    // Antes era un enum de uchuva; el inicializador del catálogo convierte la columna a texto
     @Column(nullable = false, length = 80)
     private String variedad;
 
@@ -39,7 +39,14 @@ public class SiembraEntity {
     @Column(name = "fecha_fin")
     private LocalDate fechaFin;
 
+    /** Borrado lógico: la siembra eliminada sigue en los reportes con sus gastos e ingresos */
+    @Column(name = "eliminado_en")
+    private LocalDateTime eliminadoEn;
+
     public SiembraEntity() {}
+
+    public LocalDateTime getEliminadoEn() { return eliminadoEn; }
+    public void setEliminadoEn(LocalDateTime eliminadoEn) { this.eliminadoEn = eliminadoEn; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
