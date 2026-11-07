@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Una temporada de cultivo en un lote. Un lote puede tener muchas siembras en el tiempo,
@@ -27,6 +28,25 @@ public class Siembra {
     private Long loteId;
     /** Día en que terminó la temporada (null mientras esté activa) */
     private LocalDate fechaFin;
+    /**
+     * Cuándo se eliminó (null si está vigente). El borrado es lógico: la siembra deja de verse
+     * en el lote, pero sus actividades, fumigaciones, cosechas y jornales se conservan
+     * y siguen contando en los reportes de cultivos y de costos.
+     */
+    private LocalDateTime eliminadoEn;
+
+    public boolean estaEliminada() {
+        return eliminadoEn != null;
+    }
+
+    /**
+     * Marca la siembra como eliminada. Si seguía activa, primero cierra la temporada en
+     * {@code hoy}, para que no quede "en curso" para siempre en los reportes.
+     */
+    public void eliminar(LocalDate hoy, LocalDateTime cuando) {
+        if (estaActiva()) finalizar(hoy);
+        if (eliminadoEn == null) eliminadoEn = cuando;
+    }
 
     public Siembra(Long id, LocalDate fechaSiembra, Integer cantidadPlantas,
                    VariedadCultivo variedad, Long loteId) {

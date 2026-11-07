@@ -47,6 +47,10 @@ public class CropQueryAdapter implements CropQueryPort {
                             : lotes.computeIfAbsent(siembra.getLoteId(), jpaLoteRepository::findById);
                     Optional<FincaEntity> finca = lote.map(LoteEntity::getFincaId)
                             .flatMap(id -> fincas.computeIfAbsent(id, jpaFincaRepository::findById));
+                    // Las eliminadas siguen aquí (borrado lógico): el historial de gastos e ingresos se conserva
+                    boolean eliminada = siembra.getEliminadoEn() != null
+                            || lote.map(LoteEntity::getEliminadoEn).isPresent()
+                            || finca.map(FincaEntity::getEliminadoEn).isPresent();
                     return new CropDetail(
                             siembra.getId(),
                             nombreCultivo(siembra),
@@ -57,7 +61,8 @@ public class CropQueryAdapter implements CropQueryPort {
                             jpaCosechaRepository.countBySiembraId(siembra.getId()),
                             siembra.getTipoCultivo(),
                             lote.map(LoteEntity::getNombre).orElse(null),
-                            finca.map(FincaEntity::getNombre).orElse(null));
+                            finca.map(FincaEntity::getNombre).orElse(null),
+                            eliminada);
                 })
                 .toList();
     }

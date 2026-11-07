@@ -31,18 +31,13 @@ public class FincaRepositoryImpl implements FincaRepository {
 
     @Override
     public List<Finca> findByAgricultorId(Long agricultorId) {
-        return jpaRepository.findByAgricultorId(agricultorId)
+        return jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(agricultorId)
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
-    public void deleteById(Long id) {
-        jpaRepository.deleteById(id);
-    }
-
-    @Override
     public boolean existsByNombreAndAgricultorId(String nombre, Long agricultorId) {
-        return jpaRepository.existsByNombreAndAgricultorId(nombre, agricultorId);
+        return jpaRepository.existsByNombreAndAgricultorIdAndEliminadoEnIsNull(nombre, agricultorId);
     }
 
     private FincaEntity toEntity(Finca finca) {
@@ -55,6 +50,7 @@ public class FincaRepositoryImpl implements FincaRepository {
         entity.setFechaRegistro(finca.getFechaRegistro());
         entity.setCentroideLat(finca.getCentroideLat());
         entity.setCentroideLng(finca.getCentroideLng());
+        entity.setEliminadoEn(finca.getEliminadoEn());
         return entity;
     }
 
@@ -68,6 +64,7 @@ public class FincaRepositoryImpl implements FincaRepository {
         finca.setFechaRegistro(entity.getFechaRegistro());
         finca.setCentroideLat(entity.getCentroideLat());
         finca.setCentroideLng(entity.getCentroideLng());
+        finca.setEliminadoEn(entity.getEliminadoEn());
         return finca;
     }
 }

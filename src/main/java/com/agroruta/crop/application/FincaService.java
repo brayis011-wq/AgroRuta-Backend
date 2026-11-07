@@ -3,20 +3,27 @@ package com.agroruta.crop.application;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.domain.Lote;
+import com.agroruta.crop.domain.LoteRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 public class FincaService implements FincaUseCase {
 
     private final FincaRepository fincaRepository;
+    // Repositorio (no LoteUseCase) para no crear un ciclo: LoteService ya depende de FincaUseCase
+    private final LoteRepository loteRepository;
 
-    public FincaService(FincaRepository fincaRepository) {
+    public FincaService(FincaRepository fincaRepository, LoteRepository loteRepository) {
         this.fincaRepository = fincaRepository;
+        this.loteRepository = loteRepository;
     }
 
     @Override
@@ -46,10 +53,29 @@ public class FincaService implements FincaUseCase {
         return fincaRepository.findByAgricultorId(agricultorId);
     }
 
+    /**
+     * Borrado lógico de la finca y de sus lotes: dejan de verse, pero sus siembras (con sus
+     * gastos e ingresos) siguen en los reportes. No se puede si algún lote tiene una siembra en curso.
+     */
     @Override
+    @Transactional
     public void eliminarFinca(Long id) {
-        buscarFincaPorId(id);
-        fincaRepository.deleteById(id);
+        Finca finca = buscarFincaPorId(id);
+        if (finca.estaEliminada()) return;
+        List<Lote> lotes = loteRepository.findByFincaId(id);
+        for (Lote lote : lotes) {
+            if (loteRepository.existsSiembraActivaEnLote(lote.getId())) {
+                throw new BusinessException("El lote '" + lote.getNombre() + "' tiene una siembra en curso. "
+                        + "Finalízala o elimínala antes de borrar la finca.");
+            }
+        }
+        LocalDateTime ahora = LocalDateTime.now();
+        for (Lote lote : lotes) {
+            lote.eliminar(ahora);
+            loteRepository.save(lote);
+        }
+        finca.eliminar(ahora);
+        fincaRepository.save(finca);
     }
     @Override
     public Finca actualizarFinca(Long id, String nombre, String ubicacion, Double hectareas) {

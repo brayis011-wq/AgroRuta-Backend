@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import java.time.LocalDateTime;
 import com.agroruta.crop.domain.Finca;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -175,7 +176,7 @@ class FincaRepositoryImplTest {
         entity2.setAgricultorId(AGRICULTOR_ID);
         entity2.setFechaRegistro(FECHA_REGISTRO.plusMonths(2));
 
-        when(jpaRepository.findByAgricultorId(AGRICULTOR_ID))
+        when(jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(AGRICULTOR_ID))
                 .thenReturn(List.of(entityGuardada, entity2));
 
         List<Finca> resultado = repository.findByAgricultorId(AGRICULTOR_ID);
@@ -187,7 +188,7 @@ class FincaRepositoryImplTest {
 
     @Test
     void deberiaRetornarListaVaciaSiElAgricultorNoTieneFincas() {
-        when(jpaRepository.findByAgricultorId(AGRICULTOR_ID)).thenReturn(List.of());
+        when(jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(AGRICULTOR_ID)).thenReturn(List.of());
 
         List<Finca> resultado = repository.findByAgricultorId(AGRICULTOR_ID);
 
@@ -207,7 +208,7 @@ class FincaRepositoryImplTest {
         entity2.setCentroideLat(5.0);
         entity2.setCentroideLng(-75.0);
 
-        when(jpaRepository.findByAgricultorId(AGRICULTOR_ID))
+        when(jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(AGRICULTOR_ID))
                 .thenReturn(List.of(entityGuardada, entity2));
 
         List<Finca> resultado = repository.findByAgricultorId(AGRICULTOR_ID);
@@ -222,7 +223,7 @@ class FincaRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiExisteFincaConMismoNombreYAgricultor() {
-        when(jpaRepository.existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID))
+        when(jpaRepository.existsByNombreAndAgricultorIdAndEliminadoEnIsNull(NOMBRE, AGRICULTOR_ID))
                 .thenReturn(true);
 
         assertTrue(repository.existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID));
@@ -230,7 +231,7 @@ class FincaRepositoryImplTest {
 
     @Test
     void deberiaRetornarFalseSiNoExisteFincaConEsaCombinacion() {
-        when(jpaRepository.existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID))
+        when(jpaRepository.existsByNombreAndAgricultorIdAndEliminadoEnIsNull(NOMBRE, AGRICULTOR_ID))
                 .thenReturn(false);
 
         assertFalse(repository.existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID));
@@ -238,32 +239,26 @@ class FincaRepositoryImplTest {
 
     @Test
     void existsDeberiaDelegarAlJpaConLosParametrosCorrectos() {
-        when(jpaRepository.existsByNombreAndAgricultorId(any(), any())).thenReturn(false);
+        when(jpaRepository.existsByNombreAndAgricultorIdAndEliminadoEnIsNull(any(), any())).thenReturn(false);
 
         repository.existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID);
 
         verify(jpaRepository, times(1))
-                .existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID);
+                .existsByNombreAndAgricultorIdAndEliminadoEnIsNull(NOMBRE, AGRICULTOR_ID);
     }
 
-    // ── deleteById ───────────────────────────────────────────────
+    // ── Borrado lógico ───────────────────────────────────────────
 
     @Test
-    void deberiaEliminarFincaPorId() {
-        doNothing().when(jpaRepository).deleteById(ID);
+    void saveConservaLaFechaDeEliminacion() {
+        LocalDateTime cuando = LocalDateTime.of(2026, 11, 7, 10, 30);
+        Finca finca = new Finca(null, "La Esperanza", "Vereda El Rosal", 2.0, AGRICULTOR_ID);
+        finca.eliminar(cuando);
+        when(jpaRepository.save(any(FincaEntity.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        repository.deleteById(ID);
+        Finca guardada = repository.save(finca);
 
-        verify(jpaRepository, times(1)).deleteById(ID);
-    }
-
-    @Test
-    void deleteDeberiaLlamarAlJpaConElIdCorrecto() {
-        doNothing().when(jpaRepository).deleteById(any());
-
-        repository.deleteById(77L);
-
-        verify(jpaRepository).deleteById(77L);
-        verifyNoMoreInteractions(jpaRepository);
+        assertEquals(cuando, guardada.getEliminadoEn());
+        assertTrue(guardada.estaEliminada());
     }
 }

@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import java.time.LocalDateTime;
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Siembra;
 import org.junit.jupiter.api.BeforeEach;
@@ -129,7 +130,7 @@ class SiembraRepositoryImplTest {
 
     @Test
     void deberiaRetornarLaSiembraEnCursoDelLote() {
-        when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(
+        when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
                 LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(Optional.of(entityGuardada));
 
         Optional<Siembra> resultado = repository.findActivaByLoteId(LOTE_ID);
@@ -142,7 +143,7 @@ class SiembraRepositoryImplTest {
 
     @Test
     void deberiaRetornarVacioSiNoHaySiembraEnCursoEnElLote() {
-        when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(
+        when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
                 LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(Optional.empty());
 
         assertFalse(repository.findActivaByLoteId(LOTE_ID).isPresent());
@@ -158,7 +159,7 @@ class SiembraRepositoryImplTest {
         anterior.setEstadoCultivo(EstadoCultivo.FINALIZADO);
         anterior.setLoteId(LOTE_ID);
         anterior.setFechaFin(FECHA_SIEMBRA.minusDays(20));
-        when(jpaRepository.findByLoteIdOrderByFechaSiembraDescIdDesc(LOTE_ID))
+        when(jpaRepository.findByLoteIdAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(LOTE_ID))
                 .thenReturn(List.of(entityGuardada, anterior));
 
         List<Siembra> resultado = repository.findHistorialByLoteId(LOTE_ID);
@@ -180,7 +181,7 @@ class SiembraRepositoryImplTest {
         entity2.setEstadoCultivo(ESTADO);
         entity2.setLoteId(16L);
 
-        when(jpaRepository.findByEstadoCultivo(ESTADO))
+        when(jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(ESTADO))
                 .thenReturn(List.of(entityGuardada, entity2));
 
         List<Siembra> resultado = repository.findByEstadoCultivo(ESTADO);
@@ -193,7 +194,7 @@ class SiembraRepositoryImplTest {
 
     @Test
     void deberiaRetornarListaVaciaSiNoHaySiembraConEseEstado() {
-        when(jpaRepository.findByEstadoCultivo(EstadoCultivo.FINALIZADO))
+        when(jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(EstadoCultivo.FINALIZADO))
                 .thenReturn(List.of());
 
         List<Siembra> resultado = repository.findByEstadoCultivo(EstadoCultivo.FINALIZADO);
@@ -204,48 +205,27 @@ class SiembraRepositoryImplTest {
 
     @Test
     void findByEstadoDeberiaDelegarAlJpaConElEstadoCorrecto() {
-        when(jpaRepository.findByEstadoCultivo(any())).thenReturn(List.of());
+        when(jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(any())).thenReturn(List.of());
 
         repository.findByEstadoCultivo(EstadoCultivo.PRODUCCION);
 
-        verify(jpaRepository, times(1)).findByEstadoCultivo(EstadoCultivo.PRODUCCION);
+        verify(jpaRepository, times(1)).findByEstadoCultivoAndEliminadoEnIsNull(EstadoCultivo.PRODUCCION);
     }
 
     // ── existsActivaByLoteId ──────────────────────────────────────
 
     @Test
     void deberiaRetornarTrueSiHaySiembraEnCursoEnElLote() {
-        when(jpaRepository.existsByLoteIdAndEstadoCultivoNot(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(true);
+        when(jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(true);
 
         assertTrue(repository.existsActivaByLoteId(LOTE_ID));
     }
 
     @Test
     void deberiaRetornarFalseSiSoloHaySiembrasFinalizadas() {
-        when(jpaRepository.existsByLoteIdAndEstadoCultivoNot(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(false);
+        when(jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(false);
 
         assertFalse(repository.existsActivaByLoteId(LOTE_ID));
-    }
-
-    // ── deleteById ───────────────────────────────────────────────
-
-    @Test
-    void deberiaEliminarSiembraPorId() {
-        doNothing().when(jpaRepository).deleteById(ID);
-
-        repository.deleteById(ID);
-
-        verify(jpaRepository, times(1)).deleteById(ID);
-    }
-
-    @Test
-    void deleteDeberiaLlamarAlJpaConElIdCorrecto() {
-        doNothing().when(jpaRepository).deleteById(any());
-
-        repository.deleteById(44L);
-
-        verify(jpaRepository).deleteById(44L);
-        verifyNoMoreInteractions(jpaRepository);
     }
 
     // ── Mapeo toDomain – todos los EstadoCultivo ──────────────────
@@ -303,7 +283,7 @@ class SiembraRepositoryImplTest {
             entity.setEstadoCultivo(estado);
             entity.setLoteId(LOTE_ID);
 
-            when(jpaRepository.findByEstadoCultivo(estado))
+            when(jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(estado))
                     .thenReturn(List.of(entity));
 
             List<Siembra> resultado = repository.findByEstadoCultivo(estado);
@@ -311,5 +291,24 @@ class SiembraRepositoryImplTest {
             assertEquals(1, resultado.size());
             assertEquals(estado, resultado.get(0).getEstadoCultivo());
         }
+    }
+    // ── Borrado lógico ───────────────────────────────────────────
+
+    @Test
+    void saveConservaLaFechaDeEliminacion() {
+        LocalDateTime cuando = LocalDateTime.of(2026, 11, 7, 10, 30);
+        Siembra siembra = new Siembra();
+        siembra.setFechaSiembra(java.time.LocalDate.of(2026, 9, 1));
+        siembra.setCantidadPlantas(100);
+        siembra.setVariedad("Castillo");
+        siembra.setEstadoCultivo(EstadoCultivo.FINALIZADO);
+        siembra.setLoteId(3L);
+        siembra.eliminar(java.time.LocalDate.of(2026, 11, 7), cuando);
+        when(jpaRepository.save(any(SiembraEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Siembra guardada = repository.save(siembra);
+
+        assertEquals(cuando, guardada.getEliminadoEn());
+        assertTrue(guardada.estaEliminada());
     }
 }

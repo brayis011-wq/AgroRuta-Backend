@@ -7,13 +7,19 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Las consultas con "EliminadoEnIsNull" son las de uso diario (pantallas, alertas, calendario):
+ * no ven las siembras eliminadas. findById y findByAgricultorId sí las ven, porque los
+ * reportes de cultivos y de costos deben conservar el historial de gastos e ingresos.
+ */
 public interface JpaSiembraRepository extends JpaRepository<SiembraEntity, Long> {
-    Optional<SiembraEntity> findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(
+    Optional<SiembraEntity> findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
             Long loteId, EstadoCultivo estadoCultivo);
-    List<SiembraEntity> findByLoteIdOrderByFechaSiembraDescIdDesc(Long loteId);
-    boolean existsByLoteIdAndEstadoCultivoNot(Long loteId, EstadoCultivo estadoCultivo);
-    List<SiembraEntity> findByEstadoCultivo(EstadoCultivo estadoCultivo);
+    List<SiembraEntity> findByLoteIdAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(Long loteId);
+    boolean existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(Long loteId, EstadoCultivo estadoCultivo);
+    List<SiembraEntity> findByEstadoCultivoAndEliminadoEnIsNull(EstadoCultivo estadoCultivo);
 
+    /** Todas las siembras del agricultor, también las eliminadas (para los reportes) */
     @Query("""
         SELECT s FROM SiembraEntity s
         WHERE s.loteId IN (

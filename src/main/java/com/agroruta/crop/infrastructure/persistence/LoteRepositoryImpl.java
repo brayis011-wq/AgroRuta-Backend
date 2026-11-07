@@ -35,23 +35,19 @@ public class LoteRepositoryImpl implements LoteRepository {
 
     @Override
     public List<Lote> findByFincaId(Long fincaId) {
-        return jpaRepository.findByFincaId(fincaId)
+        return jpaRepository.findByFincaIdAndEliminadoEnIsNull(fincaId)
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public boolean existsSiembraActivaEnLote(Long loteId) {
-        return jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(loteId, EstadoCultivo.FINALIZADO);
+        return jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(
+                loteId, EstadoCultivo.FINALIZADO);
     }
 
     @Override
     public boolean existsByNombreAndFincaId(String nombre, Long fincaId) {
-        return jpaRepository.existsByNombreAndFincaId(nombre, fincaId);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        jpaRepository.deleteById(id);
+        return jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(nombre, fincaId);
     }
 
     private LoteEntity toEntity(Lote lote) {
@@ -64,6 +60,7 @@ public class LoteRepositoryImpl implements LoteRepository {
         entity.setCoordenadas(lote.getCoordenadas());
         entity.setCentroideLat(lote.getCentroideLat());
         entity.setCentroideLng(lote.getCentroideLng());
+        entity.setEliminadoEn(lote.getEliminadoEn());
         return entity;
     }
 
@@ -77,6 +74,7 @@ public class LoteRepositoryImpl implements LoteRepository {
         lote.setCoordenadas(entity.getCoordenadas());
         lote.setCentroideLat(entity.getCentroideLat());
         lote.setCentroideLng(entity.getCentroideLng());
+        lote.setEliminadoEn(entity.getEliminadoEn());
         return lote;
     }
 }
