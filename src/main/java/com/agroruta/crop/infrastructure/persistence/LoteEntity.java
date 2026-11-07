@@ -2,14 +2,12 @@ package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.EstadoLote;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "lotes", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_lote_nombre_finca",
-                columnNames = {"nombre", "fincaId"}
-        )
-})
+// El nombre no es único en la base: un lote eliminado (borrado lógico) conserva su nombre
+// y se puede crear otro igual. LoteService valida el nombre solo entre los vigentes.
+@Table(name = "lotes")
 public class LoteEntity {
 
     @Id
@@ -35,7 +33,13 @@ public class LoteEntity {
     private Double centroideLat;
     private Double centroideLng;
 
+    @Column(name = "eliminado_en")
+    private LocalDateTime eliminadoEn;
+
     public LoteEntity() {}
+
+    public LocalDateTime getEliminadoEn() { return eliminadoEn; }
+    public void setEliminadoEn(LocalDateTime eliminadoEn) { this.eliminadoEn = eliminadoEn; }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

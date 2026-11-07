@@ -26,7 +26,7 @@ public class SiembraRepositoryImpl implements SiembraRepository {
     }
     @Override
     public boolean existsActivaByLoteId(Long loteId) {
-        return jpaRepository.existsByLoteIdAndEstadoCultivoNot(loteId, EstadoCultivo.FINALIZADO);
+        return jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(loteId, EstadoCultivo.FINALIZADO);
     }
     @Override
     public Optional<Siembra> findById(Long id) {
@@ -36,25 +36,21 @@ public class SiembraRepositoryImpl implements SiembraRepository {
     @Override
     public Optional<Siembra> findActivaByLoteId(Long loteId) {
         return jpaRepository
-                .findFirstByLoteIdAndEstadoCultivoNotOrderByFechaSiembraDescIdDesc(loteId, EstadoCultivo.FINALIZADO)
+                .findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
+                        loteId, EstadoCultivo.FINALIZADO)
                 .map(this::toDomain);
     }
 
     @Override
     public List<Siembra> findHistorialByLoteId(Long loteId) {
-        return jpaRepository.findByLoteIdOrderByFechaSiembraDescIdDesc(loteId)
+        return jpaRepository.findByLoteIdAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(loteId)
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
     public List<Siembra> findByEstadoCultivo(EstadoCultivo estado) {
-        return jpaRepository.findByEstadoCultivo(estado)
+        return jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(estado)
                 .stream().map(this::toDomain).collect(Collectors.toList());
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        jpaRepository.deleteById(id);
     }
 
     private SiembraEntity toEntity(Siembra siembra) {
@@ -68,6 +64,7 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         entity.setEstadoCultivo(siembra.getEstadoCultivo());
         entity.setLoteId(siembra.getLoteId());
         entity.setFechaFin(siembra.getFechaFin());
+        entity.setEliminadoEn(siembra.getEliminadoEn());
         return entity;
     }
 
@@ -82,6 +79,7 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         siembra.setEstadoCultivo(entity.getEstadoCultivo());
         siembra.setLoteId(entity.getLoteId());
         siembra.setFechaFin(entity.getFechaFin());
+        siembra.setEliminadoEn(entity.getEliminadoEn());
         return siembra;
     }
 }

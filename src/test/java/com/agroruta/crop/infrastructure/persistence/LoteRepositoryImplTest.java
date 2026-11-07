@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import java.time.LocalDateTime;
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Lote;
@@ -184,7 +185,7 @@ class LoteRepositoryImplTest {
         entity2.setFincaId(FINCA_ID);
         entity2.setCoordenadas(null);
 
-        when(jpaRepository.findByFincaId(FINCA_ID))
+        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID))
                 .thenReturn(List.of(entityGuardada, entity2));
 
         List<Lote> resultado = repository.findByFincaId(FINCA_ID);
@@ -196,7 +197,7 @@ class LoteRepositoryImplTest {
 
     @Test
     void deberiaRetornarListaVaciaSiLaFincaNoTieneLotes() {
-        when(jpaRepository.findByFincaId(FINCA_ID)).thenReturn(List.of());
+        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID)).thenReturn(List.of());
 
         List<Lote> resultado = repository.findByFincaId(FINCA_ID);
 
@@ -215,7 +216,7 @@ class LoteRepositoryImplTest {
         entity2.setCentroideLat(5.0);
         entity2.setCentroideLng(-75.0);
 
-        when(jpaRepository.findByFincaId(FINCA_ID))
+        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID))
                 .thenReturn(List.of(entityGuardada, entity2));
 
         List<Lote> resultado = repository.findByFincaId(FINCA_ID);
@@ -230,7 +231,7 @@ class LoteRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiExisteSiembraActivaEnElLote() {
-        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO))
+        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(ID, EstadoCultivo.FINALIZADO))
                 .thenReturn(true);
 
         assertTrue(repository.existsSiembraActivaEnLote(ID));
@@ -238,7 +239,7 @@ class LoteRepositoryImplTest {
 
     @Test
     void deberiaRetornarFalseSiNoExisteSiembraActivaEnElLote() {
-        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO))
+        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(ID, EstadoCultivo.FINALIZADO))
                 .thenReturn(false);
 
         assertFalse(repository.existsSiembraActivaEnLote(ID));
@@ -246,12 +247,12 @@ class LoteRepositoryImplTest {
 
     @Test
     void existsSiembraActivaDeberiaDelegarAlJpaSiembraConElLoteIdCorrecto() {
-        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO))
+        when(jpaSiembraRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(ID, EstadoCultivo.FINALIZADO))
                 .thenReturn(false);
 
         repository.existsSiembraActivaEnLote(ID);
 
-        verify(jpaSiembraRepository, times(1)).existsByLoteIdAndEstadoCultivoNot(ID, EstadoCultivo.FINALIZADO);
+        verify(jpaSiembraRepository, times(1)).existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(ID, EstadoCultivo.FINALIZADO);
         verifyNoInteractions(jpaRepository);
     }
 
@@ -259,46 +260,25 @@ class LoteRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiExisteLoteConMismoNombreYFinca() {
-        when(jpaRepository.existsByNombreAndFincaId(NOMBRE, FINCA_ID)).thenReturn(true);
+        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID)).thenReturn(true);
 
         assertTrue(repository.existsByNombreAndFincaId(NOMBRE, FINCA_ID));
     }
 
     @Test
     void deberiaRetornarFalseSiNoExisteLoteConEsaCombinacion() {
-        when(jpaRepository.existsByNombreAndFincaId(NOMBRE, FINCA_ID)).thenReturn(false);
+        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID)).thenReturn(false);
 
         assertFalse(repository.existsByNombreAndFincaId(NOMBRE, FINCA_ID));
     }
 
     @Test
     void existsByNombreDeberiaDelegarAlJpaConLosParametrosCorrectos() {
-        when(jpaRepository.existsByNombreAndFincaId(any(), any())).thenReturn(false);
+        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(any(), any())).thenReturn(false);
 
         repository.existsByNombreAndFincaId(NOMBRE, FINCA_ID);
 
-        verify(jpaRepository, times(1)).existsByNombreAndFincaId(NOMBRE, FINCA_ID);
-    }
-
-    // ── deleteById ───────────────────────────────────────────────
-
-    @Test
-    void deberiaEliminarLotePorId() {
-        doNothing().when(jpaRepository).deleteById(ID);
-
-        repository.deleteById(ID);
-
-        verify(jpaRepository, times(1)).deleteById(ID);
-    }
-
-    @Test
-    void deleteDeberiaLlamarAlJpaConElIdCorrecto() {
-        doNothing().when(jpaRepository).deleteById(any());
-
-        repository.deleteById(66L);
-
-        verify(jpaRepository).deleteById(66L);
-        verifyNoMoreInteractions(jpaRepository);
+        verify(jpaRepository, times(1)).existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID);
     }
 
     // ── Mapeo toDomain – todos los EstadoLote ────────────────────
@@ -320,5 +300,19 @@ class LoteRepositoryImplTest {
             assertTrue(resultado.isPresent());
             assertEquals(estado, resultado.get().getEstado());
         }
+    }
+    // ── Borrado lógico ───────────────────────────────────────────
+
+    @Test
+    void saveConservaLaFechaDeEliminacion() {
+        LocalDateTime cuando = LocalDateTime.of(2026, 11, 7, 10, 30);
+        Lote lote = new Lote(null, "Lote Norte", 1.5, FINCA_ID);
+        lote.eliminar(cuando);
+        when(jpaRepository.save(any(LoteEntity.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Lote guardado = repository.save(lote);
+
+        assertEquals(cuando, guardado.getEliminadoEn());
+        assertTrue(guardado.estaEliminado());
     }
 }

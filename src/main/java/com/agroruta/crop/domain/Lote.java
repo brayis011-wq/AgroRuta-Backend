@@ -3,6 +3,7 @@ package com.agroruta.crop.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -17,6 +18,19 @@ public class Lote {
     private String coordenadas;
     private Double centroideLat;
     private Double centroideLng;
+    /**
+     * Cuándo se eliminó (null si está vigente). El borrado es lógico: el lote deja de verse,
+     * pero sus siembras siguen en los reportes con sus gastos e ingresos.
+     */
+    private LocalDateTime eliminadoEn;
+
+    public boolean estaEliminado() {
+        return eliminadoEn != null;
+    }
+
+    public void eliminar(LocalDateTime cuando) {
+        if (eliminadoEn == null) eliminadoEn = cuando;
+    }
 
     public Lote(Long id, String nombre, Double area, Long fincaId) {
         this.id = id;

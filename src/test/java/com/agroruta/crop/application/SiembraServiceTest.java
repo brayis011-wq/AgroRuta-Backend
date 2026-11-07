@@ -327,27 +327,47 @@ class SiembraServiceTest {
     }
 
     @Test
-    void eliminarBorraSusRegistrosYLiberaElLote() {
+    void eliminarEnCursoLaCierraHoyConservaSusRegistrosYLiberaElLote() {
         siembraEn(EstadoCultivo.PRODUCCION);
+        when(siembraRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.eliminarSiembra(1L);
 
-        verify(cosechaRepository).deleteBySiembraId(1L);
-        verify(fumigacionRepository).deleteBySiembraId(1L);
-        verify(actividadRepository).deleteBySiembraId(1L);
-        verify(etapaRepository).deleteBySiembraId(1L);
-        verify(siembraRepository).deleteById(1L);
+        ArgumentCaptor<Siembra> guardada = ArgumentCaptor.forClass(Siembra.class);
+        verify(siembraRepository).save(guardada.capture());
+        assertTrue(guardada.getValue().estaEliminada());
+        assertEquals(EstadoCultivo.FINALIZADO, guardada.getValue().getEstadoCultivo());
+        assertEquals(LocalDate.now(), guardada.getValue().getFechaFin());
+        verify(etapaRepository).save(argThat(e -> e.getEtapa() == EstadoCultivo.FINALIZADO));
         verify(loteUseCase).liberarLote(loteId, EstadoLote.DISPONIBLE);
+        // Borrado lógico: los gastos e ingresos (actividades, fumigaciones, cosechas) se conservan
+        verifyNoInteractions(cosechaRepository, fumigacionRepository, actividadRepository);
+        verify(etapaRepository, never()).deleteBySiembraId(any());
     }
 
     @Test
-    void eliminarUnaTemporadaTerminadaNoTocaElLote() {
-        siembraEn(EstadoCultivo.FINALIZADO);
+    void eliminarUnaTemporadaTerminadaNoTocaElLoteNiSuFechaDeFin() {
+        Siembra s = siembraEn(EstadoCultivo.FINALIZADO);
+        LocalDate fin = fecha.plusDays(90);
+        s.setFechaFin(fin);
+        when(siembraRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         service.eliminarSiembra(1L);
 
-        verify(siembraRepository).deleteById(1L);
+        assertTrue(s.estaEliminada());
+        assertEquals(fin, s.getFechaFin());
+        verify(etapaRepository, never()).save(any());
         verify(loteUseCase, never()).liberarLote(any(), any());
+    }
+
+    @Test
+    void eliminarDosVecesNoHaceNada() {
+        Siembra s = siembraEn(EstadoCultivo.FINALIZADO);
+        s.setEliminadoEn(java.time.LocalDateTime.of(2026, 1, 1, 0, 0));
+
+        service.eliminarSiembra(1L);
+
+        verify(siembraRepository, never()).save(any());
     }
 
     @Test

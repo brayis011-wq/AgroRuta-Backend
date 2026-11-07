@@ -6,9 +6,11 @@ import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.BusinessException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,21 +26,13 @@ public class SiembraService implements SiembraUseCase {
     private final LoteUseCase loteUseCase;
     private final CatalogoCultivoRepository catalogo;
     private final EtapaSiembraRepository etapaRepository;
-    private final CosechaRepository cosechaRepository;
-    private final FumigacionRepository fumigacionRepository;
-    private final ActividadCultivoRepository actividadRepository;
 
     public SiembraService(SiembraRepository siembraRepository, LoteUseCase loteUseCase,
-                          CatalogoCultivoRepository catalogo, EtapaSiembraRepository etapaRepository,
-                          CosechaRepository cosechaRepository, FumigacionRepository fumigacionRepository,
-                          ActividadCultivoRepository actividadRepository) {
+                          CatalogoCultivoRepository catalogo, EtapaSiembraRepository etapaRepository) {
         this.siembraRepository = siembraRepository;
         this.loteUseCase = loteUseCase;
         this.catalogo = catalogo;
         this.etapaRepository = etapaRepository;
-        this.cosechaRepository = cosechaRepository;
-        this.fumigacionRepository = fumigacionRepository;
-        this.actividadRepository = actividadRepository;
     }
 
     @Override
@@ -177,16 +171,24 @@ public class SiembraService implements SiembraUseCase {
         return siembraRepository.findByEstadoCultivo(estadoCultivo);
     }
 
-    /** Borra la siembra y todo lo registrado en ella; si estaba en curso, el lote queda libre. */
+    /**
+     * Borrado lógico: la siembra deja de verse en el lote, pero sus actividades, fumigaciones,
+     * cosechas y jornales se conservan y siguen en los reportes de cultivos y de costos.
+     * Si estaba en curso, se cierra hoy (queda la etapa FINALIZADO) y el lote queda libre.
+     */
     @Override
+    @Transactional
     public void eliminarSiembra(Long id) {
         Siembra siembra = buscarSiembraPorId(id);
-        cosechaRepository.deleteBySiembraId(id);
-        fumigacionRepository.deleteBySiembraId(id);
-        actividadRepository.deleteBySiembraId(id);
-        etapaRepository.deleteBySiembraId(id);
-        siembraRepository.deleteById(id);
-        if (siembra.estaActiva()) loteUseCase.liberarLote(siembra.getLoteId(), EstadoLote.DISPONIBLE);
+        if (siembra.estaEliminada()) return;
+        boolean estabaActiva = siembra.estaActiva();
+        LocalDate hoy = LocalDate.now();
+        siembra.eliminar(hoy, LocalDateTime.now());
+        Siembra guardada = siembraRepository.save(siembra);
+        if (estabaActiva) {
+            registrarEtapa(guardada, EstadoCultivo.FINALIZADO, hoy);
+            loteUseCase.liberarLote(guardada.getLoteId(), EstadoLote.DISPONIBLE);
+        }
     }
 
     // ── apoyo ─────────────────────────────────────────────────────────────

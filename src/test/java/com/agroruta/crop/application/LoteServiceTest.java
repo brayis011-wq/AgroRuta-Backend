@@ -105,7 +105,9 @@ class LoteServiceTest {
 
         service.eliminarLote(1L);
 
-        verify(loteRepository).deleteById(1L);
+        // Borrado lógico: se marca y se guarda, no se borra la fila
+        assertTrue(lote.estaEliminado());
+        verify(loteRepository).save(lote);
     }
 
     @Test
@@ -197,6 +199,6 @@ class LoteServiceTest {
         when(loteRepository.existsSiembraActivaEnLote(1L)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> service.eliminarLote(1L));
-        verify(loteRepository, never()).deleteById(any());
+        verify(loteRepository, never()).save(any());
     }
 }

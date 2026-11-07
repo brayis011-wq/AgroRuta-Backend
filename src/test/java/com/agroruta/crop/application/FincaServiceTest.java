@@ -2,6 +2,8 @@ package com.agroruta.crop.application;
 
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.domain.Lote;
+import com.agroruta.crop.domain.LoteRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,9 @@ class FincaServiceTest {
 
     @Mock
     private FincaRepository fincaRepository;
+
+    @Mock
+    private LoteRepository loteRepository;
 
     @InjectMocks
     private FincaService service;
@@ -85,11 +90,34 @@ class FincaServiceTest {
     @Test
     void deberiaEliminarFinca() {
         Finca finca = new Finca(1L, "Finca", "Ubicacion", 10.0, agricultorId);
+        Lote lote = new Lote(5L, "Lote A", 2.0, 1L);
         when(fincaRepository.findById(1L)).thenReturn(Optional.of(finca));
+        when(loteRepository.findByFincaId(1L)).thenReturn(List.of(lote));
 
         service.eliminarFinca(1L);
 
-        verify(fincaRepository).deleteById(1L);
+        // Borrado lógico de la finca y de sus lotes: las siembras siguen en los reportes
+        assertTrue(finca.estaEliminada());
+        assertTrue(lote.estaEliminado());
+        assertEquals(finca.getEliminadoEn(), lote.getEliminadoEn());
+        verify(fincaRepository).save(finca);
+        verify(loteRepository).save(lote);
+    }
+
+    @Test
+    void noSeBorraUnaFincaConUnaSiembraEnCurso() {
+        Finca finca = new Finca(1L, "Finca", "Ubicacion", 10.0, agricultorId);
+        Lote lote = new Lote(5L, "Lote A", 2.0, 1L);
+        when(fincaRepository.findById(1L)).thenReturn(Optional.of(finca));
+        when(loteRepository.findByFincaId(1L)).thenReturn(List.of(lote));
+        when(loteRepository.existsSiembraActivaEnLote(5L)).thenReturn(true);
+
+        BusinessException e = assertThrows(BusinessException.class, () -> service.eliminarFinca(1L));
+
+        assertTrue(e.getMessage().contains("Lote A"));
+        assertFalse(finca.estaEliminada());
+        verify(fincaRepository, never()).save(any());
+        verify(loteRepository, never()).save(any());
     }
 
     @Test
