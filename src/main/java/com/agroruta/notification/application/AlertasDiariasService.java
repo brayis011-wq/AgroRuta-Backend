@@ -4,6 +4,8 @@ import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
 import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.inventario.application.ports.in.StockBajoUseCase;
+import com.agroruta.inventario.domain.StockInsumo;
 import com.agroruta.notification.application.MensajesCorreo.ClimaFinca;
 import com.agroruta.notification.application.ports.in.AlertasDiariasUseCase;
 import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
@@ -27,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * El resumen de cada mañana para los agricultores: fumigaciones, labores, reentrada, carencia
- * y clima de sus fincas. Solo se manda a quien tiene algo para hoy.
+ * clima de sus fincas e insumos que se están acabando. Solo se manda a quien tiene algo para hoy.
  *
  * Lo dispara una tarea de GitHub Actions (Render gratis se duerme y no correría un @Scheduled).
  */
@@ -43,6 +45,7 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     private final WeatherUseCase clima;
     private final MensajesCorreo mensajes;
     private final CorreoPort correo;
+    private final StockBajoUseCase stockBajo;
     private final Clock reloj;
     /** Último día que se mandó, para que un reintento de la tarea no duplique correos */
     private final AtomicReference<LocalDate> ultimoEnvio = new AtomicReference<>();
@@ -50,14 +53,14 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     @Autowired
     public AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                                  AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                                 MensajesCorreo mensajes, CorreoPort correo) {
-        this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo,
+                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo) {
+        this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo,
                 Clock.system(ZoneId.of("America/Bogota")));
     }
 
     AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                           AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                          MensajesCorreo mensajes, CorreoPort correo, Clock reloj) {
+                          MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj) {
         this.usuarios = usuarios;
         this.preferencias = preferencias;
         this.alertasCultivo = alertasCultivo;
@@ -65,6 +68,7 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         this.clima = clima;
         this.mensajes = mensajes;
         this.correo = correo;
+        this.stockBajo = stockBajo;
         this.reloj = reloj;
     }
 
@@ -92,8 +96,19 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     private boolean enviarA(Usuario u, LocalDate hoy) {
         List<AlertaCultivo> alertas = alertasCultivo.alertasDelDia(u.getId(), hoy);
         List<ClimaFinca> tiempo = climaDe(u.getId(), alertas.stream().anyMatch(AlertaCultivo::esFumigacionPendiente));
-        if (alertas.isEmpty() && tiempo.isEmpty()) return false;
-        return correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo));
+        List<StockInsumo> stock = stockDe(u.getId());
+        if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty()) return false;
+        return correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock));
+    }
+
+    /** Insumos que se están acabando; si falla, el resumen sale igual sin esa parte */
+    private List<StockInsumo> stockDe(Long agricultorId) {
+        try {
+            return stockBajo.avisos(agricultorId);
+        } catch (RuntimeException e) {
+            log.warn("Sin avisos de bodega para el agricultor {}: {}", agricultorId, e.getMessage());
+            return List.of();
+        }
     }
 
     /** Solo las fincas con algo que avisar (helada, lluvia fuerte o lluvia el día que toca fumigar) */
