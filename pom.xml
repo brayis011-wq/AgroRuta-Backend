@@ -68,7 +68,10 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- FLYWAY -->
+		<!-- FLYWAY
+		     Fijo en 10.10 a propósito: es la versión con la que se probaron las migraciones contra
+		     TiDB (FlywayConfig arma el historial a mano porque TiDB no soporta CREATE TABLE ... SELECT).
+		     Subir de versión mayor (11+) hay que probarlo antes en una rama de TiDB. -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
@@ -132,7 +135,8 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- SWAGGER / OpenAPI -->
+		<!-- SWAGGER / OpenAPI: funciona con Spring Boot 4 (probado: /v3/api-docs y /swagger-ui).
+		     En producción está apagado (application-prod.yml). La línea 3.x es la de Boot 4. -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -143,7 +147,7 @@
 		<dependency>
 			<groupId>org.apache.pdfbox</groupId>
 			<artifactId>pdfbox</artifactId>
-			<version>3.0.1</version>
+			<version>3.0.8</version>
 		</dependency>
 
 		<!-- TEST -->
