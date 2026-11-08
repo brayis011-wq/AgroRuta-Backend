@@ -50,7 +50,7 @@ class OwnershipCheckerTest {
     @Mock private NominaRepository nominaRepository;
     @Mock private PagoRepository pagoRepository;
     @Mock private CosechaRepository cosechaRepository;
-    @Mock private com.agroruta.worker.domain.ActividadRepository actividadRepository;
+    @Mock private com.agroruta.worker.domain.LaborRepository laborRepository;
 
     @InjectMocks private OwnershipChecker ownership;
 
@@ -204,11 +204,11 @@ class OwnershipCheckerTest {
     @Test
     @DisplayName("laborPropia: el agricultor modifica solo sus labores, nunca las comunes")
     void laborPropia() {
-        com.agroruta.worker.domain.Actividad comun = new com.agroruta.worker.domain.Actividad(1L, "Recolección", "");
-        com.agroruta.worker.domain.Actividad propia = new com.agroruta.worker.domain.Actividad(2L, "Deshoje", "");
+        com.agroruta.worker.domain.Labor comun = new com.agroruta.worker.domain.Labor(1L, "Recolección", "");
+        com.agroruta.worker.domain.Labor propia = new com.agroruta.worker.domain.Labor(2L, "Deshoje", "");
         propia.setAgricultorId(1L);
-        org.mockito.Mockito.when(actividadRepository.buscarPorId(1L)).thenReturn(java.util.Optional.of(comun));
-        org.mockito.Mockito.when(actividadRepository.buscarPorId(2L)).thenReturn(java.util.Optional.of(propia));
+        org.mockito.Mockito.when(laborRepository.buscarPorId(1L)).thenReturn(java.util.Optional.of(comun));
+        org.mockito.Mockito.when(laborRepository.buscarPorId(2L)).thenReturn(java.util.Optional.of(propia));
 
         assertThat(ownership.laborPropia(2L, auth(1L, Rol.Agricultor))).isTrue();
         assertThat(ownership.laborPropia(2L, auth(3L, Rol.Agricultor))).isFalse();

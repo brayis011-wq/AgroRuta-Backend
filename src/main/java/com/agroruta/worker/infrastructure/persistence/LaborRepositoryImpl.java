@@ -1,8 +1,8 @@
 package com.agroruta.worker.infrastructure.persistence;
 
 
-import com.agroruta.worker.domain.Actividad;
-import com.agroruta.worker.domain.ActividadRepository;
+import com.agroruta.worker.domain.Labor;
+import com.agroruta.worker.domain.LaborRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -10,13 +10,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Repository
-class ActividadRepositoryImpl implements ActividadRepository {
+class LaborRepositoryImpl implements LaborRepository {
 
-    private final JpaActividadRepository jpa;
+    private final JpaLaborRepository jpa;
 
-    ActividadRepositoryImpl(JpaActividadRepository jpa) { this.jpa = jpa; }
+    LaborRepositoryImpl(JpaLaborRepository jpa) { this.jpa = jpa; }
 
-    @Override public Actividad guardar(Actividad actividad) {
+    @Override public Labor guardar(Labor actividad) {
         return WorkerMapper.toDomain(jpa.save(WorkerMapper.toEntity(actividad)));
     }
     @Override
@@ -28,19 +28,19 @@ class ActividadRepositoryImpl implements ActividadRepository {
     public boolean existsByNombreAndIdNot(String nombre, Long id) {
         return jpa.existsByNombreAndIdNot(nombre, id);
     }
-    @Override public Optional<Actividad> buscarPorId(Long id) {
+    @Override public Optional<Labor> buscarPorId(Long id) {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }
 
-    @Override public List<Actividad> listarTodas() {
+    @Override public List<Labor> listarTodas() {
         return jpa.findAll().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 
-    @Override public List<Actividad> listarActivas() {
+    @Override public List<Labor> listarActivas() {
         return jpa.findByActivaTrue().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 
-    @Override public List<Actividad> listarActivasPara(Long agricultorId) {
+    @Override public List<Labor> listarActivasPara(Long agricultorId) {
         return jpa.activasPara(agricultorId).stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 

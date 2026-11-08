@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class Actividad {
+public class Labor {
 
     private Long id;
     private String nombre;
@@ -16,7 +16,7 @@ public class Actividad {
     /** Dueño de la labor. null = labor común (la crea el Administrador y la ven todos). */
     private Long agricultorId;
 
-    public Actividad(Long id, String nombre, String descripcion) {
+    public Labor(Long id, String nombre, String descripcion) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;

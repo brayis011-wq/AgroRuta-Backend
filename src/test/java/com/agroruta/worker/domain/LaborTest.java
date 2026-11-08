@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ActividadTest {
+class LaborTest {
 
     @Test
     void deberiaCrearActividadConValoresCorrectos() {
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         assertEquals(1L, actividad.getId());
         assertEquals("Riego", actividad.getNombre());
@@ -17,14 +17,14 @@ class ActividadTest {
 
     @Test
     void deberiaEstarActivaAlCrearse() {
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         assertTrue(actividad.isActiva());
     }
 
     @Test
     void deberiaDesactivarActividad() {
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         actividad.desactivar();
 
@@ -33,7 +33,7 @@ class ActividadTest {
 
     @Test
     void deberiaActivarActividadDesactivada() {
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
         actividad.desactivar();
 
         actividad.activar();
@@ -43,7 +43,7 @@ class ActividadTest {
 
     @Test
     void deberiaPermitirCambiarNombre() {
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         actividad.setNombre("Poda");
 
@@ -52,7 +52,7 @@ class ActividadTest {
 
     @Test
     void deberiaCrearActividadVaciaConNoArgsConstructor() {
-        Actividad actividad = new Actividad();
+        Labor actividad = new Labor();
 
         assertNull(actividad.getId());
         assertNull(actividad.getNombre());

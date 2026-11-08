@@ -51,7 +51,7 @@ class JornalTest {
     @Test
     void deberiaAgregarActividad() {
         Jornal jornal = new Jornal(1L, LocalDate.now(), trabajador, 10L, "Maíz", "Sin observaciones");
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         jornal.agregarActividad(actividad);
 
@@ -61,7 +61,7 @@ class JornalTest {
     @Test
     void noDeberiaAgregarActividadDuplicada() {
         Jornal jornal = new Jornal(1L, LocalDate.now(), trabajador, 10L, "Maíz", "Sin observaciones");
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         jornal.agregarActividad(actividad);
         jornal.agregarActividad(actividad);
@@ -72,7 +72,7 @@ class JornalTest {
     @Test
     void deberiaRemoverActividad() {
         Jornal jornal = new Jornal(1L, LocalDate.now(), trabajador, 10L, "Maíz", "Sin observaciones");
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
         jornal.agregarActividad(actividad);
 
         jornal.removerActividad(actividad);
@@ -93,7 +93,7 @@ class JornalTest {
     void deberiaLanzarExcepcionAlAgregarActividadEnJornalLiquidado() {
         Jornal jornal = new Jornal(1L, LocalDate.now(), trabajador, 10L, "Maíz", "Sin observaciones");
         jornal.marcarComoLiquidado();
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
         assertThrows(IllegalStateException.class, () -> jornal.agregarActividad(actividad));
     }
@@ -101,7 +101,7 @@ class JornalTest {
     @Test
     void deberiaLanzarExcepcionAlRemoverActividadEnJornalLiquidado() {
         Jornal jornal = new Jornal(1L, LocalDate.now(), trabajador, 10L, "Maíz", "Sin observaciones");
-        Actividad actividad = new Actividad(1L, "Riego", "Riego de cultivos");
+        Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
         jornal.agregarActividad(actividad);
         jornal.marcarComoLiquidado();
 

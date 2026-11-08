@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @Entity
-// El nombre ya no es único en toda la tabla: cada agricultor tiene sus labores (se valida en ActividadService)
+// El nombre ya no es único en toda la tabla: cada agricultor tiene sus labores (se valida en LaborService)
 @Table(name = "actividades")
-public class ActividadEntity {
+public class LaborEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
