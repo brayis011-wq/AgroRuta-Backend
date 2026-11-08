@@ -1,5 +1,6 @@
 package com.agroruta.notification.application;
 
+import com.agroruta.inventario.application.ports.in.StockBajoUseCase;
 import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
 import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.crop.domain.Finca;
@@ -43,6 +44,7 @@ class AlertasDiariasServiceTest {
     private final FincaRepository fincas = mock(FincaRepository.class);
     private final WeatherUseCase clima = mock(WeatherUseCase.class);
     private final CorreoPort correo = mock(CorreoPort.class);
+    private final StockBajoUseCase stockBajo = mock(StockBajoUseCase.class);
     private final LocalDate hoy = LocalDate.of(2026, 11, 5);
     private AlertasDiariasService service;
 
@@ -54,7 +56,7 @@ class AlertasDiariasServiceTest {
     void setUp() {
         Clock reloj = Clock.fixed(Instant.parse("2026-11-05T11:00:00Z"), ZoneId.of("America/Bogota"));
         service = new AlertasDiariasService(usuarios, preferencias, alertas, fincas, clima,
-                new MensajesCorreo("https://agroruta.app"), correo, reloj);
+                new MensajesCorreo("https://agroruta.app"), correo, stockBajo, reloj);
         when(usuarios.findAllActivos()).thenReturn(List.of(ana, luis, admin));
         when(preferencias.obtener(anyLong())).thenAnswer(i -> PreferenciasCorreo.porDefecto(i.getArgument(0)));
         when(correo.enviar(any())).thenReturn(true);

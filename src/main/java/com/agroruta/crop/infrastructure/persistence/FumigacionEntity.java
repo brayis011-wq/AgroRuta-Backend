@@ -45,7 +45,21 @@ public class FumigacionEntity {
 
     private Double costo;
 
+    /** Producto gastado en total: lo que se descontó de la bodega de insumos */
+    @Column(name = "cantidad_usada")
+    private Double cantidadUsada;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unidad_cantidad")
+    private UnidadMedida unidadCantidad;
+
     public FumigacionEntity() {}
+
+    public Double getCantidadUsada() { return cantidadUsada; }
+    public void setCantidadUsada(Double v) { this.cantidadUsada = v; }
+
+    public UnidadMedida getUnidadCantidad() { return unidadCantidad; }
+    public void setUnidadCantidad(UnidadMedida v) { this.unidadCantidad = v; }
 
     public Long getAgriculturalInputId() { return agriculturalInputId; }
     public void setAgriculturalInputId(Long v) { this.agriculturalInputId = v; }

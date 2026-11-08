@@ -29,6 +29,9 @@ public class Fumigacion {
     private Integer reentradaHoras;
     /** Costo del producto aplicado (COP) */
     private Double costo;
+    /** Producto gastado en total (se descuenta de la bodega); la dosis es una concentración */
+    private Double cantidadUsada;
+    private UnidadMedida unidadCantidad;
 
     public static Fumigacion fromCatalog(
             LocalDate fecha,
@@ -70,6 +73,18 @@ public class Fumigacion {
         this.diasCarencia = r.diasCarencia();
         this.reentradaHoras = r.reentradaHoras();
         this.costo = r.costo();
+        if (r.tieneCantidadUsada()) {
+            this.cantidadUsada = r.cantidadUsada();
+            this.unidadCantidad = UnidadMedida.valueOf(r.unidadCantidad().trim().toUpperCase());
+        } else {
+            this.cantidadUsada = null;
+            this.unidadCantidad = null;
+        }
+    }
+
+    /** ¿Hay que descontar producto de la bodega? Solo con insumo del catálogo y cantidad usada */
+    public boolean descuentaDeBodega() {
+        return tieneInsumoDelCatalogo() && cantidadUsada != null && unidadCantidad != null;
     }
 
     public boolean tieneInsumoDelCatalogo() {

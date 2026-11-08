@@ -39,7 +39,9 @@ class RegistrosCultivoEdicionTest {
     @BeforeEach
     void setUp() {
         cosechas = new CosechaService(cosechaRepository, siembraUseCase);
-        fumigaciones = new FumigacionService(fumigacionRepository, siembraUseCase);
+        fumigaciones = new FumigacionService(fumigacionRepository, siembraUseCase,
+                org.mockito.Mockito.mock(com.agroruta.crop.application.ports.out.InventarioPort.class),
+                org.mockito.Mockito.mock(LoteRepository.class), org.mockito.Mockito.mock(FincaRepository.class));
         actividades = new ActividadCultivoService(actividadRepository, siembraUseCase);
 
         finalizada = new Siembra(5L, fecha.minusMonths(6), 100, Variedades.COLOMBIA, 1L);

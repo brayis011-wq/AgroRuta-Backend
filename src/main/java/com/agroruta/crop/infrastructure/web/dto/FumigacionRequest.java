@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
+import com.agroruta.crop.domain.RestriccionesFumigacion;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -53,6 +54,17 @@ public class FumigacionRequest {
     // Opcional: costo del producto aplicado (COP)
     @PositiveOrZero(message = "El costo no puede ser negativo")
     private Double costo;
+
+    // Opcional: producto gastado en total (la dosis es una concentración). Si el producto es del
+    // catálogo, se descuenta de la bodega de insumos. Unidad: LITROS, ML, GRAMOS o KG.
+    @Positive(message = "La cantidad usada debe ser mayor a 0")
+    private Double cantidadUsada;
+
+    private String unidadCantidad;
+
+    public RestriccionesFumigacion restricciones() {
+        return new RestriccionesFumigacion(diasCarencia, reentradaHoras, costo, cantidadUsada, unidadCantidad);
+    }
 
     @NotNull(message = "La siembra es obligatoria")
     @Positive(message = "La siembra no es válida")

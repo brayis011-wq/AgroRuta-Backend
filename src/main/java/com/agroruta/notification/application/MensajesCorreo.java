@@ -1,6 +1,8 @@
 package com.agroruta.notification.application;
 
 import com.agroruta.crop.domain.AlertaCultivo;
+import com.agroruta.inventario.domain.StockInsumo;
+import com.agroruta.inventario.domain.UnidadBase;
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.PlantillaCorreo;
 import com.agroruta.weather.domain.Pronostico;
@@ -153,8 +155,23 @@ public class MensajesCorreo {
 
     public Correo resumenDiario(String nombre, String email, LocalDate hoy,
                                 List<AlertaCultivo> alertas, List<ClimaFinca> clima) {
+        return resumenDiario(nombre, email, hoy, alertas, clima, List.of());
+    }
+
+    /** @param stock insumos bajos, agotados o en negativo en la bodega */
+    public Correo resumenDiario(String nombre, String email, LocalDate hoy,
+                                List<AlertaCultivo> alertas, List<ClimaFinca> clima, List<StockInsumo> stock) {
         List<String[]> fumigar = new ArrayList<>(), labores = new ArrayList<>(),
-                restricciones = new ArrayList<>(), tiempo = new ArrayList<>();
+                restricciones = new ArrayList<>(), tiempo = new ArrayList<>(), bodega = new ArrayList<>();
+        for (StockInsumo s : stock) {
+            switch (s.estado()) {
+                case NEGATIVO -> bodega.add(new String[]{s.nombre(), "· en negativo: falta registrar una compra o hacer un conteo."});
+                case AGOTADO -> bodega.add(new String[]{s.nombre(), "· se acabó."});
+                case BAJO -> bodega.add(new String[]{s.nombre(), "· quedan " + cantidad(s.cantidad(), s.unidadBase())
+                        + " (mínimo " + cantidad(s.stockMinimo(), s.unidadBase()) + ")."});
+                case OK -> { }
+            }
+        }
 
         for (AlertaCultivo a : alertas) {
             String donde = donde(a);
@@ -184,7 +201,7 @@ public class MensajesCorreo {
             if (!partes.isEmpty()) tiempo.add(new String[]{c.finca(), "· " + String.join("; ", partes) + "."});
         }
 
-        int total = fumigar.size() + labores.size() + restricciones.size() + tiempo.size();
+        int total = fumigar.size() + labores.size() + restricciones.size() + tiempo.size() + bodega.size();
         PlantillaCorreo p = PlantillaCorreo.con("Tu cultivo hoy, " + hoy.format(DIA))
                 .resumen(total == 1 ? "Tienes 1 aviso para hoy." : "Tienes " + total + " avisos para hoy.")
                 .parrafo("Hola " + primerNombre(nombre) + ", esto es lo que conviene tener en cuenta hoy:");
@@ -192,7 +209,10 @@ public class MensajesCorreo {
         if (!fumigar.isEmpty()) p.seccion("Fumigaciones").lista(fumigar);
         if (!labores.isEmpty()) p.seccion("Labores programadas").lista(labores);
         if (!restricciones.isEmpty()) p.seccion("Reentrada y cosecha").lista(restricciones);
-        return p.boton("Abrir el calendario", url("/cultivo/calendario"))
+        if (!bodega.isEmpty()) p.seccion("Bodega de insumos").lista(bodega);
+        boolean soloBodega = total == bodega.size();
+        return p.boton(soloBodega ? "Abrir el inventario" : "Abrir el calendario",
+                        url(soloBodega ? "/cultivo/inventario" : "/cultivo/calendario"))
                 .pie(PIE_CUENTA)
                 .pie("Puedes dejar de recibir este resumen en Configuración: " + url("/configuracion"))
                 .para(email, "AgroRuta: " + (total == 1 ? "1 aviso" : total + " avisos") + " para hoy");
@@ -210,6 +230,17 @@ public class MensajesCorreo {
     private static String labor(AlertaCultivo a) {
         String nombre = LABORES.getOrDefault(a.titulo(), "Labor");
         return a.detalle() == null || a.detalle().isBlank() ? nombre + "." : nombre + " — " + a.detalle() + ".";
+    }
+
+    /** "2,5 L", "750 ml", "1,2 kg", "300 g" */
+    static String cantidad(Double base, UnidadBase unidad) {
+        if (base == null) return "—";
+        boolean grande = Math.abs(base) >= 1000;
+        double v = grande ? base / 1000 : base;
+        String u = unidad == UnidadBase.ML ? (grande ? "L" : "ml") : (grande ? "kg" : "g");
+        NumberFormat f = NumberFormat.getNumberInstance(ES);
+        f.setMaximumFractionDigits(grande ? 2 : 0);
+        return f.format(v) + " " + u;
     }
 
     private static String dias(String n) {
