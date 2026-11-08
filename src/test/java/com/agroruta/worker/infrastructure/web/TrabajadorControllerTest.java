@@ -213,10 +213,10 @@ class TrabajadorControllerTest {
         void debeRetornar201AlRegistrar() {
             when(trabajadorUseCase.registrarTrabajador(
                     "Juan", "Pérez", "123456789", "3001234567",
-                    "Calle 1", FECHA_INGRESO, TipoContrato.JORNAL, 1L))
+                    "Calle 1", FECHA_INGRESO, TipoContrato.JORNAL, 1L, 5L))
                     .thenReturn(trabajadorBase);
 
-            ResponseEntity<TrabajadorResponse> response = trabajadorController.registrar(buildRequest());
+            ResponseEntity<TrabajadorResponse> response = trabajadorController.registrar(buildRequest(), auth(5L, Rol.Agricultor));
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -226,43 +226,43 @@ class TrabajadorControllerTest {
             assertEquals("123456789", response.getBody().cedula);
             verify(trabajadorUseCase, times(1)).registrarTrabajador(
                     "Juan", "Pérez", "123456789", "3001234567",
-                    "Calle 1", FECHA_INGRESO, TipoContrato.JORNAL, 1L);
+                    "Calle 1", FECHA_INGRESO, TipoContrato.JORNAL, 1L, 5L);
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si la cédula ya está registrada")
         void debePropaglarExcepcionSiCedulaDuplicada() {
             when(trabajadorUseCase.registrarTrabajador(
-                    any(), any(), any(), any(), any(), any(), any(), any()))
+                    any(), any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new BusinessException(
                             ErrorCode.BUSINESS_RULE_VIOLATION,
                             "Ya existe un trabajador con esa cédula"));
 
             BusinessException ex = assertThrows(
                     BusinessException.class,
-                    () -> trabajadorController.registrar(buildRequest())
+                    () -> trabajadorController.registrar(buildRequest(), auth(5L, Rol.Agricultor))
             );
 
             assertEquals(ErrorCode.BUSINESS_RULE_VIOLATION, ex.getErrorCode());
             verify(trabajadorUseCase, times(1)).registrarTrabajador(
-                    any(), any(), any(), any(), any(), any(), any(), any());
+                    any(), any(), any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el cargo no existe")
         void debePropaglarExcepcionSiCargoNoExiste() {
             when(trabajadorUseCase.registrarTrabajador(
-                    any(), any(), any(), any(), any(), any(), any(), any()))
+                    any(), any(), any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new ResourceNotFoundException("Cargo", 1L));
 
             ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
-                    () -> trabajadorController.registrar(buildRequest())
+                    () -> trabajadorController.registrar(buildRequest(), auth(5L, Rol.Agricultor))
             );
 
             assertTrue(ex.getMessage().contains("1"));
             verify(trabajadorUseCase, times(1)).registrarTrabajador(
-                    any(), any(), any(), any(), any(), any(), any(), any());
+                    any(), any(), any(), any(), any(), any(), any(), any(), any());
         }
     }
 

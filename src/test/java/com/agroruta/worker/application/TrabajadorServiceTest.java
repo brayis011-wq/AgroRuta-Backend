@@ -69,7 +69,7 @@ class TrabajadorServiceTest {
 
         Trabajador resultado = trabajadorService.registrarTrabajador(
                 "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
-                LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L);
+                LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L, 7L);
 
         assertNotNull(resultado);
         assertTrue(resultado.estaActivo());
@@ -85,7 +85,7 @@ class TrabajadorServiceTest {
 
         Trabajador resultado = trabajadorService.registrarTrabajador(
                 "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
-                LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L);
+                LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L, 7L);
 
         assertEquals(cargoBase, resultado.getCargo());
     }
@@ -99,7 +99,7 @@ class TrabajadorServiceTest {
                 BusinessException.class,
                 () -> trabajadorService.registrarTrabajador(
                         "Carlos", "Pérez", "123456", "3001234567", "Calle 1",
-                        LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L)
+                        LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L, 7L)
         );
 
         assertTrue(ex.getMessage().contains("123456"));
@@ -116,7 +116,7 @@ class TrabajadorServiceTest {
                 ResourceNotFoundException.class,
                 () -> trabajadorService.registrarTrabajador(
                         "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
-                        LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 99L)
+                        LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 99L, 7L)
         );
 
         assertTrue(ex.getMessage().contains("99"));

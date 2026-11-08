@@ -51,11 +51,13 @@ public class TrabajadorController {
     // El cargo asignado debe pertenecer al usuario autenticado
     @PostMapping
     @PreAuthorize("@ownership.cargoPropio(#req.cargoId, authentication)")
-    public ResponseEntity<TrabajadorResponse> registrar(@Valid @RequestBody TrabajadorRequest req) {
+    public ResponseEntity<TrabajadorResponse> registrar(@Valid @RequestBody TrabajadorRequest req,
+                                                        Authentication authentication) {
         TrabajadorResponse response = TrabajadorResponse.from(
                 trabajadorUseCase.registrarTrabajador(
                         req.nombre, req.apellido, req.cedula, req.telefono,
-                        req.direccion, req.fechaIngreso, req.tipoContrato, req.cargoId
+                        req.direccion, req.fechaIngreso, req.tipoContrato, req.cargoId,
+                        CurrentUser.id(authentication)
                 )
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

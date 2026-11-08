@@ -54,10 +54,10 @@ class CargoServiceTest {
     @Test
     @DisplayName("crearCargo debe guardar y retornar el cargo cuando el nombre no existe")
     void crearCargo_nombreNuevo_debeGuardarYRetornar() {
-        when(cargoRepository.existsByNombreAndAgricultorId("Operario", null)).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorId("Operario", 7L)).thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(cargoBase);
 
-        Cargo resultado = cargoService.crearCargo("Operario", "Cargo base", new BigDecimal("80000"));
+        Cargo resultado = cargoService.crearCargo("Operario", "Cargo base", new BigDecimal("80000"), 7L);
 
         assertNotNull(resultado);
         assertEquals("Operario", resultado.getNombre());
@@ -68,10 +68,10 @@ class CargoServiceTest {
     @DisplayName("crearCargo debe crear el cargo con activo en true")
     void crearCargo_debeCrearConActivoEnTrue() {
         Cargo nuevo = new Cargo(null, "Supervisor", "Desc", new BigDecimal("120000"), true);
-        when(cargoRepository.existsByNombreAndAgricultorId("Supervisor", null)).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorId("Supervisor", 7L)).thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(nuevo);
 
-        Cargo resultado = cargoService.crearCargo("Supervisor", "Desc", new BigDecimal("120000"));
+        Cargo resultado = cargoService.crearCargo("Supervisor", "Desc", new BigDecimal("120000"), 7L);
 
         assertTrue(resultado.isActivo());
     }
@@ -79,11 +79,11 @@ class CargoServiceTest {
     @Test
     @DisplayName("crearCargo debe lanzar BusinessException cuando el nombre ya existe")
     void crearCargo_nombreDuplicado_debeLanzarBusinessException() {
-        when(cargoRepository.existsByNombreAndAgricultorId("Operario", null)).thenReturn(true);
+        when(cargoRepository.existsByNombreAndAgricultorId("Operario", 7L)).thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"))
+                () -> cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"), 7L)
         );
 
         assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
@@ -92,17 +92,13 @@ class CargoServiceTest {
     }
 
     @Test
-    @DisplayName("crearCargo debe asignar como dueño al usuario autenticado")
+    @DisplayName("crearCargo asigna como dueño al agricultor que recibe (el controlador pasa el de la sesión)")
     void crearCargo_debeAsignarAgricultorAutenticado() {
-        CustomUserDetails d = new CustomUserDetails(
-                new Usuario(7L, "Dueño", "d@d.com", "pw", Rol.Agricultor));
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(d, null, d.getAuthorities()));
 
         when(cargoRepository.existsByNombreAndAgricultorId("Operario", 7L)).thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Cargo resultado = cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"));
+        Cargo resultado = cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"), 7L);
 
         assertEquals(7L, resultado.getAgricultorId());
     }

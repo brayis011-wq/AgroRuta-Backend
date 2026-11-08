@@ -39,9 +39,9 @@ public class CargoController {
     }
 
     @PostMapping
-    public ResponseEntity<CargoResponse> crear(@Valid @RequestBody CargoRequest req) {
+    public ResponseEntity<CargoResponse> crear(@Valid @RequestBody CargoRequest req, Authentication authentication) {
         CargoResponse response = CargoResponse.from(
-                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.valorJornal)
+                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.valorJornal, CurrentUser.id(authentication))
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
