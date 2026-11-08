@@ -34,8 +34,8 @@ class WorkerMapperTest {
                 new BigDecimal("85000.00"), true);
     }
 
-    private ActividadEntity actividadEntity() {
-        ActividadEntity e = new ActividadEntity();
+    private LaborEntity actividadEntity() {
+        LaborEntity e = new LaborEntity();
         e.setId(2L);
         e.setNombre("Fumigación");
         e.setDescripcion("Aplicación de agroquímicos");
@@ -43,9 +43,9 @@ class WorkerMapperTest {
         return e;
     }
 
-    private Actividad actividadDomain() {
+    private Labor actividadDomain() {
         // El constructor fija activa=true por defecto
-        return new Actividad(2L, "Fumigación", "Aplicación de agroquímicos");
+        return new Labor(2L, "Fumigación", "Aplicación de agroquímicos");
     }
 
     private TrabajadorEntity trabajadorEntity() {
@@ -207,30 +207,30 @@ class WorkerMapperTest {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // Actividad
+    // Labor
     // ═══════════════════════════════════════════════════════════════════════
 
     @Nested
-    @DisplayName("Actividad")
+    @DisplayName("Labor")
     class ActividadTests {
 
         @Test
         @DisplayName("toDomain(null) retorna null")
         void toDomain_null() {
-            assertNull(WorkerMapper.toDomain((ActividadEntity) null));
+            assertNull(WorkerMapper.toDomain((LaborEntity) null));
         }
 
         @Test
         @DisplayName("toEntity(null) retorna null")
         void toEntity_null() {
-            assertNull(WorkerMapper.toEntity((Actividad) null));
+            assertNull(WorkerMapper.toEntity((Labor) null));
         }
 
         @Test
         @DisplayName("toDomain mapea todos los campos")
         void toDomain_mapea_campos() {
-            ActividadEntity e = actividadEntity();
-            Actividad d = WorkerMapper.toDomain(e);
+            LaborEntity e = actividadEntity();
+            Labor d = WorkerMapper.toDomain(e);
 
             assertNotNull(d);
             assertEquals(e.getId(), d.getId());
@@ -242,8 +242,8 @@ class WorkerMapperTest {
         @Test
         @DisplayName("toEntity mapea todos los campos")
         void toEntity_mapea_campos() {
-            Actividad d = actividadDomain();
-            ActividadEntity e = WorkerMapper.toEntity(d);
+            Labor d = actividadDomain();
+            LaborEntity e = WorkerMapper.toEntity(d);
 
             assertNotNull(e);
             assertEquals(d.getId(), e.getId());
@@ -255,7 +255,7 @@ class WorkerMapperTest {
         @Test
         @DisplayName("actividad inactiva conserva activa=false")
         void toDomain_inactiva() {
-            ActividadEntity e = actividadEntity();
+            LaborEntity e = actividadEntity();
             e.setActiva(false);
             assertFalse(WorkerMapper.toDomain(e).isActiva());
         }

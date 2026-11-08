@@ -32,19 +32,19 @@ public class WorkerMapper {
         return e;
     }
 
-    // ── Actividad ─────────────────────────────────────────────────────────────
+    // ── Labor ─────────────────────────────────────────────────────────────
 
-    public static Actividad toDomain(ActividadEntity e) {
+    public static Labor toDomain(LaborEntity e) {
         if (e == null) return null;
-        Actividad a = new Actividad(e.getId(), e.getNombre(), e.getDescripcion());
+        Labor a = new Labor(e.getId(), e.getNombre(), e.getDescripcion());
         a.setActiva(e.isActiva());
         a.setAgricultorId(e.getAgricultorId());
         return a;
     }
 
-    public static ActividadEntity toEntity(Actividad d) {
+    public static LaborEntity toEntity(Labor d) {
         if (d == null) return null;
-        ActividadEntity e = new ActividadEntity();
+        LaborEntity e = new LaborEntity();
         e.setId(d.getId());
         e.setNombre(d.getNombre());
         e.setDescripcion(d.getDescripcion());
@@ -102,7 +102,7 @@ public class WorkerMapper {
         );
         j.setValorJornal(e.getValorJornal());
         j.setLiquidado(e.isLiquidado());
-        List<Actividad> actividades = e.getActividades().stream()
+        List<Labor> actividades = e.getActividades().stream()
                 .map(WorkerMapper::toDomain)
                 .collect(Collectors.toList());
         j.setActividades(actividades);
@@ -120,7 +120,7 @@ public class WorkerMapper {
         e.setObservaciones(d.getObservaciones());
         e.setValorJornal(d.getValorJornal());
         e.setLiquidado(d.isLiquidado());
-        List<ActividadEntity> actividades = d.getActividades().stream()
+        List<LaborEntity> actividades = d.getActividades().stream()
                 .map(WorkerMapper::toEntity)
                 .collect(Collectors.toList());
         e.setActividades(actividades);

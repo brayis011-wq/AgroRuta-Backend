@@ -53,7 +53,7 @@ public class SecurityConfig {
                                 "/api/fumigaciones/**", "/api/actividades/**", "/api/agricultural-inputs/**",
                                 "/api/trabajadores/**", "/api/cargos/**", "/api/jornales/**", "/api/nominas/**",
                                 "/api/pagos/**", "/api/worker/**", "/api/reports/**", "/api/catalogo-cultivos/**",
-                                "/api/inventario/**"
+                                "/api/inventario/**", "/api/labores/**"
                         ).hasAnyRole("Agricultor", "Administrador")
                         .anyRequest().authenticated()
                 )

@@ -3,7 +3,6 @@ package com.agroruta.worker.application;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.domain.CargoRepository;
@@ -35,7 +34,7 @@ public class TrabajadorService implements TrabajadorUseCase {
     public Trabajador registrarTrabajador(String nombre, String apellido, String cedula,
                                           String telefono, String direccion,
                                           LocalDate fechaIngreso, TipoContrato tipoContrato,
-                                          Long cargoId) {
+                                          Long cargoId, Long agricultorId) {
         if (trabajadorRepository.existePorCedula(cedula)) {
             throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
                     "Ya existe un trabajador con cédula: " + cedula);
@@ -48,8 +47,8 @@ public class TrabajadorService implements TrabajadorUseCase {
                 null, nombre, apellido, cedula,
                 telefono, direccion, fechaIngreso, tipoContrato, cargo
         );
-        // El dueño es siempre el usuario autenticado, nunca un valor enviado por el cliente
-        trabajador.setAgricultorId(CurrentUser.idActual());
+        // El dueño lo pasa el controlador desde la sesión, nunca un valor enviado por el cliente
+        trabajador.setAgricultorId(agricultorId);
 
         return trabajadorRepository.guardar(trabajador);
     }

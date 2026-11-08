@@ -2,9 +2,11 @@ package com.agroruta.shared.security;
 
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
-/** Utilidades para saber quién hace la petición. */
+/**
+ * Utilidades para saber quién hace la petición. Solo se usan en los controladores: ellos le pasan
+ * el id del usuario a los casos de uso, así la lógica de negocio no depende de Spring Security.
+ */
 public final class CurrentUser {
 
     private static final String ROL_ADMIN = "ROLE_Administrador";
@@ -30,10 +32,5 @@ public final class CurrentUser {
             return u.getNombre();
         }
         return null;
-    }
-
-    /** Id del usuario autenticado en el hilo actual, o null si no hay sesión. */
-    public static Long idActual() {
-        return id(SecurityContextHolder.getContext().getAuthentication());
     }
 }

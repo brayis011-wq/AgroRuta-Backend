@@ -1,6 +1,6 @@
 package com.agroruta.worker.infrastructure.persistence;
 
-import com.agroruta.worker.domain.Actividad;
+import com.agroruta.worker.domain.Labor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -18,23 +18,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("ActividadRepositoryImpl - Pruebas Unitarias")
-class ActividadRepositoryImplTest {
+@DisplayName("LaborRepositoryImpl - Pruebas Unitarias")
+class LaborRepositoryImplTest {
 
     @Mock
-    private JpaActividadRepository jpa;
+    private JpaLaborRepository jpa;
 
     @InjectMocks
-    private ActividadRepositoryImpl repository;
+    private LaborRepositoryImpl repository;
 
-    private Actividad actividadBase;
-    private ActividadEntity entityBase;
+    private Labor actividadBase;
+    private LaborEntity entityBase;
 
     @BeforeEach
     void setUp() {
-        actividadBase = new Actividad(1L, "Fumigación", "Aplicación de pesticidas");
+        actividadBase = new Labor(1L, "Fumigación", "Aplicación de pesticidas");
 
-        entityBase = new ActividadEntity();
+        entityBase = new LaborEntity();
         entityBase.setId(1L);
         entityBase.setNombre("Fumigación");
         entityBase.setDescripcion("Aplicación de pesticidas");
@@ -51,38 +51,38 @@ class ActividadRepositoryImplTest {
         @Test
         @DisplayName("Debe guardar y retornar la actividad mapeada al dominio")
         void debeGuardarYRetornarActividadMapeada() {
-            when(jpa.save(any(ActividadEntity.class))).thenReturn(entityBase);
+            when(jpa.save(any(LaborEntity.class))).thenReturn(entityBase);
 
-            Actividad resultado = repository.guardar(actividadBase);
+            Labor resultado = repository.guardar(actividadBase);
 
             assertNotNull(resultado);
             assertEquals(1L,                         resultado.getId());
             assertEquals("Fumigación",               resultado.getNombre());
             assertEquals("Aplicación de pesticidas", resultado.getDescripcion());
             assertTrue(resultado.isActiva());
-            verify(jpa, times(1)).save(any(ActividadEntity.class));
+            verify(jpa, times(1)).save(any(LaborEntity.class));
         }
 
         @Test
         @DisplayName("Debe guardar y retornar correctamente una actividad desactivada")
         void debeGuardarActividadDesactivada() {
-            ActividadEntity entityInactiva = new ActividadEntity();
+            LaborEntity entityInactiva = new LaborEntity();
             entityInactiva.setId(2L);
             entityInactiva.setNombre("Riego");
             entityInactiva.setDescripcion("Riego por goteo");
             entityInactiva.setActiva(false);
 
-            Actividad actividadInactiva = new Actividad(2L, "Riego", "Riego por goteo");
+            Labor actividadInactiva = new Labor(2L, "Riego", "Riego por goteo");
             actividadInactiva.desactivar();
 
-            when(jpa.save(any(ActividadEntity.class))).thenReturn(entityInactiva);
+            when(jpa.save(any(LaborEntity.class))).thenReturn(entityInactiva);
 
-            Actividad resultado = repository.guardar(actividadInactiva);
+            Labor resultado = repository.guardar(actividadInactiva);
 
             assertNotNull(resultado);
             assertEquals("Riego", resultado.getNombre());
             assertFalse(resultado.isActiva());
-            verify(jpa, times(1)).save(any(ActividadEntity.class));
+            verify(jpa, times(1)).save(any(LaborEntity.class));
         }
     }
 
@@ -158,7 +158,7 @@ class ActividadRepositoryImplTest {
         void debeRetornarOptionalConActividadSiIdExiste() {
             when(jpa.findById(1L)).thenReturn(Optional.of(entityBase));
 
-            Optional<Actividad> resultado = repository.buscarPorId(1L);
+            Optional<Labor> resultado = repository.buscarPorId(1L);
 
             assertTrue(resultado.isPresent());
             assertEquals(1L,           resultado.get().getId());
@@ -172,7 +172,7 @@ class ActividadRepositoryImplTest {
         void debeRetornarOptionalVacioSiIdNoExiste() {
             when(jpa.findById(99L)).thenReturn(Optional.empty());
 
-            Optional<Actividad> resultado = repository.buscarPorId(99L);
+            Optional<Labor> resultado = repository.buscarPorId(99L);
 
             assertTrue(resultado.isEmpty());
             verify(jpa, times(1)).findById(99L);
@@ -189,7 +189,7 @@ class ActividadRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar todas las actividades mapeadas al dominio")
         void debeRetornarTodasLasActividades() {
-            ActividadEntity otraEntity = new ActividadEntity();
+            LaborEntity otraEntity = new LaborEntity();
             otraEntity.setId(2L);
             otraEntity.setNombre("Riego");
             otraEntity.setDescripcion("Riego por aspersión");
@@ -197,7 +197,7 @@ class ActividadRepositoryImplTest {
 
             when(jpa.findAll()).thenReturn(List.of(entityBase, otraEntity));
 
-            List<Actividad> resultado = repository.listarTodas();
+            List<Labor> resultado = repository.listarTodas();
 
             assertEquals(2,            resultado.size());
             assertEquals("Fumigación", resultado.get(0).getNombre());
@@ -212,7 +212,7 @@ class ActividadRepositoryImplTest {
         void debeRetornarListaVaciaSiNoHayActividades() {
             when(jpa.findAll()).thenReturn(List.of());
 
-            List<Actividad> resultado = repository.listarTodas();
+            List<Labor> resultado = repository.listarTodas();
 
             assertTrue(resultado.isEmpty());
             verify(jpa, times(1)).findAll();
@@ -231,7 +231,7 @@ class ActividadRepositoryImplTest {
         void debeRetornarSoloActividadesActivas() {
             when(jpa.findByActivaTrue()).thenReturn(List.of(entityBase));
 
-            List<Actividad> resultado = repository.listarActivas();
+            List<Labor> resultado = repository.listarActivas();
 
             assertEquals(1,            resultado.size());
             assertEquals("Fumigación", resultado.get(0).getNombre());
@@ -244,7 +244,7 @@ class ActividadRepositoryImplTest {
         void debeRetornarListaVaciaSiNoHayActivas() {
             when(jpa.findByActivaTrue()).thenReturn(List.of());
 
-            List<Actividad> resultado = repository.listarActivas();
+            List<Labor> resultado = repository.listarActivas();
 
             assertTrue(resultado.isEmpty());
             verify(jpa, times(1)).findByActivaTrue();

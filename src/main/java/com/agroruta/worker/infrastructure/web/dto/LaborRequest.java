@@ -3,7 +3,7 @@ package com.agroruta.worker.infrastructure.web.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class ActividadRequest {
+public class LaborRequest {
 
     @NotBlank(message = "El nombre es obligatorio")
     @Size(max = 100, message = "El nombre no puede superar 100 caracteres")

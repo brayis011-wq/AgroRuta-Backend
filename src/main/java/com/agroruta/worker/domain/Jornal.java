@@ -17,7 +17,7 @@ public class Jornal {
     private Trabajador trabajador;
     private Long cultivoId;
     private String nombreCultivo;
-    private List<Actividad> actividades;
+    private List<Labor> actividades;
     private String observaciones;
     private BigDecimal valorJornal;
     private boolean liquidado;
@@ -42,18 +42,18 @@ public class Jornal {
 
     // ── Lógica de dominio ────────────────────────────────────────────────────
 
-    public void agregarActividad(Actividad actividad) {
+    public void agregarActividad(Labor actividad) {
         if (this.liquidado) {
-            throw new IllegalStateException("No se pueden modificar actividades de un jornal ya liquidado.");
+            throw new IllegalStateException("No se pueden modificar las labores de un jornal ya liquidado.");
         }
         if (!this.actividades.contains(actividad)) {
             this.actividades.add(actividad);
         }
     }
 
-    public void removerActividad(Actividad actividad) {
+    public void removerActividad(Labor actividad) {
         if (this.liquidado) {
-            throw new IllegalStateException("No se pueden modificar actividades de un jornal ya liquidado.");
+            throw new IllegalStateException("No se pueden modificar las labores de un jornal ya liquidado.");
         }
         this.actividades.remove(actividad);
     }
@@ -63,7 +63,7 @@ public class Jornal {
     }
 
     // Sobreescribe el getter de Lombok para proteger la lista
-    public List<Actividad> getActividades() {
+    public List<Labor> getActividades() {
         return Collections.unmodifiableList(actividades);
     }
 }

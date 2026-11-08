@@ -6,7 +6,8 @@ import java.util.List;
 
 public interface CargoUseCase {
 
-    Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal);
+    /** @param agricultorId dueño del cargo: el usuario autenticado (lo pasa el controlador) */
+    Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal, Long agricultorId);
 
     Cargo actualizarCargo(Long id, String nombre, String descripcion, BigDecimal valorJornal);
 

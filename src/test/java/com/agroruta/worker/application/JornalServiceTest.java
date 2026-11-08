@@ -28,7 +28,7 @@ class JornalServiceTest {
 
     @Mock private JornalRepository     jornalRepository;
     @Mock private TrabajadorRepository trabajadorRepository;
-    @Mock private ActividadRepository  actividadRepository;
+    @Mock private LaborRepository  laborRepository;
     @Mock private CultivoPort          cultivoPort;
 
     @InjectMocks
@@ -37,8 +37,8 @@ class JornalServiceTest {
     private Cargo        cargoBase;
     private Trabajador   trabajadorActivo;
     private Trabajador   trabajadorInactivo;
-    private Actividad    actividad1;
-    private Actividad    actividad2;
+    private Labor    actividad1;
+    private Labor    actividad2;
     private Jornal       jornalBase;
     private LocalDate    fecha;
 
@@ -55,8 +55,8 @@ class JornalServiceTest {
                 TipoContrato.JORNAL, cargoBase);
         trabajadorInactivo.desactivar();
 
-        actividad1 = new Actividad(1L, "Siembra",   "Desc siembra");
-        actividad2 = new Actividad(2L, "Fumigación", "Desc fumigación");
+        actividad1 = new Labor(1L, "Siembra",   "Desc siembra");
+        actividad2 = new Labor(2L, "Fumigación", "Desc fumigación");
 
         fecha = LocalDate.of(2024, 6, 15);
 
@@ -132,8 +132,8 @@ class JornalServiceTest {
     @DisplayName("registrarJornal debe crear jornal con actividades y retornarlo guardado")
     void registrarJornal_datosValidos_debeCrearYGuardar() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
-        when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
-        when(actividadRepository.buscarPorId(2L)).thenReturn(Optional.of(actividad2));
+        when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
+        when(laborRepository.buscarPorId(2L)).thenReturn(Optional.of(actividad2));
         when(jornalRepository.guardar(any(Jornal.class))).thenReturn(jornalBase);
 
         Jornal resultado = jornalService.registrarJornal(
@@ -189,7 +189,7 @@ class JornalServiceTest {
     @DisplayName("registrarJornal debe lanzar ResourceNotFoundException cuando una actividad no existe")
     void registrarJornal_actividadInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
-        when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
+        when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
@@ -220,7 +220,7 @@ class JornalServiceTest {
     @DisplayName("agregarActividad debe agregar la actividad al jornal y guardarlo")
     void agregarActividad_datosValidos_debeAgregarYGuardar() {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
-        when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
+        when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
         when(jornalRepository.guardar(any(Jornal.class))).thenReturn(jornalBase);
 
         Jornal resultado = jornalService.agregarActividad(1L, 1L);
@@ -240,14 +240,14 @@ class JornalServiceTest {
         );
 
         assertTrue(ex.getMessage().contains("99"));
-        verifyNoInteractions(actividadRepository);
+        verifyNoInteractions(laborRepository);
     }
 
     @Test
     @DisplayName("agregarActividad debe lanzar ResourceNotFoundException cuando la actividad no existe")
     void agregarActividad_actividadInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
-        when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
+        when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
@@ -263,7 +263,7 @@ class JornalServiceTest {
     void agregarActividad_jornalLiquidado_debeLanzarIllegalStateException() {
         jornalBase.marcarComoLiquidado();
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
-        when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
+        when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
 
         assertThrows(
                 IllegalStateException.class,
@@ -280,7 +280,7 @@ class JornalServiceTest {
     void removerActividad_datosValidos_debeRemoverYGuardar() {
         jornalBase.agregarActividad(actividad1);
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
-        when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
+        when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
         when(jornalRepository.guardar(any(Jornal.class))).thenReturn(jornalBase);
 
         Jornal resultado = jornalService.removerActividad(1L, 1L);
@@ -300,14 +300,14 @@ class JornalServiceTest {
         );
 
         assertTrue(ex.getMessage().contains("99"));
-        verifyNoInteractions(actividadRepository);
+        verifyNoInteractions(laborRepository);
     }
 
     @Test
     @DisplayName("removerActividad debe lanzar ResourceNotFoundException cuando la actividad no existe")
     void removerActividad_actividadInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
-        when(actividadRepository.buscarPorId(99L)).thenReturn(Optional.empty());
+        when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
@@ -324,7 +324,7 @@ class JornalServiceTest {
         jornalBase.agregarActividad(actividad1);
         jornalBase.marcarComoLiquidado();
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
-        when(actividadRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
+        when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
 
         assertThrows(
                 IllegalStateException.class,

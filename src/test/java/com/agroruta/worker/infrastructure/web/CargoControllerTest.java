@@ -153,11 +153,11 @@ class CargoControllerTest {
         @Test
         @DisplayName("Debe retornar 201 con el cargo creado")
         void debeRetornar201AlCrear() {
-            when(cargoUseCase.crearCargo("Operario", "Cargo operario", new BigDecimal("80000")))
+            when(cargoUseCase.crearCargo("Operario", "Cargo operario", new BigDecimal("80000"), 5L))
                     .thenReturn(cargoBase);
 
             ResponseEntity<CargoResponse> response = cargoController.crear(
-                    request("Operario", "Cargo operario", new BigDecimal("80000"))
+                    request("Operario", "Cargo operario", new BigDecimal("80000")), auth(5L, Rol.Agricultor)
             );
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
@@ -168,25 +168,25 @@ class CargoControllerTest {
             assertEquals(new BigDecimal("80000"), response.getBody().valorJornal);
             assertTrue(response.getBody().activo);
             verify(cargoUseCase, times(1))
-                    .crearCargo("Operario", "Cargo operario", new BigDecimal("80000"));
+                    .crearCargo("Operario", "Cargo operario", new BigDecimal("80000"), 5L);
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si el nombre ya existe")
         void debePropaglarExcepcionSiNombreDuplicado() {
-            when(cargoUseCase.crearCargo(any(), any(), any()))
+            when(cargoUseCase.crearCargo(any(), any(), any(), any()))
                     .thenThrow(new BusinessException(
                             ErrorCode.RESOURCE_ALREADY_EXISTS, "Operario ya existe"));
 
             BusinessException ex = assertThrows(
                     BusinessException.class,
                     () -> cargoController.crear(
-                            request("Operario", "Desc", new BigDecimal("80000")))
+                            request("Operario", "Desc", new BigDecimal("80000")), auth(5L, Rol.Agricultor))
             );
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             assertTrue(ex.getMessage().contains("Operario"));
-            verify(cargoUseCase, times(1)).crearCargo(any(), any(), any());
+            verify(cargoUseCase, times(1)).crearCargo(any(), any(), any(), any());
         }
     }
 

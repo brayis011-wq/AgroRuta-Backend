@@ -6,7 +6,7 @@ import com.agroruta.crop.domain.FincaRepository;
 import com.agroruta.crop.domain.FumigacionRepository;
 import com.agroruta.crop.domain.LoteRepository;
 import com.agroruta.crop.domain.SiembraRepository;
-import com.agroruta.worker.domain.ActividadRepository;
+import com.agroruta.worker.domain.LaborRepository;
 import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.NominaRepository;
@@ -38,7 +38,7 @@ public class OwnershipChecker {
     private final CosechaRepository cosechaRepository;
     private final FumigacionRepository fumigacionRepository;
     private final ActividadCultivoRepository actividadCultivoRepository;
-    private final ActividadRepository actividadRepository;
+    private final LaborRepository laborRepository;
 
     public OwnershipChecker(FincaRepository fincaRepository,
                             LoteRepository loteRepository,
@@ -51,7 +51,7 @@ public class OwnershipChecker {
                             CosechaRepository cosechaRepository,
                             FumigacionRepository fumigacionRepository,
                             ActividadCultivoRepository actividadCultivoRepository,
-                            ActividadRepository actividadRepository) {
+                            LaborRepository laborRepository) {
         this.fincaRepository = fincaRepository;
         this.loteRepository = loteRepository;
         this.siembraRepository = siembraRepository;
@@ -63,7 +63,7 @@ public class OwnershipChecker {
         this.cosechaRepository = cosechaRepository;
         this.fumigacionRepository = fumigacionRepository;
         this.actividadCultivoRepository = actividadCultivoRepository;
-        this.actividadRepository = actividadRepository;
+        this.laborRepository = laborRepository;
     }
 
     /** El agricultorId recibido debe ser el del usuario autenticado. */
@@ -131,7 +131,7 @@ public class OwnershipChecker {
         if (CurrentUser.esAdmin(auth)) return true;
         Long usuarioId = CurrentUser.id(auth);
         if (usuarioId == null || actividadId == null) return false;
-        return actividadRepository.buscarPorId(actividadId)
+        return laborRepository.buscarPorId(actividadId)
                 .map(a -> !a.esComun() && usuarioId.equals(a.getAgricultorId()))
                 .orElse(false);
     }

@@ -37,7 +37,7 @@ public class JornalEntity {
         joinColumns = @JoinColumn(name = "jornal_id"),
         inverseJoinColumns = @JoinColumn(name = "actividad_id")
     )
-    private List<ActividadEntity> actividades = new ArrayList<>();
+    private List<LaborEntity> actividades = new ArrayList<>();
 
     @Column(length = 500)
     private String observaciones;
@@ -66,8 +66,8 @@ public class JornalEntity {
     public String getNombreCultivo() { return nombreCultivo; }
     public void setNombreCultivo(String nombreCultivo) { this.nombreCultivo = nombreCultivo; }
 
-    public List<ActividadEntity> getActividades() { return actividades; }
-    public void setActividades(List<ActividadEntity> actividades) { this.actividades = actividades; }
+    public List<LaborEntity> getActividades() { return actividades; }
+    public void setActividades(List<LaborEntity> actividades) { this.actividades = actividades; }
 
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }

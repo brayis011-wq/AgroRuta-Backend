@@ -8,7 +8,7 @@ import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.application.ports.out.CultivoPort;
-import com.agroruta.worker.domain.Actividad;
+import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.Jornal;
@@ -363,7 +363,7 @@ class JornalControllerTest {
         @Test
         @DisplayName("Debe retornar 200 con el jornal actualizado al agregar actividad")
         void debeRetornar200AlAgregarActividad() {
-            Actividad actividad = new Actividad(2L, "Riego", "Actividad de riego");
+            Labor actividad = new Labor(2L, "Riego", "Labor de riego");
             jornalBase.agregarActividad(actividad);
             when(jornalUseCase.agregarActividad(1L, 2L)).thenReturn(jornalBase);
 

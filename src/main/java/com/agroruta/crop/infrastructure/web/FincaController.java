@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.domain.Finca;
@@ -24,33 +25,31 @@ public class FincaController {
 
     @PostMapping
     @PreAuthorize("@ownership.esAgricultor(#req.agricultorId, authentication)")
-    public ResponseEntity<Finca> registrar(@Valid @RequestBody FincaRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                fincaUseCase.registrarFinca(
+    public ResponseEntity<FincaResponse> registrar(@Valid @RequestBody FincaRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(FincaResponse.from(fincaUseCase.registrarFinca(
                         req.getNombre(), req.getUbicacion(),
                         req.getHectareas(), req.getAgricultorId()
-                )
-        );
+                )));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
-    public ResponseEntity<Finca> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(fincaUseCase.buscarFincaPorId(id));
+    public ResponseEntity<FincaResponse> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(FincaResponse.from(fincaUseCase.buscarFincaPorId(id)));
     }
 
     @GetMapping("/agricultor/{agricultorId}")
     @PreAuthorize("@ownership.esAgricultor(#agricultorId, authentication)")
-    public ResponseEntity<List<Finca>> listarPorAgricultor(@PathVariable Long agricultorId) {
-        return ResponseEntity.ok(fincaUseCase.listarFincasPorAgricultor(agricultorId));
+    public ResponseEntity<List<FincaResponse>> listarPorAgricultor(@PathVariable Long agricultorId) {
+        return ResponseEntity.ok(fincaUseCase.listarFincasPorAgricultor(agricultorId).stream().map(FincaResponse::from).toList());
     }
 
     /** Edita nombre, ubicación y hectáreas (el agricultor del cuerpo se ignora) */
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
-    public ResponseEntity<Finca> actualizar(@PathVariable Long id, @Valid @RequestBody FincaRequest req) {
-        return ResponseEntity.ok(fincaUseCase.actualizarFinca(
-                id, req.getNombre(), req.getUbicacion(), req.getHectareas()));
+    public ResponseEntity<FincaResponse> actualizar(@PathVariable Long id, @Valid @RequestBody FincaRequest req) {
+        return ResponseEntity.ok(FincaResponse.from(fincaUseCase.actualizarFinca(
+                id, req.getNombre(), req.getUbicacion(), req.getHectareas())));
     }
 
     @DeleteMapping("/{id}")
@@ -62,13 +61,13 @@ public class FincaController {
 
     @PatchMapping("/{id}/centroide")
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
-    public ResponseEntity<Finca> actualizarCentroide(
+    public ResponseEntity<FincaResponse> actualizarCentroide(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarCentroideFincaRequest request) {
 
         Finca finca = fincaUseCase.actualizarCentroideFinca(
                 id, request.centroideLat(), request.centroideLng()
         );
-        return ResponseEntity.ok(finca);
+        return ResponseEntity.ok(FincaResponse.from(finca));
     }
 }

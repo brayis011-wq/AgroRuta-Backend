@@ -1,8 +1,7 @@
 package com.agroruta.crop.infrastructure.web;
 
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import com.agroruta.crop.application.ports.in.CatalogoCultivoUseCase;
-import com.agroruta.crop.domain.TipoCultivo;
-import com.agroruta.crop.domain.VariedadCultivo;
 import com.agroruta.crop.infrastructure.web.dto.NombreCatalogoRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -25,39 +24,39 @@ public class CatalogoCultivoController {
 
     /** Cultivos y variedades activos (para registrar una siembra) */
     @GetMapping
-    public ResponseEntity<List<TipoCultivo>> activos() {
-        return ResponseEntity.ok(catalogo.listar(true));
+    public ResponseEntity<List<TipoCultivoResponse>> activos() {
+        return ResponseEntity.ok(catalogo.listar(true).stream().map(TipoCultivoResponse::from).toList());
     }
 
     /** Todo el catálogo, incluidos los desactivados (pantalla de administración) */
     @GetMapping("/todos")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<List<TipoCultivo>> todos() {
-        return ResponseEntity.ok(catalogo.listar(false));
+    public ResponseEntity<List<TipoCultivoResponse>> todos() {
+        return ResponseEntity.ok(catalogo.listar(false).stream().map(TipoCultivoResponse::from).toList());
     }
 
     @PostMapping("/tipos")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<TipoCultivo> crearTipo(@Valid @RequestBody NombreCatalogoRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(catalogo.crearTipo(req.nombre()));
+    public ResponseEntity<TipoCultivoResponse> crearTipo(@Valid @RequestBody NombreCatalogoRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(TipoCultivoResponse.from(catalogo.crearTipo(req.nombre())));
     }
 
     @PostMapping("/tipos/{id}/variedades")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<VariedadCultivo> crearVariedad(@PathVariable Long id,
+    public ResponseEntity<VariedadCultivoResponse> crearVariedad(@PathVariable Long id,
                                                          @Valid @RequestBody NombreCatalogoRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(catalogo.crearVariedad(id, req.nombre()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(VariedadCultivoResponse.from(catalogo.crearVariedad(id, req.nombre())));
     }
 
     @PatchMapping("/tipos/{id}/estado")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<TipoCultivo> estadoTipo(@PathVariable Long id, @RequestParam boolean activo) {
-        return ResponseEntity.ok(catalogo.cambiarEstadoTipo(id, activo));
+    public ResponseEntity<TipoCultivoResponse> estadoTipo(@PathVariable Long id, @RequestParam boolean activo) {
+        return ResponseEntity.ok(TipoCultivoResponse.from(catalogo.cambiarEstadoTipo(id, activo)));
     }
 
     @PatchMapping("/variedades/{id}/estado")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<VariedadCultivo> estadoVariedad(@PathVariable Long id, @RequestParam boolean activo) {
-        return ResponseEntity.ok(catalogo.cambiarEstadoVariedad(id, activo));
+    public ResponseEntity<VariedadCultivoResponse> estadoVariedad(@PathVariable Long id, @RequestParam boolean activo) {
+        return ResponseEntity.ok(VariedadCultivoResponse.from(catalogo.cambiarEstadoVariedad(id, activo)));
     }
 }

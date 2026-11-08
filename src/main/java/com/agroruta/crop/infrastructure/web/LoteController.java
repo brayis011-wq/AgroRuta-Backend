@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.web;
 
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.Lote;
@@ -25,37 +26,35 @@ public class LoteController {
 
     @PostMapping
     @PreAuthorize("@ownership.fincaPropia(#req.fincaId, authentication)")
-    public ResponseEntity<Lote> registrar(@Valid @RequestBody LoteRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                loteUseCase.registrarLote(req.getNombre(), req.getArea(), req.getFincaId())
-        );
+    public ResponseEntity<LoteResponse> registrar(@Valid @RequestBody LoteRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(LoteResponse.from(loteUseCase.registrarLote(req.getNombre(), req.getArea(), req.getFincaId())));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
-    public ResponseEntity<Lote> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(loteUseCase.buscarLotePorId(id));
+    public ResponseEntity<LoteResponse> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(LoteResponse.from(loteUseCase.buscarLotePorId(id)));
     }
 
     @GetMapping("/finca/{fincaId}")
     @PreAuthorize("@ownership.fincaPropia(#fincaId, authentication)")
-    public ResponseEntity<List<Lote>> listarPorFinca(@PathVariable Long fincaId) {
-        return ResponseEntity.ok(loteUseCase.listarLotesPorFinca(fincaId));
+    public ResponseEntity<List<LoteResponse>> listarPorFinca(@PathVariable Long fincaId) {
+        return ResponseEntity.ok(loteUseCase.listarLotesPorFinca(fincaId).stream().map(LoteResponse::from).toList());
     }
 
     /** Edita nombre y área (la finca del cuerpo se ignora: un lote no cambia de finca) */
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
-    public ResponseEntity<Lote> actualizar(@PathVariable Long id, @Valid @RequestBody LoteRequest req) {
-        return ResponseEntity.ok(loteUseCase.actualizarLote(id, req.getNombre(), req.getArea()));
+    public ResponseEntity<LoteResponse> actualizar(@PathVariable Long id, @Valid @RequestBody LoteRequest req) {
+        return ResponseEntity.ok(LoteResponse.from(loteUseCase.actualizarLote(id, req.getNombre(), req.getArea())));
     }
 
     /** Disponible o en descanso, cuando el lote no tiene siembra en curso */
     @PatchMapping("/{id}/estado")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
-    public ResponseEntity<Lote> cambiarEstado(@PathVariable Long id,
+    public ResponseEntity<LoteResponse> cambiarEstado(@PathVariable Long id,
                                               @Valid @RequestBody CambiarEstadoLoteRequest req) {
-        return ResponseEntity.ok(loteUseCase.cambiarEstado(id, req.estado()));
+        return ResponseEntity.ok(LoteResponse.from(loteUseCase.cambiarEstado(id, req.estado())));
     }
 
     @DeleteMapping("/{id}")
@@ -67,7 +66,7 @@ public class LoteController {
 
     @PatchMapping("/{id}/geometria")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
-    public ResponseEntity<Lote> actualizarGeometria(
+    public ResponseEntity<LoteResponse> actualizarGeometria(
             @PathVariable Long id,
             @Valid @RequestBody ActualizarGeometriaLoteRequest request) {
 
@@ -78,6 +77,6 @@ public class LoteController {
                 request.centroideLat(),
                 request.centroideLng()
         );
-        return ResponseEntity.ok(lote);
+        return ResponseEntity.ok(LoteResponse.from(lote));
     }
 }

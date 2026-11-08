@@ -1,8 +1,8 @@
 package com.agroruta.crop.infrastructure.web;
 
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
-import com.agroruta.crop.domain.Fumigacion;
 import com.agroruta.crop.domain.RestriccionesFumigacion;
 import com.agroruta.crop.infrastructure.web.dto.FumigacionRequest;
 import org.springframework.http.HttpStatus;
@@ -24,9 +24,8 @@ public class FumigacionController {
 
     @PostMapping
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
-    public ResponseEntity<Fumigacion> registrar(@Valid @RequestBody FumigacionRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                fumigacionUseCase.registrarFumigacion(
+    public ResponseEntity<FumigacionResponse> registrar(@Valid @RequestBody FumigacionRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(FumigacionResponse.from(fumigacionUseCase.registrarFumigacion(
                         req.getFecha(),
                         req.getProducto(),
                         req.getAgriculturalInputId(), // nullable
@@ -36,24 +35,23 @@ public class FumigacionController {
                         req.getObservaciones(),
                         req.getSiembraId(),
                         req.restricciones()
-                )
-        );
+                )));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("@ownership.fumigacionPropia(#id, authentication)")
-    public ResponseEntity<Fumigacion> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(fumigacionUseCase.buscarFumigacionPorId(id));
+    public ResponseEntity<FumigacionResponse> buscarPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(FumigacionResponse.from(fumigacionUseCase.buscarFumigacionPorId(id)));
     }
 
     /** La siembra del cuerpo se ignora */
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.fumigacionPropia(#id, authentication)")
-    public ResponseEntity<Fumigacion> actualizar(@PathVariable Long id, @Valid @RequestBody FumigacionRequest req) {
-        return ResponseEntity.ok(fumigacionUseCase.actualizarFumigacion(
+    public ResponseEntity<FumigacionResponse> actualizar(@PathVariable Long id, @Valid @RequestBody FumigacionRequest req) {
+        return ResponseEntity.ok(FumigacionResponse.from(fumigacionUseCase.actualizarFumigacion(
                 id, req.getFecha(), req.getProducto(), req.getAgriculturalInputId(), req.getDosis(),
                 req.getUnidadMedida(), req.getAreaAplicada(), req.getObservaciones(),
-                req.restricciones()));
+                req.restricciones())));
     }
 
     @DeleteMapping("/{id}")
@@ -65,7 +63,7 @@ public class FumigacionController {
 
     @GetMapping("/siembra/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
-    public ResponseEntity<List<Fumigacion>> listarPorSiembra(@PathVariable Long siembraId) {
-        return ResponseEntity.ok(fumigacionUseCase.listarFumigacionesPorSiembra(siembraId));
+    public ResponseEntity<List<FumigacionResponse>> listarPorSiembra(@PathVariable Long siembraId) {
+        return ResponseEntity.ok(fumigacionUseCase.listarFumigacionesPorSiembra(siembraId).stream().map(FumigacionResponse::from).toList());
     }
 }

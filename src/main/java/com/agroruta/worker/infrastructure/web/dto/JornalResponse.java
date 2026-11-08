@@ -12,7 +12,7 @@ public class JornalResponse {
     public TrabajadorResponse trabajador;
     public Long cultivoId;
     public String nombreCultivo;
-    public List<ActividadResponse> actividades;
+    public List<LaborResponse> actividades;
     public String observaciones;
     public BigDecimal valorJornal;
     public boolean liquidado;
@@ -25,7 +25,7 @@ public class JornalResponse {
         r.cultivoId = j.getCultivoId();
         r.nombreCultivo = j.getNombreCultivo();
         r.actividades = j.getActividades().stream()
-                .map(ActividadResponse::from)
+                .map(LaborResponse::from)
                 .toList();
         r.observaciones = j.getObservaciones();
         r.valorJornal = j.getValorJornal();

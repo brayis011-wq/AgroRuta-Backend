@@ -11,7 +11,7 @@ public interface TrabajadorUseCase {
     Trabajador registrarTrabajador(String nombre, String apellido, String cedula,
                                    String telefono, String direccion,
                                    LocalDate fechaIngreso, TipoContrato tipoContrato,
-                                   Long cargoId);
+                                   Long cargoId, Long agricultorId);
 
     Trabajador actualizarTrabajador(Long id, String nombre, String apellido,
                                     String telefono, String direccion,

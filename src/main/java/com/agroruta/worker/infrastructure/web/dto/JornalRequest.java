@@ -29,7 +29,7 @@ public class JornalRequest {
 
     @NotEmpty(message = "Selecciona al menos una actividad")
     @Size(max = 50, message = "Demasiadas actividades")
-    public List<@NotNull(message = "Actividad no válida") Long> actividadIds;
+    public List<@NotNull(message = "Labor no válida") Long> actividadIds;
 
     @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
     public String observaciones;

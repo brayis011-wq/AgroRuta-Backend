@@ -3,7 +3,6 @@ package com.agroruta.worker.application;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.domain.CargoRepository;
 import com.agroruta.worker.domain.Cargo;
 
@@ -22,10 +21,9 @@ public class CargoService implements CargoUseCase {
     }
 
     @Override
-    public Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal) {
+    public Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal, Long agricultorId) {
 
-        // El dueño es siempre el usuario autenticado, nunca un valor enviado por el cliente
-        Long agricultorId = CurrentUser.idActual();
+        // El dueño lo pasa el controlador desde la sesión, nunca un valor enviado por el cliente
 
         if (cargoRepository.existsByNombreAndAgricultorId(nombre, agricultorId)) {
             throw new BusinessException(

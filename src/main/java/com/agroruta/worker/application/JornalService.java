@@ -4,10 +4,10 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.application.ports.out.CultivoPort.CultivoInfo;
-import com.agroruta.worker.domain.ActividadRepository;
+import com.agroruta.worker.domain.LaborRepository;
 import com.agroruta.worker.domain.JornalRepository;
 import com.agroruta.worker.domain.TrabajadorRepository;
-import com.agroruta.worker.domain.Actividad;
+import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Trabajador;
 
@@ -22,16 +22,16 @@ import com.agroruta.worker.application.ports.in.JornalUseCase;
 public class JornalService implements JornalUseCase {
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;
-    private final ActividadRepository actividadRepository;
+    private final LaborRepository laborRepository;
     private final CultivoPort cultivoPort;
 
     public JornalService(JornalRepository jornalRepository,
                          TrabajadorRepository trabajadorRepository,
-                         ActividadRepository actividadRepository,
+                         LaborRepository laborRepository,
                          CultivoPort cultivoPort) {
         this.jornalRepository = jornalRepository;
         this.trabajadorRepository = trabajadorRepository;
-        this.actividadRepository = actividadRepository;
+        this.laborRepository = laborRepository;
         this.cultivoPort = cultivoPort;
     }
 
@@ -69,7 +69,7 @@ public class JornalService implements JornalUseCase {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
 
-        Actividad actividad = actividadUsable(actividadId, jornal.getTrabajador().getAgricultorId());
+        Labor actividad = actividadUsable(actividadId, jornal.getTrabajador().getAgricultorId());
 
         jornal.agregarActividad(actividad);
         return jornalRepository.guardar(jornal);
@@ -79,19 +79,19 @@ public class JornalService implements JornalUseCase {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
 
-        Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
+        Labor actividad = laborRepository.buscarPorId(actividadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Labor no encontrada con id: " + actividadId));
 
         jornal.removerActividad(actividad);
         return jornalRepository.guardar(jornal);
     }
 
     /** La labor existe y el agricultor la puede usar (es común o es suya). */
-    private Actividad actividadUsable(Long actividadId, Long agricultorId) {
-        Actividad actividad = actividadRepository.buscarPorId(actividadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con id: " + actividadId));
+    private Labor actividadUsable(Long actividadId, Long agricultorId) {
+        Labor actividad = laborRepository.buscarPorId(actividadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Labor no encontrada con id: " + actividadId));
         if (!actividad.visiblePara(agricultorId)) {
-            throw new BusinessException("La actividad " + actividad.getNombre() + " no está disponible en tus fincas.");
+            throw new BusinessException("La labor " + actividad.getNombre() + " no está disponible en tus fincas.");
         }
         return actividad;
     }
