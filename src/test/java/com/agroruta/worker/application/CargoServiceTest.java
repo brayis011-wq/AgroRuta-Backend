@@ -7,7 +7,7 @@ import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.domain.Cargo;
-import com.agroruta.worker.domain.CargoRepository;
+import com.agroruta.worker.application.ports.out.CargoRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

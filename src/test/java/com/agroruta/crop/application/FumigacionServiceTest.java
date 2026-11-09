@@ -1,5 +1,8 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.out.FincaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.InventarioPort;
 import com.agroruta.crop.domain.*;

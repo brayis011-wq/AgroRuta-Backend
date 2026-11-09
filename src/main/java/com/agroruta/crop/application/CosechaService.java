@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.CosechaUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;

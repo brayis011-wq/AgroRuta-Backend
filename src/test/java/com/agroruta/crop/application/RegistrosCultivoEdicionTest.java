@@ -1,5 +1,10 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
+import com.agroruta.crop.application.ports.out.CosechaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.BusinessException;

@@ -1,7 +1,7 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

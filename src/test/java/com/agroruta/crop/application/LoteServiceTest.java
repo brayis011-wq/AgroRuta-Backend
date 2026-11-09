@@ -6,7 +6,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.domain.LoteRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;

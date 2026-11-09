@@ -8,7 +8,7 @@ import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
 import com.agroruta.configuration.application.ports.in.UpdateProfileUseCase;
 import com.agroruta.configuration.domain.Perfil;
-import com.agroruta.configuration.domain.ProfileRepository;
+import com.agroruta.configuration.application.ports.out.ProfileRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,18 +1,18 @@
 package com.agroruta.shared.security;
 
-import com.agroruta.crop.domain.ActividadCultivoRepository;
-import com.agroruta.crop.domain.CosechaRepository;
-import com.agroruta.crop.domain.FincaRepository;
-import com.agroruta.crop.domain.FumigacionRepository;
-import com.agroruta.crop.domain.LoteRepository;
-import com.agroruta.crop.domain.SiembraRepository;
-import com.agroruta.worker.domain.LaborRepository;
-import com.agroruta.worker.domain.CargoRepository;
-import com.agroruta.worker.domain.JornalRepository;
-import com.agroruta.worker.domain.NominaRepository;
-import com.agroruta.worker.domain.PagoRepository;
+import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
+import com.agroruta.crop.application.ports.out.CosechaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
+import com.agroruta.worker.application.ports.out.LaborRepository;
+import com.agroruta.worker.application.ports.out.CargoRepository;
+import com.agroruta.worker.application.ports.out.JornalRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 

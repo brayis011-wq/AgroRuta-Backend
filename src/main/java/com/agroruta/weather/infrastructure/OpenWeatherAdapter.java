@@ -1,6 +1,6 @@
 package com.agroruta.weather.infrastructure;
 
-import com.agroruta.weather.application.port.out.WeatherApiPort;
+import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.Pronostico;
 import com.agroruta.weather.domain.Weather;
 import com.agroruta.shared.exception.ExternalApiException;

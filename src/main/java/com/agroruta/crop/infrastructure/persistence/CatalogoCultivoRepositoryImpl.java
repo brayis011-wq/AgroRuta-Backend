@@ -1,6 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import com.agroruta.crop.domain.CatalogoCultivoRepository;
+import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
 import com.agroruta.crop.domain.TipoCultivo;
 import com.agroruta.crop.domain.VariedadCultivo;
 import org.springframework.stereotype.Repository;

@@ -1,5 +1,9 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.out.CosechaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
 import org.springframework.stereotype.Service;

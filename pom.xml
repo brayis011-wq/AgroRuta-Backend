@@ -136,7 +136,7 @@
 		</dependency>
 
 		<!-- SWAGGER / OpenAPI: funciona con Spring Boot 4 (probado: /v3/api-docs y /swagger-ui).
-		     En producción está apagado (application-prod.yml). La línea 3.x es la de Boot 4. -->
+		     En producción está apagado (application-prod.properties). La línea 3.x es la de Boot 4. -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>

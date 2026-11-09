@@ -2,7 +2,7 @@ package com.agroruta.configuration.infrastructure.persistence;
 
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.configuration.domain.Perfil;
-import com.agroruta.configuration.domain.ProfileRepository;
+import com.agroruta.configuration.application.ports.out.ProfileRepository;
 import com.agroruta.user.infrastructure.persistence.JpaUsuarioRepository;
 import com.agroruta.user.infrastructure.persistence.UsuarioEntity;
 import org.springframework.stereotype.Repository;

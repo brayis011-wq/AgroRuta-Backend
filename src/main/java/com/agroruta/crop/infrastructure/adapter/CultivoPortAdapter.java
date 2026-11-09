@@ -2,11 +2,11 @@ package com.agroruta.crop.infrastructure.adapter;
 
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.domain.LoteRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.domain.Siembra;
-import com.agroruta.crop.domain.SiembraRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.worker.application.ports.out.CultivoPort;
 import org.springframework.stereotype.Component;
 

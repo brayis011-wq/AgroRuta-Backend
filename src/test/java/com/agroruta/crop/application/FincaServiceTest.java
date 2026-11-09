@@ -1,9 +1,9 @@
 package com.agroruta.crop.application;
 
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.domain.LoteRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;

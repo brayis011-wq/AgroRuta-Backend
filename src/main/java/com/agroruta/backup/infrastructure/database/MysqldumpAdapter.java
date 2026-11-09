@@ -2,7 +2,7 @@ package com.agroruta.backup.infrastructure.database;
 
 import com.agroruta.backup.domain.BackupFailedException;
 import com.agroruta.backup.application.ports.out.DatabaseDumpPort;
-import com.agroruta.backup.config.BackupProperties;
+import com.agroruta.backup.infrastructure.config.BackupProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

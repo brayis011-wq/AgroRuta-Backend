@@ -1,8 +1,8 @@
 package com.agroruta.notification.application;
 
 import com.agroruta.crop.domain.AlertaCultivo;
-import com.agroruta.inventario.domain.StockInsumo;
-import com.agroruta.inventario.domain.UnidadBase;
+import com.agroruta.inventory.domain.StockInsumo;
+import com.agroruta.inventory.domain.UnidadBase;
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.PlantillaCorreo;
 import com.agroruta.weather.domain.Pronostico;

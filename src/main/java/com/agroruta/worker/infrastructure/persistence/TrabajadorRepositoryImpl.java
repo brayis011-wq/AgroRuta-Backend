@@ -2,7 +2,7 @@ package com.agroruta.worker.infrastructure.persistence;
 
 import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

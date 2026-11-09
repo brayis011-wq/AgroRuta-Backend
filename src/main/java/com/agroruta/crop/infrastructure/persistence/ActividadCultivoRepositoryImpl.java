@@ -1,7 +1,7 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.ActividadCultivo;
-import com.agroruta.crop.domain.ActividadCultivoRepository;
+import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.domain.TipoActividad;
 import org.springframework.stereotype.Repository;
 

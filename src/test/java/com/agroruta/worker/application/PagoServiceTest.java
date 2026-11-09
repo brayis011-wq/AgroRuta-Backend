@@ -1,5 +1,8 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.application.ports.out.JornalRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;

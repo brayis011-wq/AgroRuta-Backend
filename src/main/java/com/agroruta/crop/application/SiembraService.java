@@ -1,5 +1,8 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
+import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.in.LoteUseCase;

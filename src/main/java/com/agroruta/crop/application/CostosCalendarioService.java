@@ -1,5 +1,12 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
+import com.agroruta.crop.application.ports.out.CosechaRepository;
+import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.ManoObraPort;

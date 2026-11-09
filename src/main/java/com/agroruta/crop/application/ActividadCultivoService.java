@@ -4,7 +4,7 @@ import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.ActividadCultivo;
-import com.agroruta.crop.domain.ActividadCultivoRepository;
+import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.domain.Siembra;
 import com.agroruta.crop.domain.TipoActividad;
 import com.agroruta.shared.exception.ResourceNotFoundException;
