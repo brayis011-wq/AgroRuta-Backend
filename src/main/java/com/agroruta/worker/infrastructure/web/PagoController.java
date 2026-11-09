@@ -1,5 +1,7 @@
 package com.agroruta.worker.infrastructure.web;
 
+import com.agroruta.worker.domain.ResumenPagos;
+import com.agroruta.shared.util.Pagina;
 import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
@@ -55,5 +57,24 @@ public class PagoController {
                 ? pagoUseCase.listarTodos()
                 : pagoUseCase.listarTodosDe(CurrentUser.id(authentication));
         return ResponseEntity.ok(lista.stream().map(PagoResponse::from).toList());
+    }
+
+    /** Lista de pagos por páginas, más recientes primero. Filtro opcional: la nómina. */
+    @GetMapping("/page")
+    public ResponseEntity<Pagina<PagoResponse>> pagina(@RequestParam(required = false) Integer page,
+                                                       @RequestParam(required = false) Integer size,
+                                                       @RequestParam(required = false) Long nominaId,
+                                                       Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(pagoUseCase.pagina(dueno, nominaId, Pagina.numero(page), Pagina.tamano(size))
+                .map(PagoResponse::from));
+    }
+
+    /** Totales de los pagos para las tarjetas de la lista, con el mismo filtro de nómina. */
+    @GetMapping("/summary")
+    public ResponseEntity<ResumenPagos> resumen(@RequestParam(required = false) Long nominaId,
+                                                Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId));
     }
 }

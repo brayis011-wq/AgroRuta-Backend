@@ -1,5 +1,7 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -38,4 +40,32 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
             @Param("trabajadorId") Long trabajadorId,
             @Param("inicio") LocalDate inicio,
             @Param("fin") LocalDate fin);
+
+    @Query(value = """
+        SELECT j FROM JornalEntity j
+        WHERE j.trabajador.id = :trabajadorId
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """, countQuery = """
+        SELECT COUNT(j) FROM JornalEntity j
+        WHERE j.trabajador.id = :trabajadorId
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """)
+    Page<JornalEntity> paginaPorTrabajador(@Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio,
+                                           @Param("fin") LocalDate fin, Pageable pageable);
+
+    @Query("""
+        SELECT COUNT(j), SUM(j.valorJornal),
+               SUM(CASE WHEN j.liquidado = false THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.liquidado = false THEN j.valorJornal ELSE 0 END),
+               MIN(CASE WHEN j.liquidado = false THEN j.fecha END),
+               MAX(CASE WHEN j.liquidado = false THEN j.fecha END)
+        FROM JornalEntity j
+        WHERE j.trabajador.id = :trabajadorId
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """)
+    List<Object[]> resumenPorTrabajador(@Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio,
+                                        @Param("fin") LocalDate fin);
 }

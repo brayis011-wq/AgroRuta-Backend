@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.domain.ResumenPagos;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.application.ports.out.JornalRepository;
@@ -108,5 +110,15 @@ public class PagoService implements PagoUseCase {
     public List<Pago> listarTodosDe(Long agricultorId) {
         if (agricultorId == null) return List.of();
         return pagoRepository.listarPorAgricultor(agricultorId);
+    }
+
+    @Override
+    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano) {
+        return pagoRepository.pagina(agricultorId, nominaId, pagina, tamano);
+    }
+
+    @Override
+    public ResumenPagos resumen(Long agricultorId, Long nominaId) {
+        return pagoRepository.resumen(agricultorId, nominaId);
     }
 }

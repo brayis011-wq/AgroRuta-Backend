@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.domain.ResumenNominas;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
@@ -132,5 +134,15 @@ public class NominaService implements NominaUseCase {
     public List<Nomina> listarTodasDe(Long agricultorId) {
         if (agricultorId == null) return List.of();
         return nominaRepository.listarPorAgricultor(agricultorId);
+    }
+
+    @Override
+    public Pagina<Nomina> pagina(Long agricultorId, Long trabajadorId, EstadoNomina estado, int pagina, int tamano) {
+        return nominaRepository.pagina(agricultorId, trabajadorId, estado, pagina, tamano);
+    }
+
+    @Override
+    public List<ResumenNominas> resumenPorEstado(Long agricultorId, Long trabajadorId) {
+        return nominaRepository.resumenPorEstado(agricultorId, trabajadorId);
     }
 }

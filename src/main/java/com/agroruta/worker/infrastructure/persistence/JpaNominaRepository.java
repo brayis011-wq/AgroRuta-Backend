@@ -1,5 +1,7 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import com.agroruta.worker.domain.EstadoNomina;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +22,26 @@ interface JpaNominaRepository extends JpaRepository<NominaEntity, Long> {
             @Param("fin") LocalDate fin);
     @Query("SELECT n FROM NominaEntity n WHERE n.trabajador.agricultorId = :agricultorId")
     List<NominaEntity> findByAgricultorId(@Param("agricultorId") Long agricultorId);
+
+    @Query(value = """
+        SELECT n FROM NominaEntity n
+        WHERE (:agricultorId IS NULL OR n.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR n.trabajador.id = :trabajadorId)
+          AND (:estado IS NULL OR n.estado = :estado)
+        """, countQuery = """
+        SELECT COUNT(n) FROM NominaEntity n
+        WHERE (:agricultorId IS NULL OR n.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR n.trabajador.id = :trabajadorId)
+          AND (:estado IS NULL OR n.estado = :estado)
+        """)
+    Page<NominaEntity> pagina(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
+                              @Param("estado") EstadoNomina estado, Pageable pageable);
+
+    @Query("""
+        SELECT n.estado, COUNT(n), SUM(n.valorTotal) FROM NominaEntity n
+        WHERE (:agricultorId IS NULL OR n.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR n.trabajador.id = :trabajadorId)
+        GROUP BY n.estado
+        """)
+    List<Object[]> resumenPorEstado(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId);
 }

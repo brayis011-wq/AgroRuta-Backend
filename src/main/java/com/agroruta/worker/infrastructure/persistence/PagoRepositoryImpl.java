@@ -1,5 +1,11 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import com.agroruta.worker.domain.ResumenPagos;
+import java.math.BigDecimal;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import com.agroruta.shared.util.Pagina;
 
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.application.ports.out.PagoRepository;
@@ -39,5 +45,28 @@ class PagoRepositoryImpl implements PagoRepository {
     @Override public List<Pago> listarPorAgricultor(Long agricultorId) {
         return jpa.findByAgricultorId(agricultorId).stream()
                 .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano) {
+        var orden = Sort.by(Sort.Order.desc("fechaPago"), Sort.Order.desc("id"));
+        return aPagina(jpa.pagina(agricultorId, nominaId, PageRequest.of(pagina, tamano, orden)), WorkerMapper::toDomain);
+    }
+
+    private static <E, D> Pagina<D> aPagina(Page<E> p, java.util.function.Function<E, D> f) {
+        return new Pagina<>(p.getContent().stream().map(f).toList(), p.getNumber(), p.getSize(),
+                p.getTotalElements(), p.getTotalPages());
+    }
+
+    private static BigDecimal decimal(Object o) {
+        return o == null ? BigDecimal.ZERO : new BigDecimal(o.toString());
+    }
+
+    @Override
+    public ResumenPagos resumen(Long agricultorId, Long nominaId) {
+        List<Object[]> filas = jpa.resumen(agricultorId, nominaId);
+        Object[] f = filas.isEmpty() ? new Object[3] : filas.get(0);
+        return new ResumenPagos(f[0] == null ? 0 : ((Number) f[0]).longValue(), decimal(f[1]),
+                f[2] == null ? 0 : ((Number) f[2]).longValue());
     }
 }
