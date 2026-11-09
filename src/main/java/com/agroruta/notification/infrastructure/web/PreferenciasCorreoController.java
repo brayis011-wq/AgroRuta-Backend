@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /** Los correos opcionales que quiere recibir quien inició sesión. */
 @RestController
-@RequestMapping("/api/notificaciones/preferencias")
+@RequestMapping("/api/notifications/preferences")
 public class PreferenciasCorreoController {
 
     private final PreferenciasCorreoUseCase preferencias;

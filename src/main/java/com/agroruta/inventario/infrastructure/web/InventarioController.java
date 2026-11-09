@@ -21,7 +21,7 @@ import java.util.List;
  * tocar la bodega de otro agricultor.
  */
 @RestController
-@RequestMapping("/api/inventario")
+@RequestMapping("/api/inventory")
 public class InventarioController {
 
     private final InventarioUseCase inventario;
@@ -38,43 +38,43 @@ public class InventarioController {
     }
 
     /** Insumos bajos, agotados o en negativo (para el inicio) */
-    @GetMapping("/avisos")
+    @GetMapping("/alerts")
     public ResponseEntity<List<StockInsumo>> avisos(Authentication auth) {
         return ResponseEntity.ok(stockBajo.avisos(CurrentUser.id(auth)));
     }
 
-    @GetMapping("/{insumoId}/movimientos")
+    @GetMapping("/{insumoId}/movements")
     public ResponseEntity<List<MovimientoInventario>> movimientos(@PathVariable Long insumoId, Authentication auth) {
         return ResponseEntity.ok(inventario.movimientos(CurrentUser.id(auth), insumoId));
     }
 
-    @PostMapping("/compras")
+    @PostMapping("/purchases")
     public ResponseEntity<MovimientoInventario> compra(@Valid @RequestBody CompraRequest req, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventario.registrarCompra(
                 CurrentUser.id(auth), req.getInsumoId(), req.getCantidad(), req.getUnidad(), req.getCostoTotal(),
                 req.getFecha(), req.getProveedor(), req.getObservaciones()));
     }
 
-    @PostMapping("/ajustes")
+    @PostMapping("/adjustments")
     public ResponseEntity<MovimientoInventario> ajuste(@Valid @RequestBody AjusteRequest req, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventario.ajustarA(
                 CurrentUser.id(auth), req.getInsumoId(), req.getCantidadReal(), req.getUnidad(), req.getObservaciones()));
     }
 
-    @PutMapping("/{insumoId}/minimo")
+    @PutMapping("/{insumoId}/minimum")
     public ResponseEntity<StockInsumo> minimo(@PathVariable Long insumoId, @Valid @RequestBody MinimoRequest req,
                                               Authentication auth) {
         return ResponseEntity.ok(inventario.definirMinimo(CurrentUser.id(auth), insumoId, req.getMinimo(), req.getUnidad()));
     }
 
-    @DeleteMapping("/movimientos/{id}")
+    @DeleteMapping("/movements/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id, Authentication auth) {
         inventario.eliminarMovimiento(CurrentUser.id(auth), id);
         return ResponseEntity.noContent().build();
     }
 
     /** Lo que costaría una cantidad a precio promedio de compra (para la fumigación) */
-    @GetMapping("/costo-estimado")
+    @GetMapping("/estimated-cost")
     public ResponseEntity<InventarioUseCase.CostoEstimado> costoEstimado(@RequestParam Long insumoId,
                                                                         @RequestParam double cantidad,
                                                                         @RequestParam String unidad,

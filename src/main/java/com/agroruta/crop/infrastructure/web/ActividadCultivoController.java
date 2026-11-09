@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/actividades")
+@RequestMapping("/api/activities")
 public class ActividadCultivoController {
 
     private final ActividadCultivoUseCase actividadUseCase;
@@ -52,7 +52,7 @@ public class ActividadCultivoController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/siembra/{siembraId}")
+    @GetMapping("/planting/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<ActividadCultivoResponse>> listarPorSiembra(@PathVariable Long siembraId) {
         return ResponseEntity.ok(actividadUseCase.listarActividadesPorSiembra(siembraId).stream().map(ActividadCultivoResponse::from).toList());

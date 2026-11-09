@@ -40,7 +40,7 @@ class CosechaControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  POST /api/cosechas
+    //  POST /api/harvests
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -61,7 +61,7 @@ class CosechaControllerTest {
                 }
                 """.formatted(FECHA);
 
-        mockMvc.perform(post("/api/cosechas")
+        mockMvc.perform(post("/api/harvests")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -90,7 +90,7 @@ class CosechaControllerTest {
                 }
                 """.formatted(FECHA);
 
-        mockMvc.perform(post("/api/cosechas")
+        mockMvc.perform(post("/api/harvests")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -100,7 +100,7 @@ class CosechaControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/cosechas/siembra/{siembraId}
+    //  GET /api/harvests/planting/{siembraId}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -111,7 +111,7 @@ class CosechaControllerTest {
         );
         when(cosechaUseCase.listarCosechasPorSiembra(10L)).thenReturn(cosechas);
 
-        mockMvc.perform(get("/api/cosechas/siembra/10"))
+        mockMvc.perform(get("/api/harvests/planting/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -124,20 +124,20 @@ class CosechaControllerTest {
     void deberiaRetornarListaVaciaCuandoSiembraSinCosechas() throws Exception {
         when(cosechaUseCase.listarCosechasPorSiembra(99L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/cosechas/siembra/99"))
+        mockMvc.perform(get("/api/harvests/planting/99"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/cosechas/siembra/{siembraId}/total-kg
+    //  GET /api/harvests/planting/{siembraId}/total-kg
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
     void deberiaRetornarTotalKgCosechadoPorSiembra() throws Exception {
         when(cosechaUseCase.totalKgCosechado(10L)).thenReturn(210.5);
 
-        mockMvc.perform(get("/api/cosechas/siembra/10/total-kg"))
+        mockMvc.perform(get("/api/harvests/planting/10/total-kg"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(210.5));
     }
@@ -146,7 +146,7 @@ class CosechaControllerTest {
     void deberiaRetornarCeroKgCuandoNoHayCosechas() throws Exception {
         when(cosechaUseCase.totalKgCosechado(99L)).thenReturn(0.0);
 
-        mockMvc.perform(get("/api/cosechas/siembra/99/total-kg"))
+        mockMvc.perform(get("/api/harvests/planting/99/total-kg"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value(0.0));
     }

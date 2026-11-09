@@ -13,7 +13,7 @@ import java.util.List;
 
 /** Catálogo de cultivos: lectura para agricultores, edición solo para el administrador. */
 @RestController
-@RequestMapping("/api/catalogo-cultivos")
+@RequestMapping("/api/crop-catalog")
 public class CatalogoCultivoController {
 
     private final CatalogoCultivoUseCase catalogo;
@@ -29,32 +29,32 @@ public class CatalogoCultivoController {
     }
 
     /** Todo el catálogo, incluidos los desactivados (pantalla de administración) */
-    @GetMapping("/todos")
+    @GetMapping("/all")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<TipoCultivoResponse>> todos() {
         return ResponseEntity.ok(catalogo.listar(false).stream().map(TipoCultivoResponse::from).toList());
     }
 
-    @PostMapping("/tipos")
+    @PostMapping("/types")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<TipoCultivoResponse> crearTipo(@Valid @RequestBody NombreCatalogoRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(TipoCultivoResponse.from(catalogo.crearTipo(req.nombre())));
     }
 
-    @PostMapping("/tipos/{id}/variedades")
+    @PostMapping("/types/{id}/varieties")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<VariedadCultivoResponse> crearVariedad(@PathVariable Long id,
                                                          @Valid @RequestBody NombreCatalogoRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(VariedadCultivoResponse.from(catalogo.crearVariedad(id, req.nombre())));
     }
 
-    @PatchMapping("/tipos/{id}/estado")
+    @PatchMapping("/types/{id}/status")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<TipoCultivoResponse> estadoTipo(@PathVariable Long id, @RequestParam boolean activo) {
         return ResponseEntity.ok(TipoCultivoResponse.from(catalogo.cambiarEstadoTipo(id, activo)));
     }
 
-    @PatchMapping("/variedades/{id}/estado")
+    @PatchMapping("/varieties/{id}/status")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<VariedadCultivoResponse> estadoVariedad(@PathVariable Long id, @RequestParam boolean activo) {
         return ResponseEntity.ok(VariedadCultivoResponse.from(catalogo.cambiarEstadoVariedad(id, activo)));

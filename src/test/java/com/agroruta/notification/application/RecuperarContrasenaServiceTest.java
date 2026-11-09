@@ -88,7 +88,7 @@ class RecuperarContrasenaServiceTest {
         assertThat(r.getValue().getTokenHash()).isEqualTo(RecuperarContrasenaService.hash(token)).isNotEqualTo(token);
         assertThat(r.getValue().getExpiraEn()).isEqualTo(ahora.plusMinutes(30));
         assertThat(c.getValue().para()).isEqualTo("ana@x.com");
-        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/restablecer?token=" + token);
+        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/reset-password?token=" + token);
     }
 
     @Test

@@ -15,7 +15,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/siembras")
+@RequestMapping("/api/plantings")
 public class SiembraController {
 
     private final SiembraUseCase siembraUseCase;
@@ -39,14 +39,14 @@ public class SiembraController {
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.buscarSiembraPorId(id)));
     }
 
-    @GetMapping("/lote/{loteId}")
+    @GetMapping("/plot/{loteId}")
     @PreAuthorize("@ownership.lotePropio(#loteId, authentication)")
     public ResponseEntity<SiembraResponse> buscarPorLote(@PathVariable Long loteId) {
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.buscarSiembraPorLote(loteId)));
     }
 
     /** Todas las temporadas del lote, la más reciente primero */
-    @GetMapping("/lote/{loteId}/historial")
+    @GetMapping("/plot/{loteId}/history")
     @PreAuthorize("@ownership.lotePropio(#loteId, authentication)")
     public ResponseEntity<List<SiembraResponse>> historialPorLote(@PathVariable Long loteId) {
         return ResponseEntity.ok(siembraUseCase.listarHistorialPorLote(loteId).stream().map(SiembraResponse::from).toList());
@@ -61,7 +61,7 @@ public class SiembraController {
     }
 
     /** ?fecha=2026-11-04 opcional (por defecto hoy) */
-    @PutMapping("/{id}/avanzar-etapa")
+    @PatchMapping("/{id}/advance-stage")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<SiembraResponse> avanzarEtapa(
             @PathVariable Long id,
@@ -69,13 +69,13 @@ public class SiembraController {
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.avanzarEtapa(id, fecha)));
     }
 
-    @PutMapping("/{id}/retroceder-etapa")
+    @PatchMapping("/{id}/revert-stage")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<SiembraResponse> retrocederEtapa(@PathVariable Long id) {
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.retrocederEtapa(id)));
     }
 
-    @PutMapping("/{id}/finalizar")
+    @PatchMapping("/{id}/finish")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<SiembraResponse> finalizar(@PathVariable Long id,
                                              @Valid @RequestBody(required = false) FinalizarSiembraRequest req) {
@@ -84,14 +84,14 @@ public class SiembraController {
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.finalizarSiembra(id, fecha, descanso)));
     }
 
-    @GetMapping("/{id}/etapas")
+    @GetMapping("/{id}/stages")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<List<EtapaSiembraResponse>> etapas(@PathVariable Long id) {
         return ResponseEntity.ok(siembraUseCase.listarEtapas(id).stream().map(EtapaSiembraResponse::from).toList());
     }
 
     // Devuelve siembras de TODOS los usuarios: solo administrador
-    @GetMapping("/estado/{estado}")
+    @GetMapping("/status/{estado}")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<SiembraResponse>> listarPorEstado(@PathVariable String estado) {
         return ResponseEntity.ok(siembraUseCase.listarSiembrasPorEstado(estado).stream().map(SiembraResponse::from).toList());

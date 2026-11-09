@@ -67,17 +67,17 @@ public class AgriculturalInputController {
         return ResponseEntity.ok(result);
     }
 
-    // ── GET /api/agricultural-inputs/todos (solo Administrador) ──────────────
+    // ── GET /api/agricultural-inputs/all (solo Administrador) ──────────────
     /** Catálogo completo, también los inactivos, para poder volver a activarlos. */
-    @GetMapping("/todos")
+    @GetMapping("/all")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<AgriculturalInputResponse>> getAllIncludingInactive() {
         return ResponseEntity.ok(statusUseCase.getAllIncludingInactive().stream()
                 .map(AgriculturalInputWebMapper::toResponse).toList());
     }
 
-    // ── PATCH /api/agricultural-inputs/{id}/estado?activo= (solo Administrador)
-    @PatchMapping("/{id}/estado")
+    // ── PATCH /api/agricultural-inputs/{id}/status?activo= (solo Administrador)
+    @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<AgriculturalInputResponse> changeStatus(
             @PathVariable Long id, @RequestParam boolean activo) {

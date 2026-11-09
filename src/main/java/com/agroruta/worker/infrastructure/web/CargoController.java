@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cargos")
+@RequestMapping("/api/positions")
 public class CargoController {
 
     private final CargoUseCase cargoUseCase;
@@ -56,7 +56,7 @@ public class CargoController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("@ownership.cargoPropio(#id, authentication)")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) {
         cargoUseCase.desactivarCargo(id);

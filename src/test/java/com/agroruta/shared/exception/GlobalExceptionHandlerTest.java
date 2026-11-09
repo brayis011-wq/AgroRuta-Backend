@@ -46,7 +46,7 @@ class GlobalExceptionHandlerTest {
     @BeforeEach
     void setUp() {
         MDC.put(MdcKeys.TRACE_ID, TRACE_ID);
-        when(request.getRequestURI()).thenReturn("/api/v1/agricultores");
+        when(request.getRequestURI()).thenReturn("/api/v1/farmers");
     }
 
     @AfterEach

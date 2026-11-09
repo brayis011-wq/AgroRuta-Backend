@@ -22,14 +22,14 @@ public class CostosCalendarioController {
     }
 
     /** Mano de obra (jornales), insumos, otros costos, ingresos y ganancia de la temporada */
-    @GetMapping("/siembras/{id}/costos")
+    @GetMapping("/plantings/{id}/costs")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<CostosSiembra> costos(@PathVariable Long id) {
         return ResponseEntity.ok(service.costos(id));
     }
 
     /** Eventos de la siembra entre dos fechas (por defecto 30 días atrás y 60 adelante) */
-    @GetMapping("/siembras/{id}/calendario")
+    @GetMapping("/plantings/{id}/calendar")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<List<EventoCalendario>> calendarioSiembra(
             @PathVariable Long id,
@@ -39,7 +39,7 @@ public class CostosCalendarioController {
     }
 
     /** Eventos de todas las siembras de la finca entre dos fechas */
-    @GetMapping("/fincas/{id}/calendario")
+    @GetMapping("/farms/{id}/calendar")
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<List<EventoCalendario>> calendarioFinca(
             @PathVariable Long id,

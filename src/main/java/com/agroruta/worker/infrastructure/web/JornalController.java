@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/jornales")
+@RequestMapping("/api/workdays")
 public class JornalController {
 
     private final JornalUseCase jornalUseCase;
@@ -39,7 +39,7 @@ public class JornalController {
     }
 
     // Cultivos activos de las fincas del usuario, para el selector del formulario de jornal
-    @GetMapping("/cultivos-disponibles")
+    @GetMapping("/available-plantings")
     @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
     public ResponseEntity<List<CultivoPort.CultivoInfo>> cultivosDisponibles(Authentication authentication) {
         return ResponseEntity.ok(jornalUseCase.cultivosDisponibles(CurrentUser.id(authentication)));
@@ -51,7 +51,7 @@ public class JornalController {
         return ResponseEntity.ok(JornalResponse.from(jornalUseCase.buscarPorId(id)));
     }
 
-    @GetMapping("/trabajador/{trabajadorId}")
+    @GetMapping("/worker/{trabajadorId}")
     @PreAuthorize("@ownership.trabajadorPropio(#trabajadorId, authentication)")
     public ResponseEntity<List<JornalResponse>> porTrabajador(
             @PathVariable Long trabajadorId,
@@ -67,7 +67,7 @@ public class JornalController {
 
     // cultivoId es un número libre (no pertenece a un solo usuario): se devuelven
     // solo los jornales de los trabajadores del usuario autenticado.
-    @GetMapping("/cultivo/{cultivoId}")
+    @GetMapping("/planting/{cultivoId}")
     public ResponseEntity<List<JornalResponse>> porCultivo(
             @PathVariable Long cultivoId,
             @RequestParam(required = false) LocalDate inicio,
@@ -81,14 +81,14 @@ public class JornalController {
         return ResponseEntity.ok(respuesta);
     }
 
-    @PatchMapping("/{id}/actividades/{actividadId}")
+    @PatchMapping("/{id}/activities/{actividadId}")
     @PreAuthorize("@ownership.jornalPropio(#id, authentication)")
     public ResponseEntity<JornalResponse> agregarActividad(@PathVariable Long id,
                                                            @PathVariable Long actividadId) {
         return ResponseEntity.ok(JornalResponse.from(jornalUseCase.agregarActividad(id, actividadId)));
     }
 
-    @DeleteMapping("/{id}/actividades/{actividadId}")
+    @DeleteMapping("/{id}/activities/{actividadId}")
     @PreAuthorize("@ownership.jornalPropio(#id, authentication)")
     public ResponseEntity<JornalResponse> removerActividad(@PathVariable Long id,
                                                            @PathVariable Long actividadId) {

@@ -28,18 +28,18 @@ public class AdminController {
         this.adminUseCase = adminUseCase;
     }
 
-    @GetMapping("/resumen")
+    @GetMapping("/summary")
     public ResponseEntity<ResumenAdminResponse> resumen() {
         return ResponseEntity.ok(ResumenAdminResponse.from(adminUseCase.resumen()));
     }
 
-    @GetMapping("/usuarios")
+    @GetMapping("/users")
     public ResponseEntity<List<UsuarioAdminResponse>> usuarios() {
         return ResponseEntity.ok(adminUseCase.listarUsuarios().stream()
                 .map(UsuarioAdminResponse::from).toList());
     }
 
-    @PatchMapping("/usuarios/{id}/estado")
+    @PatchMapping("/users/{id}/status")
     public ResponseEntity<UsuarioAdminResponse> cambiarEstado(
             @PathVariable Long id,
             @Valid @RequestBody CambiarEstadoUsuarioRequest request,
@@ -48,7 +48,7 @@ public class AdminController {
                 adminUseCase.cambiarEstado(CurrentUser.id(authentication), id, request.activo())));
     }
 
-    @PatchMapping("/usuarios/{id}/rol")
+    @PatchMapping("/users/{id}/role")
     public ResponseEntity<UsuarioAdminResponse> cambiarRol(
             @PathVariable Long id,
             @Valid @RequestBody CambiarRolUsuarioRequest request,
@@ -57,13 +57,13 @@ public class AdminController {
                 adminUseCase.cambiarRol(CurrentUser.id(authentication), id, request.rol())));
     }
 
-    @GetMapping("/agricultores")
+    @GetMapping("/farmers")
     public ResponseEntity<List<AgricultorAdminResponse>> agricultores() {
         return ResponseEntity.ok(adminUseCase.listarAgricultores().stream()
                 .map(AgricultorAdminResponse::from).toList());
     }
 
-    @GetMapping("/agricultores/{id}")
+    @GetMapping("/farmers/{id}")
     public ResponseEntity<AgricultorDetalleResponse> agricultor(@PathVariable Long id) {
         return ResponseEntity.ok(AgricultorDetalleResponse.from(adminUseCase.detalleAgricultor(id)));
     }

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/trabajadores")
+@RequestMapping("/api/workers")
 public class TrabajadorController {
 
     private final TrabajadorUseCase trabajadorUseCase;
@@ -34,7 +34,7 @@ public class TrabajadorController {
     }
 
     // ✅ /todos ANTES de /{id} para que Spring no lo confunda con un Long
-    @GetMapping("/todos")
+    @GetMapping("/all")
     public ResponseEntity<List<TrabajadorResponse>> listarTodos(Authentication authentication) {
         List<Trabajador> lista = CurrentUser.esAdmin(authentication)
                 ? trabajadorUseCase.listarTodos()
@@ -76,28 +76,28 @@ public class TrabajadorController {
     }
 
     // Tanto el trabajador como el nuevo cargo deben ser del usuario autenticado
-    @PatchMapping("/{id}/cargo/{cargoId}")
+    @PatchMapping("/{id}/position/{cargoId}")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication) and @ownership.cargoPropio(#cargoId, authentication)")
     public ResponseEntity<TrabajadorResponse> cambiarCargo(@PathVariable Long id,
                                                            @PathVariable Long cargoId) {
         return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.cambiarCargo(id, cargoId)));
     }
 
-    @PatchMapping("/{id}/desactivar")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) {
         trabajadorUseCase.desactivarTrabajador(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/suspender")
+    @PatchMapping("/{id}/suspend")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
     public ResponseEntity<Void> suspender(@PathVariable Long id) {
         trabajadorUseCase.suspenderTrabajador(id);
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/reactivar")
+    @PatchMapping("/{id}/reactivate")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
     public ResponseEntity<Void> reactivar(@PathVariable Long id) {
         trabajadorUseCase.reactivarTrabajador(id);
@@ -106,13 +106,13 @@ public class TrabajadorController {
 
     // ── Acceso al portal del trabajador ──────────────────────────────────────
 
-    @PatchMapping("/{id}/acceso/aprobar")
+    @PatchMapping("/{id}/access/approve")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
     public ResponseEntity<TrabajadorResponse> aprobarAcceso(@PathVariable Long id) {
         return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.aprobarAcceso(id)));
     }
 
-    @PatchMapping("/{id}/acceso/rechazar")
+    @PatchMapping("/{id}/access/reject")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
     public ResponseEntity<TrabajadorResponse> rechazarAcceso(@PathVariable Long id) {
         return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.rechazarAcceso(id)));

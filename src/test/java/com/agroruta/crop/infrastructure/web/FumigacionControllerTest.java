@@ -40,7 +40,7 @@ class FumigacionControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  POST /api/fumigaciones
+    //  POST /api/sprayings
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -67,7 +67,7 @@ class FumigacionControllerTest {
                 }
                 """.formatted(FECHA);
 
-        mockMvc.perform(post("/api/fumigaciones")
+        mockMvc.perform(post("/api/sprayings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -105,7 +105,7 @@ class FumigacionControllerTest {
                 }
                 """.formatted(FECHA);
 
-        mockMvc.perform(post("/api/fumigaciones")
+        mockMvc.perform(post("/api/sprayings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -141,7 +141,7 @@ class FumigacionControllerTest {
                 }
                 """.formatted(FECHA);
 
-        mockMvc.perform(post("/api/fumigaciones")
+        mockMvc.perform(post("/api/sprayings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -152,7 +152,7 @@ class FumigacionControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/fumigaciones/siembra/{siembraId}
+    //  GET /api/sprayings/planting/{siembraId}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -169,7 +169,7 @@ class FumigacionControllerTest {
 
         when(fumigacionUseCase.listarFumigacionesPorSiembra(10L)).thenReturn(List.of(f1, f2));
 
-        mockMvc.perform(get("/api/fumigaciones/siembra/10"))
+        mockMvc.perform(get("/api/sprayings/planting/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -184,7 +184,7 @@ class FumigacionControllerTest {
     void deberiaRetornarListaVaciaCuandoSiembraSinFumigaciones() throws Exception {
         when(fumigacionUseCase.listarFumigacionesPorSiembra(99L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/fumigaciones/siembra/99"))
+        mockMvc.perform(get("/api/sprayings/planting/99"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }

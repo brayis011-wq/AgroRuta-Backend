@@ -41,5 +41,5 @@ jobs:
           done
           curl -fsS --max-time 300 -X POST \
             -H "X-Tarea-Token: $TAREAS_TOKEN" \
-            "$API_URL/api/tareas/alertas-diarias?forzar=$FORZAR"
+            "$API_URL/api/jobs/daily-alerts?forzar=$FORZAR"
           echo

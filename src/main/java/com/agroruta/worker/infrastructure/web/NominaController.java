@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/nominas")
+@RequestMapping("/api/payrolls")
 public class NominaController {
 
     private final NominaUseCase nominaUseCase;
@@ -24,7 +24,7 @@ public class NominaController {
         this.nominaUseCase = nominaUseCase;
     }
 
-    @PostMapping("/generar")
+    @PostMapping("/generate")
     @PreAuthorize("@ownership.trabajadorPropio(#req.trabajadorId, authentication)")
     public ResponseEntity<NominaResponse> generar(@Valid @RequestBody NominaRequest req) {
         NominaResponse response = NominaResponse.from(
@@ -39,7 +39,7 @@ public class NominaController {
         return ResponseEntity.ok(NominaResponse.from(nominaUseCase.buscarPorId(id)));
     }
 
-    @GetMapping("/trabajador/{trabajadorId}")
+    @GetMapping("/worker/{trabajadorId}")
     @PreAuthorize("@ownership.trabajadorPropio(#trabajadorId, authentication)")
     public ResponseEntity<List<NominaResponse>> porTrabajador(@PathVariable Long trabajadorId) {
         List<NominaResponse> nominas = nominaUseCase.listarPorTrabajador(trabajadorId)
@@ -55,13 +55,13 @@ public class NominaController {
         return ResponseEntity.ok(lista.stream().map(NominaResponse::from).toList());
     }
 
-    @PatchMapping("/{id}/aprobar")
+    @PatchMapping("/{id}/approve")
     @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
     public ResponseEntity<NominaResponse> aprobar(@PathVariable Long id) {
         return ResponseEntity.ok(NominaResponse.from(nominaUseCase.aprobarNomina(id)));
     }
 
-    @PatchMapping("/{id}/anular")
+    @PatchMapping("/{id}/void")
     @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
     public ResponseEntity<Void> anular(@PathVariable Long id) {
         nominaUseCase.anularNomina(id);
@@ -69,7 +69,7 @@ public class NominaController {
     }
 
     // ✅ NUEVO — vuelve la nómina a estado BORRADOR
-    @PatchMapping("/{id}/reactivar")
+    @PatchMapping("/{id}/reactivate")
     @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
     public ResponseEntity<NominaResponse> reactivar(@PathVariable Long id) {
         return ResponseEntity.ok(NominaResponse.from(nominaUseCase.reactivarNomina(id)));

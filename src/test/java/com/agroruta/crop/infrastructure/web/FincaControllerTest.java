@@ -38,7 +38,7 @@ class FincaControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  POST /api/fincas
+    //  POST /api/farms
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -56,7 +56,7 @@ class FincaControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/fincas")
+        mockMvc.perform(post("/api/farms")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -68,7 +68,7 @@ class FincaControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/fincas/{id}
+    //  GET /api/farms/{id}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -76,7 +76,7 @@ class FincaControllerTest {
         Finca finca = new Finca(1L, "La Esperanza", "Vereda El Monte", 12.5, 5L);
         when(fincaUseCase.buscarFincaPorId(1L)).thenReturn(finca);
 
-        mockMvc.perform(get("/api/fincas/1"))
+        mockMvc.perform(get("/api/farms/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.nombre").value("La Esperanza"))
@@ -85,7 +85,7 @@ class FincaControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/fincas/agricultor/{agricultorId}
+    //  GET /api/farms/farmer/{agricultorId}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -96,7 +96,7 @@ class FincaControllerTest {
         );
         when(fincaUseCase.listarFincasPorAgricultor(5L)).thenReturn(fincas);
 
-        mockMvc.perform(get("/api/fincas/agricultor/5"))
+        mockMvc.perform(get("/api/farms/farmer/5"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -109,27 +109,27 @@ class FincaControllerTest {
     void deberiaRetornarListaVaciaCuandoAgricultorSinFincas() throws Exception {
         when(fincaUseCase.listarFincasPorAgricultor(99L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/fincas/agricultor/99"))
+        mockMvc.perform(get("/api/farms/farmer/99"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  DELETE /api/fincas/{id}
+    //  DELETE /api/farms/{id}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
     void deberiaEliminarFincaYRetornar204() throws Exception {
         doNothing().when(fincaUseCase).eliminarFinca(1L);
 
-        mockMvc.perform(delete("/api/fincas/1"))
+        mockMvc.perform(delete("/api/farms/1"))
                 .andExpect(status().isNoContent());
 
         verify(fincaUseCase).eliminarFinca(1L);
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  PATCH /api/fincas/{id}/centroide
+    //  PATCH /api/farms/{id}/centroid
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -146,7 +146,7 @@ class FincaControllerTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/fincas/1/centroide")
+        mockMvc.perform(patch("/api/farms/1/centroid")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -169,7 +169,7 @@ class FincaControllerTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/fincas/2/centroide")
+        mockMvc.perform(patch("/api/farms/2/centroid")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())

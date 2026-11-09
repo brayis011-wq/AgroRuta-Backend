@@ -58,7 +58,7 @@ class VerificacionCorreoServiceTest {
         String token = c.getValue().texto().replaceAll("(?s).*token=([A-Za-z0-9_-]+).*", "$1");
         assertThat(v.getValue().getTokenHash()).isEqualTo(RecuperarContrasenaService.hash(token));
         assertThat(v.getValue().getExpiraEn()).isEqualTo(ahora.plusHours(24));
-        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/verificar?token=" + token);
+        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/verify?token=" + token);
         assertThat(c.getValue().asunto()).isEqualTo("Confirma tu correo en AgroRuta");
     }
 

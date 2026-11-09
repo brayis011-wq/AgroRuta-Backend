@@ -19,7 +19,7 @@ import java.util.Map;
  * se duerme sin visitas. No usan sesión: se protegen con la clave TAREAS_TOKEN.
  */
 @RestController
-@RequestMapping("/api/tareas")
+@RequestMapping("/api/jobs")
 public class TareasController {
 
     private final AlertasDiariasUseCase alertas;
@@ -30,7 +30,7 @@ public class TareasController {
         this.token = token == null ? "" : token.trim();
     }
 
-    @PostMapping("/alertas-diarias")
+    @PostMapping("/daily-alerts")
     public ResponseEntity<Map<String, Object>> alertasDiarias(
             @RequestHeader(value = "X-Tarea-Token", required = false) String recibido,
             @RequestParam(defaultValue = "false") boolean forzar) {

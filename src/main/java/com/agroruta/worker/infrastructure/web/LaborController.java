@@ -15,8 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-// /api/labores es la ruta nueva; /api/worker/actividades se mantiene mientras el frontend viejo siga publicado
-@RequestMapping({"/api/labores", "/api/worker/actividades"})
+@RequestMapping("/api/labors")
 public class LaborController {
 
     private final LaborUseCase laborUseCase;
@@ -54,7 +53,7 @@ public class LaborController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/{id}")
+    @PatchMapping("/{id}/deactivate")
     @PreAuthorize("@ownership.laborPropia(#id, authentication)")
     public ResponseEntity<Void> desactivar(@PathVariable Long id) {
         laborUseCase.desactivarActividad(id);

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/cosechas")
+@RequestMapping("/api/harvests")
 public class CosechaController {
 
     private final CosechaUseCase cosechaUseCase;
@@ -51,13 +51,13 @@ public class CosechaController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/siembra/{siembraId}")
+    @GetMapping("/planting/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<CosechaResponse>> listarPorSiembra(@PathVariable Long siembraId) {
         return ResponseEntity.ok(cosechaUseCase.listarCosechasPorSiembra(siembraId).stream().map(CosechaResponse::from).toList());
     }
 
-    @GetMapping("/siembra/{siembraId}/total-kg")
+    @GetMapping("/planting/{siembraId}/total-kg")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<Double> totalKgCosechado(@PathVariable Long siembraId) {
         return ResponseEntity.ok(cosechaUseCase.totalKgCosechado(siembraId));

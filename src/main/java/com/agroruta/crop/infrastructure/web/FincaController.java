@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/fincas")
+@RequestMapping("/api/farms")
 public class FincaController {
 
     private final FincaUseCase fincaUseCase;
@@ -38,7 +38,7 @@ public class FincaController {
         return ResponseEntity.ok(FincaResponse.from(fincaUseCase.buscarFincaPorId(id)));
     }
 
-    @GetMapping("/agricultor/{agricultorId}")
+    @GetMapping("/farmer/{agricultorId}")
     @PreAuthorize("@ownership.esAgricultor(#agricultorId, authentication)")
     public ResponseEntity<List<FincaResponse>> listarPorAgricultor(@PathVariable Long agricultorId) {
         return ResponseEntity.ok(fincaUseCase.listarFincasPorAgricultor(agricultorId).stream().map(FincaResponse::from).toList());
@@ -59,7 +59,7 @@ public class FincaController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/centroide")
+    @PatchMapping("/{id}/centroid")
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<FincaResponse> actualizarCentroide(
             @PathVariable Long id,

@@ -40,7 +40,7 @@ class MensajesCorreoTest {
                 "LABORES PROGRAMADAS", "mañana: Riego — Goteo.",
                 "REENTRADA Y COSECHA", "no entrar hasta el 6 de noviembre (se aplicó Mancozeb)",
                 "ya se puede cosechar", "CLIMA", "lluvia (8 mm): si fumigas",
-                "https://agroruta.app/cultivo/calendario", "https://agroruta.app/configuracion");
+                "https://agroruta.app/crops/calendar", "https://agroruta.app/settings");
     }
 
     @Test
@@ -82,7 +82,7 @@ class MensajesCorreoTest {
 
         assertThat(c.asunto()).isEqualTo("AgroRuta: 3 avisos para hoy");
         assertThat(c.texto()).contains("BODEGA DE INSUMOS", "quedan 750 ml (mínimo 1 L)", "Mancozeb", "se acabó",
-                "en negativo", "https://agroruta.app/cultivo/inventario");
+                "en negativo", "https://agroruta.app/crops/inventory");
     }
 
     @Test

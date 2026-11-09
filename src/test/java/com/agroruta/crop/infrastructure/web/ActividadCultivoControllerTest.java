@@ -55,7 +55,7 @@ class ActividadCultivoControllerTest {
                 }
                 """.formatted(LocalDate.now());
 
-        mockMvc.perform(post("/api/actividades")
+        mockMvc.perform(post("/api/activities")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -71,7 +71,7 @@ class ActividadCultivoControllerTest {
         );
         when(actividadUseCase.listarActividadesPorSiembra(10L)).thenReturn(actividades);
 
-        mockMvc.perform(get("/api/actividades/siembra/10"))
+        mockMvc.perform(get("/api/activities/planting/10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].tipo").value("RIEGO"))

@@ -123,7 +123,7 @@ class AvisosCorreoListenerTest {
     void seguridad() {
         when(usuarios.findByEmail("carlos@x.com")).thenReturn(Optional.of(agricultor));
         listener.cuentaBloqueada(new CuentaBloqueada("carlos@x.com", 15));
-        assertThat(enviado().texto()).contains("15 minutos", "https://agroruta.app/auth/recuperar");
+        assertThat(enviado().texto()).contains("15 minutos", "https://agroruta.app/auth/forgot-password");
 
         org.mockito.Mockito.reset(correo);
         listener.contrasenaCambiada(new ContrasenaCambiada(1L));
