@@ -1,5 +1,8 @@
 package com.agroruta.worker.application.ports.in;
 
+import com.agroruta.worker.domain.ResumenNominas;
+import com.agroruta.worker.domain.EstadoNomina;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.Nomina;
 
 import java.time.LocalDate;
@@ -17,4 +20,7 @@ public interface NominaUseCase {
     List<Nomina> listarPorPeriodo(LocalDate inicio, LocalDate fin);
     List<Nomina> listarTodas();
     List<Nomina> listarTodasDe(Long agricultorId);
+
+    Pagina<Nomina> pagina(Long agricultorId, Long trabajadorId, EstadoNomina estado, int pagina, int tamano);
+    List<ResumenNominas> resumenPorEstado(Long agricultorId, Long trabajadorId);
 }

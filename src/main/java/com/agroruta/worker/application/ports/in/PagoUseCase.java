@@ -1,5 +1,7 @@
 package com.agroruta.worker.application.ports.in;
 
+import com.agroruta.worker.domain.ResumenPagos;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Pago;
 
@@ -18,4 +20,8 @@ public interface PagoUseCase {
 
     List<Pago> listarTodos();
     List<Pago> listarTodosDe(Long agricultorId);
+
+    Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano);
+
+    ResumenPagos resumen(Long agricultorId, Long nominaId);
 }

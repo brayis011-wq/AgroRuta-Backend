@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.domain.ResumenJornales;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.CultivoPort;
@@ -119,5 +121,15 @@ public class JornalService implements JornalUseCase {
 
     public List<CultivoInfo> cultivosDisponibles(Long agricultorId) {
         return cultivoPort.activosDelAgricultor(agricultorId);
+    }
+
+    @Override
+    public Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
+        return jornalRepository.paginaPorTrabajador(trabajadorId, inicio, fin, pagina, tamano);
+    }
+
+    @Override
+    public ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin) {
+        return jornalRepository.resumenPorTrabajador(trabajadorId, inicio, fin);
     }
 }

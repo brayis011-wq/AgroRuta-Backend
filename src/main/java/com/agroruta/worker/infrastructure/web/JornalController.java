@@ -1,5 +1,7 @@
 package com.agroruta.worker.infrastructure.web;
 
+import com.agroruta.worker.domain.ResumenJornales;
+import com.agroruta.shared.util.Pagina;
 import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
@@ -104,5 +106,28 @@ public class JornalController {
                 .filter(j -> j.getTrabajador() != null
                         && userId.equals(j.getTrabajador().getAgricultorId()))
                 .toList();
+    }
+
+    /** Jornales del trabajador por páginas, más recientes primero. inicio y fin son opcionales. */
+    @GetMapping("/worker/{trabajadorId}/page")
+    @PreAuthorize("@ownership.trabajadorPropio(#trabajadorId, authentication)")
+    public ResponseEntity<Pagina<JornalResponse>> paginaPorTrabajador(
+            @PathVariable Long trabajadorId,
+            @RequestParam(required = false) LocalDate inicio,
+            @RequestParam(required = false) LocalDate fin,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        return ResponseEntity.ok(jornalUseCase.paginaPorTrabajador(trabajadorId, inicio, fin,
+                Pagina.numero(page), Pagina.tamano(size)).map(JornalResponse::from));
+    }
+
+    /** Totales de los jornales del trabajador en el mismo rango (los muestra la lista paginada). */
+    @GetMapping("/worker/{trabajadorId}/summary")
+    @PreAuthorize("@ownership.trabajadorPropio(#trabajadorId, authentication)")
+    public ResponseEntity<ResumenJornales> resumenPorTrabajador(
+            @PathVariable Long trabajadorId,
+            @RequestParam(required = false) LocalDate inicio,
+            @RequestParam(required = false) LocalDate fin) {
+        return ResponseEntity.ok(jornalUseCase.resumenPorTrabajador(trabajadorId, inicio, fin));
     }
 }

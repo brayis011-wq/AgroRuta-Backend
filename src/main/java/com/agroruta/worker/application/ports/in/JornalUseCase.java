@@ -1,5 +1,7 @@
 package com.agroruta.worker.application.ports.in;
 
+import com.agroruta.worker.domain.ResumenJornales;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.domain.Jornal;
 
@@ -27,4 +29,7 @@ public interface JornalUseCase {
 
     /** Cultivos activos del agricultor, para elegir en qué cultivo se trabajó. */
     List<CultivoPort.CultivoInfo> cultivosDisponibles(Long agricultorId);
+
+    Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+    ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin);
 }

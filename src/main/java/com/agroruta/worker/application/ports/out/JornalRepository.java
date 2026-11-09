@@ -1,5 +1,7 @@
 package com.agroruta.worker.application.ports.out;
 
+import com.agroruta.worker.domain.ResumenJornales;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.Jornal;
 
 import java.time.LocalDate;
@@ -24,4 +26,10 @@ public interface JornalRepository {
     List<Jornal> buscarDisponiblesParaNomina(Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     void eliminar(Long id);
+
+    /** Jornales del trabajador, más recientes primero. inicio y fin son opcionales. */
+    Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+
+    /** Totales de los jornales del trabajador en el mismo rango de fechas. */
+    ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin);
 }

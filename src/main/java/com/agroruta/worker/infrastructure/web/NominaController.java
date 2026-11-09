@@ -1,5 +1,8 @@
 package com.agroruta.worker.infrastructure.web;
 
+import com.agroruta.worker.domain.ResumenNominas;
+import com.agroruta.worker.domain.EstadoNomina;
+import com.agroruta.shared.util.Pagina;
 import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
@@ -80,5 +83,28 @@ public class NominaController {
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         nominaUseCase.eliminarNomina(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /** Lista de nóminas por páginas, más recientes primero. Filtros opcionales: trabajador y estado. */
+    @GetMapping("/page")
+    public ResponseEntity<Pagina<NominaResponse>> pagina(@RequestParam(required = false) Integer page,
+                                                         @RequestParam(required = false) Integer size,
+                                                         @RequestParam(required = false) Long trabajadorId,
+                                                         @RequestParam(required = false) EstadoNomina estado,
+                                                         Authentication authentication) {
+        return ResponseEntity.ok(nominaUseCase.pagina(dueno(authentication), trabajadorId, estado,
+                Pagina.numero(page), Pagina.tamano(size)).map(NominaResponse::from));
+    }
+
+    /** Cantidad y total por estado (tarjetas de la lista), con el mismo filtro de trabajador. */
+    @GetMapping("/summary")
+    public ResponseEntity<List<ResumenNominas>> resumen(@RequestParam(required = false) Long trabajadorId,
+                                                        Authentication authentication) {
+        return ResponseEntity.ok(nominaUseCase.resumenPorEstado(dueno(authentication), trabajadorId));
+    }
+
+    /** El agricultor solo ve lo suyo; el Administrador ve todo (null). */
+    private static Long dueno(Authentication authentication) {
+        return CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
     }
 }
