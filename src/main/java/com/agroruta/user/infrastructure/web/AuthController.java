@@ -34,10 +34,10 @@ public class AuthController {
         this.cookie = cookie;
     }
 
+    /** No abre sesión: después de registrarse la persona entra por el login (o confirma su correo). */
     @PostMapping("/register")
-    public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegisterRequest request,
-                                                 HttpServletResponse response) {
-        return conSesion(authService.registrar(request), response);
+    public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(authService.registrar(request));
     }
 
     @PostMapping("/login")

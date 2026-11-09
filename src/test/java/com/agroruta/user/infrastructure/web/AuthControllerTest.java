@@ -69,7 +69,7 @@ class AuthControllerTest {
 
             when(authService.registrar(any(RegisterRequest.class))).thenReturn(authResponseBase);
 
-            ResponseEntity<AuthResponse> respuesta = authController.registro(request, response);
+            ResponseEntity<AuthResponse> respuesta = authController.registro(request);
 
             assertNotNull(respuesta);
             assertEquals(HttpStatus.OK,            respuesta.getStatusCode());
@@ -97,7 +97,7 @@ class AuthControllerTest {
 
             when(authService.registrar(any(RegisterRequest.class))).thenReturn(otraRespuesta);
 
-            ResponseEntity<AuthResponse> respuesta = authController.registro(request, response);
+            ResponseEntity<AuthResponse> respuesta = authController.registro(request);
 
             assertEquals(HttpStatus.OK,       respuesta.getStatusCode());
             assertEquals("ana@agroruta.com",  respuesta.getBody().getEmail());
@@ -200,12 +200,11 @@ class AuthControllerTest {
         }
 
         @Test
-        @DisplayName("registro con correo por confirmar no abre sesión")
+        @DisplayName("registro no abre sesión: la persona entra después por el login")
         void registroPendienteSinCookie() {
-            AuthResponse pendiente = new AuthResponse(5L, null, "a@x.com", "Ana", "Agricultor", true);
-            when(authService.registrar(any(RegisterRequest.class))).thenReturn(pendiente);
+            when(authService.registrar(any(RegisterRequest.class))).thenReturn(authResponseBase);
 
-            authController.registro(new RegisterRequest(), response);
+            authController.registro(new RegisterRequest());
 
             assertNull(response.getHeader("Set-Cookie"));
             verifyNoInteractions(sesiones);
