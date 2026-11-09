@@ -53,6 +53,8 @@ class ProfileControllerTest {
     @Mock private ChangePasswordUseCase cambiarPasswordUseCase;
     @Mock private com.agroruta.shared.security.JwtService jwtService;
     @Mock private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
+    @Mock private com.agroruta.user.application.ports.in.SesionUseCase sesiones;
+    @Mock private com.agroruta.shared.security.CookieSesion cookie;
 
     @InjectMocks
     private ProfileController profileController;
@@ -219,6 +221,7 @@ class ProfileControllerTest {
                     .cambiarPassword(anyLong(), anyString(), anyString());
             when(userDetailsService.loadUserByUsername(USER_EMAIL)).thenReturn(userDetails);
             when(jwtService.generateToken(userDetails)).thenReturn("token-nuevo");
+            when(sesiones.abrir(1L)).thenReturn("sesion-nueva");
 
             mockMvc.perform(patch(PASSWORD_URL)
                             .contentType(MediaType.APPLICATION_JSON)
@@ -227,6 +230,8 @@ class ProfileControllerTest {
                     .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.token").value("token-nuevo"));
 
             verify(cambiarPasswordUseCase).cambiarPassword(1L, "secret123", "nuevoSecret456");
+            // Las sesiones viejas se cerraron: quien cambió la contraseña recibe una cookie nueva
+            verify(cookie).escribir(any(), eq("sesion-nueva"));
         }
 
         @Test
