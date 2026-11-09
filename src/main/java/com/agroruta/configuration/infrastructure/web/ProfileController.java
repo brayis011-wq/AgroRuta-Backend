@@ -1,5 +1,9 @@
 package com.agroruta.configuration.infrastructure.web;
 
+import com.agroruta.shared.security.CookieSesion;
+import com.agroruta.user.application.ports.in.SesionUseCase;
+import jakarta.servlet.http.HttpServletResponse;
+
 import com.agroruta.shared.security.JwtService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import java.util.Map;
@@ -25,17 +29,23 @@ public class ProfileController {
     private final ChangePasswordUseCase cambiarPasswordUseCase;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final SesionUseCase sesiones;
+    private final CookieSesion cookie;
 
     public ProfileController(GetProfileUseCase obtenerPerfilUseCase,
                              UpdateProfileUseCase actualizarPerfilUseCase,
                              ChangePasswordUseCase cambiarPasswordUseCase,
                              JwtService jwtService,
-                             UserDetailsService userDetailsService) {
+                             UserDetailsService userDetailsService,
+                             SesionUseCase sesiones,
+                             CookieSesion cookie) {
         this.obtenerPerfilUseCase    = obtenerPerfilUseCase;
         this.actualizarPerfilUseCase = actualizarPerfilUseCase;
         this.cambiarPasswordUseCase  = cambiarPasswordUseCase;
         this.jwtService              = jwtService;
         this.userDetailsService      = userDetailsService;
+        this.sesiones                = sesiones;
+        this.cookie                  = cookie;
     }
 
     @GetMapping
@@ -69,12 +79,13 @@ public class ProfileController {
 
     /**
      * Cambia la contraseña. Las sesiones anteriores quedan cerradas (ver JwtService),
-     * así que se devuelve un token nuevo para que quien la cambió siga conectado.
+     * así que se devuelve un token nuevo, y una cookie de sesión nueva, para que quien la cambió siga conectado.
      */
     @PatchMapping("/password")
     public ResponseEntity<Map<String, String>> cambiarPassword(
             @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody ChangePasswordRequest request) {
+            @Valid @RequestBody ChangePasswordRequest request,
+            HttpServletResponse response) {
 
         Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(
                 userDetails.getUsername()
@@ -86,6 +97,7 @@ public class ProfileController {
                 request.getNuevaPassword()
         );
 
+        cookie.escribir(response, sesiones.abrir(perfil.getId()));
         UserDetails actualizado = userDetailsService.loadUserByUsername(userDetails.getUsername());
         return ResponseEntity.ok(Map.of("token", jwtService.generateToken(actualizado)));
     }

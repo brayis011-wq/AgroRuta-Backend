@@ -1,6 +1,10 @@
 package com.agroruta.user.infrastructure.web;
 
+import com.agroruta.shared.exception.SesionInvalidaException;
+import com.agroruta.shared.security.CookieSesion;
 import com.agroruta.user.application.AuthService;
+import com.agroruta.user.application.ports.in.SesionUseCase;
+import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.infrastructure.web.dto.LoginRequest;
 import com.agroruta.user.infrastructure.web.dto.RegisterRequest;
@@ -9,11 +13,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,13 +30,18 @@ class AuthControllerTest {
     @Mock
     private AuthService authService;
 
-    @InjectMocks
+    @Mock
+    private SesionUseCase sesiones;
+
     private AuthController authController;
+    private MockHttpServletResponse response;
 
     private AuthResponse authResponseBase;
 
     @BeforeEach
     void setUp() {
+        authController = new AuthController(authService, sesiones, new CookieSesion(true, 30));
+        response = new MockHttpServletResponse();
         authResponseBase = new AuthResponse(
                 1L,
                 "jwt.token.ejemplo",
@@ -113,7 +122,7 @@ class AuthControllerTest {
 
             when(authService.login(any(LoginRequest.class))).thenReturn(authResponseBase);
 
-            ResponseEntity<AuthResponse> respuesta = authController.login(request);
+            ResponseEntity<AuthResponse> respuesta = authController.login(request, response);
 
             assertNotNull(respuesta);
             assertEquals(HttpStatus.OK,        respuesta.getStatusCode());
@@ -139,7 +148,7 @@ class AuthControllerTest {
 
             when(authService.login(any(LoginRequest.class))).thenReturn(otraRespuesta);
 
-            ResponseEntity<AuthResponse> respuesta = authController.login(request);
+            ResponseEntity<AuthResponse> respuesta = authController.login(request, response);
 
             assertEquals(HttpStatus.OK,      respuesta.getStatusCode());
             assertEquals("otro.jwt.token",   respuesta.getBody().getToken());
@@ -152,7 +161,7 @@ class AuthControllerTest {
     @DisplayName("verificar() confirma el correo y devuelve la sesión")
     void verificarDevuelveSesion() {
         when(authService.verificarCorreo("tok")).thenReturn(authResponseBase);
-        var r = authController.verificar(new com.agroruta.user.infrastructure.web.dto.VerificarRequest("tok"));
+        var r = authController.verificar(new com.agroruta.user.infrastructure.web.dto.VerificarRequest("tok"), response);
         org.junit.jupiter.api.Assertions.assertEquals(200, r.getStatusCode().value());
         org.junit.jupiter.api.Assertions.assertEquals(authResponseBase, r.getBody());
     }
@@ -164,5 +173,73 @@ class AuthControllerTest {
                 new com.agroruta.user.infrastructure.web.dto.ReenviarVerificacionRequest("ana@x.com"));
         org.junit.jupiter.api.Assertions.assertEquals(200, r.getStatusCode().value());
         verify(authService).reenviarVerificacion("ana@x.com");
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Cookie de sesión (refresh token)
+    // ══════════════════════════════════════════════════════════════════════
+    @Nested
+    @DisplayName("cookie de sesión")
+    class CookieDeSesion {
+
+        @Test
+        @DisplayName("login abre una sesión y la manda en una cookie httpOnly, Strict, solo para /api/auth")
+        void loginEscribeLaCookie() {
+            when(authService.login(any(LoginRequest.class))).thenReturn(authResponseBase);
+            when(sesiones.abrir(1L)).thenReturn("refresh-1");
+
+            authController.login(new LoginRequest(), response);
+
+            String cookie = response.getHeader("Set-Cookie");
+            assertNotNull(cookie);
+            assertTrue(cookie.startsWith("agroruta_sesion=refresh-1"));
+            assertTrue(cookie.contains("HttpOnly"));
+            assertTrue(cookie.contains("Secure"));
+            assertTrue(cookie.contains("SameSite=Strict"));
+            assertTrue(cookie.contains("Path=/api/auth"));
+        }
+
+        @Test
+        @DisplayName("registro no abre sesión: la persona entra después por el login")
+        void registroPendienteSinCookie() {
+            when(authService.registrar(any(RegisterRequest.class))).thenReturn(authResponseBase);
+
+            authController.registro(new RegisterRequest());
+
+            assertNull(response.getHeader("Set-Cookie"));
+            verifyNoInteractions(sesiones);
+        }
+
+        @Test
+        @DisplayName("refresh cambia la cookie y devuelve un token de acceso nuevo")
+        void refreshRenueva() {
+            Usuario usuario = new Usuario();
+            when(sesiones.renovar("viejo")).thenReturn(new SesionUseCase.Renovacion(usuario, "nuevo"));
+            when(authService.respuestaDeSesion(usuario)).thenReturn(authResponseBase);
+
+            ResponseEntity<AuthResponse> r = authController.renovar("viejo", response);
+
+            assertEquals(authResponseBase, r.getBody());
+            assertTrue(response.getHeader("Set-Cookie").startsWith("agroruta_sesion=nuevo"));
+        }
+
+        @Test
+        @DisplayName("refresh con una cookie que no sirve la borra y responde 401")
+        void refreshInvalidoBorraLaCookie() {
+            when(sesiones.renovar("robado")).thenThrow(new SesionInvalidaException("Tu sesión terminó."));
+
+            assertThrows(SesionInvalidaException.class, () -> authController.renovar("robado", response));
+            assertTrue(response.getHeader("Set-Cookie").contains("Max-Age=0"));
+        }
+
+        @Test
+        @DisplayName("logout cierra la sesión y borra la cookie")
+        void logoutCierra() {
+            ResponseEntity<Void> r = authController.logout("tok", response);
+
+            assertEquals(HttpStatus.NO_CONTENT, r.getStatusCode());
+            verify(sesiones).cerrar("tok");
+            assertTrue(response.getHeader("Set-Cookie").contains("Max-Age=0"));
+        }
     }
 }

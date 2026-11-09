@@ -301,6 +301,12 @@ public class GlobalExceptionHandler {
                 "Tu cuenta está desactivada. Contacta al administrador.");
     }
 
+    // ── 401: la cookie de sesión no sirve (vencida, revocada o reutilizada) ─────
+    @ExceptionHandler(SesionInvalidaException.class)
+    public ResponseEntity<ErrorResponse> handleSesionInvalida(SesionInvalidaException ex) {
+        return simple(HttpStatus.UNAUTHORIZED, ErrorCode.AUTHENTICATION_FAILED, ex.getMessage());
+    }
+
     // ── 401: credenciales inválidas / usuario deshabilitado ──────────────────
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ErrorResponse> handleAuthentication(

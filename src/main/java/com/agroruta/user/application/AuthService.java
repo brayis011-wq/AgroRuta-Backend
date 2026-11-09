@@ -130,12 +130,12 @@ public class AuthService {
             throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED,
                     "Confirma tu correo para entrar: abre el enlace que te enviamos a " + usuario.getEmail() + ".");
         }
-        return sesion(usuario);
+        return respuestaDeSesion(usuario);
     }
 
     /** El enlace del correo de confirmación: confirma la cuenta y deja la sesión iniciada. */
     public AuthResponse verificarCorreo(String token) {
-        return sesion(verificacion.confirmar(token));
+        return respuestaDeSesion(verificacion.confirmar(token));
     }
 
     /** Vuelve a mandar el enlace de confirmación. Responde igual exista o no la cuenta. */
@@ -143,7 +143,8 @@ public class AuthService {
         verificacion.reenviar(normalizarEmail(email));
     }
 
-    private AuthResponse sesion(Usuario usuario) {
+    /** Respuesta con un token de acceso nuevo para el usuario (login, confirmación o renovación). */
+    public AuthResponse respuestaDeSesion(Usuario usuario) {
         CustomUserDetails userDetails = new CustomUserDetails(usuario);
         String token = tokenPort.generateToken(userDetails);
         return new AuthResponse(
