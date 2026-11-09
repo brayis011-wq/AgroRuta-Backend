@@ -1,6 +1,6 @@
 package com.agroruta.weather.infrastructure.web;
 
-import com.agroruta.weather.application.port.in.WeatherUseCase;
+import com.agroruta.weather.application.ports.in.WeatherUseCase;
 import com.agroruta.weather.domain.Weather;
 import com.agroruta.weather.infrastructure.web.dto.WeatherResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/weather")
+@RequestMapping("/api/weather")
 @RequiredArgsConstructor
 public class WeatherController {
 

@@ -2,7 +2,7 @@ package com.agroruta.worker.infrastructure.adapter;
 
 import com.agroruta.crop.application.ports.out.ManoObraPort;
 import com.agroruta.worker.domain.Jornal;
-import com.agroruta.worker.domain.JornalRepository;
+import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.domain.Trabajador;
 import org.springframework.stereotype.Component;
 

@@ -20,7 +20,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/registro")
+    @PostMapping("/register")
     public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(authService.registrar(request));
     }
@@ -31,13 +31,13 @@ public class AuthController {
     }
 
     /** Enlace del correo de confirmación: confirma la cuenta e inicia sesión */
-    @PostMapping("/verificar")
+    @PostMapping("/verify")
     public ResponseEntity<AuthResponse> verificar(@Valid @RequestBody VerificarRequest request) {
         return ResponseEntity.ok(authService.verificarCorreo(request.token()));
     }
 
     /** Siempre responde lo mismo, exista o no la cuenta */
-    @PostMapping("/reenviar-verificacion")
+    @PostMapping("/resend-verification")
     public ResponseEntity<java.util.Map<String, String>> reenviarVerificacion(@Valid @RequestBody ReenviarVerificacionRequest request) {
         authService.reenviarVerificacion(request.email());
         return ResponseEntity.ok(java.util.Map.of("mensaje",

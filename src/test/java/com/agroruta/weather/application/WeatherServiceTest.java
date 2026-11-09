@@ -1,6 +1,6 @@
 package com.agroruta.weather.application;
 
-import com.agroruta.weather.application.port.out.WeatherApiPort;
+import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.Weather;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

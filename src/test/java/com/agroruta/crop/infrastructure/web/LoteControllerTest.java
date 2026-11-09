@@ -39,7 +39,7 @@ class LoteControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  POST /api/lotes
+    //  POST /api/plots
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -56,7 +56,7 @@ class LoteControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/lotes")
+        mockMvc.perform(post("/api/plots")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -68,7 +68,7 @@ class LoteControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/lotes/{id}
+    //  GET /api/plots/{id}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -76,7 +76,7 @@ class LoteControllerTest {
         Lote lote = new Lote(1L, "Lote A", 3.5, 2L);
         when(loteUseCase.buscarLotePorId(1L)).thenReturn(lote);
 
-        mockMvc.perform(get("/api/lotes/1"))
+        mockMvc.perform(get("/api/plots/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.nombre").value("Lote A"))
@@ -91,14 +91,14 @@ class LoteControllerTest {
         lote.iniciarCultivo();
         when(loteUseCase.buscarLotePorId(2L)).thenReturn(lote);
 
-        mockMvc.perform(get("/api/lotes/2"))
+        mockMvc.perform(get("/api/plots/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(2L))
                 .andExpect(jsonPath("$.estado").value("EN_CULTIVO"));
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/lotes/finca/{fincaId}
+    //  GET /api/plots/farm/{fincaId}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -109,7 +109,7 @@ class LoteControllerTest {
 
         when(loteUseCase.listarLotesPorFinca(2L)).thenReturn(List.of(lote1, lote2));
 
-        mockMvc.perform(get("/api/lotes/finca/2"))
+        mockMvc.perform(get("/api/plots/farm/2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -124,27 +124,27 @@ class LoteControllerTest {
     void deberiaRetornarListaVaciaCuandoFincaSinLotes() throws Exception {
         when(loteUseCase.listarLotesPorFinca(99L)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/lotes/finca/99"))
+        mockMvc.perform(get("/api/plots/farm/99"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  DELETE /api/lotes/{id}
+    //  DELETE /api/plots/{id}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
     void deberiaEliminarLoteYRetornar204() throws Exception {
         doNothing().when(loteUseCase).eliminarLote(1L);
 
-        mockMvc.perform(delete("/api/lotes/1"))
+        mockMvc.perform(delete("/api/plots/1"))
                 .andExpect(status().isNoContent());
 
         verify(loteUseCase).eliminarLote(1L);
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  PATCH /api/lotes/{id}/geometria
+    //  PATCH /api/plots/{id}/geometry
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -166,7 +166,7 @@ class LoteControllerTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/lotes/1/geometria")
+        mockMvc.perform(patch("/api/plots/1/geometry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -195,7 +195,7 @@ class LoteControllerTest {
                 }
                 """;
 
-        mockMvc.perform(patch("/api/lotes/3/geometria")
+        mockMvc.perform(patch("/api/plots/3/geometry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())

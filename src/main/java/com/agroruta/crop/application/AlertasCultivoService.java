@@ -1,16 +1,16 @@
 package com.agroruta.crop.application;
 
 import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
-import com.agroruta.crop.domain.ActividadCultivoRepository;
+import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.crop.domain.AlertasCultivo;
 import com.agroruta.crop.domain.CalendarioCultivo.DatosSiembra;
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.domain.FincaRepository;
-import com.agroruta.crop.domain.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.domain.LoteRepository;
-import com.agroruta.crop.domain.SiembraRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

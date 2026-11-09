@@ -2,7 +2,7 @@ package com.agroruta.worker.infrastructure.persistence;
 
 
 import com.agroruta.worker.domain.Cargo;
-import com.agroruta.worker.domain.CargoRepository;
+import com.agroruta.worker.application.ports.out.CargoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package com.agroruta.notification.infrastructure.persistence;
 
 import com.agroruta.notification.domain.VerificacionCorreo;
-import com.agroruta.notification.domain.VerificacionCorreoRepository;
+import com.agroruta.notification.application.ports.out.VerificacionCorreoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

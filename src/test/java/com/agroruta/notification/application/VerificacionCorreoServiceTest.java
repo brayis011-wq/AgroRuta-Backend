@@ -2,11 +2,11 @@ package com.agroruta.notification.application;
 
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.VerificacionCorreo;
-import com.agroruta.notification.domain.VerificacionCorreoRepository;
+import com.agroruta.notification.application.ports.out.VerificacionCorreoRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ class VerificacionCorreoServiceTest {
         String token = c.getValue().texto().replaceAll("(?s).*token=([A-Za-z0-9_-]+).*", "$1");
         assertThat(v.getValue().getTokenHash()).isEqualTo(RecuperarContrasenaService.hash(token));
         assertThat(v.getValue().getExpiraEn()).isEqualTo(ahora.plusHours(24));
-        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/verificar?token=" + token);
+        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/verify?token=" + token);
         assertThat(c.getValue().asunto()).isEqualTo("Confirma tu correo en AgroRuta");
     }
 

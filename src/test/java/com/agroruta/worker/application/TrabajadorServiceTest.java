@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.application.ports.out.CargoRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;

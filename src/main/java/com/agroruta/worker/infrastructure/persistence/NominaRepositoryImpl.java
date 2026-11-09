@@ -3,7 +3,7 @@ package com.agroruta.worker.infrastructure.persistence;
 
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.Nomina;
-import com.agroruta.worker.domain.NominaRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;

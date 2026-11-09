@@ -6,7 +6,7 @@ import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.GestionarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

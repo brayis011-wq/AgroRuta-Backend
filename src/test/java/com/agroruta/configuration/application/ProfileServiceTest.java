@@ -1,7 +1,7 @@
 package com.agroruta.configuration.application;
 
 import com.agroruta.configuration.domain.Perfil;
-import com.agroruta.configuration.domain.ProfileRepository;
+import com.agroruta.configuration.application.ports.out.ProfileRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;

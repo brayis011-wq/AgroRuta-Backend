@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/lotes")
+@RequestMapping("/api/plots")
 public class LoteController {
 
     private final LoteUseCase loteUseCase;
@@ -36,7 +36,7 @@ public class LoteController {
         return ResponseEntity.ok(LoteResponse.from(loteUseCase.buscarLotePorId(id)));
     }
 
-    @GetMapping("/finca/{fincaId}")
+    @GetMapping("/farm/{fincaId}")
     @PreAuthorize("@ownership.fincaPropia(#fincaId, authentication)")
     public ResponseEntity<List<LoteResponse>> listarPorFinca(@PathVariable Long fincaId) {
         return ResponseEntity.ok(loteUseCase.listarLotesPorFinca(fincaId).stream().map(LoteResponse::from).toList());
@@ -50,7 +50,7 @@ public class LoteController {
     }
 
     /** Disponible o en descanso, cuando el lote no tiene siembra en curso */
-    @PatchMapping("/{id}/estado")
+    @PatchMapping("/{id}/status")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
     public ResponseEntity<LoteResponse> cambiarEstado(@PathVariable Long id,
                                               @Valid @RequestBody CambiarEstadoLoteRequest req) {
@@ -64,7 +64,7 @@ public class LoteController {
         return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping("/{id}/geometria")
+    @PatchMapping("/{id}/geometry")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
     public ResponseEntity<LoteResponse> actualizarGeometria(
             @PathVariable Long id,

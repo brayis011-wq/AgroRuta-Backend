@@ -191,7 +191,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
-    // ── Parámetro con tipo inválido (p. ej. /api/fincas/abc) ─────────────────
+    // ── Parámetro con tipo inválido (p. ej. /api/farms/abc) ─────────────────
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleTypeMismatch(
             MethodArgumentTypeMismatchException ex, HttpServletRequest req) {

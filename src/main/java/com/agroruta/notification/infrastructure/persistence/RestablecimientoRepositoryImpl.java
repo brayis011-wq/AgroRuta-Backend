@@ -1,7 +1,7 @@
 package com.agroruta.notification.infrastructure.persistence;
 
 import com.agroruta.notification.domain.RestablecimientoContrasena;
-import com.agroruta.notification.domain.RestablecimientoRepository;
+import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

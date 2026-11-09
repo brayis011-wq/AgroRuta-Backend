@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("ProfileController - Pruebas Unitarias")
 class ProfileControllerTest {
 
-    private static final String BASE_URL     = "/api/configuration/perfil";
+    private static final String BASE_URL     = "/api/configuration/profile";
     private static final String PASSWORD_URL = BASE_URL + "/password";
     private static final String USER_EMAIL   = "ana@agroruta.com";
 
@@ -96,7 +96,7 @@ class ProfileControllerTest {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // GET /api/configuration/perfil
+    // GET /api/configuration/profile
     // ═════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("obtener()")
@@ -130,7 +130,7 @@ class ProfileControllerTest {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // PUT /api/configuration/perfil
+    // PUT /api/configuration/profile
     // ═════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("actualizar()")
@@ -198,7 +198,7 @@ class ProfileControllerTest {
     }
 
     // ═════════════════════════════════════════════════════════════════════════
-    // PATCH /api/configuration/perfil/password
+    // PATCH /api/configuration/profile/password
     // ═════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("cambiarPassword()")

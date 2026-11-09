@@ -1,8 +1,8 @@
 package com.agroruta.notification.application;
 
 import com.agroruta.crop.domain.AlertaCultivo;
-import com.agroruta.inventario.domain.StockInsumo;
-import com.agroruta.inventario.domain.UnidadBase;
+import com.agroruta.inventory.domain.StockInsumo;
+import com.agroruta.inventory.domain.UnidadBase;
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.PlantillaCorreo;
 import com.agroruta.weather.domain.Pronostico;
@@ -51,7 +51,7 @@ public class MensajesCorreo {
         return PlantillaCorreo.con("Crea una contraseña nueva")
                 .resumen("Usa este enlace en los próximos " + minutos + " minutos.")
                 .parrafo("Hola " + primerNombre(nombre) + ", recibimos una solicitud para cambiar la contraseña de tu cuenta.")
-                .boton("Crear contraseña nueva", url("/auth/restablecer?token=" + token))
+                .boton("Crear contraseña nueva", url("/auth/reset-password?token=" + token))
                 .parrafo("El enlace sirve una sola vez y vence en " + minutos + " minutos.")
                 .parrafo("Si no pediste el cambio, ignora este correo: tu contraseña sigue igual.")
                 .pie(PIE_CUENTA)
@@ -63,7 +63,7 @@ public class MensajesCorreo {
                 .resumen("Un paso más para empezar a usar AgroRuta.")
                 .parrafo("Hola " + primerNombre(nombre) + ", gracias por registrarte en AgroRuta.")
                 .parrafo("Confirma que este correo es tuyo para activar tu cuenta:")
-                .boton("Confirmar mi correo", url("/auth/verificar?token=" + token))
+                .boton("Confirmar mi correo", url("/auth/verify?token=" + token))
                 .parrafo("El enlace vence en " + horas + " horas. Si no creaste esta cuenta, ignora este correo.")
                 .pie(PIE_CUENTA)
                 .para(email, "Confirma tu correo en AgroRuta");
@@ -76,7 +76,7 @@ public class MensajesCorreo {
                         + cuando.format(HORA) + ".")
                 .parrafo("Por seguridad cerramos las sesiones abiertas en otros equipos.")
                 .aviso(PIE_NO_FUISTE + " Puedes crear una nueva desde el enlace de abajo.")
-                .boton("Recuperar mi cuenta", url("/auth/recuperar"))
+                .boton("Recuperar mi cuenta", url("/auth/forgot-password"))
                 .pie(PIE_CUENTA)
                 .para(email, "Tu contraseña de AgroRuta cambió");
     }
@@ -87,7 +87,7 @@ public class MensajesCorreo {
                 .parrafo("Hola " + primerNombre(nombre) + ", alguien intentó entrar a tu cuenta varias veces con una "
                         + "contraseña equivocada, así que pausamos el inicio de sesión " + minutos + " minutos.")
                 .parrafo("Si fuiste tú y no recuerdas la contraseña, crea una nueva:")
-                .boton("Crear contraseña nueva", url("/auth/recuperar"))
+                .boton("Crear contraseña nueva", url("/auth/forgot-password"))
                 .aviso("Si no fuiste tú, tu contraseña sigue protegida. Te recomendamos cambiarla por una que no uses en otros sitios.")
                 .pie(PIE_CUENTA)
                 .para(email, "Intentos fallidos en tu cuenta de AgroRuta");
@@ -103,7 +103,7 @@ public class MensajesCorreo {
                 .parrafo("Si la apruebas, podrá ver sus jornales, nóminas y pagos (solo los suyos).")
                 .boton("Revisar la solicitud", url("/worker"))
                 .pie(PIE_CUENTA)
-                .pie("Puedes dejar de recibir estos avisos en Configuración: " + url("/configuracion"))
+                .pie("Puedes dejar de recibir estos avisos en Configuración: " + url("/settings"))
                 .para(email, "Solicitud de acceso de " + trabajador);
     }
 
@@ -122,13 +122,13 @@ public class MensajesCorreo {
                     .resumen(quien + " aprobó tu acceso.")
                     .parrafo("Hola " + primerNombre(nombre) + ", " + quien + " aprobó tu acceso.")
                     .parrafo("Desde ahora ves tus jornales, nóminas y pagos en AgroRuta.")
-                    .boton("Entrar al portal", url("/portal/inicio"))
+                    .boton("Entrar al portal", url("/portal/home"))
                 : PlantillaCorreo.con("Tu solicitud de acceso no fue aprobada")
                     .resumen("Revisa la cédula o habla con tu empleador.")
                     .parrafo("Hola " + primerNombre(nombre) + ", " + quien + " no aprobó tu solicitud de acceso al portal.")
                     .parrafo("Si crees que es un error, revisa que la cédula sea la correcta y vuelve a enviarla, "
                             + "o habla con tu empleador.")
-                    .boton("Ver mi solicitud", url("/portal/inicio"));
+                    .boton("Ver mi solicitud", url("/portal/home"));
         return p.pie(PIE_CUENTA).para(email, aprobado ? "Tu acceso a AgroRuta fue aprobado" : "Tu solicitud de acceso en AgroRuta");
     }
 
@@ -143,7 +143,7 @@ public class MensajesCorreo {
                         new String[]{"Valor:", valor},
                         new String[]{"Forma de pago:", metodoPago(metodo)},
                         new String[]{"Fecha:", fechaPago.format(DIA_CORTO)}))
-                .boton("Ver mis pagos", url("/portal/pagos"))
+                .boton("Ver mis pagos", url("/portal/payments"))
                 .pie(PIE_CUENTA)
                 .para(email, "Pago de nómina: " + valor);
     }
@@ -212,9 +212,9 @@ public class MensajesCorreo {
         if (!bodega.isEmpty()) p.seccion("Bodega de insumos").lista(bodega);
         boolean soloBodega = total == bodega.size();
         return p.boton(soloBodega ? "Abrir el inventario" : "Abrir el calendario",
-                        url(soloBodega ? "/cultivo/inventario" : "/cultivo/calendario"))
+                        url(soloBodega ? "/crops/inventory" : "/crops/calendar"))
                 .pie(PIE_CUENTA)
-                .pie("Puedes dejar de recibir este resumen en Configuración: " + url("/configuracion"))
+                .pie("Puedes dejar de recibir este resumen en Configuración: " + url("/settings"))
                 .para(email, "AgroRuta: " + (total == 1 ? "1 aviso" : total + " avisos") + " para hoy");
     }
 

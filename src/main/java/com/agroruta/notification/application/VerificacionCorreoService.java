@@ -1,12 +1,12 @@
 package com.agroruta.notification.application;
 
 import com.agroruta.notification.domain.VerificacionCorreo;
-import com.agroruta.notification.domain.VerificacionCorreoRepository;
+import com.agroruta.notification.application.ports.out.VerificacionCorreoRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.user.application.ports.out.VerificacionCorreoPort;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

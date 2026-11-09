@@ -1,7 +1,7 @@
 package com.agroruta.backup.infrastructure.storage;
 
 import com.agroruta.backup.application.ports.out.BackupStoragePort;
-import com.agroruta.backup.config.BackupProperties;
+import com.agroruta.backup.infrastructure.config.BackupProperties;
 import com.agroruta.backup.domain.Backup;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;

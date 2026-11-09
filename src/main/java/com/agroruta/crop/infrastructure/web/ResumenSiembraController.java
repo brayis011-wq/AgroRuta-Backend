@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/siembras")
+@RequestMapping("/api/plantings")
 public class ResumenSiembraController {
 
     private final ResumenSiembraService service;
@@ -20,7 +20,7 @@ public class ResumenSiembraController {
     }
 
     /** Rendimiento, cosechas por semana, carencia y reentrada vigentes y temporadas anteriores */
-    @GetMapping("/{id}/resumen")
+    @GetMapping("/{id}/summary")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<ResumenSiembra> resumen(@PathVariable Long id) {
         return ResponseEntity.ok(service.resumen(id));

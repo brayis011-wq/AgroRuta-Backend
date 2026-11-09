@@ -11,14 +11,14 @@ import com.agroruta.shared.evento.CuentaBloqueada;
 import com.agroruta.shared.evento.PagoRegistrado;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
-import com.agroruta.worker.domain.PagoRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -123,7 +123,7 @@ class AvisosCorreoListenerTest {
     void seguridad() {
         when(usuarios.findByEmail("carlos@x.com")).thenReturn(Optional.of(agricultor));
         listener.cuentaBloqueada(new CuentaBloqueada("carlos@x.com", 15));
-        assertThat(enviado().texto()).contains("15 minutos", "https://agroruta.app/auth/recuperar");
+        assertThat(enviado().texto()).contains("15 minutos", "https://agroruta.app/auth/forgot-password");
 
         org.mockito.Mockito.reset(correo);
         listener.contrasenaCambiada(new ContrasenaCambiada(1L));

@@ -4,7 +4,7 @@ import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.domain.LoteRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.util.EnumParser;
 import org.springframework.stereotype.Service;

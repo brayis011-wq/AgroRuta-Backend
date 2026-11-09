@@ -1,7 +1,7 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.EtapaSiembra;
-import com.agroruta.crop.domain.EtapaSiembraRepository;
+import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

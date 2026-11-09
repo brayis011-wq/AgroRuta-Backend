@@ -1,9 +1,9 @@
 package com.agroruta.worker.application;
 
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.worker.domain.JornalRepository;
-import com.agroruta.worker.domain.NominaRepository;
-import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.application.ports.out.JornalRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Nomina;

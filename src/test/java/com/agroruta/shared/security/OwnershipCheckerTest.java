@@ -2,25 +2,25 @@ package com.agroruta.shared.security;
 
 import com.agroruta.crop.domain.CalidadCosecha;
 import com.agroruta.crop.domain.Cosecha;
-import com.agroruta.crop.domain.CosechaRepository;
+import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.domain.LoteRepository;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.domain.Siembra;
-import com.agroruta.crop.domain.SiembraRepository;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.domain.Jornal;
-import com.agroruta.worker.domain.JornalRepository;
+import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.domain.Nomina;
-import com.agroruta.worker.domain.NominaRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.domain.Pago;
-import com.agroruta.worker.domain.PagoRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.domain.TrabajadorRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +50,7 @@ class OwnershipCheckerTest {
     @Mock private NominaRepository nominaRepository;
     @Mock private PagoRepository pagoRepository;
     @Mock private CosechaRepository cosechaRepository;
-    @Mock private com.agroruta.worker.domain.LaborRepository laborRepository;
+    @Mock private com.agroruta.worker.application.ports.out.LaborRepository laborRepository;
 
     @InjectMocks private OwnershipChecker ownership;
 

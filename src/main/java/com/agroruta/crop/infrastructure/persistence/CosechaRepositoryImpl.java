@@ -1,7 +1,7 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.Cosecha;
-import com.agroruta.crop.domain.CosechaRepository;
+import com.agroruta.crop.application.ports.out.CosechaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;

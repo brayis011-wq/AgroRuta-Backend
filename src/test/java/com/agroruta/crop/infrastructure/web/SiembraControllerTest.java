@@ -43,7 +43,7 @@ class SiembraControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  POST /api/siembras
+    //  POST /api/plantings
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -61,7 +61,7 @@ class SiembraControllerTest {
                 }
                 """.formatted(FECHA_SIEMBRA);
 
-        mockMvc.perform(post("/api/siembras")
+        mockMvc.perform(post("/api/plantings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -87,7 +87,7 @@ class SiembraControllerTest {
                 }
                 """.formatted(FECHA_SIEMBRA);
 
-        mockMvc.perform(post("/api/siembras")
+        mockMvc.perform(post("/api/plantings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -97,7 +97,7 @@ class SiembraControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/siembras/{id}
+    //  GET /api/plantings/{id}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -105,7 +105,7 @@ class SiembraControllerTest {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         when(siembraUseCase.buscarSiembraPorId(1L)).thenReturn(siembra);
 
-        mockMvc.perform(get("/api/siembras/1"))
+        mockMvc.perform(get("/api/plantings/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.variedad").value("Colombia"))
@@ -114,7 +114,7 @@ class SiembraControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/siembras/lote/{loteId}
+    //  GET /api/plantings/plot/{loteId}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -122,7 +122,7 @@ class SiembraControllerTest {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         when(siembraUseCase.buscarSiembraPorLote(3L)).thenReturn(siembra);
 
-        mockMvc.perform(get("/api/siembras/lote/3"))
+        mockMvc.perform(get("/api/plantings/plot/3"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.loteId").value(3))
@@ -130,7 +130,7 @@ class SiembraControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  PUT /api/siembras/{id}/avanzar-etapa
+    //  PUT /api/plantings/{id}/advance-stage
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -139,7 +139,7 @@ class SiembraControllerTest {
         siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
         when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
-        mockMvc.perform(put("/api/siembras/1/avanzar-etapa"))
+        mockMvc.perform(patch("/api/plantings/1/advance-stage"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.estadoCultivo").value("CRECIMIENTO"));
@@ -152,7 +152,7 @@ class SiembraControllerTest {
         siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
         when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
-        mockMvc.perform(put("/api/siembras/1/avanzar-etapa"))
+        mockMvc.perform(patch("/api/plantings/1/advance-stage"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.estadoCultivo").value("PRODUCCION"));
@@ -167,14 +167,14 @@ class SiembraControllerTest {
         siembra.avanzarEtapa();  // COSECHA     → FINALIZADO
         when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
-        mockMvc.perform(put("/api/siembras/1/avanzar-etapa"))
+        mockMvc.perform(patch("/api/plantings/1/advance-stage"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.estadoCultivo").value("FINALIZADO"));
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  GET /api/siembras/estado/{estado}
+    //  GET /api/plantings/status/{estado}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
@@ -183,7 +183,7 @@ class SiembraControllerTest {
         Siembra s2 = new Siembra(2L, FECHA_SIEMBRA.plusDays(10), 200, Variedades.GIGANTE,  4L);
         when(siembraUseCase.listarSiembrasPorEstado("GERMINACION")).thenReturn(List.of(s1, s2));
 
-        mockMvc.perform(get("/api/siembras/estado/GERMINACION"))
+        mockMvc.perform(get("/api/plantings/status/GERMINACION"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -196,20 +196,20 @@ class SiembraControllerTest {
     void deberiaRetornarListaVaciaCuandoNoHaySiembrasEnEseEstado() throws Exception {
         when(siembraUseCase.listarSiembrasPorEstado("FINALIZADO")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/siembras/estado/FINALIZADO"))
+        mockMvc.perform(get("/api/plantings/status/FINALIZADO"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
 
     // ──────────────────────────────────────────────────────────────────────
-    //  DELETE /api/siembras/{id}
+    //  DELETE /api/plantings/{id}
     // ──────────────────────────────────────────────────────────────────────
 
     @Test
     void deberiaEliminarSiembraYRetornar204() throws Exception {
         doNothing().when(siembraUseCase).eliminarSiembra(1L);
 
-        mockMvc.perform(delete("/api/siembras/1"))
+        mockMvc.perform(delete("/api/plantings/1"))
                 .andExpect(status().isNoContent());
 
         verify(siembraUseCase).eliminarSiembra(1L);
@@ -225,7 +225,7 @@ class SiembraControllerTest {
         siembra.avanzarEtapa();
         when(siembraUseCase.avanzarEtapa(1L, LocalDate.of(2025, 3, 1))).thenReturn(siembra);
 
-        mockMvc.perform(put("/api/siembras/1/avanzar-etapa").param("fecha", "2025-03-01"))
+        mockMvc.perform(patch("/api/plantings/1/advance-stage").param("fecha", "2025-03-01"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estadoCultivo").value("CRECIMIENTO"));
     }
@@ -236,7 +236,7 @@ class SiembraControllerTest {
         siembra.finalizar(LocalDate.of(2025, 9, 1));
         when(siembraUseCase.finalizarSiembra(1L, LocalDate.of(2025, 9, 1), true)).thenReturn(siembra);
 
-        mockMvc.perform(put("/api/siembras/1/finalizar")
+        mockMvc.perform(patch("/api/plantings/1/finish")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"fecha\": \"2025-09-01\", \"dejarEnDescanso\": true}"))
                 .andExpect(status().isOk())
@@ -249,7 +249,7 @@ class SiembraControllerTest {
                 new Siembra(2L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L),
                 new Siembra(1L, FECHA_SIEMBRA.minusYears(1), 400, Variedades.COLOMBIA, 3L)));
 
-        mockMvc.perform(get("/api/siembras/lote/3/historial"))
+        mockMvc.perform(get("/api/plantings/plot/3/history"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].id").value(2));

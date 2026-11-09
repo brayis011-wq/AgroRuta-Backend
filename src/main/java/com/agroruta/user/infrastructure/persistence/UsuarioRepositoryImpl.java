@@ -2,7 +2,7 @@ package com.agroruta.user.infrastructure.persistence;
 
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

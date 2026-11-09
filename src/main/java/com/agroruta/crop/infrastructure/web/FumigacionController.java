@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/fumigaciones")
+@RequestMapping("/api/sprayings")
 public class FumigacionController {
 
     private final FumigacionUseCase fumigacionUseCase;
@@ -61,7 +61,7 @@ public class FumigacionController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/siembra/{siembraId}")
+    @GetMapping("/planting/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<FumigacionResponse>> listarPorSiembra(@PathVariable Long siembraId) {
         return ResponseEntity.ok(fumigacionUseCase.listarFumigacionesPorSiembra(siembraId).stream().map(FumigacionResponse::from).toList());

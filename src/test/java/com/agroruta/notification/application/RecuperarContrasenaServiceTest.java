@@ -2,13 +2,13 @@ package com.agroruta.notification.application;
 
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.RestablecimientoContrasena;
-import com.agroruta.notification.domain.RestablecimientoRepository;
+import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
 import com.agroruta.shared.evento.ContrasenaCambiada;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.user.application.IntentosLogin;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -88,7 +88,7 @@ class RecuperarContrasenaServiceTest {
         assertThat(r.getValue().getTokenHash()).isEqualTo(RecuperarContrasenaService.hash(token)).isNotEqualTo(token);
         assertThat(r.getValue().getExpiraEn()).isEqualTo(ahora.plusMinutes(30));
         assertThat(c.getValue().para()).isEqualTo("ana@x.com");
-        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/restablecer?token=" + token);
+        assertThat(c.getValue().html()).contains("https://agroruta.app/auth/reset-password?token=" + token);
     }
 
     @Test

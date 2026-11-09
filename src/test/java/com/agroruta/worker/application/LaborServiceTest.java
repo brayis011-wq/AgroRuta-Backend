@@ -4,7 +4,7 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.Labor;
-import com.agroruta.worker.domain.LaborRepository;
+import com.agroruta.worker.application.ports.out.LaborRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

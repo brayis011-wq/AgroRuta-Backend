@@ -1,18 +1,18 @@
 package com.agroruta.notification.application;
 
-import com.agroruta.inventario.application.ports.in.StockBajoUseCase;
+import com.agroruta.inventory.application.ports.in.StockBajoUseCase;
 import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
 import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.domain.FincaRepository;
+import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
 import com.agroruta.notification.application.ports.out.CorreoPort;
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.PreferenciasCorreo;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
-import com.agroruta.weather.application.port.in.WeatherUseCase;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
+import com.agroruta.weather.application.ports.in.WeatherUseCase;
 import com.agroruta.weather.domain.Pronostico;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

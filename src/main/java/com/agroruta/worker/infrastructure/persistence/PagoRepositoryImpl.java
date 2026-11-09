@@ -2,7 +2,7 @@ package com.agroruta.worker.infrastructure.persistence;
 
 
 import com.agroruta.worker.domain.Pago;
-import com.agroruta.worker.domain.PagoRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

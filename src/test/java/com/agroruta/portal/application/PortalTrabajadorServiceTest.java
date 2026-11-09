@@ -1,10 +1,11 @@
 package com.agroruta.portal.application;
 
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.portal.domain.EstadoPortal;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.PagoUseCase;

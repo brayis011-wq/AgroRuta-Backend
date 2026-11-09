@@ -35,9 +35,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         // Tareas programadas (GitHub Actions): las protege la clave TAREAS_TOKEN, no una sesión
-                        .requestMatchers("/api/tareas/**").permitAll()
+                        .requestMatchers("/api/jobs/**").permitAll()
                         // El clima usa nuestra clave de OpenWeather: solo con sesión iniciada, para que nadie gaste la cuota desde afuera
-                        .requestMatchers("/api/v1/weather/**").authenticated()
+                        .requestMatchers("/api/weather/**").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Solo el health es público (healthchecks de Docker/Render)
@@ -49,11 +49,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/portal/**").hasRole("Trabajador")
                         // Pantallas de gestión: agricultores y administrador (el trabajador no gestiona nada)
                         .requestMatchers(
-                                "/api/fincas/**", "/api/lotes/**", "/api/siembras/**", "/api/cosechas/**",
-                                "/api/fumigaciones/**", "/api/actividades/**", "/api/agricultural-inputs/**",
-                                "/api/trabajadores/**", "/api/cargos/**", "/api/jornales/**", "/api/nominas/**",
-                                "/api/pagos/**", "/api/worker/**", "/api/reports/**", "/api/catalogo-cultivos/**",
-                                "/api/inventario/**", "/api/labores/**"
+                                "/api/farms/**", "/api/plots/**", "/api/plantings/**", "/api/harvests/**",
+                                "/api/sprayings/**", "/api/activities/**", "/api/agricultural-inputs/**",
+                                "/api/workers/**", "/api/positions/**", "/api/workdays/**", "/api/payrolls/**",
+                                "/api/payments/**", "/api/reports/**", "/api/crop-catalog/**",
+                                "/api/inventory/**", "/api/labors/**"
                         ).hasAnyRole("Agricultor", "Administrador")
                         .anyRequest().authenticated()
                 )

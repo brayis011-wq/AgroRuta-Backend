@@ -17,7 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/configuration/perfil")
+@RequestMapping("/api/configuration/profile")
 public class ProfileController {
 
     private final GetProfileUseCase     obtenerPerfilUseCase;

@@ -367,10 +367,10 @@ class JwtAuthenticationFilterTest {
         }
 
         @Test
-        @DisplayName("no filtra /api/auth/registro")
+        @DisplayName("no filtra /api/auth/register")
         void noFiltraRegistro() {
             when(request.getContextPath()).thenReturn("");
-            when(request.getRequestURI()).thenReturn("/api/auth/registro");
+            when(request.getRequestURI()).thenReturn("/api/auth/register");
 
             assertThat(filter.shouldNotFilter(request)).isTrue();
         }
@@ -388,7 +388,7 @@ class JwtAuthenticationFilterTest {
         @DisplayName("sí filtra las demás rutas de la API")
         void filtraRutasProtegidas() {
             when(request.getContextPath()).thenReturn("");
-            when(request.getRequestURI()).thenReturn("/api/fincas/1");
+            when(request.getRequestURI()).thenReturn("/api/farms/1");
 
             assertThat(filter.shouldNotFilter(request)).isFalse();
         }

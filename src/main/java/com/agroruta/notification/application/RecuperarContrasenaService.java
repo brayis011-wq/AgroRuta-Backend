@@ -2,13 +2,13 @@ package com.agroruta.notification.application;
 
 import com.agroruta.notification.application.ports.in.RecuperarContrasenaUseCase;
 import com.agroruta.notification.domain.RestablecimientoContrasena;
-import com.agroruta.notification.domain.RestablecimientoRepository;
+import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
 import com.agroruta.shared.evento.ContrasenaCambiada;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.user.application.IntentosLogin;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.domain.UsuarioRepository;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -2,7 +2,7 @@ package com.agroruta.worker.infrastructure.persistence;
 
 
 import com.agroruta.worker.domain.Jornal;
-import com.agroruta.worker.domain.JornalRepository;
+import com.agroruta.worker.application.ports.out.JornalRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;

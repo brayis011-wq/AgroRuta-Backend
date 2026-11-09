@@ -27,28 +27,28 @@ public class PortalController {
         this.portal = portal;
     }
 
-    @GetMapping("/estado")
+    @GetMapping("/status")
     public ResponseEntity<EstadoPortalResponse> estado(Authentication auth) {
         return ResponseEntity.ok(EstadoPortalResponse.from(portal.estado(CurrentUser.id(auth))));
     }
 
-    @PostMapping("/solicitud")
+    @PostMapping("/request")
     public ResponseEntity<EstadoPortalResponse> solicitar(@Valid @RequestBody SolicitudAccesoRequest req,
                                                           Authentication auth) {
         return ResponseEntity.ok(EstadoPortalResponse.from(portal.solicitar(CurrentUser.id(auth), req.cedula())));
     }
 
-    @GetMapping("/jornales")
+    @GetMapping("/workdays")
     public ResponseEntity<List<MiJornalResponse>> jornales(Authentication auth) {
         return ResponseEntity.ok(portal.misJornales(CurrentUser.id(auth)).stream().map(MiJornalResponse::from).toList());
     }
 
-    @GetMapping("/nominas")
+    @GetMapping("/payrolls")
     public ResponseEntity<List<MiNominaResponse>> nominas(Authentication auth) {
         return ResponseEntity.ok(portal.misNominas(CurrentUser.id(auth)).stream().map(MiNominaResponse::from).toList());
     }
 
-    @GetMapping("/pagos")
+    @GetMapping("/payments")
     public ResponseEntity<List<MiPagoResponse>> pagos(Authentication auth) {
         return ResponseEntity.ok(portal.misPagos(CurrentUser.id(auth)).stream().map(MiPagoResponse::from).toList());
     }

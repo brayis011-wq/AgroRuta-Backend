@@ -1,7 +1,7 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.Fumigacion;
-import com.agroruta.crop.domain.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

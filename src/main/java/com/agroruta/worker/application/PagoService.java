@@ -2,9 +2,9 @@ package com.agroruta.worker.application;
 
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
-import com.agroruta.worker.domain.JornalRepository;
-import com.agroruta.worker.domain.NominaRepository;
-import com.agroruta.worker.domain.PagoRepository;
+import com.agroruta.worker.application.ports.out.JornalRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Nomina;

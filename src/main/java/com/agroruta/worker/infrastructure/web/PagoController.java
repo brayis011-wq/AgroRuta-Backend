@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/pagos")
+@RequestMapping("/api/payments")
 public class PagoController {
 
     private final PagoUseCase pagoUseCase;
@@ -41,7 +41,7 @@ public class PagoController {
         return ResponseEntity.ok(PagoResponse.from(pagoUseCase.buscarPorId(id)));
     }
 
-    @GetMapping("/trabajador/{trabajadorId}")
+    @GetMapping("/worker/{trabajadorId}")
     @PreAuthorize("@ownership.trabajadorPropio(#trabajadorId, authentication)")
     public ResponseEntity<List<PagoResponse>> historialPorTrabajador(@PathVariable Long trabajadorId) {
         List<PagoResponse> pagos = pagoUseCase.historialPorTrabajador(trabajadorId)

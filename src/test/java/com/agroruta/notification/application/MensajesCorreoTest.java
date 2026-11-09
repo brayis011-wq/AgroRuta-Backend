@@ -40,7 +40,7 @@ class MensajesCorreoTest {
                 "LABORES PROGRAMADAS", "mañana: Riego — Goteo.",
                 "REENTRADA Y COSECHA", "no entrar hasta el 6 de noviembre (se aplicó Mancozeb)",
                 "ya se puede cosechar", "CLIMA", "lluvia (8 mm): si fumigas",
-                "https://agroruta.app/cultivo/calendario", "https://agroruta.app/configuracion");
+                "https://agroruta.app/crops/calendar", "https://agroruta.app/settings");
     }
 
     @Test
@@ -68,28 +68,28 @@ class MensajesCorreoTest {
     @Test
     @DisplayName("resumen diario: sección de bodega con insumos bajos, agotados y en negativo")
     void bodega() {
-        var bajo = new com.agroruta.inventario.domain.StockInsumo(1L, "Glifosato", "HERBICIDA",
-                com.agroruta.inventario.domain.UnidadBase.ML, 750, 1000.0, null, null,
-                com.agroruta.inventario.domain.EstadoStock.BAJO, hoy);
-        var agotado = new com.agroruta.inventario.domain.StockInsumo(2L, "Mancozeb", "FUNGICIDA",
-                com.agroruta.inventario.domain.UnidadBase.GRAMOS, 0, null, null, null,
-                com.agroruta.inventario.domain.EstadoStock.AGOTADO, hoy);
-        var negativo = new com.agroruta.inventario.domain.StockInsumo(3L, "Urea", "FERTILIZANTE_SUELO",
-                com.agroruta.inventario.domain.UnidadBase.GRAMOS, -200, null, null, null,
-                com.agroruta.inventario.domain.EstadoStock.NEGATIVO, hoy);
+        var bajo = new com.agroruta.inventory.domain.StockInsumo(1L, "Glifosato", "HERBICIDA",
+                com.agroruta.inventory.domain.UnidadBase.ML, 750, 1000.0, null, null,
+                com.agroruta.inventory.domain.EstadoStock.BAJO, hoy);
+        var agotado = new com.agroruta.inventory.domain.StockInsumo(2L, "Mancozeb", "FUNGICIDA",
+                com.agroruta.inventory.domain.UnidadBase.GRAMOS, 0, null, null, null,
+                com.agroruta.inventory.domain.EstadoStock.AGOTADO, hoy);
+        var negativo = new com.agroruta.inventory.domain.StockInsumo(3L, "Urea", "FERTILIZANTE_SUELO",
+                com.agroruta.inventory.domain.UnidadBase.GRAMOS, -200, null, null, null,
+                com.agroruta.inventory.domain.EstadoStock.NEGATIVO, hoy);
 
         Correo c = m.resumenDiario("Ana", "ana@x.com", hoy, List.of(), List.of(), List.of(bajo, agotado, negativo));
 
         assertThat(c.asunto()).isEqualTo("AgroRuta: 3 avisos para hoy");
         assertThat(c.texto()).contains("BODEGA DE INSUMOS", "quedan 750 ml (mínimo 1 L)", "Mancozeb", "se acabó",
-                "en negativo", "https://agroruta.app/cultivo/inventario");
+                "en negativo", "https://agroruta.app/crops/inventory");
     }
 
     @Test
     @DisplayName("cantidades: litros y kilos desde 1000, mililitros y gramos por debajo")
     void cantidades() {
-        assertThat(MensajesCorreo.cantidad(2500.0, com.agroruta.inventario.domain.UnidadBase.ML)).isEqualTo("2,5 L");
-        assertThat(MensajesCorreo.cantidad(300.0, com.agroruta.inventario.domain.UnidadBase.GRAMOS)).isEqualTo("300 g");
-        assertThat(MensajesCorreo.cantidad(1200.0, com.agroruta.inventario.domain.UnidadBase.GRAMOS)).isEqualTo("1,2 kg");
+        assertThat(MensajesCorreo.cantidad(2500.0, com.agroruta.inventory.domain.UnidadBase.ML)).isEqualTo("2,5 L");
+        assertThat(MensajesCorreo.cantidad(300.0, com.agroruta.inventory.domain.UnidadBase.GRAMOS)).isEqualTo("300 g");
+        assertThat(MensajesCorreo.cantidad(1200.0, com.agroruta.inventory.domain.UnidadBase.GRAMOS)).isEqualTo("1,2 kg");
     }
 }
