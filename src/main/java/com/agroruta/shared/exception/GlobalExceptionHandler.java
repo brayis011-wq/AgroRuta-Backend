@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
         // Un duplicado es un conflicto (409); el resto de reglas de negocio, 422.
         // Demasiados intentos de inicio de sesión: 429.
         HttpStatus status = switch (ex.getErrorCode()) {
-            case RESOURCE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case RESOURCE_ALREADY_EXISTS, DUPLICATE_SUBMISSION -> HttpStatus.CONFLICT;
             case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
             case EMAIL_NOT_VERIFIED, TWO_FACTOR_REQUIRED -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.UNPROCESSABLE_ENTITY;

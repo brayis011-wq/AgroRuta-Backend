@@ -6,6 +6,8 @@ public enum ErrorCode {
     // Recursos
     RESOURCE_NOT_FOUND("AGR-001", "Recurso no encontrado"),
     RESOURCE_ALREADY_EXISTS("AGR-002", "El recurso ya existe"),
+    /** El mismo envío (misma clave del dispositivo) ya se había recibido: no se guarda dos veces */
+    DUPLICATE_SUBMISSION("AGR-036", "Registro ya recibido"),
 
     // Negocio
     BUSINESS_RULE_VIOLATION("AGR-010", "Violación de regla de negocio"),
