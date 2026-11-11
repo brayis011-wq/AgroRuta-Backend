@@ -36,6 +36,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // Tareas programadas (GitHub Actions): las protege la clave TAREAS_TOKEN, no una sesión
                         .requestMatchers("/api/jobs/**").permitAll()
+                        // Verificación del QR de un comprobante de pago: la abre cualquiera, la protege el código firmado
+                        .requestMatchers("/api/public/**").permitAll()
                         // El clima usa nuestra clave de OpenWeather: solo con sesión iniciada, para que nadie gaste la cuota desde afuera
                         .requestMatchers("/api/weather/**").authenticated()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()

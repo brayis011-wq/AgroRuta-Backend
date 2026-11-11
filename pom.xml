@@ -150,6 +150,13 @@
 			<version>3.0.8</version>
 		</dependency>
 
+		<!-- Códigos QR (comprobantes de pago, segundo factor). Solo el núcleo: sin AWT ni imágenes -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.3</version>
+		</dependency>
+
 		<!-- TEST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
