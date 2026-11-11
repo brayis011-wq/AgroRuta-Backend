@@ -53,6 +53,8 @@ class AuthServiceTest {
 
     @Mock private com.agroruta.user.application.ports.out.VerificacionCorreoPort verificacion;
 
+    @Mock private com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor;
+
     @InjectMocks
     private AuthService authService;
 
@@ -487,6 +489,56 @@ class AuthServiceTest {
 
         assertEquals(TOKEN, response.getToken());
         assertEquals(EMAIL, response.getEmail());
+    }
+
+    // ── segundo factor ────────────────────────────────────────────
+
+    private LoginRequest loginConCodigo(String codigo) {
+        LoginRequest request = new LoginRequest();
+        request.setEmail(EMAIL);
+        request.setPassword(PASSWORD);
+        request.setCodigo(codigo);
+        when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
+        when(segundoFactor.activo(ID)).thenReturn(true);
+        return request;
+    }
+
+    @Test
+    void loginConSegundoFactorSinCodigoDeberiaPedirlo() {
+        LoginRequest request = loginConCodigo(null);
+
+        com.agroruta.shared.exception.BusinessException e = assertThrows(
+                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+
+        assertEquals(com.agroruta.shared.exception.ErrorCode.TWO_FACTOR_REQUIRED, e.getErrorCode());
+        verify(segundoFactor, never()).verificar(any(), any());
+        verifyNoInteractions(tokenPort);
+    }
+
+    @Test
+    void loginConCodigoEquivocadoDeberiaRechazarseYContarComoIntento() {
+        LoginRequest request = loginConCodigo("000000");
+        when(segundoFactor.verificar(ID, "000000")).thenReturn(false);
+
+        for (int i = 0; i < IntentosLogin.MAX_FALLOS; i++) {
+            com.agroruta.shared.exception.BusinessException e = assertThrows(
+                    com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+            assertEquals(com.agroruta.shared.exception.ErrorCode.TWO_FACTOR_INVALID, e.getErrorCode());
+        }
+        // Después de diez códigos equivocados la cuenta queda bloqueada, aunque la contraseña sea buena
+        com.agroruta.shared.exception.BusinessException bloqueo = assertThrows(
+                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        assertEquals(com.agroruta.shared.exception.ErrorCode.TOO_MANY_ATTEMPTS, bloqueo.getErrorCode());
+        verifyNoInteractions(tokenPort);
+    }
+
+    @Test
+    void loginConCodigoCorrectoDeberiaEntrar() {
+        LoginRequest request = loginConCodigo("123456");
+        when(segundoFactor.verificar(ID, "123456")).thenReturn(true);
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        assertEquals(TOKEN, authService.login(request).getToken());
     }
 
     @Test

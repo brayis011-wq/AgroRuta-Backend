@@ -40,6 +40,7 @@ public class AuthService {
     private final IntentosLogin intentosLogin;
     private final ApplicationEventPublisher eventos;
     private final VerificacionCorreoPort verificacion;
+    private final com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor;
 
     public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
                        BuscarUsuarioUseCase buscarUsuarioUseCase,
@@ -49,7 +50,9 @@ public class AuthService {
                        VinculoTrabajadorPort vinculoTrabajador,
                        IntentosLogin intentosLogin,
                        ApplicationEventPublisher eventos,
-                       VerificacionCorreoPort verificacion) {
+                       VerificacionCorreoPort verificacion,
+                       com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor) {
+        this.segundoFactor = segundoFactor;
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.buscarUsuarioUseCase = buscarUsuarioUseCase;
         this.tokenPort = tokenPort;
@@ -122,15 +125,38 @@ public class AuthService {
             }
             throw e;
         }
+        Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
+        exigirSegundoFactor(usuario, request);
+        // Solo cuando pasó todo: un código equivocado cuenta como intento fallido
         intentosLogin.limpiar(request.getEmail());
 
-        Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
         // Se revisa después de la contraseña, para no contarle a cualquiera qué cuentas faltan por confirmar
         if (!usuario.isEmailVerificado() && verificacion.activa()) {
             throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED,
                     "Confirma tu correo para entrar: abre el enlace que te enviamos a " + usuario.getEmail() + ".");
         }
         return respuestaDeSesion(usuario);
+    }
+
+    /**
+     * Con verificación en dos pasos, la contraseña sola no alcanza. Sin código se responde
+     * TWO_FACTOR_REQUIRED (la pantalla muestra el campo); con un código equivocado, TWO_FACTOR_INVALID,
+     * y cuenta para el bloqueo por intentos, para que nadie pruebe códigos al azar.
+     */
+    private void exigirSegundoFactor(Usuario usuario, LoginRequest request) {
+        if (!segundoFactor.activo(usuario.getId())) return;
+        String codigo = request.getCodigo();
+        if (codigo == null || codigo.isBlank()) {
+            throw new BusinessException(ErrorCode.TWO_FACTOR_REQUIRED,
+                    "Escribe el código de 6 dígitos de tu app de autenticación.");
+        }
+        if (!segundoFactor.verificar(usuario.getId(), codigo)) {
+            if (intentosLogin.registrarFallo(request.getEmail())) {
+                eventos.publishEvent(new CuentaBloqueada(request.getEmail(), IntentosLogin.BLOQUEO.toMinutes()));
+            }
+            throw new BusinessException(ErrorCode.TWO_FACTOR_INVALID,
+                    "El código no es correcto. Usa el más reciente de tu app o un código de respaldo.");
+        }
     }
 
     /** El enlace del correo de confirmación: confirma la cuenta y deja la sesión iniciada. */

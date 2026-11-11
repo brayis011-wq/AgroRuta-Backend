@@ -22,6 +22,9 @@ public enum ErrorCode {
     AUTHENTICATION_FAILED("AGR-031", "Credenciales inválidas"),
     TOO_MANY_ATTEMPTS("AGR-032", "Demasiados intentos"),
     EMAIL_NOT_VERIFIED("AGR-033", "Correo sin confirmar"),
+    /** La contraseña es correcta, pero la cuenta pide el código de la app de autenticación */
+    TWO_FACTOR_REQUIRED("AGR-034", "Falta el código de verificación"),
+    TWO_FACTOR_INVALID("AGR-035", "Código de verificación incorrecto"),
 
     // Sistema
     INTERNAL_ERROR("AGR-500", "Error interno del servidor"),

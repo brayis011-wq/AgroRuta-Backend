@@ -40,4 +40,14 @@ public class SesionEntity {
 
     @Column(name = "revocado_en")
     private LocalDateTime revocadoEn;
+
+    /** Inicio de sesión al que pertenece (se conserva al renovar) */
+    @Column(name = "familia", length = 36)
+    private String familia;
+
+    @Column(name = "dispositivo", length = 120)
+    private String dispositivo;
+
+    @Column(name = "iniciada_en")
+    private LocalDateTime iniciadaEn;
 }

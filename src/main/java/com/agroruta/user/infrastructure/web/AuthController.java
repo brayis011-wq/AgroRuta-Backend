@@ -27,11 +27,41 @@ public class AuthController {
     private final AuthService authService;
     private final SesionUseCase sesiones;
     private final CookieSesion cookie;
+    private com.agroruta.user.application.ports.in.SesionesAbiertasUseCase abiertas;
 
     public AuthController(AuthService authService, SesionUseCase sesiones, CookieSesion cookie) {
         this.authService = authService;
         this.sesiones = sesiones;
         this.cookie = cookie;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setAbiertas(com.agroruta.user.application.ports.in.SesionesAbiertasUseCase abiertas) {
+        this.abiertas = abiertas;
+    }
+
+    // ── Sesiones abiertas ────────────────────────────────────────────────────
+    // Van bajo /api/auth porque la cookie de sesión solo viaja a esta ruta, y es ella la que
+    // dice quién pregunta y cuál es "esta" sesión.
+
+    @GetMapping("/sessions")
+    public ResponseEntity<java.util.List<com.agroruta.user.domain.SesionAbierta>> sesionesAbiertas(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token) {
+        return ResponseEntity.ok(abiertas.listar(token));
+    }
+
+    /** Cierra una sesión. Si es la de este dispositivo, también borra la cookie. */
+    @DeleteMapping("/sessions/{id}")
+    public ResponseEntity<Void> cerrarSesion(@CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
+                                             @PathVariable Long id, HttpServletResponse response) {
+        if (abiertas.cerrar(token, id)) cookie.borrar(response);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/sessions/close-others")
+    public ResponseEntity<Map<String, Integer>> cerrarOtrasSesiones(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token) {
+        return ResponseEntity.ok(Map.of("cerradas", abiertas.cerrarOtras(token)));
     }
 
     /** No abre sesión: después de registrarse la persona entra por el login (o confirma su correo). */
