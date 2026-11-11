@@ -62,7 +62,10 @@ public class CropQueryAdapter implements CropQueryPort {
                             siembra.getTipoCultivo(),
                             lote.map(LoteEntity::getNombre).orElse(null),
                             finca.map(FincaEntity::getNombre).orElse(null),
-                            eliminada);
+                            eliminada,
+                            siembra.getLoteId(),
+                            lote.map(LoteEntity::getArea).orElse(null),
+                            siembra.getFechaFin());
                 })
                 .toList();
     }
