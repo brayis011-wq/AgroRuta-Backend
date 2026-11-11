@@ -32,6 +32,9 @@ public class CosechaRequest {
     @PositiveOrZero(message = "El precio no puede ser negativo")
     private Double precioKg;
 
+    // true = la persona confirmó que cosecha aunque no haya terminado la carencia de una fumigación
+    private boolean confirmarCarencia;
+
     @NotNull(message = "La siembra es obligatoria")
     @Positive(message = "La siembra no es válida")
     private Long siembraId;

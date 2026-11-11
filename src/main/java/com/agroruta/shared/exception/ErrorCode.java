@@ -10,6 +10,8 @@ public enum ErrorCode {
     // Negocio
     BUSINESS_RULE_VIOLATION("AGR-010", "Violación de regla de negocio"),
     INVALID_OPERATION("AGR-011", "Operación no válida"),
+    /** Cosecha dentro del periodo de carencia de una fumigación: el frontend pide confirmación */
+    HARVEST_IN_WITHDRAWAL("AGR-012", "Cosecha en periodo de carencia"),
 
     // Validación
     INVALID_ARGUMENT("AGR-020", "Argumento inválido"),

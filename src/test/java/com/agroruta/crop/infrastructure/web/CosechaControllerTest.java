@@ -48,7 +48,7 @@ class CosechaControllerTest {
         Cosecha cosecha = new Cosecha(
                 1L, FECHA, 150.5, CalidadCosecha.PRIMERA, "Cosecha en buen estado", 10L
         );
-        when(cosechaUseCase.registrarCosecha(any(), anyDouble(), anyString(), anyString(), anyLong(), any()))
+        when(cosechaUseCase.registrarCosecha(any(), anyDouble(), anyString(), anyString(), anyLong(), any(), anyBoolean()))
                 .thenReturn(cosecha);
 
         String body = """
@@ -77,7 +77,7 @@ class CosechaControllerTest {
         Cosecha cosecha = new Cosecha(
                 2L, FECHA, 80.0, CalidadCosecha.SEGUNDA, "Leve daño por lluvia", 10L
         );
-        when(cosechaUseCase.registrarCosecha(any(), anyDouble(), anyString(), anyString(), anyLong(), any()))
+        when(cosechaUseCase.registrarCosecha(any(), anyDouble(), anyString(), anyString(), anyLong(), any(), anyBoolean()))
                 .thenReturn(cosecha);
 
         String body = """

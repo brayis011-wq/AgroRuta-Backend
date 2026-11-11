@@ -44,10 +44,10 @@ public final class Respuestas {
     }
 
     public record CosechaResponse(Long id, LocalDate fecha, Double cantidadKg, CalidadCosecha calidad,
-                                  String observaciones, Long siembraId, Double precioKg) {
+                                  String observaciones, Long siembraId, Double precioKg, boolean enCarencia) {
         public static CosechaResponse from(Cosecha c) {
             return new CosechaResponse(c.getId(), c.getFecha(), c.getCantidadKg(), c.getCalidad(),
-                    c.getObservaciones(), c.getSiembraId(), c.getPrecioKg());
+                    c.getObservaciones(), c.getSiembraId(), c.getPrecioKg(), c.isEnCarencia());
         }
     }
 
