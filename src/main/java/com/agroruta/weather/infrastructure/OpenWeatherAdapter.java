@@ -56,6 +56,45 @@ public class OpenWeatherAdapter implements WeatherApiPort {
         }
     }
 
+    /** 16 franjas de 3 horas = 48 horas */
+    @Override
+    @SuppressWarnings("unchecked")
+    public List<com.agroruta.weather.domain.FranjaClima> fetchFranjas48h(double lat, double lon) {
+        String url = String.format(java.util.Locale.ROOT, "%s/forecast?lat=%s&lon=%s&cnt=16&appid=%s&units=metric",
+                baseUrl, lat, lon, apiKey);
+        try {
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            List<Map<String, Object>> franjas = response == null ? null : (List<Map<String, Object>>) response.get("list");
+            if (franjas == null || franjas.isEmpty()) throw new ExternalApiException("Pronóstico vacío de OpenWeatherMap");
+            return franjas(franjas);
+        } catch (ExternalApiException e) {
+            throw e;
+        } catch (Exception e) {
+            // Sin el mensaje original: trae la URL con la clave de la API
+            throw new ExternalApiException("Error al consultar el pronóstico de OpenWeatherMap");
+        }
+    }
+
+    private static final java.time.ZoneId ZONA = java.time.ZoneId.of("America/Bogota");
+
+    @SuppressWarnings("unchecked")
+    static List<com.agroruta.weather.domain.FranjaClima> franjas(List<Map<String, Object>> lista) {
+        List<com.agroruta.weather.domain.FranjaClima> res = new java.util.ArrayList<>();
+        for (Map<String, Object> f : lista) {
+            if (!(f.get("dt") instanceof Number dt)) continue;
+            Map<String, Object> main = (Map<String, Object>) f.get("main");
+            Map<String, Object> rain = (Map<String, Object>) f.get("rain");
+            Map<String, Object> wind = (Map<String, Object>) f.get("wind");
+            res.add(new com.agroruta.weather.domain.FranjaClima(
+                    java.time.LocalDateTime.ofInstant(java.time.Instant.ofEpochSecond(dt.longValue()), ZONA),
+                    main == null ? 0 : numero(main.get("temp"), 0),
+                    rain == null ? 0 : numero(rain.get("3h"), 0),
+                    numero(f.get("pop"), 0),
+                    wind == null ? 0 : numero(wind.get("speed"), 0)));
+        }
+        return res;
+    }
+
     @SuppressWarnings("unchecked")
     static Pronostico resumir(List<Map<String, Object>> franjas) {
         double min = Double.MAX_VALUE, max = -Double.MAX_VALUE, lluvia = 0, viento = 0;

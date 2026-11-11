@@ -47,20 +47,31 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     private final CorreoPort correo;
     private final StockBajoUseCase stockBajo;
     private final Clock reloj;
+    /** null en pruebas antiguas: el resumen sale sin los consejos por horas */
+    private final com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima;
     /** Último día que se mandó, para que un reintento de la tarea no duplique correos */
     private final AtomicReference<LocalDate> ultimoEnvio = new AtomicReference<>();
 
     @Autowired
     public AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                                  AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo) {
+                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo,
+                                 com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
         this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo,
-                Clock.system(ZoneId.of("America/Bogota")));
+                Clock.system(ZoneId.of("America/Bogota")), consejosClima);
     }
 
     AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                           AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
                           MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj) {
+        this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo, reloj, null);
+    }
+
+    AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
+                          AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
+                          MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj,
+                          com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
+        this.consejosClima = consejosClima;
         this.usuarios = usuarios;
         this.preferencias = preferencias;
         this.alertasCultivo = alertasCultivo;
@@ -97,8 +108,21 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         List<AlertaCultivo> alertas = alertasCultivo.alertasDelDia(u.getId(), hoy);
         List<ClimaFinca> tiempo = climaDe(u.getId(), alertas.stream().anyMatch(AlertaCultivo::esFumigacionPendiente));
         List<StockInsumo> stock = stockDe(u.getId());
-        if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty()) return false;
-        return correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock));
+        List<com.agroruta.weather.domain.ConsejoClima> consejos = consejosDe(u.getId());
+        if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty() && consejos.isEmpty()) return false;
+        return correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock, consejos));
+    }
+
+    /** "No fumigues hoy: llueve a las 3"; si falla, el resumen sale igual sin esa parte */
+    private List<com.agroruta.weather.domain.ConsejoClima> consejosDe(Long agricultorId) {
+        if (consejosClima == null) return List.of();
+        try {
+            // Un "todo bien para fumigar" no justifica un correo por sí solo, pero sí acompaña a los demás avisos
+            return consejosClima.consejos(agricultorId);
+        } catch (RuntimeException e) {
+            log.warn("Sin consejos de clima para el agricultor {}: {}", agricultorId, e.getMessage());
+            return List.of();
+        }
     }
 
     /** Insumos que se están acabando; si falla, el resumen sale igual sin esa parte */
