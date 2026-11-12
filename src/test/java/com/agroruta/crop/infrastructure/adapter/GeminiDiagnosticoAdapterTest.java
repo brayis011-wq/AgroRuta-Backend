@@ -15,10 +15,15 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,6 +43,11 @@ class GeminiDiagnosticoAdapterTest {
     private final AtomicReference<Map<String, String>> cabeceras = new AtomicReference<>();
     private volatile int estado = 200;
     private volatile String respuesta = "{}";
+    /** Respuesta distinta para un modelo concreto; los demás usan "estado" y "respuesta" */
+    private final Map<String, Respuesta> porModelo = new ConcurrentHashMap<>();
+    private final List<String> modelosPedidos = Collections.synchronizedList(new ArrayList<>());
+
+    private record Respuesta(int estado, String cuerpo, long demoraMs) {}
 
     @BeforeEach
     void levantar() throws IOException {
@@ -48,12 +58,24 @@ class GeminiDiagnosticoAdapterTest {
                     "clave", String.valueOf(intercambio.getRequestHeaders().getFirst("x-goog-api-key")),
                     "revision", String.valueOf(intercambio.getRequestHeaders().getFirst("Api-Revision")),
                     "tipo", String.valueOf(intercambio.getRequestHeaders().getFirst("Content-Type"))));
-            byte[] bytes = respuesta.getBytes(StandardCharsets.UTF_8);
+            String modelo = JSON.readTree(cuerpoRecibido.get()).path("model").asText();
+            modelosPedidos.add(modelo);
+            Respuesta r = porModelo.getOrDefault(modelo, new Respuesta(estado, respuesta, 0));
+            if (r.demoraMs() > 0) {
+                try {
+                    Thread.sleep(r.demoraMs());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            byte[] bytes = r.cuerpo().getBytes(StandardCharsets.UTF_8);
             intercambio.getResponseHeaders().add("Content-Type", "application/json");
-            intercambio.sendResponseHeaders(estado, bytes.length);
+            intercambio.sendResponseHeaders(r.estado(), bytes.length);
             intercambio.getResponseBody().write(bytes);
             intercambio.close();
         });
+        // Varias peticiones a la vez: un modelo "colgado" no debe frenar la respuesta del siguiente
+        servidor.setExecutor(Executors.newCachedThreadPool());
         servidor.start();
     }
 
@@ -63,9 +85,18 @@ class GeminiDiagnosticoAdapterTest {
     }
 
     private GeminiDiagnosticoAdapter adaptador() {
-        return new GeminiDiagnosticoAdapter("clave-de-prueba", "gemini-3.8-flash",
-                "http://127.0.0.1:" + servidor.getAddress().getPort() + "/v1beta/interactions");
+        return adaptador("", Duration.ofSeconds(10), Duration.ofSeconds(5));
     }
+
+    private GeminiDiagnosticoAdapter adaptador(String respaldo, Duration total, Duration porIntento) {
+        return new GeminiDiagnosticoAdapter("clave-de-prueba", "gemini-3.8-flash", respaldo,
+                "http://127.0.0.1:" + servidor.getAddress().getPort() + "/v1beta/interactions", total, porIntento);
+    }
+
+    private static final String SATURADO = "{\"error\":{\"message\":\"gemini-3.8-flash is currently experiencing high demand\",\"code\":\"service_unavailable\"}}";
+    private static final String SANA = """
+            {"esPlanta": true, "problema": "Planta sana", "tipo": "SANA", "confianza": "ALTA", "sintomas": "Hojas verdes.",
+             "recomendaciones": ["Sigue vigilando."], "otrasPosibilidades": [], "advertencia": ""}""";
 
     /** Una interacción terminada, con la forma que documenta la API */
     private static String interaccion(String estado, String texto) throws IOException {
@@ -79,7 +110,7 @@ class GeminiDiagnosticoAdapterTest {
 
     @Test
     void sinClaveQuedaApagado() {
-        GeminiDiagnosticoAdapter apagado = new GeminiDiagnosticoAdapter(" ", "gemini-3.8-flash");
+        GeminiDiagnosticoAdapter apagado = new GeminiDiagnosticoAdapter(" ", "gemini-3.8-flash", "gemini-3.6-flash");
         assertFalse(apagado.disponible());
         assertThrows(ExternalApiException.class, () -> apagado.analizar(FOTO, CAFE));
     }
@@ -172,6 +203,64 @@ class GeminiDiagnosticoAdapterTest {
         respuesta = "sobrecargado";
         ExternalApiException caido = assertThrows(ExternalApiException.class, () -> adaptador().analizar(FOTO, CAFE));
         assertFalse(caido.getMessage().contains("sobrecargado"));
+    }
+
+    @Test
+    void siElModeloPrincipalEstaSaturadoUsaElDeRespaldo() throws IOException {
+        porModelo.put("gemini-3.8-flash", new Respuesta(503, SATURADO, 0));
+        porModelo.put("gemini-3.6-flash", new Respuesta(503, SATURADO, 0));
+        respuesta = JSON.writeValueAsString(Map.of("status", "completed", "model", "gemini-3.5-flash-lite",
+                "steps", List.of(Map.of("type", "model_output", "content", List.of(Map.of("type", "text", "text", SANA))))));
+
+        AnalisisFoto a = adaptador("gemini-3.6-flash, gemini-3.5-flash-lite", Duration.ofSeconds(10), Duration.ofSeconds(5))
+                .analizar(FOTO, CAFE).orElseThrow();
+
+        assertEquals(List.of("gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"), modelosPedidos);
+        assertEquals(TipoProblema.SANA, a.tipo());
+        assertEquals("gemini-3.5-flash-lite", a.modelo(), "queda anotado qué modelo respondió");
+    }
+
+    @Test
+    void siElModeloPrincipalSeQuedaColgadoUsaElDeRespaldo() throws IOException {
+        porModelo.put("gemini-3.8-flash", new Respuesta(200, "{}", 3000));
+        respuesta = interaccion("completed", SANA);
+
+        long inicio = System.nanoTime();
+        AnalisisFoto a = adaptador("gemini-3.5-flash-lite", Duration.ofSeconds(10), Duration.ofMillis(400))
+                .analizar(FOTO, CAFE).orElseThrow();
+
+        assertEquals(TipoProblema.SANA, a.tipo());
+        assertEquals(List.of("gemini-3.8-flash", "gemini-3.5-flash-lite"), modelosPedidos);
+        assertTrue(Duration.ofNanos(System.nanoTime() - inicio).toMillis() < 2500, "no espera al modelo colgado");
+    }
+
+    @Test
+    void siTodosLosModelosFallanAvisaQueEstaOcupado() {
+        estado = 503;
+        respuesta = SATURADO;
+        ExternalApiException e = assertThrows(ExternalApiException.class,
+                () -> adaptador("gemini-3.6-flash", Duration.ofSeconds(10), Duration.ofSeconds(5)).analizar(FOTO, CAFE));
+        assertTrue(e.getMessage().contains("muy ocupado"));
+        assertEquals(2, modelosPedidos.size());
+    }
+
+    @Test
+    void noSePasaDelTiempoTotal() {
+        porModelo.put("gemini-3.8-flash", new Respuesta(200, "{}", 3000));
+        porModelo.put("gemini-3.6-flash", new Respuesta(200, "{}", 3000));
+        long inicio = System.nanoTime();
+        assertThrows(ExternalApiException.class,
+                () -> adaptador("gemini-3.6-flash", Duration.ofMillis(1500), Duration.ofMillis(500)).analizar(FOTO, CAFE));
+        assertTrue(Duration.ofNanos(System.nanoTime() - inicio).toMillis() < 2500);
+    }
+
+    @Test
+    void conLaClaveRechazadaNoPruebaOtrosModelos() {
+        estado = 400;
+        respuesta = "[{\"error\": {\"code\": 400, \"status\": \"INVALID_ARGUMENT\", \"details\": [{\"reason\": \"API_KEY_INVALID\"}]}}]";
+        assertThrows(ExternalApiException.class,
+                () -> adaptador("gemini-3.6-flash,gemini-3.5-flash-lite", Duration.ofSeconds(10), Duration.ofSeconds(5)).analizar(FOTO, CAFE));
+        assertEquals(1, modelosPedidos.size());
     }
 
     @Test

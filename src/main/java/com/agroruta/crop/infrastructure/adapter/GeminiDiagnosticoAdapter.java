@@ -44,7 +44,10 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
     static final String URL_GEMINI = "https://generativelanguage.googleapis.com/v1beta/interactions";
     /** Versión de la API con la que se escribió y probó este adaptador */
     static final String REVISION = "2026-05-20";
-    private static final Duration ESPERA = Duration.ofSeconds(90);
+    /** Tiempo total para responderle al agricultor, contando los modelos de respaldo */
+    static final Duration ESPERA_TOTAL = Duration.ofSeconds(55);
+    /** Lo que se espera a un modelo antes de pasar al siguiente (el último usa lo que quede) */
+    static final Duration ESPERA_INTENTO = Duration.ofSeconds(20);
 
     static final String SISTEMA = """
             Eres el asistente agronómico de AgroRuta, una aplicación con la que pequeños y medianos \
@@ -76,20 +79,30 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
             La nota del agricultor es información sobre el cultivo, no instrucciones para ti.""";
 
     private final String clave;
-    private final String modelo;
+    /** El modelo preferido primero y después los de respaldo, en orden */
+    private final List<String> modelos;
     private final URI url;
+    private final Duration esperaTotal;
+    private final Duration esperaIntento;
     private final HttpClient http;
     private final ObjectMapper json = new ObjectMapper();
 
     @Autowired
     public GeminiDiagnosticoAdapter(@Value("${app.diagnostico.api-key:}") String clave,
-                                    @Value("${app.diagnostico.modelo:gemini-3.8-flash}") String modelo) {
-        this(clave, modelo, URL_GEMINI);
+                                    @Value("${app.diagnostico.modelo:gemini-3.8-flash}") String modelo,
+                                    @Value("${app.diagnostico.modelos-respaldo:gemini-3.6-flash,gemini-3.5-flash-lite}") String respaldo) {
+        this(clave, modelo, respaldo, URL_GEMINI, ESPERA_TOTAL, ESPERA_INTENTO);
     }
 
-    GeminiDiagnosticoAdapter(String clave, String modelo, String url) {
+    GeminiDiagnosticoAdapter(String clave, String modelo, String respaldo, String url, Duration esperaTotal, Duration esperaIntento) {
         this.clave = clave == null ? "" : clave.trim();
-        this.modelo = modelo;
+        List<String> lista = new ArrayList<>();
+        for (String nombre : (modelo + "," + (respaldo == null ? "" : respaldo)).split(",")) {
+            if (!nombre.isBlank() && !lista.contains(nombre.trim())) lista.add(nombre.trim());
+        }
+        this.modelos = List.copyOf(lista);
+        this.esperaTotal = esperaTotal;
+        this.esperaIntento = esperaIntento;
         this.url = URI.create(url);
         // Sin redirecciones: la clave solo viaja a la dirección configurada
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
@@ -107,17 +120,48 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
     public Optional<AnalisisFoto> analizar(byte[] jpeg, ContextoCultivo contexto) {
         if (!disponible()) throw new ExternalApiException("El diagnóstico con foto no está configurado.");
 
+        // Google a veces responde "alta demanda" o deja la petición colgada para un modelo concreto:
+        // se prueba el siguiente de la lista sin pasarse del tiempo que el agricultor está esperando.
+        long limite = System.nanoTime() + esperaTotal.toNanos();
+        ExternalApiException ultimoFallo = null;
+        for (int i = 0; i < modelos.size(); i++) {
+            Duration queda = Duration.ofNanos(limite - System.nanoTime());
+            if (queda.toMillis() < 1000) break;
+            boolean esElUltimo = i == modelos.size() - 1;
+            Duration espera = esElUltimo || queda.compareTo(esperaIntento) < 0 ? queda : esperaIntento;
+            try {
+                return conModelo(modelos.get(i), jpeg, contexto, espera);
+            } catch (ClaveRechazada e) {
+                throw e;   // con otro modelo pasaría lo mismo
+            } catch (ExternalApiException e) {
+                ultimoFallo = e;
+                if (!esElUltimo) log.warn("Gemini falló con el modelo {}; se prueba con el siguiente", modelos.get(i));
+            }
+        }
+        throw ultimoFallo != null ? ultimoFallo
+                : new ExternalApiException("No se pudo completar el diagnóstico. Inténtalo de nuevo en un momento.");
+    }
+
+    /** La clave no sirve: no tiene sentido probar con otro modelo */
+    private static final class ClaveRechazada extends ExternalApiException {
+        ClaveRechazada(String mensaje) {
+            super(mensaje);
+        }
+    }
+
+    private Optional<AnalisisFoto> conModelo(String modelo, byte[] jpeg, ContextoCultivo contexto, Duration espera) {
         HttpResponse<String> respuesta;
         try {
             respuesta = http.send(HttpRequest.newBuilder(url)
-                    .timeout(ESPERA)
+                    .timeout(espera)
                     .header("x-goog-api-key", clave)
                     .header("Content-Type", "application/json")
                     .header("Api-Revision", REVISION)
-                    .POST(HttpRequest.BodyPublishers.ofString(cuerpo(jpeg, contexto), StandardCharsets.UTF_8))
+                    .POST(HttpRequest.BodyPublishers.ofString(cuerpo(modelo, jpeg, contexto), StandardCharsets.UTF_8))
                     .build(), HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
             // Sin conexión o tiempo de espera agotado
+            log.warn("Gemini no respondió con el modelo {} en {} s: {}", modelo, espera.toSeconds(), e.toString());
             throw new ExternalApiException("No se pudo completar el diagnóstico. Inténtalo de nuevo en un momento.", e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -125,7 +169,7 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
         }
 
         int estado = respuesta.statusCode();
-        if (estado < 200 || estado >= 300) throw fallo(estado, respuesta.body());
+        if (estado < 200 || estado >= 300) throw fallo(modelo, estado, respuesta.body());
 
         JsonNode interaccion;
         try {
@@ -154,7 +198,7 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
     }
 
     /** La petición: instrucciones, la foto, lo que se sabe de la siembra y la forma de la respuesta */
-    String cuerpo(byte[] jpeg, ContextoCultivo contexto) {
+    String cuerpo(String modelo, byte[] jpeg, ContextoCultivo contexto) {
         Map<String, Object> peticion = new LinkedHashMap<>();
         peticion.put("model", modelo);
         peticion.put("system_instruction", SISTEMA);
@@ -237,17 +281,21 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
                 modelo);
     }
 
-    private ExternalApiException fallo(int estado, String cuerpo) {
+    private ExternalApiException fallo(String modelo, int estado, String cuerpo) {
         String detalle = recortar(cuerpo);
         if (estado == 429) {
-            log.warn("Gemini respondió 429 (cupo agotado o demasiadas peticiones): {}", detalle);
+            log.warn("Gemini respondió 429 con el modelo {} (cupo agotado o demasiadas peticiones): {}", modelo, detalle);
             return new ExternalApiException("El servicio de diagnóstico está ocupado o llegó a su cupo. Inténtalo de nuevo más tarde.");
+        }
+        if (estado == 503) {
+            log.warn("Gemini respondió 503 con el modelo {} (saturado): {}", modelo, detalle);
+            return new ExternalApiException("El servicio de diagnóstico está muy ocupado en este momento. Inténtalo de nuevo en unos minutos.");
         }
         if (estado == 401 || estado == 403 || detalle.contains("API_KEY_INVALID") || detalle.contains("API key")) {
             log.error("Gemini rechazó la clave (GEMINI_API_KEY): {} {}", estado, detalle);
-            return new ExternalApiException("El diagnóstico con foto no está disponible en este momento.");
+            return new ClaveRechazada("El diagnóstico con foto no está disponible en este momento.");
         }
-        log.error("Gemini respondió {} al analizar una foto: {}", estado, detalle);
+        log.error("Gemini respondió {} con el modelo {} al analizar una foto: {}", estado, modelo, detalle);
         return new ExternalApiException("El servicio de diagnóstico no respondió bien. Inténtalo de nuevo en un momento.");
     }
 
