@@ -13,7 +13,7 @@ public interface DiagnosticoIaPort {
 
     /**
      * @param jpeg foto ya reducida y sin metadatos
-     * @return vacío si el servicio declinó analizar la foto
+     * @return vacío si el servicio no quiso o no pudo responder sobre esa foto
      * @throws com.agroruta.shared.exception.ExternalApiException si el servicio falló o no respondió
      */
     Optional<AnalisisFoto> analizar(byte[] jpeg, ContextoCultivo contexto);

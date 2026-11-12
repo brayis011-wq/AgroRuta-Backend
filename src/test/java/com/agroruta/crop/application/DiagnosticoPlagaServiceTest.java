@@ -96,7 +96,7 @@ class DiagnosticoPlagaServiceTest {
     private static AnalisisFoto roya() {
         return new AnalisisFoto(true, "Roya del café (Hemileia vastatrix)", TipoProblema.ENFERMEDAD, ConfianzaDiagnostico.MEDIA,
                 "Polvillo  anaranjado\nen el envés.", List.of("Revisa el resto del lote.", "  ", "Retira las hojas más afectadas."),
-                List.of("Mancha de hierro"), "", "claude-opus-5-5");
+                List.of("Mancha de hierro"), "", "gemini-3.8-flash");
     }
 
     @Test
@@ -188,7 +188,7 @@ class DiagnosticoPlagaServiceTest {
     @Test
     void unaFotoSinPlantaNoSeGuardaPeroCuenta() {
         when(ia.analizar(any(), any())).thenReturn(Optional.of(new AnalisisFoto(false, "Se ve una herramienta, no una planta.",
-                null, null, null, null, null, null, "claude-opus-5-5")));
+                null, null, null, null, null, null, "gemini-3.8-flash")));
         BusinessException e = assertThrows(BusinessException.class,
                 () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         assertEquals(ErrorCode.INVALID_OPERATION, e.getErrorCode());
