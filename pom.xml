@@ -157,13 +157,6 @@
 			<version>3.5.3</version>
 		</dependency>
 
-		<!-- Diagnóstico de plagas y enfermedades a partir de una foto (API de Claude) -->
-		<dependency>
-			<groupId>com.anthropic</groupId>
-			<artifactId>anthropic-java</artifactId>
-			<version>3.3.0</version>
-		</dependency>
-
 		<!-- TEST -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
