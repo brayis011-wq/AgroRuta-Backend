@@ -18,6 +18,8 @@ public class Cosecha {
     private Long siembraId;
     /** Precio de venta por kilo (COP); null si no se registró */
     private Double precioKg;
+    /** Se registró dentro del periodo de carencia de una fumigación (la persona lo confirmó) */
+    private boolean enCarencia;
 
     public Cosecha(Long id, LocalDate fecha, Double cantidadKg,
                    CalidadCosecha calidad, String observaciones, Long siembraId) {

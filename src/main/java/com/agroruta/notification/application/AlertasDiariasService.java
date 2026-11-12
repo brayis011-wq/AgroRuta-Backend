@@ -47,20 +47,33 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     private final CorreoPort correo;
     private final StockBajoUseCase stockBajo;
     private final Clock reloj;
+    /** null en pruebas antiguas: el resumen sale sin los consejos por horas */
+    private final com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima;
+    /** null si no hay avisos push (pruebas): el resumen solo sale por correo */
+    private com.agroruta.notification.application.ports.in.AvisosPushUseCase push;
     /** Último día que se mandó, para que un reintento de la tarea no duplique correos */
     private final AtomicReference<LocalDate> ultimoEnvio = new AtomicReference<>();
 
     @Autowired
     public AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                                  AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo) {
+                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo,
+                                 com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
         this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo,
-                Clock.system(ZoneId.of("America/Bogota")));
+                Clock.system(ZoneId.of("America/Bogota")), consejosClima);
     }
 
     AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                           AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
                           MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj) {
+        this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo, reloj, null);
+    }
+
+    AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
+                          AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
+                          MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj,
+                          com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
+        this.consejosClima = consejosClima;
         this.usuarios = usuarios;
         this.preferencias = preferencias;
         this.alertasCultivo = alertasCultivo;
@@ -70,6 +83,11 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         this.correo = correo;
         this.stockBajo = stockBajo;
         this.reloj = reloj;
+    }
+
+    @Autowired(required = false)
+    void setPush(com.agroruta.notification.application.ports.in.AvisosPushUseCase push) {
+        this.push = push;
     }
 
     @Override
@@ -82,9 +100,13 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         }
         int enviados = 0;
         for (Usuario u : usuarios.findAllActivos()) {
-            if (u.getRol() != Rol.Agricultor || !preferencias.obtener(u.getId()).alertasCultivo()) continue;
+            if (u.getRol() != Rol.Agricultor) continue;
+            // El correo se puede apagar en Configuración; el aviso push sale si activó los avisos en algún dispositivo
+            boolean porCorreo = preferencias.obtener(u.getId()).alertasCultivo();
+            boolean porPush = push != null && push.tieneSuscripcion(u.getId());
+            if (!porCorreo && !porPush) continue;
             try {
-                if (enviarA(u, hoy)) enviados++;
+                if (enviarA(u, hoy, porCorreo, porPush)) enviados++;
             } catch (RuntimeException e) {
                 log.warn("No se pudo armar el resumen del agricultor {}", u.getId(), e);
             }
@@ -93,12 +115,56 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         return enviados;
     }
 
-    private boolean enviarA(Usuario u, LocalDate hoy) {
+    private boolean enviarA(Usuario u, LocalDate hoy, boolean porCorreo, boolean porPush) {
         List<AlertaCultivo> alertas = alertasCultivo.alertasDelDia(u.getId(), hoy);
         List<ClimaFinca> tiempo = climaDe(u.getId(), alertas.stream().anyMatch(AlertaCultivo::esFumigacionPendiente));
         List<StockInsumo> stock = stockDe(u.getId());
-        if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty()) return false;
-        return correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock));
+        List<com.agroruta.weather.domain.ConsejoClima> consejos = consejosDe(u.getId());
+        if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty() && consejos.isEmpty()) return false;
+        if (porPush) {
+            push.enviar(u.getId(), new com.agroruta.notification.domain.AvisoPush("Tu finca hoy",
+                    resumenCorto(alertas, tiempo, stock, consejos, hoy), "/dashboard", "resumen-" + hoy));
+        }
+        return porCorreo && correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock, consejos));
+    }
+
+    /** Lo esencial del día en una o dos líneas, para la notificación del teléfono */
+    static String resumenCorto(List<AlertaCultivo> alertas, List<ClimaFinca> tiempo, List<StockInsumo> stock,
+                               List<com.agroruta.weather.domain.ConsejoClima> consejos, LocalDate hoy) {
+        List<String> partes = new ArrayList<>();
+        // Primero lo que cambia el plan del día: no fumigar, helada, lluvia fuerte
+        consejos.stream()
+                .filter(c -> c.nivel() == com.agroruta.weather.domain.ConsejoClima.Nivel.ALERTA)
+                .findFirst()
+                .or(() -> consejos.stream().findFirst())
+                .ifPresent(c -> {
+                    String texto = MensajesCorreo.consejo(c, hoy);
+                    String donde = c.lote() != null ? c.lote() : c.finca();
+                    partes.add((donde == null ? "" : donde + ": ") + texto.replaceAll("\\.$", ""));
+                });
+        if (consejos.isEmpty() && !tiempo.isEmpty()) {
+            partes.add("Alerta de clima en " + tiempo.get(0).finca());
+        }
+        if (!alertas.isEmpty()) {
+            partes.add(alertas.size() == 1 ? "1 aviso del cultivo" : alertas.size() + " avisos del cultivo");
+        }
+        if (!stock.isEmpty()) {
+            partes.add(stock.size() == 1 ? "1 insumo por acabarse" : stock.size() + " insumos por acabarse");
+        }
+        String texto = String.join(" · ", partes);
+        return texto.isEmpty() ? texto : Character.toUpperCase(texto.charAt(0)) + texto.substring(1);
+    }
+
+    /** "No fumigues hoy: llueve a las 3"; si falla, el resumen sale igual sin esa parte */
+    private List<com.agroruta.weather.domain.ConsejoClima> consejosDe(Long agricultorId) {
+        if (consejosClima == null) return List.of();
+        try {
+            // Un "todo bien para fumigar" no justifica un correo por sí solo, pero sí acompaña a los demás avisos
+            return consejosClima.consejos(agricultorId);
+        } catch (RuntimeException e) {
+            log.warn("Sin consejos de clima para el agricultor {}: {}", agricultorId, e.getMessage());
+            return List.of();
+        }
     }
 
     /** Insumos que se están acabando; si falla, el resumen sale igual sin esa parte */

@@ -20,6 +20,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.LinkedHashMap;
@@ -81,9 +84,9 @@ public class GlobalExceptionHandler {
         // Un duplicado es un conflicto (409); el resto de reglas de negocio, 422.
         // Demasiados intentos de inicio de sesión: 429.
         HttpStatus status = switch (ex.getErrorCode()) {
-            case RESOURCE_ALREADY_EXISTS -> HttpStatus.CONFLICT;
+            case RESOURCE_ALREADY_EXISTS, DUPLICATE_SUBMISSION -> HttpStatus.CONFLICT;
             case TOO_MANY_ATTEMPTS -> HttpStatus.TOO_MANY_REQUESTS;
-            case EMAIL_NOT_VERIFIED -> HttpStatus.FORBIDDEN;
+            case EMAIL_NOT_VERIFIED, TWO_FACTOR_REQUIRED -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
 
@@ -213,6 +216,28 @@ public class GlobalExceptionHandler {
 
         return simple(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ARGUMENT,
                 "Falta el parámetro obligatorio '" + ex.getParameterName() + "'.");
+    }
+
+    // ── Archivo adjunto demasiado grande ─────────────────────────────────────
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleArchivoGrande(
+            MaxUploadSizeExceededException ex, HttpServletRequest req) {
+
+        log.warn("[{}] Archivo demasiado grande en {}", MDC.get(MdcKeys.TRACE_ID), req.getRequestURI());
+
+        return simple(HttpStatus.CONTENT_TOO_LARGE, ErrorCode.INVALID_ARGUMENT,
+                "El archivo pesa demasiado. El máximo es 6 MB.");
+    }
+
+    // ── Falta el archivo o el envío no llegó completo ────────────────────────
+    @ExceptionHandler({MissingServletRequestPartException.class, MultipartException.class})
+    public ResponseEntity<ErrorResponse> handleArchivoAusente(Exception ex, HttpServletRequest req) {
+
+        log.warn("[{}] Envío de archivo incompleto en {}: {}",
+                MDC.get(MdcKeys.TRACE_ID), req.getRequestURI(), ex.getMessage());
+
+        return simple(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ARGUMENT,
+                "Falta el archivo o no llegó completo. Inténtalo de nuevo.");
     }
 
     // ── Ruta inexistente ─────────────────────────────────────────────────────

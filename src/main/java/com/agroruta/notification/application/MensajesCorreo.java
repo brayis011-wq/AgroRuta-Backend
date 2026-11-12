@@ -161,6 +161,13 @@ public class MensajesCorreo {
     /** @param stock insumos bajos, agotados o en negativo en la bodega */
     public Correo resumenDiario(String nombre, String email, LocalDate hoy,
                                 List<AlertaCultivo> alertas, List<ClimaFinca> clima, List<StockInsumo> stock) {
+        return resumenDiario(nombre, email, hoy, alertas, clima, stock, List.of());
+    }
+
+    /** @param consejos lo que el pronóstico por horas cambia en la agenda ("no fumigues hoy: llueve a las 3") */
+    public Correo resumenDiario(String nombre, String email, LocalDate hoy,
+                                List<AlertaCultivo> alertas, List<ClimaFinca> clima, List<StockInsumo> stock,
+                                List<com.agroruta.weather.domain.ConsejoClima> consejos) {
         List<String[]> fumigar = new ArrayList<>(), labores = new ArrayList<>(),
                 restricciones = new ArrayList<>(), tiempo = new ArrayList<>(), bodega = new ArrayList<>();
         for (StockInsumo s : stock) {
@@ -190,8 +197,18 @@ public class MensajesCorreo {
                         + a.titulo() + ")."});
             }
         }
+        // Con consejos por horas de una finca, sobra el aviso general de esa misma finca
+        java.util.Set<String> conConsejo = new java.util.HashSet<>();
+        for (com.agroruta.weather.domain.ConsejoClima c : consejos) {
+            String texto = consejo(c, hoy);
+            if (texto == null) continue;
+            conConsejo.add(c.finca());
+            String donde = c.lote() == null ? c.finca() : c.finca() + " / " + c.lote();
+            tiempo.add(new String[]{donde, "· " + texto});
+        }
         boolean hayFumigacion = alertas.stream().anyMatch(AlertaCultivo::esFumigacionPendiente);
         for (ClimaFinca c : clima) {
+            if (conConsejo.contains(c.finca())) continue;
             Pronostico p = c.pronostico();
             List<String> partes = new ArrayList<>();
             if (p.riesgoHelada()) partes.add("riesgo de helada (mínima de " + grados(p.tempMin()) + ")");
@@ -205,7 +222,7 @@ public class MensajesCorreo {
         PlantillaCorreo p = PlantillaCorreo.con("Tu cultivo hoy, " + hoy.format(DIA))
                 .resumen(total == 1 ? "Tienes 1 aviso para hoy." : "Tienes " + total + " avisos para hoy.")
                 .parrafo("Hola " + primerNombre(nombre) + ", esto es lo que conviene tener en cuenta hoy:");
-        if (!tiempo.isEmpty()) p.seccion("Clima (próximas 24 horas)").lista(tiempo);
+        if (!tiempo.isEmpty()) p.seccion("Clima y lo que tienes programado").lista(tiempo);
         if (!fumigar.isEmpty()) p.seccion("Fumigaciones").lista(fumigar);
         if (!labores.isEmpty()) p.seccion("Labores programadas").lista(labores);
         if (!restricciones.isEmpty()) p.seccion("Reentrada y cosecha").lista(restricciones);
@@ -271,6 +288,34 @@ public class MensajesCorreo {
             case "CHEQUE" -> "Cheque";
             default -> metodo;
         };
+    }
+
+    /** Texto de un consejo de clima; null si no vale la pena decirlo en el correo */
+    static String consejo(com.agroruta.weather.domain.ConsejoClima c, LocalDate hoy) {
+        String dia = c.dia() != null && c.dia().isAfter(hoy) ? "mañana" : "hoy";
+        String porque = "VIENTO".equals(c.motivo()) ? "viento fuerte" : "lluvia";
+        String desde = c.problemaDesde() == null ? "" : " desde las " + hora(c.problemaDesde());
+        String ventana = c.ventanaInicio() == null ? ""
+                : (c.ventanaInicio().toLocalDate().isAfter(hoy) ? "mañana " : "hoy ") + "entre las "
+                + hora(c.ventanaInicio()) + " y las " + hora(c.ventanaFin());
+        return switch (c.tipo()) {
+            case NO_FUMIGAR -> "no fumigues " + dia + ": " + porque + desde + "."
+                    + (ventana.isEmpty() ? "" : " Mejor " + ventana + ".");
+            case FUMIGAR_EN_VENTANA -> "si vas a fumigar " + dia + ", hazlo " + ventana.replaceFirst("^(hoy|mañana) ", "")
+                    + ": " + porque + desde + ".";
+            case FUMIGAR_BIEN -> "buen tiempo para fumigar " + dia + ": sin lluvia ni viento fuerte.";
+            case NO_REGAR -> "no hace falta regar hoy: se esperan " + mm(c.valor() == null ? 0 : c.valor()) + " de lluvia" + desde + ".";
+            case HELADA -> "riesgo de helada (mínima de " + grados(c.valor() == null ? 0 : c.valor()) + ")"
+                    + (c.problemaDesde() == null ? "" : " hacia las " + hora(c.problemaDesde())) + ".";
+            case LLUVIA_FUERTE -> "lluvia fuerte (" + mm(c.valor() == null ? 0 : c.valor()) + ")" + desde + ".";
+        };
+    }
+
+    /** "3 p. m.", "10:30 a. m." (a mano: el formato de Java usa espacios especiales) */
+    static String hora(java.time.LocalDateTime t) {
+        int h = t.getHour() % 12 == 0 ? 12 : t.getHour() % 12;
+        String minutos = t.getMinute() == 0 ? "" : String.format(":%02d", t.getMinute());
+        return h + minutos + (t.getHour() < 12 ? " a. m." : " p. m.");
     }
 
     private static String grados(double t) {

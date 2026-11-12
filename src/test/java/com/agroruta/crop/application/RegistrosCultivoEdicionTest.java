@@ -43,7 +43,7 @@ class RegistrosCultivoEdicionTest {
 
     @BeforeEach
     void setUp() {
-        cosechas = new CosechaService(cosechaRepository, siembraUseCase);
+        cosechas = new CosechaService(cosechaRepository, siembraUseCase, fumigacionRepository);
         fumigaciones = new FumigacionService(fumigacionRepository, siembraUseCase,
                 org.mockito.Mockito.mock(com.agroruta.crop.application.ports.out.InventarioPort.class),
                 org.mockito.Mockito.mock(LoteRepository.class), org.mockito.Mockito.mock(FincaRepository.class));

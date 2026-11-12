@@ -1,6 +1,8 @@
 package com.agroruta.crop.application;
 
 import com.agroruta.crop.application.ports.out.CosechaRepository;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.BusinessException;
@@ -26,6 +28,9 @@ class CosechaServiceTest {
 
     @Mock
     private SiembraUseCase siembraUseCase;
+
+    @Mock
+    private FumigacionRepository fumigacionRepository;
 
     @InjectMocks
     private CosechaService service;
@@ -59,6 +64,42 @@ class CosechaServiceTest {
 
         assertThrows(BusinessException.class, () ->
                 service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId));
+    }
+
+    @Test
+    void noDejaCosecharEnCarenciaSinConfirmar() {
+        Fumigacion f = Fumigacion.fromManualEntry(fecha.minusDays(3), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
+        f.fijarRestricciones(new RestriccionesFumigacion(14, null));
+        when(fumigacionRepository.findBySiembraId(siembraId)).thenReturn(List.of(f));
+
+        BusinessException e = assertThrows(BusinessException.class, () ->
+                service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, false));
+
+        assertEquals(ErrorCode.HARVEST_IN_WITHDRAWAL, e.getErrorCode());
+        assertTrue(e.getMessage().contains("Mancozeb"));
+        verify(cosechaRepository, never()).save(any());
+    }
+
+    @Test
+    void conConfirmacionGuardaLaCosechaMarcadaEnCarencia() {
+        Fumigacion f = Fumigacion.fromManualEntry(fecha.minusDays(3), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
+        f.fijarRestricciones(new RestriccionesFumigacion(14, null));
+        when(fumigacionRepository.findBySiembraId(siembraId)).thenReturn(List.of(f));
+        when(cosechaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Cosecha r = service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, true);
+
+        assertTrue(r.isEnCarencia());
+    }
+
+    @Test
+    void fueraDeLaCarenciaNoQuedaMarcada() {
+        Fumigacion f = Fumigacion.fromManualEntry(fecha.minusDays(20), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
+        f.fijarRestricciones(new RestriccionesFumigacion(14, null));
+        when(fumigacionRepository.findBySiembraId(siembraId)).thenReturn(List.of(f));
+        when(cosechaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        assertFalse(service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, false).isEnCarencia());
     }
 
     @Test

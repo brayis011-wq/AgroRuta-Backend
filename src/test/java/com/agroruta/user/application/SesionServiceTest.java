@@ -44,7 +44,7 @@ class SesionServiceTest {
 
         @Override public Sesion guardar(Sesion s) {
             Sesion g = s.getId() != null ? s : new Sesion(sec++, s.getUsuarioId(), s.getTokenHash(), s.getCreadoEn(),
-                    s.getExpiraEn(), s.getRotadoEn(), s.getRevocadoEn());
+                    s.getExpiraEn(), s.getRotadoEn(), s.getRevocadoEn(), s.getFamilia(), s.getDispositivo(), s.getIniciadaEn());
             filas.removeIf(f -> f.getId().equals(g.getId()));
             filas.add(g);
             return g;
@@ -57,6 +57,18 @@ class SesionServiceTest {
         }
         @Override public void borrarVencidas(Long usuarioId, LocalDateTime ahora) {
             filas.removeIf(f -> f.getUsuarioId().equals(usuarioId) && f.vencida(ahora));
+        }
+        @Override public List<Sesion> buscarAbiertas(Long usuarioId, LocalDateTime ahora) {
+            return filas.stream().filter(f -> f.getUsuarioId().equals(usuarioId) && f.abierta(ahora)).toList();
+        }
+        @Override public void revocarFamilia(Long usuarioId, String familia, LocalDateTime ahora) {
+            filas.stream().filter(f -> f.getUsuarioId().equals(usuarioId) && familia.equals(f.getFamilia())).forEach(f -> f.revocar(ahora));
+        }
+        @Override public int revocarOtras(Long usuarioId, String familia, LocalDateTime ahora) {
+            List<Sesion> otras = filas.stream()
+                    .filter(f -> f.getUsuarioId().equals(usuarioId) && !familia.equals(f.getFamilia()) && !f.revocada()).toList();
+            otras.forEach(f -> f.revocar(ahora));
+            return otras.size();
         }
         long abiertas() { return filas.stream().filter(f -> !f.revocada() && !f.rotada()).count(); }
     }

@@ -32,6 +32,9 @@ public class CosechaEntity {
     @Column(name = "precio_kg")
     private Double precioKg;
 
+    @Column(name = "en_carencia", nullable = false)
+    private boolean enCarencia;
+
     @Column(nullable = false)
     private Long siembraId;
 
@@ -54,6 +57,9 @@ public class CosechaEntity {
 
     public Double getPrecioKg() { return precioKg; }
     public void setPrecioKg(Double precioKg) { this.precioKg = precioKg; }
+
+    public boolean isEnCarencia() { return enCarencia; }
+    public void setEnCarencia(boolean enCarencia) { this.enCarencia = enCarencia; }
 
     public Long getSiembraId() { return siembraId; }
     public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }

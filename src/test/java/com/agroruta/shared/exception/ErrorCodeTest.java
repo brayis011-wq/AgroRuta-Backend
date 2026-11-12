@@ -13,7 +13,8 @@ class ErrorCodeTest {
     @Test
     @DisplayName("debe contener exactamente 12 códigos definidos")
     void shouldContainExactlyElevenCodes() {
-        assertThat(ErrorCode.values()).hasSize(12);
+        // Se sumaron: cosecha en carencia, segundo factor (falta / incorrecto) y envío duplicado
+        assertThat(ErrorCode.values()).hasSize(16);
     }
 
     @ParameterizedTest(name = "{0} debe tener code y defaultMessage no nulos ni vacíos")

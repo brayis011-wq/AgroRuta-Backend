@@ -17,4 +17,8 @@ public class LoginRequest {
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(max = 72, message = "La contraseña no puede superar 72 caracteres")
     private String password;
+
+    /** Código de la app de autenticación o de respaldo; solo si la cuenta tiene verificación en dos pasos */
+    @Size(max = 20, message = "El código no puede superar 20 caracteres")
+    private String codigo;
 }

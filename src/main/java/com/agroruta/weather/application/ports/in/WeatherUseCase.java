@@ -9,4 +9,7 @@ public interface WeatherUseCase {
     Weather getWeatherByCoordinates(double lat, double lon);
     /** Mínima, máxima, lluvia y viento de las próximas 24 horas */
     Pronostico getPronostico24h(double lat, double lon);
+
+    /** Las próximas 48 horas en franjas de tres horas. Se guarda media hora para no gastar la cuota de OpenWeather. */
+    java.util.List<com.agroruta.weather.domain.FranjaClima> getFranjas48h(double lat, double lon);
 }
