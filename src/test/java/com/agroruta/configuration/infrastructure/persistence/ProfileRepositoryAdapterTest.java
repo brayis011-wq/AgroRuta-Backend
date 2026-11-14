@@ -26,6 +26,7 @@ import static org.mockito.Mockito.*;
  * Qué se verifica aquí:
  *  - Mapeo correcto entre UsuarioEntity ↔ Perfil (dominio).
  *  - Delegación exacta al puerto secundario JpaUsuarioRepository.
+ *  - La foto se lee y se guarda en su propia tabla (JpaFotoPerfilRepository).
  *  - Manejo de Optional vacío → RuntimeException en cada método.
  *  - Que los campos modificados en guardar() y cambiarPassword()
  *    se aplican sobre la entidad antes de persistir.
@@ -37,8 +38,13 @@ class ProfileRepositoryAdapterTest {
     @Mock
     private JpaUsuarioRepository jpaUsuarioRepository;
 
+    @Mock
+    private JpaFotoPerfilRepository jpaFotoPerfilRepository;
+
     @InjectMocks
     private ProfileRepositoryAdapter adapter;
+
+    private static final String FOTO = "https://cdn.agroruta.com/foto.jpg";
 
     // ── fixture ──────────────────────────────────────────────────────────────
     private UsuarioEntity entityEjemplo;
@@ -50,7 +56,6 @@ class ProfileRepositoryAdapterTest {
         entityEjemplo.setNombre("Ana Gómez");
         entityEjemplo.setEmail("ana@agroruta.com");
         entityEjemplo.setTelefono("3001234567");
-        entityEjemplo.setFotoPerfil("https://cdn.agroruta.com/foto.jpg");
         entityEjemplo.setPassword("$2a$10$hash");
         entityEjemplo.setRol(Rol.Agricultor);
     }
@@ -67,6 +72,8 @@ class ProfileRepositoryAdapterTest {
         void deberiaRetornarPerfil_cuandoEmailExiste() {
             when(jpaUsuarioRepository.findByEmail("ana@agroruta.com"))
                     .thenReturn(Optional.of(entityEjemplo));
+            when(jpaFotoPerfilRepository.findById(1L))
+                    .thenReturn(Optional.of(new FotoPerfilEntity(1L, FOTO)));
 
             Optional<Perfil> resultado = adapter.buscarPorEmail("ana@agroruta.com");
 
@@ -76,7 +83,7 @@ class ProfileRepositoryAdapterTest {
             assertThat(perfil.getNombre()).isEqualTo("Ana Gómez");
             assertThat(perfil.getEmail()).isEqualTo("ana@agroruta.com");
             assertThat(perfil.getTelefono()).isEqualTo("3001234567");
-            assertThat(perfil.getFotoPerfil()).isEqualTo("https://cdn.agroruta.com/foto.jpg");
+            assertThat(perfil.getFotoPerfil()).isEqualTo(FOTO);
             assertThat(perfil.getRol()).isEqualTo(Rol.Agricultor);
             verify(jpaUsuarioRepository, times(1)).findByEmail("ana@agroruta.com");
         }
@@ -149,7 +156,6 @@ class ProfileRepositoryAdapterTest {
             entityActualizada.setNombre("Ana Nueva");
             entityActualizada.setEmail("ana@agroruta.com");
             entityActualizada.setTelefono("3109876543");
-            entityActualizada.setFotoPerfil("https://cdn.agroruta.com/nueva.jpg");
             entityActualizada.setRol(Rol.Agricultor);
             when(jpaUsuarioRepository.save(any(UsuarioEntity.class))).thenReturn(entityActualizada);
 
@@ -161,11 +167,48 @@ class ProfileRepositoryAdapterTest {
             UsuarioEntity entityCapturada = captor.getValue();
             assertThat(entityCapturada.getNombre()).isEqualTo("Ana Nueva");
             assertThat(entityCapturada.getTelefono()).isEqualTo("3109876543");
-            assertThat(entityCapturada.getFotoPerfil()).isEqualTo("https://cdn.agroruta.com/nueva.jpg");
 
-            // y que el retorno está correctamente mapeado
+            // la foto va a su propia tabla, con el id del usuario como clave
+            ArgumentCaptor<FotoPerfilEntity> foto = ArgumentCaptor.forClass(FotoPerfilEntity.class);
+            verify(jpaFotoPerfilRepository).save(foto.capture());
+            assertThat(foto.getValue().getUsuarioId()).isEqualTo(1L);
+            assertThat(foto.getValue().getFoto()).isEqualTo("https://cdn.agroruta.com/nueva.jpg");
+            verify(jpaFotoPerfilRepository, never()).deleteById(any());
+
+            // y que el retorno está correctamente mapeado, sin volver a leer la foto
             assertThat(resultado.getNombre()).isEqualTo("Ana Nueva");
             assertThat(resultado.getTelefono()).isEqualTo("3109876543");
+            assertThat(resultado.getFotoPerfil()).isEqualTo("https://cdn.agroruta.com/nueva.jpg");
+            verify(jpaFotoPerfilRepository, never()).findById(any());
+        }
+
+        @Test
+        @DisplayName("al quitar la foto borra su fila")
+        void deberiaBorrarLaFoto_cuandoSeQuita() {
+            Perfil sinFoto = new Perfil(1L, "Ana Gómez", "ana@agroruta.com", "3001234567", null, Rol.Agricultor);
+            when(jpaUsuarioRepository.findById(1L)).thenReturn(Optional.of(entityEjemplo));
+            when(jpaUsuarioRepository.save(any(UsuarioEntity.class))).thenReturn(entityEjemplo);
+            when(jpaFotoPerfilRepository.existsById(1L)).thenReturn(true);
+
+            Perfil resultado = adapter.guardar(sinFoto);
+
+            verify(jpaFotoPerfilRepository).deleteById(1L);
+            verify(jpaFotoPerfilRepository, never()).save(any());
+            assertThat(resultado.getFotoPerfil()).isNull();
+        }
+
+        @Test
+        @DisplayName("sin foto antes ni después no toca la tabla de fotos")
+        void noDeberiaBorrarNada_cuandoNuncaHuboFoto() {
+            Perfil sinFoto = new Perfil(1L, "Ana Gómez", "ana@agroruta.com", "3001234567", "  ", Rol.Agricultor);
+            when(jpaUsuarioRepository.findById(1L)).thenReturn(Optional.of(entityEjemplo));
+            when(jpaUsuarioRepository.save(any(UsuarioEntity.class))).thenReturn(entityEjemplo);
+            when(jpaFotoPerfilRepository.existsById(1L)).thenReturn(false);
+
+            adapter.guardar(sinFoto);
+
+            verify(jpaFotoPerfilRepository, never()).deleteById(any());
+            verify(jpaFotoPerfilRepository, never()).save(any());
         }
 
         @Test
@@ -181,6 +224,7 @@ class ProfileRepositoryAdapterTest {
                     .hasMessage("Usuario no encontrado");
 
             verify(jpaUsuarioRepository, never()).save(any());
+            verifyNoInteractions(jpaFotoPerfilRepository);
         }
     }
 
@@ -258,6 +302,7 @@ class ProfileRepositoryAdapterTest {
         @DisplayName("debería mapear todos los campos de UsuarioEntity a Perfil correctamente")
         void deberiaMappearTodosLosCampos() {
             when(jpaUsuarioRepository.findById(1L)).thenReturn(Optional.of(entityEjemplo));
+            when(jpaFotoPerfilRepository.findById(1L)).thenReturn(Optional.of(new FotoPerfilEntity(1L, FOTO)));
 
             Perfil perfil = adapter.buscarPorId(1L).orElseThrow();
 
@@ -265,7 +310,7 @@ class ProfileRepositoryAdapterTest {
             assertThat(perfil.getNombre()).isEqualTo(entityEjemplo.getNombre());
             assertThat(perfil.getEmail()).isEqualTo(entityEjemplo.getEmail());
             assertThat(perfil.getTelefono()).isEqualTo(entityEjemplo.getTelefono());
-            assertThat(perfil.getFotoPerfil()).isEqualTo(entityEjemplo.getFotoPerfil());
+            assertThat(perfil.getFotoPerfil()).isEqualTo(FOTO);
             assertThat(perfil.getRol()).isEqualTo(entityEjemplo.getRol());
         }
 
@@ -273,8 +318,8 @@ class ProfileRepositoryAdapterTest {
         @DisplayName("debería mapear campos nulos sin lanzar excepción")
         void deberiaMappearCamposNulos() {
             entityEjemplo.setTelefono(null);
-            entityEjemplo.setFotoPerfil(null);
             when(jpaUsuarioRepository.findById(1L)).thenReturn(Optional.of(entityEjemplo));
+            when(jpaFotoPerfilRepository.findById(1L)).thenReturn(Optional.empty());
 
             Perfil perfil = adapter.buscarPorId(1L).orElseThrow();
 
