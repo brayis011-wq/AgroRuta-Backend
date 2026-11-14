@@ -43,3 +43,20 @@ jobs:
             -H "X-Tarea-Token: $TAREAS_TOKEN" \
             "$API_URL/api/jobs/daily-alerts?forzar=$FORZAR"
           echo
+
+      # Sesiones y enlaces de correo vencidos: sin esto esas tablas solo crecen.
+      # Corre aunque el resumen haya fallado; el backend ya quedó despierto con el paso anterior.
+      - name: Borrar sesiones y enlaces vencidos
+        if: ${{ !cancelled() }}
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$TAREAS_TOKEN" ]; then
+            echo "::warning::Faltan los secretos API_URL o TAREAS_TOKEN; no se limpia nada."
+            exit 0
+          fi
+          curl -fsS --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors -X POST \
+            -H "X-Tarea-Token: $TAREAS_TOKEN" \
+            "${API_URL%/}/api/jobs/cleanup"
+          echo
