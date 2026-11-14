@@ -3,7 +3,9 @@ package com.agroruta.crop.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.agroruta.shared.util.Dinero;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 /**
  * Modelo de dominio de Fumigación (refactorizado).
@@ -28,7 +30,7 @@ public class Fumigacion {
     /** Horas sin entrar al lote después de aplicar */
     private Integer reentradaHoras;
     /** Costo del producto aplicado (COP) */
-    private Double costo;
+    private BigDecimal costo;
     /** Producto gastado en total (se descuenta de la bodega); la dosis es una concentración */
     private Double cantidadUsada;
     private UnidadMedida unidadCantidad;
@@ -72,7 +74,7 @@ public class Fumigacion {
         if (r == null) return;
         this.diasCarencia = r.diasCarencia();
         this.reentradaHoras = r.reentradaHoras();
-        this.costo = r.costo();
+        this.costo = Dinero.redondear(r.costo());
         if (r.tieneCantidadUsada()) {
             this.cantidadUsada = r.cantidadUsada();
             this.unidadCantidad = UnidadMedida.valueOf(r.unidadCantidad().trim().toUpperCase());
@@ -85,6 +87,10 @@ public class Fumigacion {
     /** ¿Hay que descontar producto de la bodega? Solo con insumo del catálogo y cantidad usada */
     public boolean descuentaDeBodega() {
         return tieneInsumoDelCatalogo() && cantidadUsada != null && unidadCantidad != null;
+    }
+
+    public void setCosto(BigDecimal costo) {
+        this.costo = Dinero.redondear(costo);
     }
 
     public boolean tieneInsumoDelCatalogo() {

@@ -157,29 +157,29 @@ class CosechaRepositoryImplTest {
         assertTrue(resultado.isEmpty());
     }
 
-    // ── existsByFechaAndSiembraId ─────────────────────────────────
+    // ── existsByFechaAndSiembraIdAndCalidad ─────────────────────────────────
 
     @Test
-    void deberiaRetornarTrueSiExisteCosechaConMismaFechaYSiembra() {
-        when(jpaRepository.existsByFechaAndSiembraId(FECHA, SIEMBRA_ID)).thenReturn(true);
+    void deberiaRetornarTrueSiExisteCosechaConMismaFechaSiembraYCalidad() {
+        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA)).thenReturn(true);
 
-        assertTrue(repository.existsByFechaAndSiembraId(FECHA, SIEMBRA_ID));
+        assertTrue(repository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA));
     }
 
     @Test
     void deberiaRetornarFalseSiNoExisteCosechaConEsaCombinacion() {
-        when(jpaRepository.existsByFechaAndSiembraId(FECHA, SIEMBRA_ID)).thenReturn(false);
+        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA)).thenReturn(false);
 
-        assertFalse(repository.existsByFechaAndSiembraId(FECHA, SIEMBRA_ID));
+        assertFalse(repository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA));
     }
 
     @Test
     void existsDeberiaDelegarAlJpaConLosParametrosCorrectos() {
-        when(jpaRepository.existsByFechaAndSiembraId(any(), any())).thenReturn(false);
+        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(any(), any(), any())).thenReturn(false);
 
-        repository.existsByFechaAndSiembraId(FECHA, SIEMBRA_ID);
+        repository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA);
 
-        verify(jpaRepository, times(1)).existsByFechaAndSiembraId(FECHA, SIEMBRA_ID);
+        verify(jpaRepository, times(1)).existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA);
     }
 
     // ── totalKgBySiembraId ───────────────────────────────────────

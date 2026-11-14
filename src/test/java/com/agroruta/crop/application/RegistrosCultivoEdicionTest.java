@@ -73,7 +73,7 @@ class RegistrosCultivoEdicionTest {
     void editarCosechaCambiaKilosCalidadYFecha() {
         Cosecha c = new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, "ok", 5L);
         when(cosechaRepository.findById(1L)).thenReturn(Optional.of(c));
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha.plusDays(1), 5L)).thenReturn(false);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha.plusDays(1), 5L, CalidadCosecha.SEGUNDA)).thenReturn(false);
 
         Cosecha r = cosechas.actualizarCosecha(1L, fecha.plusDays(1), 25.5, "segunda", null);
 
@@ -84,21 +84,41 @@ class RegistrosCultivoEdicionTest {
     }
 
     @Test
-    void editarCosechaNoPuedeQuedarElMismoDiaQueOtra() {
+    void editarCosechaNoPuedeQuedarElMismoDiaQueOtraDeSuCalidad() {
         when(cosechaRepository.findById(1L)).thenReturn(Optional.of(
                 new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha.plusDays(2), 5L)).thenReturn(true);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha.plusDays(2), 5L, CalidadCosecha.PRIMERA)).thenReturn(true);
 
         assertThrows(BusinessException.class, () ->
                 cosechas.actualizarCosecha(1L, fecha.plusDays(2), 20.0, "PRIMERA", null));
+        verify(cosechaRepository, never()).save(any());
+    }
+
+    @Test
+    void editarCosechaNoPuedeCambiarALaCalidadDeOtraDelMismoDia() {
+        when(cosechaRepository.findById(1L)).thenReturn(Optional.of(
+                new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, 5L, CalidadCosecha.SEGUNDA)).thenReturn(true);
+
+        assertThrows(BusinessException.class, () ->
+                cosechas.actualizarCosecha(1L, fecha, 20.0, "SEGUNDA", null));
+        verify(cosechaRepository, never()).save(any());
+    }
+
+    @Test
+    void editarCosechaPuedeCambiarAUnaCalidadLibreDelMismoDia() {
+        when(cosechaRepository.findById(1L)).thenReturn(Optional.of(
+                new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, 5L, CalidadCosecha.TERCERA)).thenReturn(false);
+
+        assertEquals(CalidadCosecha.TERCERA, cosechas.actualizarCosecha(1L, fecha, 20.0, "TERCERA", null).getCalidad());
     }
 
     @Test
     void editarCosechaSinCambiarLaFechaNoChocaConsigoMisma() {
         when(cosechaRepository.findById(1L)).thenReturn(Optional.of(
                 new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha, 5L)).thenReturn(true);
-
+        // Ni la fecha ni la calidad cambian: no se pregunta si ya existe (sería ella misma)
         assertEquals(30.0, cosechas.actualizarCosecha(1L, fecha, 30.0, "PRIMERA", null).getCantidadKg());
     }
 

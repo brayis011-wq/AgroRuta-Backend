@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import com.agroruta.crop.domain.CalidadCosecha;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.jpa.repository.Query;
@@ -15,7 +16,7 @@ public interface JpaCosechaRepository extends JpaRepository<CosechaEntity, Long>
     @Query("SELECT SUM(c.cantidadKg) FROM CosechaEntity c WHERE c.siembraId = :siembraId")
     Double sumCantidadKgBySiembraId(@Param("siembraId") Long siembraId);
 
-    boolean existsByFechaAndSiembraId(LocalDate fecha, Long siembraId);
+    boolean existsByFechaAndSiembraIdAndCalidad(LocalDate fecha, Long siembraId, CalidadCosecha calidad);
 
     // nuevo — cuenta cosechas por siembra
     @Query("SELECT COUNT(c) FROM CosechaEntity c WHERE c.siembraId = :siembraId")

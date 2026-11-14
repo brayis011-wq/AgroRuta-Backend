@@ -2,6 +2,7 @@ package com.agroruta.crop.application.ports.out;
 
 import java.time.LocalDate;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 /**
  * Lo que las fumigaciones le piden a la bodega de insumos: descontar el producto gastado
@@ -15,7 +16,7 @@ public interface InventarioPort {
      * @param unidad LITROS, ML, KG o GRAMOS
      * @return lo que costó a precio promedio de compra, si hay compras con precio
      */
-    Optional<Double> registrarUso(Long fumigacionId, Long agricultorId, Long insumoId,
+    Optional<BigDecimal> registrarUso(Long fumigacionId, Long agricultorId, Long insumoId,
                                   double cantidad, String unidad, LocalDate fecha);
 
     /** Devuelve a la bodega el producto de una fumigación (se borró o ya no usa un insumo del catálogo) */

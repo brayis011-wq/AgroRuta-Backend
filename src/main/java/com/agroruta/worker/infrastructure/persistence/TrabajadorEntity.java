@@ -7,7 +7,10 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "trabajadores")
+@Table(name = "trabajadores", uniqueConstraints = {
+        // Única por agricultor: la misma persona puede trabajar para dos agricultores
+        @UniqueConstraint(name = "uk_trabajador_cedula_agricultor", columnNames = {"cedula", "agricultor_id"})
+})
 public class TrabajadorEntity {
 
     @Id
@@ -20,7 +23,7 @@ public class TrabajadorEntity {
     @Column(nullable = false, length = 100)
     private String apellido;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String cedula;
 
     @Column(length = 20)

@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -61,7 +62,7 @@ class RespuestasCultivoTest {
     void cosecha() {
         Cosecha c = new Cosecha();
         c.setId(4L); c.setFecha(dia); c.setCantidadKg(100.0); c.setCalidad(CalidadCosecha.PRIMERA);
-        c.setObservaciones("buena"); c.setSiembraId(3L); c.setPrecioKg(8000.0);
+        c.setObservaciones("buena"); c.setSiembraId(3L); c.setPrecioKg(new BigDecimal("8000"));
         mismoJson(c, CosechaResponse.from(c));
     }
 
@@ -69,7 +70,7 @@ class RespuestasCultivoTest {
     void fumigacion() {
         Fumigacion f = Fumigacion.fromCatalog(dia, "Glifosato", 10L, 2.5, UnidadMedida.LITROS, 5.0, "obs", 3L);
         f.setId(6L);
-        f.fijarRestricciones(new RestriccionesFumigacion(2, 24, 22500.0, 0.75, "LITROS"));
+        f.fijarRestricciones(new RestriccionesFumigacion(2, 24, new BigDecimal("22500"), 0.75, "LITROS"));
         mismoJson(f, FumigacionResponse.from(f));
     }
 
@@ -77,7 +78,7 @@ class RespuestasCultivoTest {
     void actividadCultivo() {
         ActividadCultivo a = new ActividadCultivo();
         a.setId(7L); a.setTipo(TipoActividad.PODA); a.setDescripcion("poda"); a.setFecha(dia);
-        a.setSiembraId(3L); a.setCosto(50000.0);
+        a.setSiembraId(3L); a.setCosto(new BigDecimal("50000"));
         mismoJson(a, ActividadCultivoResponse.from(a));
     }
 

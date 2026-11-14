@@ -3,6 +3,7 @@ package com.agroruta.crop.infrastructure.persistence;
 import com.agroruta.crop.domain.TipoActividad;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "actividades_cultivo", uniqueConstraints = {
@@ -30,7 +31,8 @@ public class ActividadCultivoEntity {
     @Column(nullable = false)
     private Long siembraId;
 
-    private Double costo;
+    @Column(precision = 14, scale = 2)
+    private BigDecimal costo;
 
     public ActividadCultivoEntity() {}
 
@@ -49,6 +51,6 @@ public class ActividadCultivoEntity {
     public Long getSiembraId() { return siembraId; }
     public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }
 
-    public Double getCosto() { return costo; }
-    public void setCosto(Double costo) { this.costo = costo; }
+    public BigDecimal getCosto() { return costo; }
+    public void setCosto(BigDecimal costo) { this.costo = costo; }
 }

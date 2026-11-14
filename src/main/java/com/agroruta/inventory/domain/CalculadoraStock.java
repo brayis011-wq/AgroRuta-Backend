@@ -1,5 +1,6 @@
 package com.agroruta.inventory.domain;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -22,13 +23,14 @@ public final class CalculadoraStock {
      * Null si ninguna compra tiene precio.
      */
     public static Double costoPromedio(List<MovimientoInventario> movimientos) {
-        double costo = 0, cantidad = 0;
+        BigDecimal costo = BigDecimal.ZERO; // el dinero se suma exacto; solo la división final es aproximada
+        double cantidad = 0;
         for (MovimientoInventario m : movimientos) {
             if (m.getTipo() != TipoMovimiento.COMPRA || m.getCostoTotal() == null || m.getCantidad() <= 0) continue;
-            costo += m.getCostoTotal();
+            costo = costo.add(m.getCostoTotal());
             cantidad += m.getCantidad();
         }
-        return cantidad > 0 ? costo / cantidad : null;
+        return cantidad > 0 ? costo.doubleValue() / cantidad : null;
     }
 
     public static EstadoStock estado(double cantidad, Double minimo) {

@@ -65,7 +65,7 @@ class TrabajadorServiceTest {
     @Test
     @DisplayName("registrarTrabajador debe crear y guardar el trabajador con estado ACTIVO")
     void registrarTrabajador_datosValidos_debeCrearYGuardar() {
-        when(trabajadorRepository.existePorCedula("999999")).thenReturn(false);
+        when(trabajadorRepository.existePorCedulaYAgricultor("999999", 7L)).thenReturn(false);
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
         when(trabajadorRepository.guardar(any(Trabajador.class))).thenReturn(trabajadorActivo);
 
@@ -81,7 +81,7 @@ class TrabajadorServiceTest {
     @Test
     @DisplayName("registrarTrabajador debe asignar el cargo correcto al trabajador")
     void registrarTrabajador_debeAsignarCargo() {
-        when(trabajadorRepository.existePorCedula("999999")).thenReturn(false);
+        when(trabajadorRepository.existePorCedulaYAgricultor("999999", 7L)).thenReturn(false);
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
         when(trabajadorRepository.guardar(any(Trabajador.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -95,7 +95,7 @@ class TrabajadorServiceTest {
     @Test
     @DisplayName("registrarTrabajador debe lanzar BusinessException cuando la cédula ya existe")
     void registrarTrabajador_cedulaDuplicada_debeLanzarBusinessException() {
-        when(trabajadorRepository.existePorCedula("123456")).thenReturn(true);
+        when(trabajadorRepository.existePorCedulaYAgricultor("123456", 7L)).thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
@@ -111,7 +111,7 @@ class TrabajadorServiceTest {
     @Test
     @DisplayName("registrarTrabajador debe lanzar ResourceNotFoundException cuando el cargo no existe")
     void registrarTrabajador_cargoInexistente_debeLanzarResourceNotFoundException() {
-        when(trabajadorRepository.existePorCedula("999999")).thenReturn(false);
+        when(trabajadorRepository.existePorCedulaYAgricultor("999999", 7L)).thenReturn(false);
         when(cargoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(

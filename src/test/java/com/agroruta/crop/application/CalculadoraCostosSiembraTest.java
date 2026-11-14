@@ -16,21 +16,25 @@ class CalculadoraCostosSiembraTest {
         return new JornalDeSiembra(LocalDate.parse(fecha), trabajador, nombre, BigDecimal.valueOf(valor));
     }
 
+    private static BigDecimal pesos(Double v) {
+        return v == null ? null : BigDecimal.valueOf(v);
+    }
+
     private Fumigacion fumigacion(String fecha, Double costo) {
         Fumigacion f = Fumigacion.fromManualEntry(LocalDate.parse(fecha), "Mancozeb", 1.0, UnidadMedida.KG, 1.0, null, 1L);
-        f.fijarRestricciones(new RestriccionesFumigacion(null, null, costo));
+        f.fijarRestricciones(new RestriccionesFumigacion(null, null, pesos(costo)));
         return f;
     }
 
     private ActividadCultivo actividad(String fecha, Double costo) {
         ActividadCultivo a = new ActividadCultivo(null, TipoActividad.TUTOREO, "Tutores", LocalDate.parse(fecha), 1L);
-        a.setCosto(costo);
+        a.setCosto(pesos(costo));
         return a;
     }
 
     private Cosecha cosecha(String fecha, double kg, Double precio) {
         Cosecha c = new Cosecha(null, LocalDate.parse(fecha), kg, CalidadCosecha.PRIMERA, null, 1L);
-        c.setPrecioKg(precio);
+        c.setPrecioKg(pesos(precio));
         return c;
     }
 
@@ -84,6 +88,18 @@ class CalculadoraCostosSiembraTest {
         assertNull(c.ganancia());
         assertNull(c.precioPromedioKg());
         assertEquals(0, c.costoPorKg());
+    }
+
+    @Test
+    void losCentavosSeSumanExactos() {
+        // 0,70 + 1,40 + 1,40 = 3,50 → 4 pesos. Sumado en double daba 3,4999999999999996 → 3
+        CostosSiembra c = CalculadoraCostosSiembra.calcular(1L, List.of(), List.of(),
+                List.of(actividad("2026-10-01", 0.7), actividad("2026-10-02", 1.4), actividad("2026-10-03", 1.4)),
+                List.of());
+
+        assertEquals(4, c.otros());
+        assertEquals(4, c.costoTotal());
+        assertEquals(4, c.meses().get(0).otros());
     }
 
     @Test

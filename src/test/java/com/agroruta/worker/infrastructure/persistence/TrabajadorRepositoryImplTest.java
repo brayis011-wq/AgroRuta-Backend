@@ -156,35 +156,30 @@ class TrabajadorRepositoryImplTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  buscarPorCedula
+    //  buscarPorCedulaNormalizada
     // ══════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("buscarPorCedula()")
-    class BuscarPorCedula {
+    @DisplayName("buscarPorCedulaNormalizada()")
+    class BuscarPorCedulaNormalizada {
 
         @Test
-        @DisplayName("Debe retornar Optional con el trabajador mapeado cuando la cédula existe")
-        void debeRetornarTrabajadorSiCedulaExiste() {
-            when(jpa.findByCedula("123456789")).thenReturn(Optional.of(entityBase));
+        @DisplayName("Debe retornar todos los registros con esa cédula (uno por agricultor)")
+        void debeRetornarTodosLosRegistrosConEsaCedula() {
+            when(jpa.findByCedulaNormalizada("123456789")).thenReturn(List.of(entityBase, entityBase));
 
-            Optional<Trabajador> resultado = repository.buscarPorCedula("123456789");
+            List<Trabajador> resultado = repository.buscarPorCedulaNormalizada("123456789");
 
-            assertTrue(resultado.isPresent());
-            assertEquals(1L,          resultado.get().getId());
-            assertEquals("123456789", resultado.get().getCedula());
-            assertEquals("Juan",      resultado.get().getNombre());
-            verify(jpa, times(1)).findByCedula("123456789");
+            assertEquals(2, resultado.size());
+            assertEquals("123456789", resultado.get(0).getCedula());
+            assertEquals("Juan",      resultado.get(0).getNombre());
         }
 
         @Test
-        @DisplayName("Debe retornar Optional vacío cuando la cédula no existe")
-        void debeRetornarOptionalVacioSiCedulaNoExiste() {
-            when(jpa.findByCedula("000000000")).thenReturn(Optional.empty());
+        @DisplayName("Debe retornar lista vacía cuando ningún agricultor registró la cédula")
+        void debeRetornarListaVaciaSiCedulaNoExiste() {
+            when(jpa.findByCedulaNormalizada("000000000")).thenReturn(List.of());
 
-            Optional<Trabajador> resultado = repository.buscarPorCedula("000000000");
-
-            assertTrue(resultado.isEmpty());
-            verify(jpa, times(1)).findByCedula("000000000");
+            assertTrue(repository.buscarPorCedulaNormalizada("000000000").isEmpty());
         }
     }
 
@@ -309,32 +304,28 @@ class TrabajadorRepositoryImplTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  existePorCedula
+    //  existePorCedulaYAgricultor
     // ══════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("existePorCedula()")
-    class ExistePorCedula {
+    @DisplayName("existePorCedulaYAgricultor()")
+    class ExistePorCedulaYAgricultor {
 
         @Test
-        @DisplayName("Debe retornar true cuando la cédula ya está registrada")
-        void debeRetornarTrueSiCedulaExiste() {
-            when(jpa.existsByCedula("123456789")).thenReturn(true);
+        @DisplayName("Debe retornar true cuando ese agricultor ya registró la cédula")
+        void debeRetornarTrueSiElAgricultorYaLaTiene() {
+            when(jpa.existsByCedulaAndAgricultorId("123456789", 7L)).thenReturn(true);
 
-            boolean resultado = repository.existePorCedula("123456789");
-
-            assertTrue(resultado);
-            verify(jpa, times(1)).existsByCedula("123456789");
+            assertTrue(repository.existePorCedulaYAgricultor("123456789", 7L));
+            verify(jpa, times(1)).existsByCedulaAndAgricultorId("123456789", 7L);
         }
 
         @Test
-        @DisplayName("Debe retornar false cuando la cédula no está registrada")
-        void debeRetornarFalseSiCedulaNoExiste() {
-            when(jpa.existsByCedula("000000000")).thenReturn(false);
+        @DisplayName("Debe retornar false cuando la cédula solo la tiene otro agricultor")
+        void debeRetornarFalseSiLaTieneOtroAgricultor() {
+            when(jpa.existsByCedulaAndAgricultorId("123456789", 8L)).thenReturn(false);
 
-            boolean resultado = repository.existePorCedula("000000000");
-
-            assertFalse(resultado);
-            verify(jpa, times(1)).existsByCedula("000000000");
+            assertFalse(repository.existePorCedulaYAgricultor("123456789", 8L));
+            verify(jpa, times(1)).existsByCedulaAndAgricultorId("123456789", 8L);
         }
     }
 }

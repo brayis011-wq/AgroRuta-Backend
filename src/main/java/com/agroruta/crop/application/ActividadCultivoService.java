@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.agroruta.shared.exception.ErrorCode;
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 @Service
 public class ActividadCultivoService implements ActividadCultivoUseCase {
@@ -28,7 +29,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
 
     @Override
     public ActividadCultivo registrarActividad(String tipo, String descripcion,
-                                               LocalDate fecha, Long siembraId, Double costo) {
+                                               LocalDate fecha, Long siembraId, BigDecimal costo) {
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
             throw new BusinessException("La siembra está finalizada; reábrela para registrar más actividades.");
@@ -59,7 +60,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
     }
 
     @Override
-    public ActividadCultivo actualizarActividad(Long id, String tipo, String descripcion, LocalDate fecha, Double costo) {
+    public ActividadCultivo actualizarActividad(Long id, String tipo, String descripcion, LocalDate fecha, BigDecimal costo) {
         ActividadCultivo actividad = buscarActividadPorId(id);
         actividad.setCosto(costo);
         return actualizar(actividad, tipo, descripcion, fecha);

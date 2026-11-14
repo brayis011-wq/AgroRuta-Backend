@@ -4,6 +4,7 @@ import com.agroruta.crop.domain.Cosecha;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 public interface CosechaUseCase {
 
@@ -13,10 +14,10 @@ public interface CosechaUseCase {
      * (HARVEST_IN_WITHDRAWAL); con esto se guarda marcada como "en carencia".
      */
     Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg, String calidad, String observaciones,
-                             Long siembraId, Double precioKg, boolean confirmarCarencia);
+                             Long siembraId, BigDecimal precioKg, boolean confirmarCarencia);
 
     default Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg,
-                                     String calidad, String observaciones, Long siembraId, Double precioKg) {
+                                     String calidad, String observaciones, Long siembraId, BigDecimal precioKg) {
         return registrarCosecha(fecha, cantidadKg, calidad, observaciones, siembraId, precioKg, false);
     }
 
@@ -37,10 +38,10 @@ public interface CosechaUseCase {
 
     /** precioKg null = sin precio. confirmarCarencia: igual que al registrar. */
     Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                              String calidad, String observaciones, Double precioKg, boolean confirmarCarencia);
+                              String calidad, String observaciones, BigDecimal precioKg, boolean confirmarCarencia);
 
     default Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                                      String calidad, String observaciones, Double precioKg) {
+                                      String calidad, String observaciones, BigDecimal precioKg) {
         return actualizarCosecha(id, fecha, cantidadKg, calidad, observaciones, precioKg, false);
     }
 

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,7 +18,7 @@ class CalculadoraStockTest {
     private final InsumoCatalogo mancozeb = new InsumoCatalogo(1L, "Mancozeb", "FUNGICIDA", MeasurementUnit.GRAMOS, true);
 
     private MovimientoInventario compra(double g, Double costo) {
-        return MovimientoInventario.compra(9L, 1L, g, costo, dia, null, null);
+        return MovimientoInventario.compra(9L, 1L, g, costo == null ? null : BigDecimal.valueOf(costo), dia, null, null);
     }
 
     @Test

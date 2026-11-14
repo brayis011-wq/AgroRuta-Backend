@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.math.BigDecimal;
 
 /**
  * Fumigaciones de una siembra. Si el producto es del catálogo y se indica la cantidad total usada,
@@ -137,7 +138,7 @@ public class FumigacionService implements FumigacionUseCase {
         }
         Long agricultorId = agricultorDe(siembra).orElse(null);
         if (agricultorId == null) return f;
-        Optional<Double> costo = inventario.registrarUso(f.getId(), agricultorId, f.getAgriculturalInputId(),
+        Optional<BigDecimal> costo = inventario.registrarUso(f.getId(), agricultorId, f.getAgriculturalInputId(),
                 f.getCantidadUsada(), f.getUnidadCantidad().name(), f.getFecha());
         if (f.getCosto() == null && costo.isPresent()) {
             f.setCosto(costo.get());

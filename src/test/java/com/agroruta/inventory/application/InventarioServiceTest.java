@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,16 +46,17 @@ class InventarioServiceTest {
     }
 
     private MovimientoInventario compra(Long insumo, double base, Double costo) {
-        return MovimientoInventario.compra(ana, insumo, base, costo, hoy.minusDays(5), null, null);
+        return MovimientoInventario.compra(ana, insumo, base, costo == null ? null : BigDecimal.valueOf(costo),
+                hoy.minusDays(5), null, null);
     }
 
     @Test
     void laCompraSeGuardaEnLaUnidadBase() {
-        MovimientoInventario m = service.registrarCompra(ana, 1L, 2.5, "LITROS", 90000.0, null, " Agro El Valle ", "");
+        MovimientoInventario m = service.registrarCompra(ana, 1L, 2.5, "LITROS", new BigDecimal("90000"), null, " Agro El Valle ", "");
 
         assertEquals(TipoMovimiento.COMPRA, m.getTipo());
         assertEquals(2500, m.getCantidad());
-        assertEquals(90000.0, m.getCostoTotal());
+        assertEquals(new BigDecimal("90000.00"), m.getCostoTotal());
         assertEquals(hoy, m.getFecha());
         assertEquals("Agro El Valle", m.getProveedor());
         assertNull(m.getObservaciones());
@@ -120,14 +122,14 @@ class InventarioServiceTest {
         when(repo.usoDeFumigacion(7L)).thenReturn(Optional.empty());
         when(repo.movimientosDe(ana, 1L)).thenReturn(List.of(compra(1L, 4000, 120000.0)));  // 30 $/ml
 
-        Optional<Double> costo = service.registrarUso(7L, ana, 1L, 0.75, "LITROS", hoy);
+        Optional<BigDecimal> costo = service.registrarUso(7L, ana, 1L, 0.75, "LITROS", hoy);
 
         ArgumentCaptor<MovimientoInventario> g = ArgumentCaptor.forClass(MovimientoInventario.class);
         verify(repo).guardar(g.capture());
         assertEquals(TipoMovimiento.USO, g.getValue().getTipo());
         assertEquals(750, g.getValue().getCantidad());
         assertEquals(7L, g.getValue().getFumigacionId());
-        assertEquals(Optional.of(22500.0), costo);
+        assertEquals(Optional.of(BigDecimal.valueOf(22500)), costo);
     }
 
     @Test
@@ -137,7 +139,7 @@ class InventarioServiceTest {
         when(repo.usoDeFumigacion(7L)).thenReturn(Optional.of(anterior));
         when(repo.movimientosDe(ana, 1L)).thenReturn(List.of());
 
-        Optional<Double> costo = service.registrarUso(7L, ana, 1L, 300, "ML", hoy);
+        Optional<BigDecimal> costo = service.registrarUso(7L, ana, 1L, 300, "ML", hoy);
 
         assertEquals(70L, anterior.getId());
         assertEquals(300, anterior.getCantidad());
@@ -196,7 +198,7 @@ class InventarioServiceTest {
 
         CostoEstimado c = service.costoEstimado(ana, 2L, 0.4, "KG");
 
-        assertEquals(10000.0, c.costo());
+        assertEquals(BigDecimal.valueOf(10000), c.costo());
         assertEquals(2000, c.disponible());
         assertEquals(UnidadBase.GRAMOS, c.unidadBase());
     }

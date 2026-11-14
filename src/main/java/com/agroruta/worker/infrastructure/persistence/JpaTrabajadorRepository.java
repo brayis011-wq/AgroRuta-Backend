@@ -9,13 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 interface JpaTrabajadorRepository extends JpaRepository<TrabajadorEntity, Long> {
-    Optional<TrabajadorEntity> findByCedula(String cedula);
-
     Optional<TrabajadorEntity> findFirstByUsuarioId(Long usuarioId);
 
     @Query("SELECT t FROM TrabajadorEntity t WHERE UPPER(REPLACE(REPLACE(REPLACE(t.cedula, '.', ''), ' ', ''), '-', '')) = :cedula")
     List<TrabajadorEntity> findByCedulaNormalizada(@Param("cedula") String cedula);
-    boolean existsByCedula(String cedula);
+    boolean existsByCedulaAndAgricultorId(String cedula, Long agricultorId);
     List<TrabajadorEntity> findByEstado(EstadoTrabajador estado);
     List<TrabajadorEntity> findByAgricultorId(Long agricultorId);
     List<TrabajadorEntity> findByAgricultorIdAndEstado(Long agricultorId, EstadoTrabajador estado);
