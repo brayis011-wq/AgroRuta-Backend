@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import com.agroruta.worker.domain.PagosDelMes;
 import com.agroruta.worker.domain.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -304,6 +305,39 @@ class PagoRepositoryImplTest {
 
             assertTrue(resultado.isEmpty());
             verify(jpa, times(1)).findAll();
+        }
+    }
+
+    @Nested
+    @DisplayName("totalesPorMes()")
+    class TotalesPorMes {
+
+        @Test
+        @DisplayName("Arma un renglón por mes, del más antiguo al más reciente")
+        void debeArmarUnRenglonPorMes() {
+            LocalDate desde = LocalDate.of(2025, 12, 1);
+            when(jpa.totalesPorMes(7L, desde)).thenReturn(List.of(
+                    new Object[]{2026, 1, new BigDecimal("150000.00"), 2L},
+                    new Object[]{2025, 12, new BigDecimal("80000.00"), 1L}));
+
+            List<PagosDelMes> meses = repository.totalesPorMes(7L, desde);
+
+            assertEquals(2, meses.size());
+            assertEquals("2025-12", meses.get(0).mes());
+            assertEquals(0, new BigDecimal("80000").compareTo(meses.get(0).total()));
+            assertEquals(1, meses.get(0).cantidad());
+            assertEquals("2026-01", meses.get(1).mes());
+            assertEquals(0, new BigDecimal("150000").compareTo(meses.get(1).total()));
+            assertEquals(2, meses.get(1).cantidad());
+        }
+
+        @Test
+        @DisplayName("Sin pagos devuelve lista vacía")
+        void sinPagos() {
+            LocalDate desde = LocalDate.of(2026, 1, 1);
+            when(jpa.totalesPorMes(null, desde)).thenReturn(List.of());
+
+            assertTrue(repository.totalesPorMes(null, desde).isEmpty());
         }
     }
 }

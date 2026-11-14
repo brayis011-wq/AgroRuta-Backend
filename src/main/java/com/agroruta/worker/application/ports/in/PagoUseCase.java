@@ -1,5 +1,7 @@
 package com.agroruta.worker.application.ports.in;
 
+import com.agroruta.worker.domain.PagosDelMes;
+import java.time.LocalDate;
 import com.agroruta.worker.domain.ResumenPagos;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.MetodoPago;
@@ -24,4 +26,7 @@ public interface PagoUseCase {
     Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano);
 
     ResumenPagos resumen(Long agricultorId, Long nominaId);
+
+    /** Lo pagado cada mes desde una fecha. agricultorId null = todos (Administrador). */
+    List<PagosDelMes> totalesPorMes(Long agricultorId, LocalDate desde);
 }

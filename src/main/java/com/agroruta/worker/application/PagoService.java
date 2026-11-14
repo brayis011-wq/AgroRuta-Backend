@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.domain.PagosDelMes;
 import com.agroruta.worker.domain.ResumenPagos;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -120,5 +121,10 @@ public class PagoService implements PagoUseCase {
     @Override
     public ResumenPagos resumen(Long agricultorId, Long nominaId) {
         return pagoRepository.resumen(agricultorId, nominaId);
+    }
+
+    @Override
+    public List<PagosDelMes> totalesPorMes(Long agricultorId, LocalDate desde) {
+        return pagoRepository.totalesPorMes(agricultorId, desde);
     }
 }

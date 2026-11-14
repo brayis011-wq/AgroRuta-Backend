@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.worker.domain.PagosDelMes;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.application.ports.out.PagoRepository;
@@ -309,5 +310,15 @@ class PagoServiceTest {
     void listarTodosDe_conIdNulo_debeRetornarVacio() {
         assertTrue(pagoService.listarTodosDe(null).isEmpty());
         verify(pagoRepository, never()).listarPorAgricultor(any());
+    }
+
+    @Test
+    @DisplayName("totalesPorMes pide a la base lo pagado cada mes")
+    void totalesPorMes_delegaEnElRepositorio() {
+        LocalDate desde = LocalDate.of(2026, 10, 1);
+        List<PagosDelMes> meses = List.of(new PagosDelMes("2026-10", new BigDecimal("90000"), 1));
+        when(pagoRepository.totalesPorMes(7L, desde)).thenReturn(meses);
+
+        assertEquals(meses, pagoService.totalesPorMes(7L, desde));
     }
 }
