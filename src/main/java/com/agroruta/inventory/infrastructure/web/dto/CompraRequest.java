@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Data
 public class CompraRequest {
@@ -21,7 +22,8 @@ public class CompraRequest {
 
     // Opcional: lo que costó la compra completa (COP); sin él no se puede calcular el costo de las fumigaciones
     @PositiveOrZero(message = "El costo no puede ser negativo")
-    private Double costoTotal;
+    @DecimalMax(value = "999999999999.99", message = "El valor es demasiado grande")
+    private BigDecimal costoTotal;
 
     @PastOrPresent(message = "La fecha de compra no puede ser futura")
     private LocalDate fecha;

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
@@ -12,6 +13,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Data
 public class FumigacionRequest {
@@ -53,7 +55,8 @@ public class FumigacionRequest {
 
     // Opcional: costo del producto aplicado (COP)
     @PositiveOrZero(message = "El costo no puede ser negativo")
-    private Double costo;
+    @DecimalMax(value = "999999999999.99", message = "El valor es demasiado grande")
+    private BigDecimal costo;
 
     // Opcional: producto gastado en total (la dosis es una concentración). Si el producto es del
     // catálogo, se descuenta de la bodega de insumos. Unidad: LITROS, ML, GRAMOS o KG.

@@ -3,6 +3,7 @@ package com.agroruta.crop.infrastructure.persistence;
 import com.agroruta.crop.domain.UnidadMedida;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "fumigaciones")
@@ -43,7 +44,8 @@ public class FumigacionEntity {
     @Column(name = "reentrada_horas")
     private Integer reentradaHoras;
 
-    private Double costo;
+    @Column(precision = 14, scale = 2)
+    private BigDecimal costo;
 
     /** Producto gastado en total: lo que se descontó de la bodega de insumos */
     @Column(name = "cantidad_usada")
@@ -67,8 +69,8 @@ public class FumigacionEntity {
     public Integer getDiasCarencia() { return diasCarencia; }
     public void setDiasCarencia(Integer v) { this.diasCarencia = v; }
 
-    public Double getCosto() { return costo; }
-    public void setCosto(Double v) { this.costo = v; }
+    public BigDecimal getCosto() { return costo; }
+    public void setCosto(BigDecimal v) { this.costo = v; }
 
     public Integer getReentradaHoras() { return reentradaHoras; }
     public void setReentradaHoras(Integer v) { this.reentradaHoras = v; }

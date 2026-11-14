@@ -3,12 +3,13 @@ package com.agroruta.crop.infrastructure.persistence;
 import com.agroruta.crop.domain.CalidadCosecha;
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "cosechas", uniqueConstraints = {
         @UniqueConstraint(
-                name = "uk_cosecha_fecha_siembra",
-                columnNames = {"fecha", "siembraId"}
+                name = "uk_cosecha_fecha_siembra_calidad",
+                columnNames = {"fecha", "siembraId", "calidad"}
         )
 })
 public class CosechaEntity {
@@ -29,8 +30,8 @@ public class CosechaEntity {
 
     private String observaciones;
 
-    @Column(name = "precio_kg")
-    private Double precioKg;
+    @Column(name = "precio_kg", precision = 14, scale = 2)
+    private BigDecimal precioKg;
 
     @Column(name = "en_carencia", nullable = false)
     private boolean enCarencia;
@@ -55,8 +56,8 @@ public class CosechaEntity {
     public String getObservaciones() { return observaciones; }
     public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
 
-    public Double getPrecioKg() { return precioKg; }
-    public void setPrecioKg(Double precioKg) { this.precioKg = precioKg; }
+    public BigDecimal getPrecioKg() { return precioKg; }
+    public void setPrecioKg(BigDecimal precioKg) { this.precioKg = precioKg; }
 
     public boolean isEnCarencia() { return enCarencia; }
     public void setEnCarencia(boolean enCarencia) { this.enCarencia = enCarencia; }

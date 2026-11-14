@@ -3,7 +3,9 @@ package com.agroruta.crop.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.agroruta.shared.util.Dinero;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -16,7 +18,7 @@ public class ActividadCultivo {
     private LocalDate fecha;
     private Long siembraId;
     /** Costo de materiales o servicios de la actividad (COP), aparte de los jornales */
-    private Double costo;
+    private BigDecimal costo;
 
     public ActividadCultivo(Long id, TipoActividad tipo, String descripcion,
                             LocalDate fecha, Long siembraId) {
@@ -25,5 +27,9 @@ public class ActividadCultivo {
         this.descripcion = descripcion;
         this.fecha = fecha;
         this.siembraId = siembraId;
+    }
+
+    public void setCosto(BigDecimal costo) {
+        this.costo = Dinero.redondear(costo);
     }
 }

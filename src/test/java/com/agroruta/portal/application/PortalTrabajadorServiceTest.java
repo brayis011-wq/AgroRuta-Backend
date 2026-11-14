@@ -66,7 +66,7 @@ class PortalTrabajadorServiceTest {
         @Test
         @DisplayName("busca la cédula normalizada y deja la solicitud pendiente")
         void creaSolicitud() {
-            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(Optional.of(luis));
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(List.of(luis));
             when(trabajadorRepository.buscarPorUsuarioId(9L)).thenReturn(Optional.empty());
 
             service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1.052.334.120");
@@ -78,7 +78,7 @@ class PortalTrabajadorServiceTest {
         @Test
         @DisplayName("rechaza una cédula que ningún agricultor registró")
         void cedulaDesconocida() {
-            when(trabajadorRepository.buscarPorCedulaNormalizada("123456")).thenReturn(Optional.empty());
+            when(trabajadorRepository.buscarPorCedulaNormalizada("123456")).thenReturn(List.of());
 
             assertThatThrownBy(() -> service.validarCedulaDisponible("123456"))
                     .isInstanceOf(BusinessException.class)
@@ -89,11 +89,46 @@ class PortalTrabajadorServiceTest {
         @DisplayName("rechaza una cédula que ya usa otra cuenta")
         void cedulaOcupada() {
             luis.solicitarAcceso(7L, "Otra", "otra@gmail.com");
-            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(Optional.of(luis));
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(List.of(luis));
 
             assertThatThrownBy(() -> service.validarCedulaDisponible("1052334120"))
                     .isInstanceOf(BusinessException.class)
                     .hasMessageContaining("ya tiene una cuenta");
+        }
+
+        @Test
+        @DisplayName("con la cédula en dos agricultores, la solicitud va al registro activo más antiguo")
+        void cedulaConDosAgricultores() {
+            Trabajador conOtroAgricultor = new Trabajador(30L, "Luis", "Rojas", "1052334120", null, null,
+                    LocalDate.of(2026, 3, 1), TipoContrato.JORNAL, luis.getCargo());
+            Trabajador inactivo = new Trabajador(2L, "Luis", "Rojas", "1052334120", null, null,
+                    LocalDate.of(2024, 1, 1), TipoContrato.JORNAL, luis.getCargo());
+            inactivo.desactivar();
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120"))
+                    .thenReturn(List.of(conOtroAgricultor, inactivo, luis));
+            when(trabajadorRepository.buscarPorUsuarioId(9L)).thenReturn(Optional.empty());
+
+            service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1052334120");
+
+            assertThat(luis.getAccesoEstado()).isEqualTo(EstadoAccesoPortal.PENDIENTE);
+            assertThat(conOtroAgricultor.getUsuarioId()).isNull();
+            assertThat(inactivo.getUsuarioId()).isNull();
+            verify(trabajadorRepository).guardar(luis);
+        }
+
+        @Test
+        @DisplayName("rechaza la cédula si otra cuenta ya la usa con cualquiera de sus agricultores")
+        void cedulaOcupadaConOtroAgricultor() {
+            Trabajador conOtroAgricultor = new Trabajador(30L, "Luis", "Rojas", "1052334120", null, null,
+                    LocalDate.of(2026, 3, 1), TipoContrato.JORNAL, luis.getCargo());
+            conOtroAgricultor.solicitarAcceso(7L, "Otra", "otra@gmail.com");
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120"))
+                    .thenReturn(List.of(luis, conOtroAgricultor));
+
+            assertThatThrownBy(() -> service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1052334120"))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("ya tiene una cuenta");
+            assertThat(luis.getUsuarioId()).isNull();
         }
 
         @Test
@@ -103,7 +138,7 @@ class PortalTrabajadorServiceTest {
                     LocalDate.of(2025, 1, 1), TipoContrato.JORNAL, luis.getCargo());
             anterior.solicitarAcceso(9L, "Luis", "luis@gmail.com");
             anterior.rechazarAcceso();
-            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(Optional.of(luis));
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(List.of(luis));
             when(trabajadorRepository.buscarPorUsuarioId(9L)).thenReturn(Optional.of(anterior));
 
             service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1052334120");

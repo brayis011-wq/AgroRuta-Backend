@@ -15,6 +15,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.math.BigDecimal;
 
 @Service
 public class CosechaService implements CosechaUseCase {
@@ -35,21 +36,20 @@ public class CosechaService implements CosechaUseCase {
 
     @Override
     public Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg, String calidad, String observaciones,
-                                    Long siembraId, Double precioKg, boolean confirmarCarencia) {
+                                    Long siembraId, BigDecimal precioKg, boolean confirmarCarencia) {
 
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
             throw new BusinessException("La siembra está finalizada; reábrela para registrar más cosechas.");
         }
 
-        if (cosechaRepository.existsByFechaAndSiembraId(fecha, siembraId)) {
-            throw fechaRepetida(fecha);
+        // El mismo día se puede cosechar primera, segunda y tercera; lo que no se repite es la calidad
+        CalidadCosecha calidadCosecha = EnumParser.parse(CalidadCosecha.class, calidad, "calidad");
+        if (cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, calidadCosecha)) {
+            throw repetida(fecha, calidadCosecha);
         }
 
-        Cosecha cosecha = new Cosecha(
-                null, fecha, cantidadKg,
-                EnumParser.parse(CalidadCosecha.class, calidad, "calidad"), observaciones, siembraId
-        );
+        Cosecha cosecha = new Cosecha(null, fecha, cantidadKg, calidadCosecha, observaciones, siembraId);
         cosecha.setPrecioKg(precioKg);
         cosecha.setEnCarencia(revisarCarencia(siembraId, fecha, confirmarCarencia));
         return cosechaRepository.save(cosecha);
@@ -69,7 +69,7 @@ public class CosechaService implements CosechaUseCase {
 
     @Override
     public Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                                     String calidad, String observaciones, Double precioKg, boolean confirmarCarencia) {
+                                     String calidad, String observaciones, BigDecimal precioKg, boolean confirmarCarencia) {
         Cosecha cosecha = buscarCosechaPorId(id);
         cosecha.setPrecioKg(precioKg);
         return aplicarCambios(cosecha, fecha, cantidadKg, calidad, observaciones, confirmarCarencia);
@@ -84,8 +84,13 @@ public class CosechaService implements CosechaUseCase {
     private Cosecha aplicarCambios(Cosecha cosecha, LocalDate fecha, Double cantidadKg,
                                    String calidad, String observaciones, boolean confirmarCarencia) {
         boolean cambiaFecha = fecha != null && !fecha.equals(cosecha.getFecha());
-        if (cambiaFecha && cosechaRepository.existsByFechaAndSiembraId(fecha, cosecha.getSiembraId())) {
-            throw fechaRepetida(fecha);
+        CalidadCosecha calidadFinal = calidad != null
+                ? EnumParser.parse(CalidadCosecha.class, calidad, "calidad") : cosecha.getCalidad();
+        if (cambiaFecha || calidadFinal != cosecha.getCalidad()) {
+            LocalDate dia = cambiaFecha ? fecha : cosecha.getFecha();
+            if (cosechaRepository.existsByFechaAndSiembraIdAndCalidad(dia, cosecha.getSiembraId(), calidadFinal)) {
+                throw repetida(dia, calidadFinal);
+            }
         }
         // Si solo se corrigen los kilos o el precio de una cosecha que ya estaba confirmada, no se vuelve a preguntar
         if (cambiaFecha || !cosecha.isEnCarencia()) {
@@ -94,7 +99,7 @@ public class CosechaService implements CosechaUseCase {
         }
         if (fecha != null) cosecha.setFecha(fecha);
         if (cantidadKg != null) cosecha.setCantidadKg(cantidadKg);
-        if (calidad != null) cosecha.setCalidad(EnumParser.parse(CalidadCosecha.class, calidad, "calidad"));
+        cosecha.setCalidad(calidadFinal);
         cosecha.setObservaciones(observaciones);
         return cosechaRepository.save(cosecha);
     }
@@ -120,10 +125,11 @@ public class CosechaService implements CosechaUseCase {
         cosechaRepository.deleteById(id);
     }
 
-    private static BusinessException fechaRepetida(LocalDate fecha) {
+    private static BusinessException repetida(LocalDate fecha, CalidadCosecha calidad) {
         return new BusinessException(
                 ErrorCode.RESOURCE_ALREADY_EXISTS,
-                String.format("Ya existe una cosecha registrada el '%s' para esta siembra.", fecha));
+                String.format("Ya existe una cosecha de %s calidad registrada el '%s' para esta siembra.",
+                        calidad.name().toLowerCase(Locale.ROOT), fecha));
     }
 
     @Override

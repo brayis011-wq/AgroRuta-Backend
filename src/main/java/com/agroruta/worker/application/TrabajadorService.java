@@ -35,9 +35,10 @@ public class TrabajadorService implements TrabajadorUseCase {
                                           String telefono, String direccion,
                                           LocalDate fechaIngreso, TipoContrato tipoContrato,
                                           Long cargoId, Long agricultorId) {
-        if (trabajadorRepository.existePorCedula(cedula)) {
+        // Única por agricultor: otro agricultor puede tener registrada a la misma persona
+        if (trabajadorRepository.existePorCedulaYAgricultor(cedula, agricultorId)) {
             throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    "Ya existe un trabajador con cédula: " + cedula);
+                    "Ya tienes un trabajador con cédula: " + cedula);
         }
 
         Cargo cargo = cargoRepository.buscarPorId(cargoId)

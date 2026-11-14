@@ -3,7 +3,9 @@ package com.agroruta.crop.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.agroruta.shared.util.Dinero;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -17,7 +19,7 @@ public class Cosecha {
     private String observaciones;
     private Long siembraId;
     /** Precio de venta por kilo (COP); null si no se registró */
-    private Double precioKg;
+    private BigDecimal precioKg;
     /** Se registró dentro del periodo de carencia de una fumigación (la persona lo confirmó) */
     private boolean enCarencia;
 
@@ -29,5 +31,9 @@ public class Cosecha {
         this.calidad = calidad;
         this.observaciones = observaciones;
         this.siembraId = siembraId;
+    }
+
+    public void setPrecioKg(BigDecimal precioKg) {
+        this.precioKg = Dinero.redondear(precioKg);
     }
 }

@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "movimientos_inventario")
@@ -34,8 +35,8 @@ public class MovimientoInventarioEntity {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    @Column(name = "costo_total")
-    private Double costoTotal;
+    @Column(name = "costo_total", precision = 14, scale = 2)
+    private BigDecimal costoTotal;
 
     @Column(length = 150)
     private String proveedor;

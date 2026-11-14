@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -116,13 +117,13 @@ class FumigacionServiceTest {
             if (f.getId() == null) f.setId(70L);
             return f;
         });
-        when(inventario.registrarUso(70L, 9L, 10L, 0.75, "LITROS", fecha)).thenReturn(java.util.Optional.of(22500.0));
+        when(inventario.registrarUso(70L, 9L, 10L, 0.75, "LITROS", fecha)).thenReturn(java.util.Optional.of(BigDecimal.valueOf(22500)));
 
         Fumigacion f = service.registrarFumigacion(fecha, "Glifosato", 10L, 2.5, "LITROS", 5.0, null, siembraId,
                 new RestriccionesFumigacion(null, null, null, 0.75, "litros"));
 
         verify(inventario).registrarUso(70L, 9L, 10L, 0.75, "LITROS", fecha);
-        assertEquals(22500.0, f.getCosto());
+        assertEquals(new BigDecimal("22500.00"), f.getCosto());
         assertEquals(UnidadMedida.LITROS, f.getUnidadCantidad());
     }
 
@@ -135,12 +136,12 @@ class FumigacionServiceTest {
             return f;
         });
         when(inventario.registrarUso(any(), any(), any(), anyDouble(), any(), any()))
-                .thenReturn(java.util.Optional.of(22500.0));
+                .thenReturn(java.util.Optional.of(BigDecimal.valueOf(22500)));
 
         Fumigacion f = service.registrarFumigacion(fecha, "Glifosato", 10L, 2.5, "LITROS", 5.0, null, siembraId,
-                new RestriccionesFumigacion(null, null, 18000.0, 0.75, "LITROS"));
+                new RestriccionesFumigacion(null, null, new BigDecimal("18000"), 0.75, "LITROS"));
 
-        assertEquals(18000.0, f.getCosto());
+        assertEquals(new BigDecimal("18000.00"), f.getCosto());
         verify(fumigacionRepository, times(1)).save(any());
     }
 
@@ -161,12 +162,12 @@ class FumigacionServiceTest {
     void alQuitarLaCantidadEnUnaEdicionElProductoVuelveALaBodega() {
         Fumigacion guardada = Fumigacion.fromCatalog(fecha, "Glifosato", 10L, 2.5, UnidadMedida.LITROS, 5.0, null, siembraId);
         guardada.setId(70L);
-        guardada.fijarRestricciones(new RestriccionesFumigacion(null, null, 22500.0, 0.75, "LITROS"));
+        guardada.fijarRestricciones(new RestriccionesFumigacion(null, null, new BigDecimal("22500"), 0.75, "LITROS"));
         when(fumigacionRepository.findById(70L)).thenReturn(java.util.Optional.of(guardada));
         when(fumigacionRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Fumigacion f = service.actualizarFumigacion(70L, fecha, "Glifosato", 10L, 2.5, "LITROS", 5.0, null,
-                new RestriccionesFumigacion(null, null, 22500.0, null, null));
+                new RestriccionesFumigacion(null, null, new BigDecimal("22500"), null, null));
 
         assertNull(f.getCantidadUsada());
         verify(inventario).quitarUso(70L);

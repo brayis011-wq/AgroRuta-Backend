@@ -24,12 +24,8 @@ class TrabajadorRepositoryImpl implements TrabajadorRepository {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }
 
-    @Override public Optional<Trabajador> buscarPorCedula(String cedula) {
-        return jpa.findByCedula(cedula).map(WorkerMapper::toDomain);
-    }
-
-    @Override public Optional<Trabajador> buscarPorCedulaNormalizada(String cedula) {
-        return jpa.findByCedulaNormalizada(cedula).stream().findFirst().map(WorkerMapper::toDomain);
+    @Override public List<Trabajador> buscarPorCedulaNormalizada(String cedula) {
+        return jpa.findByCedulaNormalizada(cedula).stream().map(WorkerMapper::toDomain).toList();
     }
 
     @Override public Optional<Trabajador> buscarPorUsuarioId(Long usuarioId) {
@@ -57,7 +53,7 @@ class TrabajadorRepositoryImpl implements TrabajadorRepository {
 
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 
-    @Override public boolean existePorCedula(String cedula) {
-        return jpa.existsByCedula(cedula);
+    @Override public boolean existePorCedulaYAgricultor(String cedula, Long agricultorId) {
+        return jpa.existsByCedulaAndAgricultorId(cedula, agricultorId);
     }
 }

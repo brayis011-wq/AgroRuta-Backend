@@ -47,7 +47,7 @@ class CosechaServiceTest {
     @Test
     void deberiaRegistrarCosechaCorrectamente() {
         Cosecha cosecha = new Cosecha(1L, fecha, 300.0, CalidadCosecha.PRIMERA, "Buena", siembraId);
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha, siembraId)).thenReturn(false);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA)).thenReturn(false);
         when(cosechaRepository.save(any())).thenReturn(cosecha);
 
         Cosecha resultado = service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId);
@@ -59,11 +59,27 @@ class CosechaServiceTest {
     }
 
     @Test
-    void deberiaLanzarExcepcionSiCosechaYaExisteEnEsaFecha() {
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha, siembraId)).thenReturn(true);
+    void deberiaLanzarExcepcionSiYaHayCosechaDeEsaCalidadEnEsaFecha() {
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () ->
+        BusinessException e = assertThrows(BusinessException.class, () ->
                 service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId));
+        assertTrue(e.getMessage().contains("primera calidad"), e.getMessage());
+        verify(cosechaRepository, never()).save(any());
+    }
+
+    @Test
+    void elMismoDiaSePuedeRegistrarOtraCalidad() {
+        // Ese día ya hay una de primera; solo se pregunta por la calidad que se va a registrar
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.SEGUNDA)).thenReturn(false);
+        when(cosechaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Cosecha segunda = service.registrarCosecha(fecha, 80.0, "SEGUNDA", "Más pequeña", siembraId);
+
+        assertEquals(CalidadCosecha.SEGUNDA, segunda.getCalidad());
+        assertEquals(fecha, segunda.getFecha());
+        verify(cosechaRepository, never())
+                .existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA);
     }
 
     @Test

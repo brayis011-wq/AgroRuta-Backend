@@ -5,6 +5,7 @@ import com.agroruta.crop.domain.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.math.BigDecimal;
 
 /**
  * Lo que la API de cultivos devuelve. Antes se devolvía el objeto de dominio y cualquier campo
@@ -44,7 +45,7 @@ public final class Respuestas {
     }
 
     public record CosechaResponse(Long id, LocalDate fecha, Double cantidadKg, CalidadCosecha calidad,
-                                  String observaciones, Long siembraId, Double precioKg, boolean enCarencia) {
+                                  String observaciones, Long siembraId, BigDecimal precioKg, boolean enCarencia) {
         public static CosechaResponse from(Cosecha c) {
             return new CosechaResponse(c.getId(), c.getFecha(), c.getCantidadKg(), c.getCalidad(),
                     c.getObservaciones(), c.getSiembraId(), c.getPrecioKg(), c.isEnCarencia());
@@ -53,7 +54,7 @@ public final class Respuestas {
 
     public record FumigacionResponse(Long id, LocalDate fecha, String producto, Long agriculturalInputId, Double dosis,
                                      UnidadMedida unidadMedida, Double areaAplicada, String observaciones,
-                                     Long siembraId, Integer diasCarencia, Integer reentradaHoras, Double costo,
+                                     Long siembraId, Integer diasCarencia, Integer reentradaHoras, BigDecimal costo,
                                      Double cantidadUsada, UnidadMedida unidadCantidad) {
         public static FumigacionResponse from(Fumigacion f) {
             return new FumigacionResponse(f.getId(), f.getFecha(), f.getProducto(), f.getAgriculturalInputId(),
@@ -64,7 +65,7 @@ public final class Respuestas {
 
     /** Labor registrada en una siembra (poda, riego…), no confundir con el catálogo de labores de los trabajadores */
     public record ActividadCultivoResponse(Long id, TipoActividad tipo, String descripcion, LocalDate fecha,
-                                           Long siembraId, Double costo) {
+                                           Long siembraId, BigDecimal costo) {
         public static ActividadCultivoResponse from(ActividadCultivo a) {
             return new ActividadCultivoResponse(a.getId(), a.getTipo(), a.getDescripcion(), a.getFecha(),
                     a.getSiembraId(), a.getCosto());

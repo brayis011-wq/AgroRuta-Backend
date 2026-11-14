@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.math.BigDecimal;
 
 /**
  * Bodega de insumos: una por agricultor. El stock no se guarda, se calcula sumando los movimientos
@@ -91,10 +92,10 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     @Override
     @Transactional
     public MovimientoInventario registrarCompra(Long agricultorId, Long insumoId, double cantidad, String unidad,
-                                                Double costoTotal, LocalDate fecha, String proveedor, String observaciones) {
+                                                BigDecimal costoTotal, LocalDate fecha, String proveedor, String observaciones) {
         InsumoCatalogo insumo = insumo(insumoId);
         if (cantidad <= 0) throw new BusinessException("La cantidad comprada debe ser mayor a 0.");
-        if (costoTotal != null && costoTotal < 0) throw new BusinessException("El costo no puede ser negativo.");
+        if (costoTotal != null && costoTotal.signum() < 0) throw new BusinessException("El costo no puede ser negativo.");
         LocalDate dia = fecha != null ? fecha : hoy();
         if (dia.isAfter(hoy())) throw new BusinessException("La fecha de compra no puede ser futura.");
         double base = UnidadBase.aBaseDe(cantidad, unidad(unidad), insumo.unidadBase(), insumo.nombre());
@@ -145,7 +146,7 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
 
     @Override
     @Transactional
-    public Optional<Double> registrarUso(Long fumigacionId, Long agricultorId, Long insumoId,
+    public Optional<BigDecimal> registrarUso(Long fumigacionId, Long agricultorId, Long insumoId,
                                          double cantidad, String unidad, LocalDate fecha) {
         InsumoCatalogo insumo = insumo(insumoId);
         if (cantidad <= 0) throw new BusinessException("La cantidad usada debe ser mayor a 0.");
@@ -183,7 +184,8 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
         return LocalDate.now(reloj);
     }
 
-    private static double pesos(double v) {
-        return Math.round(v);
+    /** Estimaciones a precio promedio: en pesos enteros */
+    private static BigDecimal pesos(double v) {
+        return BigDecimal.valueOf(Math.round(v));
     }
 }

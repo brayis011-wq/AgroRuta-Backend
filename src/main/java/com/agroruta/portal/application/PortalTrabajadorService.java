@@ -13,6 +13,7 @@ import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.EstadoAccesoPortal;
 import com.agroruta.worker.domain.EstadoNomina;
+import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
@@ -57,8 +58,7 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     @Override
     @Transactional(readOnly = true)
     public void validarCedulaDisponible(String cedula) {
-        Trabajador t = buscarPorCedula(cedula);
-        if (estaOcupado(t, null)) {
+        if (buscarPorCedula(cedula).stream().anyMatch(t -> estaOcupado(t, null))) {
             throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
                     "Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
         }
@@ -66,11 +66,12 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
 
     @Override
     public void solicitarAcceso(Long usuarioId, String nombre, String email, String cedula) {
-        Trabajador destino = buscarPorCedula(cedula);
-        if (estaOcupado(destino, usuarioId)) {
+        List<Trabajador> conEsaCedula = buscarPorCedula(cedula);
+        if (conEsaCedula.stream().anyMatch(t -> estaOcupado(t, usuarioId))) {
             throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
                     "Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
         }
+        Trabajador destino = elegir(conEsaCedula, usuarioId);
 
         // Si esta cuenta tenía otra solicitud (rechazada o pendiente), se libera
         trabajadorRepository.buscarPorUsuarioId(usuarioId)
@@ -151,14 +152,31 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
         return cedula == null ? "" : cedula.replaceAll("[.\\s-]", "").toUpperCase();
     }
 
-    private Trabajador buscarPorCedula(String cedula) {
+    /** Los registros con esa cédula: uno por cada agricultor que tenga a la persona. Nunca vacío. */
+    private List<Trabajador> buscarPorCedula(String cedula) {
         String normalizada = normalizar(cedula);
         if (normalizada.isEmpty()) {
             throw new IllegalArgumentException("La cédula es obligatoria.");
         }
-        return trabajadorRepository.buscarPorCedulaNormalizada(normalizada)
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_OPERATION,
-                        "Ningún agricultor ha registrado esta cédula. Pídele a tu empleador que te registre primero."));
+        List<Trabajador> encontrados = trabajadorRepository.buscarPorCedulaNormalizada(normalizada);
+        if (encontrados.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_OPERATION,
+                    "Ningún agricultor ha registrado esta cédula. Pídele a tu empleador que te registre primero.");
+        }
+        return encontrados;
+    }
+
+    /**
+     * A cuál registro va la solicitud cuando la cédula está con varios agricultores. El portal vincula
+     * la cuenta con un solo empleador: el que ya tenía la solicitud de esta cuenta; si no, uno donde
+     * la persona siga activa; y entre iguales, el registro más antiguo.
+     */
+    private static Trabajador elegir(List<Trabajador> conEsaCedula, Long usuarioId) {
+        return conEsaCedula.stream()
+                .min(Comparator.comparing((Trabajador t) -> !usuarioId.equals(t.getUsuarioId()))
+                        .thenComparing(t -> t.getEstado() != EstadoTrabajador.ACTIVO)
+                        .thenComparing(Trabajador::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElseThrow();
     }
 
     /** Ya hay otra cuenta usando a este trabajador (pendiente o aprobada). */

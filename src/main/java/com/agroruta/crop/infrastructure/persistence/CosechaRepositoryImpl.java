@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import com.agroruta.crop.domain.CalidadCosecha;
 import com.agroruta.crop.domain.Cosecha;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import org.springframework.stereotype.Repository;
@@ -36,8 +37,8 @@ public class CosechaRepositoryImpl implements CosechaRepository {
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
     @Override
-    public boolean existsByFechaAndSiembraId(LocalDate fecha, Long siembraId) {
-        return jpaRepository.existsByFechaAndSiembraId(fecha, siembraId);
+    public boolean existsByFechaAndSiembraIdAndCalidad(LocalDate fecha, Long siembraId, CalidadCosecha calidad) {
+        return jpaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, calidad);
     }
     @Override
     public Double totalKgBySiembraId(Long siembraId) {

@@ -3,9 +3,11 @@ package com.agroruta.inventory.domain;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.agroruta.shared.util.Dinero;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 /**
  * Una entrada o salida de un insumo en la bodega de un agricultor.
@@ -24,7 +26,7 @@ public class MovimientoInventario {
     private double cantidad;
     private LocalDate fecha;
     /** Lo que costó la compra completa (COP); null en usos y ajustes */
-    private Double costoTotal;
+    private BigDecimal costoTotal;
     private String proveedor;
     /** Fumigación que gastó el producto (solo en USO) */
     private Long fumigacionId;
@@ -32,9 +34,9 @@ public class MovimientoInventario {
     private LocalDateTime creadoEn;
 
     public static MovimientoInventario compra(Long agricultorId, Long insumoId, double cantidadBase,
-                                              Double costoTotal, LocalDate fecha, String proveedor, String observaciones) {
+                                              BigDecimal costoTotal, LocalDate fecha, String proveedor, String observaciones) {
         MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.COMPRA, cantidadBase, fecha);
-        m.costoTotal = costoTotal;
+        m.costoTotal = Dinero.redondear(costoTotal);
         m.proveedor = vacioANull(proveedor);
         m.observaciones = vacioANull(observaciones);
         return m;
