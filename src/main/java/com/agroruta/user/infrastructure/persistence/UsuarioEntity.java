@@ -40,15 +40,13 @@ public class UsuarioEntity {
     @Column(length = 20)
     private String telefono;
 
-    @Column(name = "foto_perfil", columnDefinition = "MEDIUMTEXT")
-    private String fotoPerfil;
 
     @Column(name = "email_verificado", nullable = false)
     private boolean emailVerificado = true;
 
     public UsuarioEntity(Long id, String nombre, String email, String password,
                          Rol rol, boolean activo, LocalDateTime fechaCreacion,
-                         String telefono, String fotoPerfil) {
+                         String telefono) {
         this.id            = id;
         this.nombre        = nombre;
         this.email         = email;
@@ -57,6 +55,5 @@ public class UsuarioEntity {
         this.activo        = activo;
         this.fechaCreacion = fechaCreacion;
         this.telefono      = telefono;
-        this.fotoPerfil    = fotoPerfil;
     }
 }

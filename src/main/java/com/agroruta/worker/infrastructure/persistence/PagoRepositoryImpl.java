@@ -1,5 +1,9 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import com.agroruta.worker.domain.PagosDelMes;
+import java.util.Comparator;
+import java.time.YearMonth;
+import java.time.LocalDate;
 import com.agroruta.worker.domain.ResumenPagos;
 import java.math.BigDecimal;
 import org.springframework.data.domain.Sort;
@@ -10,6 +14,7 @@ import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.application.ports.out.PagoRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +31,9 @@ class PagoRepositoryImpl implements PagoRepository {
         return WorkerMapper.toDomain(jpa.save(WorkerMapper.toEntity(pago)));
     }
 
+    // Con transacción propia: al armar el pago se leen los jornales de su nómina (carga diferida),
+    // y los avisos de "pago registrado" llaman esto desde otro hilo, sin la sesión de la petición.
+    @Transactional(readOnly = true)
     @Override public Optional<Pago> buscarPorId(Long id) {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }
@@ -68,5 +76,16 @@ class PagoRepositoryImpl implements PagoRepository {
         Object[] f = filas.isEmpty() ? new Object[3] : filas.get(0);
         return new ResumenPagos(f[0] == null ? 0 : ((Number) f[0]).longValue(), decimal(f[1]),
                 f[2] == null ? 0 : ((Number) f[2]).longValue());
+    }
+
+    @Override
+    public List<PagosDelMes> totalesPorMes(Long agricultorId, LocalDate desde) {
+        // Cada fila: [año, mes, total, pagos]
+        return jpa.totalesPorMes(agricultorId, desde).stream()
+                .map(f -> new PagosDelMes(
+                        YearMonth.of(((Number) f[0]).intValue(), ((Number) f[1]).intValue()).toString(),
+                        decimal(f[2]), ((Number) f[3]).longValue()))
+                .sorted(Comparator.comparing(PagosDelMes::mes))
+                .toList();
     }
 }

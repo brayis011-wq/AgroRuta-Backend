@@ -1,5 +1,7 @@
 package com.agroruta.worker.application.ports.out;
 
+import com.agroruta.worker.domain.PagosDelMes;
+import java.time.LocalDate;
 import com.agroruta.worker.domain.ResumenPagos;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.Pago;
@@ -21,4 +23,7 @@ public interface PagoRepository {
 
     /** Cantidad, total y trabajadores distintos, con el mismo filtro de la página. */
     ResumenPagos resumen(Long agricultorId, Long nominaId);
+
+    /** Total y número de pagos de cada mes desde una fecha, del más antiguo al más reciente. Los meses sin pagos no salen. */
+    List<PagosDelMes> totalesPorMes(Long agricultorId, LocalDate desde);
 }

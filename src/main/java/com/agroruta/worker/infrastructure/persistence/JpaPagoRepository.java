@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,6 +57,18 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
     List<WorkerPayrollDetail> findDetailPerWorkerByAgricultorId(@Param("agricultorId") Long agricultorId);
     @Query("SELECT p FROM PagoEntity p WHERE p.nomina.trabajador.agricultorId = :agricultorId")
     List<PagoEntity> findByAgricultorId(@Param("agricultorId") Long agricultorId);
+
+    /**
+     * Total y número de pagos de cada mes desde una fecha: [año, mes, total, pagos].
+     * agricultorId null = todos (Administrador). Los meses sin pagos no salen.
+     */
+    @Query("""
+        SELECT YEAR(p.fechaPago), MONTH(p.fechaPago), SUM(p.monto), COUNT(p) FROM PagoEntity p
+        WHERE p.fechaPago >= :desde
+          AND (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId)
+        GROUP BY YEAR(p.fechaPago), MONTH(p.fechaPago)
+        """)
+    List<Object[]> totalesPorMes(@Param("agricultorId") Long agricultorId, @Param("desde") LocalDate desde);
 
     @Query(value = "SELECT p FROM PagoEntity p WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId) AND (:nominaId IS NULL OR p.nomina.id = :nominaId)",
            countQuery = "SELECT COUNT(p) FROM PagoEntity p WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId) AND (:nominaId IS NULL OR p.nomina.id = :nominaId)")

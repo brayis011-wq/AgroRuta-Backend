@@ -1,5 +1,6 @@
 package com.agroruta.worker.infrastructure.web;
 
+import com.agroruta.worker.domain.PagosDelMes;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
@@ -104,6 +105,25 @@ class PaginacionControllersTest {
         when(pagos.resumen(7L, null)).thenReturn(resumen);
 
         assertThat(new PagoController(pagos).resumen(null, auth(7L, Rol.Agricultor)).getBody()).isEqualTo(resumen);
+    }
+
+    @Test
+    void pagosPorMesDelAgricultor() {
+        LocalDate desde = LocalDate.of(2026, 10, 1);
+        List<PagosDelMes> meses = List.of(new PagosDelMes("2026-10", new BigDecimal("90000"), 1),
+                new PagosDelMes("2026-11", new BigDecimal("240000"), 3));
+        when(pagos.totalesPorMes(7L, desde)).thenReturn(meses);
+
+        assertThat(new PagoController(pagos).porMes(desde, auth(7L, Rol.Agricultor)).getBody()).isEqualTo(meses);
+    }
+
+    @Test
+    void pagosPorMesParaElAdministradorSonLosDeTodos() {
+        LocalDate desde = LocalDate.of(2026, 10, 1);
+        when(pagos.totalesPorMes(null, desde)).thenReturn(List.of());
+
+        assertThat(new PagoController(pagos).porMes(desde, auth(1L, Rol.Administrador)).getBody()).isEmpty();
+        verify(pagos).totalesPorMes(null, desde);
     }
 
     @Test

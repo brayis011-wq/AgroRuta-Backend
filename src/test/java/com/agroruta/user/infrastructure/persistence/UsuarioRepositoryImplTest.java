@@ -40,7 +40,6 @@ class UsuarioRepositoryImplTest {
         usuarioBase = new Usuario(1L, "Juan Pérez", "juan@agroruta.com", "password123", Rol.Agricultor);
         usuarioBase.setFechaCreacion(fechaCreacion);
         usuarioBase.setTelefono("3001234567");
-        usuarioBase.setFotoPerfil("foto.jpg");
 
         entityBase = new UsuarioEntity(
                 1L,
@@ -50,8 +49,7 @@ class UsuarioRepositoryImplTest {
                 Rol.Agricultor,
                 true,
                 fechaCreacion,
-                "3001234567",
-                "foto.jpg"
+                "3001234567"
         );
     }
 
@@ -75,7 +73,6 @@ class UsuarioRepositoryImplTest {
             assertEquals("juan@agroruta.com",  resultado.getEmail());
             assertEquals(Rol.Agricultor,          resultado.getRol());
             assertEquals("3001234567",         resultado.getTelefono());
-            assertEquals("foto.jpg",           resultado.getFotoPerfil());
             assertEquals(fechaCreacion,        resultado.getFechaCreacion());
             assertTrue(resultado.isActivo());
             verify(jpaRepository, times(1)).save(any(UsuarioEntity.class));
@@ -86,7 +83,7 @@ class UsuarioRepositoryImplTest {
         void debeGuardarUsuarioDesactivado() {
             UsuarioEntity entityInactivo = new UsuarioEntity(
                     2L, "Ana López", "ana@agroruta.com", "pass456", Rol.Trabajador,
-                    false, fechaCreacion, "3009876543", null
+                    false, fechaCreacion, "3009876543"
             );
 
             Usuario usuarioInactivo = new Usuario(2L, "Ana López", "ana@agroruta.com", "pass456", Rol.Trabajador);
@@ -122,7 +119,6 @@ class UsuarioRepositoryImplTest {
             assertEquals("Juan Pérez",        resultado.get().getNombre());
             assertEquals("juan@agroruta.com", resultado.get().getEmail());
             assertEquals("3001234567",        resultado.get().getTelefono());
-            assertEquals("foto.jpg",          resultado.get().getFotoPerfil());
             assertTrue(resultado.get().isActivo());
             verify(jpaRepository, times(1)).findById(1L);
         }
@@ -143,7 +139,7 @@ class UsuarioRepositoryImplTest {
         void debeMapearUsuarioInactivoEncontradoPorId() {
             UsuarioEntity entityInactivo = new UsuarioEntity(
                     1L, "Juan Pérez", "juan@agroruta.com", "password123", Rol.Agricultor,
-                    false, fechaCreacion, "3001234567", "foto.jpg"
+                    false, fechaCreacion, "3001234567"
             );
             when(jpaRepository.findById(1L)).thenReturn(Optional.of(entityInactivo));
 
@@ -221,7 +217,7 @@ class UsuarioRepositoryImplTest {
         void debeRetornarTodosLosUsuariosActivos() {
             UsuarioEntity segundaEntity = new UsuarioEntity(
                     2L, "Ana López", "ana@agroruta.com", "pass456", Rol.Trabajador,
-                    true, fechaCreacion, "3009876543", null
+                    true, fechaCreacion, "3009876543"
             );
 
             when(jpaRepository.findByActivoTrue()).thenReturn(List.of(entityBase, segundaEntity));
@@ -249,18 +245,18 @@ class UsuarioRepositoryImplTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  Mapeo de campos opcionales (telefono, fotoPerfil, fechaCreacion)
+    //  Mapeo de campos opcionales (telefono, fechaCreacion)
     // ══════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("Mapeo de campos opcionales")
     class MapeoOpcionales {
 
         @Test
-        @DisplayName("Debe mapear correctamente un usuario sin teléfono ni fotoPerfil")
+        @DisplayName("Debe mapear correctamente un usuario sin teléfono")
         void debeMapearUsuarioConCamposNulos() {
             UsuarioEntity entitySinOpcionales = new UsuarioEntity(
                     3L, "Pedro Ruiz", "pedro@agroruta.com", "pass789", Rol.Administrador,
-                    true, fechaCreacion, null, null
+                    true, fechaCreacion, null
             );
             when(jpaRepository.findById(3L)).thenReturn(Optional.of(entitySinOpcionales));
 
@@ -268,7 +264,6 @@ class UsuarioRepositoryImplTest {
 
             assertTrue(resultado.isPresent());
             assertNull(resultado.get().getTelefono());
-            assertNull(resultado.get().getFotoPerfil());
             verify(jpaRepository, times(1)).findById(3L);
         }
 

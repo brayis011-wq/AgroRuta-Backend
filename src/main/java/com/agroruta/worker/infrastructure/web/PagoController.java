@@ -1,5 +1,8 @@
 package com.agroruta.worker.infrastructure.web;
 
+import com.agroruta.worker.domain.PagosDelMes;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.time.LocalDate;
 import com.agroruta.worker.domain.ResumenPagos;
 import com.agroruta.shared.util.Pagina;
 import jakarta.validation.Valid;
@@ -76,5 +79,17 @@ public class PagoController {
                                                 Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
         return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId));
+    }
+
+    /**
+     * Lo pagado cada mes desde una fecha (?since=2026-10-01), para comparar un mes con el anterior
+     * sin traer todos los pagos. Los meses sin pagos no salen.
+     */
+    @GetMapping("/monthly")
+    public ResponseEntity<List<PagosDelMes>> porMes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate since,
+            Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(pagoUseCase.totalesPorMes(dueno, since));
     }
 }
