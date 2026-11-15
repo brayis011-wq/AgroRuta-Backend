@@ -14,8 +14,10 @@ import com.agroruta.shared.exception.ErrorCode;
 import java.time.LocalDate;
 import java.util.List;
 import java.math.BigDecimal;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class ActividadCultivoService implements ActividadCultivoUseCase {
 
     private final ActividadCultivoRepository actividadRepository;
@@ -53,6 +55,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
         return actividadRepository.save(actividad);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ActividadCultivo buscarActividadPorId(Long id) {
         return actividadRepository.findById(id)
@@ -102,6 +105,7 @@ public class ActividadCultivoService implements ActividadCultivoUseCase {
                 String.format("Ya existe una actividad de tipo '%s' registrada el '%s' para esta siembra.", tipo, fecha));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<ActividadCultivo> listarActividadesPorSiembra(Long siembraId) {
         siembraUseCase.buscarSiembraPorId(siembraId);

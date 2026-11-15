@@ -19,8 +19,10 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class JornalService implements JornalUseCase {
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;
@@ -98,36 +100,44 @@ public class JornalService implements JornalUseCase {
         return actividad;
     }
 
+    @Transactional(readOnly = true)
     public Jornal buscarPorId(Long id) {
         return jornalRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + id));
     }
 
+    @Transactional(readOnly = true)
     public List<Jornal> listarPorTrabajador(Long trabajadorId) {
         return jornalRepository.buscarPorTrabajador(trabajadorId);
     }
 
+    @Transactional(readOnly = true)
     public List<Jornal> listarPorTrabajadorYPeriodo(Long trabajadorId, LocalDate inicio, LocalDate fin) {
         return jornalRepository.buscarPorTrabajadorYPeriodo(trabajadorId, inicio, fin);
     }
 
+    @Transactional(readOnly = true)
     public List<Jornal> listarPorCultivo(Long cultivoId) {
         return jornalRepository.buscarPorCultivo(cultivoId);
     }
 
+    @Transactional(readOnly = true)
     public List<Jornal> listarPorCultivoYPeriodo(Long cultivoId, LocalDate inicio, LocalDate fin) {
         return jornalRepository.buscarPorCultivoYPeriodo(cultivoId, inicio, fin);
     }
 
+    @Transactional(readOnly = true)
     public List<CultivoInfo> cultivosDisponibles(Long agricultorId) {
         return cultivoPort.activosDelAgricultor(agricultorId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
         return jornalRepository.paginaPorTrabajador(trabajadorId, inicio, fin, pagina, tamano);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin) {
         return jornalRepository.resumenPorTrabajador(trabajadorId, inicio, fin);

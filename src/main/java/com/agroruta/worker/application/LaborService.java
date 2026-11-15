@@ -10,8 +10,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import com.agroruta.worker.application.ports.in.LaborUseCase;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class LaborService implements LaborUseCase {
     private final LaborRepository laborRepository;
 
@@ -66,19 +68,23 @@ public class LaborService implements LaborUseCase {
         laborRepository.guardar(actividad);
     }
 
+    @Transactional(readOnly = true)
     public Labor buscarPorId(Long id) {
         return laborRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Labor no encontrada con id: " + id));
     }
 
+    @Transactional(readOnly = true)
     public List<Labor> listarActivas() {
         return laborRepository.listarActivas();
     }
 
+    @Transactional(readOnly = true)
     public List<Labor> listarTodas() {
         return laborRepository.listarTodas();
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Labor> listarActivasPara(Long agricultorId) {
         return laborRepository.listarActivasPara(agricultorId);

@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Catálogo de cultivos y variedades. Lo administra el Administrador;
@@ -18,6 +19,7 @@ import java.util.List;
  * No se borra nada: se desactiva, para no romper las siembras ya registradas.
  */
 @Service
+@Transactional
 public class CatalogoCultivoService implements CatalogoCultivoUseCase {
 
     private final CatalogoCultivoRepository catalogo;
@@ -26,6 +28,7 @@ public class CatalogoCultivoService implements CatalogoCultivoUseCase {
         this.catalogo = catalogo;
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<TipoCultivo> listar(boolean soloActivos) {
         return catalogo.listarTipos(soloActivos);

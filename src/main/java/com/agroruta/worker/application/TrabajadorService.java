@@ -15,8 +15,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class TrabajadorService implements TrabajadorUseCase {
 
     private final TrabajadorRepository trabajadorRepository;
@@ -122,24 +124,29 @@ public class TrabajadorService implements TrabajadorUseCase {
         return guardado;
     }
 
+    @Transactional(readOnly = true)
     public Trabajador buscarPorId(Long id) {
         return trabajadorRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + id));
     }
 
+    @Transactional(readOnly = true)
     public List<Trabajador> listarActivos() {
         return trabajadorRepository.listarActivos();
     }
 
+    @Transactional(readOnly = true)
     public List<Trabajador> listarTodos() {
         return trabajadorRepository.listarTodos();
     }
 
+    @Transactional(readOnly = true)
     public List<Trabajador> listarActivosDe(Long agricultorId) {
         if (agricultorId == null) return List.of();
         return trabajadorRepository.listarActivosPorAgricultor(agricultorId);
     }
 
+    @Transactional(readOnly = true)
     public List<Trabajador> listarTodosDe(Long agricultorId) {
         if (agricultorId == null) return List.of();
         return trabajadorRepository.listarTodosPorAgricultor(agricultorId);

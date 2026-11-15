@@ -16,8 +16,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.math.BigDecimal;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class CosechaService implements CosechaUseCase {
 
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.forLanguageTag("es-CO"));
@@ -55,12 +57,14 @@ public class CosechaService implements CosechaUseCase {
         return cosechaRepository.save(cosecha);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Cosecha> listarCosechasPorSiembra(Long siembraId) {
         siembraUseCase.buscarSiembraPorId(siembraId);
         return cosechaRepository.findBySiembraId(siembraId);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Cosecha buscarCosechaPorId(Long id) {
         return cosechaRepository.findById(id)
@@ -132,6 +136,7 @@ public class CosechaService implements CosechaUseCase {
                         calidad.name().toLowerCase(Locale.ROOT), fecha));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Double totalKgCosechado(Long siembraId) {
         siembraUseCase.buscarSiembraPorId(siembraId);
