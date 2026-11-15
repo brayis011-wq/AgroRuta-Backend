@@ -1,5 +1,7 @@
 package com.agroruta.crop.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -43,14 +45,14 @@ public class Lote {
     /** Se puede sembrar en un lote disponible o en descanso, no en uno ocupado. */
     public void iniciarCultivo() {
         if (this.estado == EstadoLote.EN_CULTIVO) {
-            throw new IllegalStateException("El lote ya tiene un cultivo en curso.");
+            throw new EstadoInvalidoException("El lote ya tiene un cultivo en curso.");
         }
         this.estado = EstadoLote.EN_CULTIVO;
     }
 
     public void editar(String nombre, Double area) {
         if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre del lote es obligatorio.");
+            throw new DatoInvalidoException("El nombre del lote es obligatorio.");
         }
         this.nombre = nombre.trim();
         this.area = area;
@@ -62,7 +64,7 @@ public class Lote {
     public void actualizarGeometria(String coordenadas, Double area,
                                     Double centroideLat, Double centroideLng) {
         if (coordenadas == null || coordenadas.isBlank()) {
-            throw new IllegalArgumentException("Las coordenadas del lote no pueden estar vacías.");
+            throw new DatoInvalidoException("Las coordenadas del lote no pueden estar vacías.");
         }
         this.coordenadas  = coordenadas;
         this.area         = area;

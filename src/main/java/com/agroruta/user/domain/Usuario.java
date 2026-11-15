@@ -1,5 +1,6 @@
 package com.agroruta.user.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -37,7 +38,7 @@ public class Usuario {
 
     public void cambiarRol(Rol nuevoRol) {
         if (nuevoRol == null) {
-            throw new IllegalArgumentException("El rol es obligatorio.");
+            throw new DatoInvalidoException("El rol es obligatorio.");
         }
         this.rol = nuevoRol;
     }

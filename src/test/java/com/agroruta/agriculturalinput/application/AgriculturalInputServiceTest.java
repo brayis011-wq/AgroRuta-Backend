@@ -6,6 +6,7 @@ import com.agroruta.agriculturalinput.application.ports.out.AgriculturalInputRep
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
 import com.agroruta.agriculturalinput.domain.AgriculturalInputType;
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
@@ -346,7 +347,7 @@ class AgriculturalInputServiceTest {
         @Test
         @DisplayName("create() rechaza un nombre vacío")
         void createRechazaNombreVacio() {
-            assertThrows(IllegalArgumentException.class, () -> service.create(
+            assertThrows(DatoInvalidoException.class, () -> service.create(
                     new CreateAgriculturalInputCommand("   ", "HERBICIDA", "LITROS", 2.5, 48)));
         }
 

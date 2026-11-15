@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.domain.ResumenNominas;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -43,7 +44,7 @@ public class NominaService implements NominaUseCase {
                 .buscarDisponiblesParaNomina(trabajadorId, periodoInicio, periodoFin);
 
         if (jornalesDisponibles.isEmpty()) {
-            throw new IllegalStateException(
+            throw new EstadoInvalidoException(
                     "No hay jornales disponibles para el trabajador "
                             + trabajador.getNombreCompleto()
                             + " en el período indicado.");
@@ -82,7 +83,7 @@ public class NominaService implements NominaUseCase {
                         "Nómina no encontrada con id: " + nominaId));
 
         if (!EstadoNomina.ANULADA.equals(nomina.getEstado())) {
-            throw new IllegalStateException(
+            throw new EstadoInvalidoException(
                     "Solo se pueden reactivar nóminas en estado ANULADA.");
         }
 
@@ -97,7 +98,7 @@ public class NominaService implements NominaUseCase {
                         "Nómina no encontrada con id: " + nominaId));
 
         if (!EstadoNomina.PENDIENTE.equals(nomina.getEstado())) {
-            throw new IllegalStateException(
+            throw new EstadoInvalidoException(
                     "Solo se pueden eliminar nóminas en estado PENDIENTE.");
         }
 

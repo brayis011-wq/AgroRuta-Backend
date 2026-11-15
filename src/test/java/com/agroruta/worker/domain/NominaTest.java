@@ -1,5 +1,6 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -71,7 +72,7 @@ class NominaTest {
                 LocalDate.now(), List.of(jornal1));
         nomina.aprobar();
 
-        assertThrows(IllegalStateException.class, nomina::aprobar);
+        assertThrows(EstadoInvalidoException.class, nomina::aprobar);
     }
 
     @Test
@@ -91,7 +92,7 @@ class NominaTest {
         nomina.aprobar();
         nomina.marcarComoPagada();
 
-        assertThrows(IllegalStateException.class, nomina::anular);
+        assertThrows(EstadoInvalidoException.class, nomina::anular);
     }
 
     @Test
@@ -110,7 +111,7 @@ class NominaTest {
         Nomina nomina = new Nomina(1L, trabajador, LocalDate.now().minusDays(7),
                 LocalDate.now(), List.of(jornal1));
 
-        assertThrows(IllegalStateException.class, nomina::reactivar);
+        assertThrows(EstadoInvalidoException.class, nomina::reactivar);
     }
 
     @Test
@@ -130,7 +131,7 @@ class NominaTest {
         Nomina nomina = new Nomina(1L, trabajador, LocalDate.now().minusDays(7),
                 LocalDate.now(), List.of(jornal1));
 
-        assertThrows(IllegalStateException.class, nomina::marcarComoPagada);
+        assertThrows(EstadoInvalidoException.class, nomina::marcarComoPagada);
     }
 
     @Test

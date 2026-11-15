@@ -1,5 +1,6 @@
 package com.agroruta.user.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -76,6 +77,6 @@ class UsuarioTest {
         u.cambiarRol(Rol.Agricultor);
 
         org.junit.jupiter.api.Assertions.assertEquals(Rol.Agricultor, u.getRol());
-        org.junit.jupiter.api.Assertions.assertThrows(IllegalArgumentException.class, () -> u.cambiarRol(null));
+        org.junit.jupiter.api.Assertions.assertThrows(DatoInvalidoException.class, () -> u.cambiarRol(null));
     }
 }

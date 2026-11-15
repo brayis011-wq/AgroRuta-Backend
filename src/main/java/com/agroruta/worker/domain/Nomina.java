@@ -1,5 +1,6 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
@@ -49,28 +50,28 @@ public class Nomina {
 
     public void aprobar() {
         if (!EstadoNomina.PENDIENTE.equals(this.estado)) {
-            throw new IllegalStateException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+            throw new EstadoInvalidoException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
         }
         this.estado = EstadoNomina.APROBADA;
     }
 
     public void anular() {
         if (EstadoNomina.PAGADA.equals(this.estado)) {
-            throw new IllegalStateException("No se puede anular una nómina ya pagada.");
+            throw new EstadoInvalidoException("No se puede anular una nómina ya pagada.");
         }
         this.estado = EstadoNomina.ANULADA;
     }
 
     public void reactivar() {
         if (!EstadoNomina.ANULADA.equals(this.estado)) {
-            throw new IllegalStateException("Solo se pueden reactivar nóminas en estado ANULADA.");
+            throw new EstadoInvalidoException("Solo se pueden reactivar nóminas en estado ANULADA.");
         }
         this.estado = EstadoNomina.PENDIENTE;
     }
 
     public void marcarComoPagada() {
         if (!EstadoNomina.APROBADA.equals(this.estado)) {
-            throw new IllegalStateException("Solo se pueden pagar nóminas en estado APROBADA.");
+            throw new EstadoInvalidoException("Solo se pueden pagar nóminas en estado APROBADA.");
         }
         this.estado = EstadoNomina.PAGADA;
         this.jornales.forEach(Jornal::marcarComoLiquidado);

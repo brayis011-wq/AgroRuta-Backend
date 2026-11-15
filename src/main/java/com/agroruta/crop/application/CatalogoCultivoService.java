@@ -5,6 +5,7 @@ import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
 import com.agroruta.crop.domain.TipoCultivo;
 import com.agroruta.crop.domain.VariedadCultivo;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -71,7 +72,7 @@ public class CatalogoCultivoService implements CatalogoCultivoUseCase {
     /** Quita espacios de más y pone la primera letra en mayúscula: "  café " → "Café" */
     static String limpiar(String nombre) {
         String t = nombre == null ? "" : nombre.trim().replaceAll("\\s+", " ");
-        if (t.isEmpty()) throw new IllegalArgumentException("El nombre es obligatorio.");
+        if (t.isEmpty()) throw new DatoInvalidoException("El nombre es obligatorio.");
         return Character.toUpperCase(t.charAt(0)) + t.substring(1);
     }
 }

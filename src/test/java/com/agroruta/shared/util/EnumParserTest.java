@@ -1,6 +1,7 @@
 package com.agroruta.shared.util;
 
 import com.agroruta.crop.domain.EstadoCultivo;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ class EnumParserTest {
     @DisplayName("rechaza un valor desconocido listando las opciones, sin nombres de clases")
     void rechazaValorDesconocido() {
         assertThatThrownBy(() -> EnumParser.parse(EstadoCultivo.class, "ROJA", "etapa"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DatoInvalidoException.class)
                 .hasMessageContaining("Valor no válido para etapa: 'ROJA'")
                 .hasMessageContaining("GERMINACION, CRECIMIENTO, PRODUCCION, COSECHA, FINALIZADO")
                 .hasMessageNotContaining("com.agroruta");
@@ -31,7 +32,7 @@ class EnumParserTest {
     @DisplayName("rechaza un valor vacío")
     void rechazaVacio() {
         assertThatThrownBy(() -> EnumParser.parse(EstadoCultivo.class, " ", "etapa"))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(DatoInvalidoException.class)
                 .hasMessage("Falta el valor de etapa.");
     }
 }

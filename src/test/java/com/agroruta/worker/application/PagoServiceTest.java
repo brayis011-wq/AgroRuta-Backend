@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.domain.PagosDelMes;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
@@ -133,12 +135,12 @@ class PagoServiceTest {
     }
 
     @Test
-    @DisplayName("registrarPago debe lanzar IllegalStateException cuando la nómina está PENDIENTE")
+    @DisplayName("registrarPago debe lanzar EstadoInvalidoException cuando la nómina está PENDIENTE")
     void registrarPago_nominaPendiente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(2L)).thenReturn(Optional.of(nominaPendiente));
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
+        EstadoInvalidoException ex = assertThrows(
+                EstadoInvalidoException.class,
                 () -> pagoService.registrarPago(
                         2L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
         );
@@ -148,13 +150,13 @@ class PagoServiceTest {
     }
 
     @Test
-    @DisplayName("registrarPago debe lanzar IllegalStateException cuando la nómina ya tiene un pago registrado")
+    @DisplayName("registrarPago debe lanzar EstadoInvalidoException cuando la nómina ya tiene un pago registrado")
     void registrarPago_nominaConPagoExistente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPagada));
         when(pagoRepository.buscarPorNomina(1L)).thenReturn(Optional.of(pagoBase));
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
+        EstadoInvalidoException ex = assertThrows(
+                EstadoInvalidoException.class,
                 () -> pagoService.registrarPago(
                         1L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
         );
@@ -213,8 +215,8 @@ class PagoServiceTest {
         when(nominaRepository.buscarPorId(3L)).thenReturn(Optional.of(nominaAprobada));
         when(pagoRepository.buscarPorNomina(3L)).thenReturn(Optional.empty());
 
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
+        DatoInvalidoException ex = assertThrows(
+                DatoInvalidoException.class,
                 () -> pagoService.registrarPago(
                         3L, new BigDecimal("50000"), MetodoPago.EFECTIVO, null, null));
 

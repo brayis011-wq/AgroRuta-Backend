@@ -2,6 +2,7 @@ package com.agroruta.worker.infrastructure.web;
 
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
@@ -278,14 +279,14 @@ class NominaControllerTest {
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si la nómina no está en estado PENDIENTE")
+        @DisplayName("Debe propagar EstadoInvalidoException si la nómina no está en estado PENDIENTE")
         void debePropaglarExcepcionSiEstadoInvalido() {
             when(nominaUseCase.aprobarNomina(1L))
-                    .thenThrow(new IllegalStateException(
+                    .thenThrow(new EstadoInvalidoException(
                             "Solo se pueden aprobar nóminas en estado PENDIENTE."));
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            EstadoInvalidoException ex = assertThrows(
+                    EstadoInvalidoException.class,
                     () -> nominaController.aprobar(1L)
             );
 
@@ -329,13 +330,13 @@ class NominaControllerTest {
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si la nómina ya está pagada")
+        @DisplayName("Debe propagar EstadoInvalidoException si la nómina ya está pagada")
         void debePropaglarExcepcionSiNominaYaPagada() {
-            doThrow(new IllegalStateException("No se puede anular una nómina ya pagada."))
+            doThrow(new EstadoInvalidoException("No se puede anular una nómina ya pagada."))
                     .when(nominaUseCase).anularNomina(1L);
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            EstadoInvalidoException ex = assertThrows(
+                    EstadoInvalidoException.class,
                     () -> nominaController.anular(1L)
             );
 
@@ -382,14 +383,14 @@ class NominaControllerTest {
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si la nómina no está ANULADA")
+        @DisplayName("Debe propagar EstadoInvalidoException si la nómina no está ANULADA")
         void debePropaglarExcepcionSiEstadoInvalido() {
             when(nominaUseCase.reactivarNomina(1L))
-                    .thenThrow(new IllegalStateException(
+                    .thenThrow(new EstadoInvalidoException(
                             "Solo se pueden reactivar nóminas en estado ANULADA."));
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            EstadoInvalidoException ex = assertThrows(
+                    EstadoInvalidoException.class,
                     () -> nominaController.reactivar(1L)
             );
 

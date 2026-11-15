@@ -1,6 +1,7 @@
 package com.agroruta.agriculturalinput.application;
 
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.agriculturalinput.application.ports.in.*;
 import com.agroruta.agriculturalinput.application.ports.out.AgriculturalInputRepositoryPort;
@@ -134,7 +135,7 @@ public class AgriculturalInputService
     static String limpiarNombre(String nombre) {
         String limpio = nombre == null ? "" : nombre.trim().replaceAll("\\s+", " ");
         if (limpio.isEmpty()) {
-            throw new IllegalArgumentException("El nombre del insumo es obligatorio.");
+            throw new DatoInvalidoException("El nombre del insumo es obligatorio.");
         }
         return limpio;
     }

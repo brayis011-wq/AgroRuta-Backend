@@ -1,5 +1,6 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
@@ -44,7 +45,7 @@ public class Jornal {
 
     public void agregarActividad(Labor actividad) {
         if (this.liquidado) {
-            throw new IllegalStateException("No se pueden modificar las labores de un jornal ya liquidado.");
+            throw new EstadoInvalidoException("No se pueden modificar las labores de un jornal ya liquidado.");
         }
         if (!this.actividades.contains(actividad)) {
             this.actividades.add(actividad);
@@ -53,7 +54,7 @@ public class Jornal {
 
     public void removerActividad(Labor actividad) {
         if (this.liquidado) {
-            throw new IllegalStateException("No se pueden modificar las labores de un jornal ya liquidado.");
+            throw new EstadoInvalidoException("No se pueden modificar las labores de un jornal ya liquidado.");
         }
         this.actividades.remove(actividad);
     }

@@ -1,5 +1,6 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -95,7 +96,7 @@ class JornalTest {
         jornal.marcarComoLiquidado();
         Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
-        assertThrows(IllegalStateException.class, () -> jornal.agregarActividad(actividad));
+        assertThrows(EstadoInvalidoException.class, () -> jornal.agregarActividad(actividad));
     }
 
     @Test
@@ -105,6 +106,6 @@ class JornalTest {
         jornal.agregarActividad(actividad);
         jornal.marcarComoLiquidado();
 
-        assertThrows(IllegalStateException.class, () -> jornal.removerActividad(actividad));
+        assertThrows(EstadoInvalidoException.class, () -> jornal.removerActividad(actividad));
     }
 }

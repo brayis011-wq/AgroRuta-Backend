@@ -8,6 +8,7 @@ import com.agroruta.admin.domain.ConteoAgricultor;
 import com.agroruta.admin.domain.ResumenSistema;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.domain.Rol;
@@ -187,12 +188,12 @@ public class AdminService implements AdministrarSistemaUseCase {
 
     private static Rol parsearRol(String texto) {
         if (texto == null || texto.isBlank()) {
-            throw new IllegalArgumentException("El rol es obligatorio.");
+            throw new DatoInvalidoException("El rol es obligatorio.");
         }
         return Arrays.stream(Rol.values())
                 .filter(r -> r.name().equalsIgnoreCase(texto.trim()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new DatoInvalidoException(
                         "Rol no válido: '" + texto + "'. Opciones: Administrador, Agricultor, Trabajador"));
     }
 }

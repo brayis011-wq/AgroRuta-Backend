@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.LaborRepository;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
@@ -174,12 +175,12 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("registrarJornal debe lanzar IllegalStateException cuando el trabajador no está activo")
+    @DisplayName("registrarJornal debe lanzar EstadoInvalidoException cuando el trabajador no está activo")
     void registrarJornal_trabajadorInactivo_debeLanzarIllegalStateException() {
         when(trabajadorRepository.buscarPorId(2L)).thenReturn(Optional.of(trabajadorInactivo));
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
+        EstadoInvalidoException ex = assertThrows(
+                EstadoInvalidoException.class,
                 () -> jornalService.registrarJornal(
                         2L, 10L, "Cultivo A", fecha, List.of(), "Obs")
         );
@@ -262,14 +263,14 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("agregarActividad debe lanzar IllegalStateException cuando el jornal está liquidado")
+    @DisplayName("agregarActividad debe lanzar EstadoInvalidoException cuando el jornal está liquidado")
     void agregarActividad_jornalLiquidado_debeLanzarIllegalStateException() {
         jornalBase.marcarComoLiquidado();
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
 
         assertThrows(
-                IllegalStateException.class,
+                EstadoInvalidoException.class,
                 () -> jornalService.agregarActividad(1L, 1L)
         );
 
@@ -322,7 +323,7 @@ class JornalServiceTest {
     }
 
     @Test
-    @DisplayName("removerActividad debe lanzar IllegalStateException cuando el jornal está liquidado")
+    @DisplayName("removerActividad debe lanzar EstadoInvalidoException cuando el jornal está liquidado")
     void removerActividad_jornalLiquidado_debeLanzarIllegalStateException() {
         jornalBase.agregarActividad(actividad1);
         jornalBase.marcarComoLiquidado();
@@ -330,7 +331,7 @@ class JornalServiceTest {
         when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
 
         assertThrows(
-                IllegalStateException.class,
+                EstadoInvalidoException.class,
                 () -> jornalService.removerActividad(1L, 1L)
         );
 

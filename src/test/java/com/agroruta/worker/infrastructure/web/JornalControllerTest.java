@@ -2,6 +2,7 @@ package com.agroruta.worker.infrastructure.web;
 
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
@@ -393,14 +394,14 @@ class JornalControllerTest {
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si el jornal ya está liquidado")
+        @DisplayName("Debe propagar EstadoInvalidoException si el jornal ya está liquidado")
         void debePropaglarExcepcionSiJornalLiquidado() {
             when(jornalUseCase.agregarActividad(1L, 2L))
-                    .thenThrow(new IllegalStateException(
+                    .thenThrow(new EstadoInvalidoException(
                             "No se pueden modificar actividades de un jornal ya liquidado."));
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            EstadoInvalidoException ex = assertThrows(
+                    EstadoInvalidoException.class,
                     () -> jornalController.agregarActividad(1L, 2L)
             );
 
@@ -446,14 +447,14 @@ class JornalControllerTest {
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si el jornal ya está liquidado")
+        @DisplayName("Debe propagar EstadoInvalidoException si el jornal ya está liquidado")
         void debePropaglarExcepcionSiJornalLiquidado() {
             when(jornalUseCase.removerActividad(1L, 2L))
-                    .thenThrow(new IllegalStateException(
+                    .thenThrow(new EstadoInvalidoException(
                             "No se pueden modificar actividades de un jornal ya liquidado."));
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
+            EstadoInvalidoException ex = assertThrows(
+                    EstadoInvalidoException.class,
                     () -> jornalController.removerActividad(1L, 2L)
             );
 

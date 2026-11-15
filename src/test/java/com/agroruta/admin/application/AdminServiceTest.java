@@ -9,6 +9,7 @@ import com.agroruta.admin.domain.ResumenSistema;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
@@ -203,7 +204,7 @@ class AdminServiceTest {
         @DisplayName("rechaza un rol que no existe")
         void rolInvalido() {
             assertThatThrownBy(() -> service.cambiarRol(1L, 3L, "Jefe"))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(DatoInvalidoException.class)
                     .hasMessageContaining("Rol no válido");
             verifyNoInteractions(usuarioRepository);
         }

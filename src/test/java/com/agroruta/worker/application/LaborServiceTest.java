@@ -1,6 +1,7 @@
 package com.agroruta.worker.application;
 
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.Labor;
@@ -252,7 +253,7 @@ class LaborServiceTest {
     @Test
     @DisplayName("crearActividad rechaza un nombre vacío")
     void crearActividad_nombreVacio_lanzaIllegalArgument() {
-        assertThrows(IllegalArgumentException.class, () -> laborService.crearActividad("   ", "", 7L));
+        assertThrows(DatoInvalidoException.class, () -> laborService.crearActividad("   ", "", 7L));
         verify(laborRepository, never()).guardar(any());
     }
 

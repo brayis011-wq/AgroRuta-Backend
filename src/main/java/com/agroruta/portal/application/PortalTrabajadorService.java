@@ -3,6 +3,7 @@ package com.agroruta.portal.application;
 import com.agroruta.portal.application.ports.in.PortalTrabajadorUseCase;
 import com.agroruta.portal.domain.EstadoPortal;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
@@ -156,7 +157,7 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     private List<Trabajador> buscarPorCedula(String cedula) {
         String normalizada = normalizar(cedula);
         if (normalizada.isEmpty()) {
-            throw new IllegalArgumentException("La cédula es obligatoria.");
+            throw new DatoInvalidoException("La cédula es obligatoria.");
         }
         List<Trabajador> encontrados = trabajadorRepository.buscarPorCedulaNormalizada(normalizada);
         if (encontrados.isEmpty()) {

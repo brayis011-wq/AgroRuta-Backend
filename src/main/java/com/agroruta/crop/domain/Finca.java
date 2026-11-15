@@ -1,5 +1,6 @@
 package com.agroruta.crop.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -48,7 +49,7 @@ public class Finca {
 
     public void editar(String nombre, String ubicacion, Double hectareas) {
         if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre de la finca es obligatorio.");
+            throw new DatoInvalidoException("El nombre de la finca es obligatorio.");
         }
         this.nombre = nombre.trim();
         this.ubicacion = ubicacion;

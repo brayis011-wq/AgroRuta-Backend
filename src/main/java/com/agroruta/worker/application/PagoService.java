@@ -1,5 +1,7 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.domain.PagosDelMes;
 import com.agroruta.worker.domain.ResumenPagos;
 import com.agroruta.shared.util.Pagina;
@@ -59,18 +61,18 @@ public class PagoService implements PagoUseCase {
         boolean aprobada = EstadoNomina.APROBADA.equals(nomina.getEstado());
         boolean pagadaSinPago = EstadoNomina.PAGADA.equals(nomina.getEstado());
         if (!aprobada && !pagadaSinPago) {
-            throw new IllegalStateException(
+            throw new EstadoInvalidoException(
                     "Solo se puede registrar el pago de nóminas en estado APROBADA.");
         }
 
         // Evitar doble pago
         pagoRepository.buscarPorNomina(nominaId).ifPresent(p -> {
-            throw new IllegalStateException("Esta nómina ya tiene un pago registrado.");
+            throw new EstadoInvalidoException("Esta nómina ya tiene un pago registrado.");
         });
 
         if (monto == null || nomina.getValorTotal() == null
                 || monto.compareTo(nomina.getValorTotal()) != 0) {
-            throw new IllegalArgumentException(
+            throw new DatoInvalidoException(
                     "El monto debe ser igual al valor total de la nómina ("
                             + nomina.getValorTotal() + ").");
         }
