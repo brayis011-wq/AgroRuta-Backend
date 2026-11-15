@@ -173,6 +173,18 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!-- Pruebas contra un MySQL real en Docker: corren las migraciones Flyway y las consultas escritas a mano.
+		     Sin Docker se saltan (en GitHub Actions siempre hay). -->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-mysql</artifactId>
+			<scope>test</scope>
+		</dependency>
 		<!-- ACTUATOR - Endpoints de salud y métricas -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
