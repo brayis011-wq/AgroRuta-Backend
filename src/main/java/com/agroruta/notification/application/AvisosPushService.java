@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
@@ -62,6 +64,7 @@ public class AvisosPushService implements AvisosPushUseCase {
     }
 
     @Override
+    @Transactional // guardar la suscripción y quitar las que sobran van juntas
     public void suscribir(Long usuarioId, String endpoint, String p256dh, String auth, String dispositivo) {
         if (!endpointPermitido(endpoint)) {
             throw new BusinessException(ErrorCode.INVALID_OPERATION, "Este navegador usa un servicio de avisos que no reconocemos.");

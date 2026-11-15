@@ -12,8 +12,10 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class LoteService implements LoteUseCase {
 
     private final LoteRepository loteRepository;
@@ -87,12 +89,14 @@ public class LoteService implements LoteUseCase {
         loteRepository.save(lote);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Lote buscarLotePorId(Long id) {
         return loteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Lote> listarLotesPorFinca(Long fincaId) {
         fincaUseCase.buscarFincaPorId(fincaId);

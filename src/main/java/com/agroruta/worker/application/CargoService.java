@@ -11,8 +11,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 import com.agroruta.worker.application.ports.in.CargoUseCase;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class CargoService implements CargoUseCase {
     private final CargoRepository cargoRepository;
 
@@ -62,6 +64,7 @@ public class CargoService implements CargoUseCase {
         cargoRepository.guardar(cargo);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Cargo buscarPorId(Long id) {
         return cargoRepository.buscarPorId(id)
@@ -69,15 +72,18 @@ public class CargoService implements CargoUseCase {
     }
 
 
+    @Transactional(readOnly = true)
     public List<Cargo> listarActivos() {
         return cargoRepository.listarActivos();
     }
 
+    @Transactional(readOnly = true)
     public List<Cargo> listarActivosDe(Long agricultorId) {
         if (agricultorId == null) return List.of();
         return cargoRepository.listarActivosPorAgricultor(agricultorId);
     }
 
+    @Transactional(readOnly = true)
     public List<Cargo> listarTodos() {
         return cargoRepository.listarTodos();
     }
