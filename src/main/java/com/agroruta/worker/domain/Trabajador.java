@@ -1,5 +1,6 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -67,7 +68,7 @@ public class Trabajador {
         boolean ocupado = this.usuarioId != null && !this.usuarioId.equals(usuarioId)
                 && (accesoEstado == EstadoAccesoPortal.PENDIENTE || accesoEstado == EstadoAccesoPortal.APROBADO);
         if (ocupado) {
-            throw new IllegalStateException("Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
+            throw new EstadoInvalidoException("Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
         }
         if (this.usuarioId != null && this.usuarioId.equals(usuarioId) && accesoEstado == EstadoAccesoPortal.APROBADO) {
             return; // ya estaba aprobado para esta misma cuenta
@@ -80,7 +81,7 @@ public class Trabajador {
 
     public void aprobarAcceso() {
         if (accesoEstado != EstadoAccesoPortal.PENDIENTE) {
-            throw new IllegalStateException("Este trabajador no tiene una solicitud de acceso pendiente.");
+            throw new EstadoInvalidoException("Este trabajador no tiene una solicitud de acceso pendiente.");
         }
         this.accesoEstado = EstadoAccesoPortal.APROBADO;
     }
@@ -88,7 +89,7 @@ public class Trabajador {
     /** Rechaza una solicitud pendiente o retira un acceso ya aprobado. */
     public void rechazarAcceso() {
         if (accesoEstado != EstadoAccesoPortal.PENDIENTE && accesoEstado != EstadoAccesoPortal.APROBADO) {
-            throw new IllegalStateException("Este trabajador no tiene acceso ni solicitudes pendientes.");
+            throw new EstadoInvalidoException("Este trabajador no tiene acceso ni solicitudes pendientes.");
         }
         this.accesoEstado = EstadoAccesoPortal.RECHAZADO;
     }

@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
@@ -116,14 +117,14 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("generarNomina debe lanzar IllegalStateException cuando no hay jornales disponibles")
+    @DisplayName("generarNomina debe lanzar EstadoInvalidoException cuando no hay jornales disponibles")
     void generarNomina_sinJornalesDisponibles_debeLanzarIllegalStateException() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajador));
         when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin))
                 .thenReturn(List.of());
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
+        EstadoInvalidoException ex = assertThrows(
+                EstadoInvalidoException.class,
                 () -> nominaService.generarNomina(1L, inicio, fin)
         );
 
@@ -172,12 +173,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("aprobarNomina debe lanzar IllegalStateException cuando la nómina no está en PENDIENTE")
+    @DisplayName("aprobarNomina debe lanzar EstadoInvalidoException cuando la nómina no está en PENDIENTE")
     void aprobarNomina_nominaNoEnPendiente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(3L)).thenReturn(Optional.of(nominaAnulada));
 
         assertThrows(
-                IllegalStateException.class,
+                EstadoInvalidoException.class,
                 () -> nominaService.aprobarNomina(3L)
         );
 
@@ -213,12 +214,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("anularNomina debe lanzar IllegalStateException cuando la nómina está PAGADA")
+    @DisplayName("anularNomina debe lanzar EstadoInvalidoException cuando la nómina está PAGADA")
     void anularNomina_nominaPagada_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(4L)).thenReturn(Optional.of(nominaPagada));
 
         assertThrows(
-                IllegalStateException.class,
+                EstadoInvalidoException.class,
                 () -> nominaService.anularNomina(4L)
         );
 
@@ -255,12 +256,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("reactivarNomina debe lanzar IllegalStateException cuando la nómina no está ANULADA")
+    @DisplayName("reactivarNomina debe lanzar EstadoInvalidoException cuando la nómina no está ANULADA")
     void reactivarNomina_nominaNoAnulada_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPendiente));
 
-        IllegalStateException ex = assertThrows(
-                IllegalStateException.class,
+        EstadoInvalidoException ex = assertThrows(
+                EstadoInvalidoException.class,
                 () -> nominaService.reactivarNomina(1L)
         );
 
@@ -295,12 +296,12 @@ class NominaServiceTest {
     }
 
     @Test
-    @DisplayName("eliminarNomina debe lanzar IllegalStateException cuando la nómina no está en PENDIENTE")
+    @DisplayName("eliminarNomina debe lanzar EstadoInvalidoException cuando la nómina no está en PENDIENTE")
     void eliminarNomina_nominaNoEnPendiente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(2L)).thenReturn(Optional.of(nominaAprobada));
 
         assertThrows(
-                IllegalStateException.class,
+                EstadoInvalidoException.class,
                 () -> nominaService.eliminarNomina(2L)
         );
 

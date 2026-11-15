@@ -1,6 +1,7 @@
 package com.agroruta.configuration.application;
 
 import com.agroruta.shared.evento.ContrasenaCambiada;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -54,7 +55,7 @@ public class ProfileService implements GetProfileUseCase,
         String hashActual = perfilRepository.obtenerPasswordHash(id);
 
         if (!passwordEncoder.matches(passwordActual, hashActual)) {
-            throw new IllegalArgumentException("La contraseña actual es incorrecta");
+            throw new DatoInvalidoException("La contraseña actual es incorrecta");
         }
 
         perfilRepository.cambiarPassword(id, passwordEncoder.encode(nuevaPassword));

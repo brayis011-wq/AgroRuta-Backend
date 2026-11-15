@@ -1,5 +1,6 @@
 package com.agroruta.configuration.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.user.domain.Rol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -128,7 +129,7 @@ class PerfilTest {
     @Test
     @DisplayName("actualizarDatos rechaza una foto que no es imagen")
     void actualizarDatos_rechazaFotoInvalida() {
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(DatoInvalidoException.class,
                 () -> perfil.actualizarDatos("Ana", "300", "data:text/html;base64,PGgxPg=="));
     }
 }

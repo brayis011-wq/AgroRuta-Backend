@@ -213,6 +213,43 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
+        @DisplayName("un dato inválido responde 400 con AGR-020 y su mensaje")
+        void datoInvalidoResponde400() {
+            BusinessException ex = new DatoInvalidoException("El nombre de la finca es obligatorio.");
+
+            ResponseEntity<ErrorResponse> response = handler.handleBusiness(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getStatus()).isEqualTo(400);
+            assertThat(response.getBody().getErrorCode()).isEqualTo("AGR-020");
+            assertThat(response.getBody().getMessage()).isEqualTo("El nombre de la finca es obligatorio.");
+        }
+
+        @Test
+        @DisplayName("una operación que no cabe en el estado actual responde 409 con AGR-011 y su mensaje")
+        void estadoInvalidoResponde409() {
+            BusinessException ex = new EstadoInvalidoException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+
+            ResponseEntity<ErrorResponse> response = handler.handleBusiness(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getStatus()).isEqualTo(409);
+            assertThat(response.getBody().getErrorCode()).isEqualTo("AGR-011");
+            assertThat(response.getBody().getMessage()).isEqualTo("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+        }
+
+        @Test
+        @DisplayName("los mismos códigos lanzados como BusinessException siguen respondiendo 422")
+        void losCodigosSueltosSiguenEn422() {
+            assertThat(handler.handleBusiness(new BusinessException(ErrorCode.INVALID_ARGUMENT, "Falta la foto."), request)
+                    .getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(handler.handleBusiness(new BusinessException(ErrorCode.INVALID_OPERATION, "La contraseña no es correcta."), request)
+                    .getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+        }
+
+        @Test
         @DisplayName("debe retornar el mensaje de la excepción")
         void shouldReturnExceptionMessage() {
             BusinessException ex = new BusinessException("No se puede cerrar un ciclo abierto");

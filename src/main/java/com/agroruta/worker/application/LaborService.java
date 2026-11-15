@@ -1,6 +1,7 @@
 package com.agroruta.worker.application;
 
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.LaborRepository;
@@ -93,7 +94,7 @@ public class LaborService implements LaborUseCase {
     /** Quita espacios de más: "  Poda   de  formación " → "Poda de formación" */
     static String limpiar(String nombre) {
         String t = nombre == null ? "" : nombre.trim().replaceAll("\\s+", " ");
-        if (t.isEmpty()) throw new IllegalArgumentException("El nombre de la labor es obligatorio.");
+        if (t.isEmpty()) throw new DatoInvalidoException("El nombre de la labor es obligatorio.");
         return t;
     }
 }

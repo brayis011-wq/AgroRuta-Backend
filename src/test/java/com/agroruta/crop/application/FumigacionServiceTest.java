@@ -6,6 +6,7 @@ import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.InventarioPort;
 import com.agroruta.crop.domain.*;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,7 +83,7 @@ class FumigacionServiceTest {
 
     @Test
     void deberiaLanzarExcepcionSiUnidadMedidaEsInvalida() {
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(DatoInvalidoException.class, () ->
                 service.registrarFumigacion(
                         fecha, "Producto", null, 1.0, "INVALIDA", 3.0, "obs", siembraId));
     }

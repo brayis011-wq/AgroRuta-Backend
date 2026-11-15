@@ -1,5 +1,6 @@
 package com.agroruta.user.application;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
@@ -149,7 +150,7 @@ class AuthServiceTest {
         request.setPassword(PASSWORD);
         request.setRol(Rol.Trabajador.name());
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+        DatoInvalidoException ex = assertThrows(DatoInvalidoException.class,
                 () -> authService.registrar(request));
 
         assertTrue(ex.getMessage().contains("cédula"));
@@ -215,7 +216,7 @@ class AuthServiceTest {
         request.setPassword(PASSWORD);
         request.setRol(Rol.Administrador.name());
 
-        assertThrows(IllegalArgumentException.class, () -> authService.registrar(request));
+        assertThrows(DatoInvalidoException.class, () -> authService.registrar(request));
         verify(registrarUsuarioUseCase, never()).registrar(any(Usuario.class));
     }
 
@@ -227,7 +228,7 @@ class AuthServiceTest {
         request.setPassword(PASSWORD);
         request.setRol("SuperUsuario");
 
-        assertThrows(IllegalArgumentException.class, () -> authService.registrar(request));
+        assertThrows(DatoInvalidoException.class, () -> authService.registrar(request));
         verify(registrarUsuarioUseCase, never()).registrar(any(Usuario.class));
     }
 

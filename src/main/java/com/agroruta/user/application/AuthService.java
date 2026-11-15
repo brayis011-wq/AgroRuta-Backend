@@ -1,5 +1,6 @@
 package com.agroruta.user.application;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.context.ApplicationEventPublisher;
 import com.agroruta.shared.evento.CuentaBloqueada;
@@ -72,7 +73,7 @@ public class AuthService {
         String cedula = request.getCedula() == null ? "" : request.getCedula().trim();
         if (rol == Rol.Trabajador) {
             if (cedula.isEmpty()) {
-                throw new IllegalArgumentException("La cédula es obligatoria para registrarse como trabajador.");
+                throw new DatoInvalidoException("La cédula es obligatoria para registrarse como trabajador.");
             }
             vinculoTrabajador.validarCedulaDisponible(cedula);
         }
@@ -195,10 +196,10 @@ public class AuthService {
         try {
             rol = Rol.valueOf(rolSolicitado.trim());
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Rol no válido. Opciones: Agricultor, Trabajador");
+            throw new DatoInvalidoException("Rol no válido. Opciones: Agricultor, Trabajador");
         }
         if (!ROLES_AUTOREGISTRO.contains(rol)) {
-            throw new IllegalArgumentException("No es posible registrarse con el rol " + rol.name());
+            throw new DatoInvalidoException("No es posible registrarse con el rol " + rol.name());
         }
         return rol;
     }

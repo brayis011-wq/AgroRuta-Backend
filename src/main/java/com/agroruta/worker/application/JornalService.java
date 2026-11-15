@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.domain.ResumenJornales;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.BusinessException;
@@ -46,7 +47,7 @@ public class JornalService implements JornalUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + trabajadorId));
 
         if (!trabajador.estaActivo()) {
-            throw new IllegalStateException("El trabajador " + trabajador.getNombreCompleto() + " no está activo.");
+            throw new EstadoInvalidoException("El trabajador " + trabajador.getNombreCompleto() + " no está activo.");
         }
 
         // El cultivo debe existir, seguir activo y estar en una finca del mismo agricultor.

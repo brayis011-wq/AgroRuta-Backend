@@ -1,5 +1,6 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ class TrabajadorAccesoTest {
         trabajador.solicitarAcceso(9L, "Luis", "luis@gmail.com");
 
         assertThatThrownBy(() -> trabajador.solicitarAcceso(10L, "Intruso", "x@x.com"))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(EstadoInvalidoException.class);
     }
 
     @Test
@@ -57,7 +58,7 @@ class TrabajadorAccesoTest {
     @Test
     @DisplayName("aprobar solo funciona con una solicitud pendiente")
     void aprobar() {
-        assertThatThrownBy(() -> trabajador.aprobarAcceso()).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> trabajador.aprobarAcceso()).isInstanceOf(EstadoInvalidoException.class);
 
         trabajador.solicitarAcceso(9L, "Luis", "luis@gmail.com");
         trabajador.aprobarAcceso();

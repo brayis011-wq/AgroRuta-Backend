@@ -4,6 +4,7 @@ import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
 import com.agroruta.crop.domain.TipoCultivo;
 import com.agroruta.crop.domain.VariedadCultivo;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,7 +45,7 @@ class CatalogoCultivoServiceTest {
 
     @Test
     void crearTipoRechazaNombreVacio() {
-        assertThrows(IllegalArgumentException.class, () -> service.crearTipo("   "));
+        assertThrows(DatoInvalidoException.class, () -> service.crearTipo("   "));
     }
 
     @Test
