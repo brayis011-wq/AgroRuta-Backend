@@ -90,6 +90,14 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         this.push = push;
     }
 
+    /** Bandeja de la app: el resumen queda en la campana aunque no tenga correo ni push */
+    private com.agroruta.notification.application.ports.in.BandejaAvisosUseCase bandeja;
+
+    @Autowired(required = false)
+    void setBandeja(com.agroruta.notification.application.ports.in.BandejaAvisosUseCase bandeja) {
+        this.bandeja = bandeja;
+    }
+
     @Override
     public int enviarResumenDelDia(boolean forzar) {
         LocalDate hoy = LocalDate.now(reloj);
@@ -104,7 +112,8 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
             // El correo se puede apagar en Configuración; el aviso push sale si activó los avisos en algún dispositivo
             boolean porCorreo = preferencias.obtener(u.getId()).alertasCultivo();
             boolean porPush = push != null && push.tieneSuscripcion(u.getId());
-            if (!porCorreo && !porPush) continue;
+            // Con la bandeja de la app, el resumen se arma para todos (la campana no se apaga)
+            if (!porCorreo && !porPush && bandeja == null) continue;
             try {
                 if (enviarA(u, hoy, porCorreo, porPush)) enviados++;
             } catch (RuntimeException e) {
@@ -121,9 +130,18 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         List<StockInsumo> stock = stockDe(u.getId());
         List<com.agroruta.weather.domain.ConsejoClima> consejos = consejosDe(u.getId());
         if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty() && consejos.isEmpty()) return false;
+        String corto = resumenCorto(alertas, tiempo, stock, consejos, hoy);
         if (porPush) {
             push.enviar(u.getId(), new com.agroruta.notification.domain.AvisoPush("Tu finca hoy",
-                    resumenCorto(alertas, tiempo, stock, consejos, hoy), "/dashboard", "resumen-" + hoy));
+                    corto, "/dashboard", "resumen-" + hoy));
+        }
+        if (bandeja != null) {
+            // Los conteos dejan armar el texto en inglés; el resumen en español va como cuerpo
+            bandeja.avisar(new com.agroruta.notification.domain.AvisoBandeja.Nuevo(u.getId(),
+                    com.agroruta.notification.domain.AvisoBandeja.Tipo.RESUMEN_DIA, "Tu finca hoy", corto,
+                    java.util.Map.of("fecha", hoy.toString(), "alertas", alertas.size(), "clima", tiempo.size(),
+                            "insumos", stock.size(), "consejos", consejos.size()),
+                    "/dashboard", "resumen-" + hoy));
         }
         return porCorreo && correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock, consejos));
     }
