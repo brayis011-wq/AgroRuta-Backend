@@ -92,6 +92,27 @@ class AlertasDiariasServiceTest {
     }
 
     @Test
+    @DisplayName("la campana recibe el resumen aunque el correo esté apagado; nunca al administrador")
+    void bandeja() {
+        var bandeja = mock(com.agroruta.notification.application.ports.in.BandejaAvisosUseCase.class);
+        service.setBandeja(bandeja);
+        when(preferencias.obtener(1L)).thenReturn(new PreferenciasCorreo(1L, false, true));
+        when(alertas.alertasDelDia(1L, hoy)).thenReturn(List.of(fumigarHoy()));
+        when(alertas.alertasDelDia(2L, hoy)).thenReturn(List.of());
+
+        assertThat(service.enviarResumenDelDia(false)).isZero(); // ningún correo: Ana lo apagó y Luis no tiene nada
+
+        var c = ArgumentCaptor.forClass(com.agroruta.notification.domain.AvisoBandeja.Nuevo.class);
+        verify(bandeja).avisar(c.capture());
+        assertThat(c.getValue().usuarioId()).isEqualTo(1L);
+        assertThat(c.getValue().tipo()).isEqualTo(com.agroruta.notification.domain.AvisoBandeja.Tipo.RESUMEN_DIA);
+        assertThat(c.getValue().datos()).containsEntry("alertas", 1).containsEntry("fecha", "2026-11-05");
+        assertThat(c.getValue().etiqueta()).isEqualTo("resumen-2026-11-05");
+        verify(correo, never()).enviar(any());
+        verify(alertas, never()).alertasDelDia(3L, hoy);
+    }
+
+    @Test
     @DisplayName("un reintento el mismo día no duplica correos, salvo que se fuerce")
     void noRepite() {
         when(alertas.alertasDelDia(1L, hoy)).thenReturn(List.of(fumigarHoy()));

@@ -65,9 +65,19 @@ class LimpiezaDatosVencidosTest {
     }
 
     @Test
-    @DisplayName("responde las cuatro tablas aunque no haya nada que borrar")
+    @DisplayName("avisos de la campana: los de hace más de tres meses")
+    void avisosBandeja() {
+        when(jdbc.update(contains("avisos_bandeja"), any(Object.class))).thenReturn(30);
+
+        assertThat(limpieza.limpiar()).containsEntry("avisosBandeja", 30);
+
+        verify(jdbc).update("DELETE FROM avisos_bandeja WHERE creado_en < ?", LocalDateTime.of(2026, 8, 22, 5, 17));
+    }
+
+    @Test
+    @DisplayName("responde todas las tablas aunque no haya nada que borrar")
     void sinNada() {
         assertThat(limpieza.limpiar()).containsOnlyKeys(
-                "sesiones", "verificacionesCorreo", "restablecimientosContrasena", "usoDiagnosticos");
+                "sesiones", "verificacionesCorreo", "restablecimientosContrasena", "usoDiagnosticos", "avisosBandeja");
     }
 }

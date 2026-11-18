@@ -13,8 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Borra lo que ya no sirve de las tablas que solo crecen: sesiones, enlaces de correo y el
- * contador diario de diagnósticos. La dispara la tarea diaria de GitHub Actions
+ * Borra lo que ya no sirve de las tablas que solo crecen: sesiones, enlaces de correo, el
+ * contador diario de diagnósticos y los avisos viejos de la campana. La dispara la tarea diaria de GitHub Actions
  * (POST /api/jobs/cleanup), porque Render gratis se duerme y no correría un @Scheduled.
  *
  * Los márgenes son de días a propósito: las fechas de estas tablas se escriben con relojes
@@ -35,6 +35,8 @@ public class LimpiezaDatosVencidos {
     static final Duration MARGEN_ENLACES = Duration.ofDays(7);
     /** El contador de diagnósticos solo se consulta para el día de hoy */
     static final int DIAS_USO_DIAGNOSTICO = 30;
+    /** Los avisos de la campana se conservan tres meses (leídos o no): después ya no dicen nada nuevo */
+    static final Duration VIDA_AVISOS = Duration.ofDays(90);
 
     private final JdbcTemplate jdbc;
     private final Clock reloj;
@@ -66,6 +68,8 @@ public class LimpiezaDatosVencidos {
         borrados.put("usoDiagnosticos", jdbc.update(
                 "DELETE FROM diagnosticos_uso WHERE dia < ?",
                 Date.valueOf(ahora.toLocalDate().minusDays(DIAS_USO_DIAGNOSTICO))));
+        borrados.put("avisosBandeja", jdbc.update(
+                "DELETE FROM avisos_bandeja WHERE creado_en < ?", ahora.minus(VIDA_AVISOS)));
         return borrados;
     }
 }
