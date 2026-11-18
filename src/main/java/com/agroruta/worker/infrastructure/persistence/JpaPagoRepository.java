@@ -30,7 +30,8 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
             SUM(p.monto),
             MIN(p.nomina.periodoInicio),
             MAX(p.nomina.periodoFin),
-            CAST(SUM(p.nomina.totalJornales) AS int)
+            CAST(SUM(p.nomina.totalJornales) AS int),
+            UPPER(CONCAT(SUBSTRING(p.nomina.trabajador.nombre, 1, 1), SUBSTRING(p.nomina.trabajador.apellido, 1, 1)))
         )
         FROM PagoEntity p
         GROUP BY p.nomina.trabajador.id, p.nomina.trabajador.nombre, p.nomina.trabajador.apellido
@@ -48,7 +49,8 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
             SUM(p.monto),
             MIN(p.nomina.periodoInicio),
             MAX(p.nomina.periodoFin),
-            CAST(SUM(p.nomina.totalJornales) AS int)
+            CAST(SUM(p.nomina.totalJornales) AS int),
+            UPPER(CONCAT(SUBSTRING(p.nomina.trabajador.nombre, 1, 1), SUBSTRING(p.nomina.trabajador.apellido, 1, 1)))
         )
         FROM PagoEntity p
         WHERE p.nomina.trabajador.agricultorId = :agricultorId

@@ -43,6 +43,16 @@ class TrabajadorTest {
     }
 
     @Test
+    void lasInicialesSonLaPrimeraLetraDelNombreYDelApellido() {
+        assertEquals("JP", trabajador.getIniciales());
+        // Con dos nombres no se toma el segundo: igual que en la lista del equipo
+        assertEquals("JP", Trabajador.iniciales("Juan Carlos", "Pérez Gómez"));
+        assertEquals("ÁÑ", Trabajador.iniciales(" ángela ", "ñustes"));
+        assertEquals("L", Trabajador.iniciales("Luis", null));
+        assertEquals("?", Trabajador.iniciales("", " "));
+    }
+
+    @Test
     void deberiaDesactivarTrabajador() {
         trabajador.desactivar();
 

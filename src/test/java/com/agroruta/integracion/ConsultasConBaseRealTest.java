@@ -3,7 +3,9 @@ package com.agroruta.integracion;
 import com.agroruta.crop.infrastructure.persistence.JpaCosechaRepository;
 import com.agroruta.shared.security.ConsultaPropiedad;
 import com.agroruta.shared.security.Recurso;
+import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
+import com.agroruta.worker.domain.ResumenJornalesInicio;
 import com.agroruta.worker.domain.Trabajador;
 import com.agroruta.worker.infrastructure.persistence.JpaPagoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +40,7 @@ class ConsultasConBaseRealTest extends ConBaseReal {
     @Autowired private JpaCosechaRepository cosechas;
     @Autowired private JpaPagoRepository pagos;
     @Autowired private TrabajadorRepository trabajadores;
+    @Autowired private JornalRepository jornales;
 
     private long ana;    // agricultora dueña de todo
     private long beto;   // otro agricultor, sin nada
@@ -129,6 +132,52 @@ class ConsultasConBaseRealTest extends ConBaseReal {
         assertTrue(pagos.totalesPorMes(beto, DIA.minusMonths(1)).isEmpty(), "Beto no ha pagado nada");
     }
 
+    @Test
+    void elDetalleDeNominaTraeLasInicialesDelNombreYDelApellido() {
+        jdbc.update("UPDATE trabajadores SET nombre = 'luis eduardo', apellido = 'herrera díaz' WHERE id = ?", trabajador);
+
+        var detalle = pagos.findDetailPerWorkerByAgricultorId(ana);
+
+        assertEquals(1, detalle.size());
+        assertEquals("LH", detalle.get(0).workerInitials());
+        assertEquals("luis eduardo herrera díaz", detalle.get(0).workerName());
+    }
+
+    // ── jornales del inicio ─────────────────────────────────────────────────
+
+    @Test
+    void elResumenDelInicioCuentaLosDosMesesYQuienTrabajoHoy() {
+        jornal(trabajador, DIA.minusDays(7));                  // 3 nov: mes en curso
+        jornal(trabajador, LocalDate.of(2026, 10, 20));        // octubre
+        jornal(trabajador, LocalDate.of(2026, 10, 1));         // octubre, primer día
+        jornal(trabajador, LocalDate.of(2026, 9, 30));         // septiembre: fuera
+        jornal(trabajador, DIA.plusDays(2));                   // después de hoy: fuera
+        long inactivo = insertar("INSERT INTO trabajadores (apellido, cedula, estado, fecha_ingreso, nombre, tipo_contrato, cargo_id, agricultor_id) VALUES ('Rojas', '77', 'INACTIVO', ?, 'Eva', 'JORNAL', ?, ?)",
+                DIA, cargo, ana);
+        jornal(inactivo, DIA);                                 // ya no trabaja: no cuenta
+        long cargoDeBeto = insertar("INSERT INTO cargos (activo, nombre, valor_jornal, agricultor_id) VALUES (1, 'Recolector', 60000, ?)", beto);
+        long deBeto = insertar("INSERT INTO trabajadores (apellido, cedula, estado, fecha_ingreso, nombre, tipo_contrato, cargo_id, agricultor_id) VALUES ('Mora', '88', 'ACTIVO', ?, 'Leo', 'JORNAL', ?, ?)",
+                DIA, cargoDeBeto, beto);
+        jornal(deBeto, DIA);
+
+        ResumenJornalesInicio r = jornales.resumenInicio(ana, DIA);
+
+        assertEquals(2, r.mesActual(), "10 y 3 de noviembre");
+        assertEquals(2, r.mesAnterior(), "20 y 1 de octubre");
+        assertEquals(List.of(trabajador), r.trabajadoresHoy());
+
+        ResumenJornalesInicio todos = jornales.resumenInicio(null, DIA);
+        // Otras pruebas pueden dejar datos en la misma base: sin filtro de dueño solo se exige lo de aquí
+        assertTrue(todos.mesActual() >= 3, "el administrador ve también el de Beto");
+        assertTrue(todos.trabajadoresHoy().containsAll(List.of(trabajador, deBeto)));
+        assertFalse(todos.trabajadoresHoy().contains(inactivo));
+
+        ResumenJornalesInicio vacio = jornales.resumenInicio(beto, LocalDate.of(2026, 8, 15));
+        assertEquals(0, vacio.mesActual());
+        assertEquals(0, vacio.mesAnterior());
+        assertTrue(vacio.trabajadoresHoy().isEmpty());
+    }
+
     // ── cédula ──────────────────────────────────────────────────────────────
 
     @Test
@@ -184,6 +233,11 @@ class ConsultasConBaseRealTest extends ConBaseReal {
     private long trabajador(String cedula, long agricultor) {
         return insertar("INSERT INTO trabajadores (apellido, cedula, estado, fecha_ingreso, nombre, tipo_contrato, cargo_id, agricultor_id) VALUES ('Herrera', ?, 'ACTIVO', ?, 'Luis', 'JORNAL', ?, ?)",
                 cedula, DIA, cargo, agricultor);
+    }
+
+    private long jornal(long trabajadorId, LocalDate fecha) {
+        return insertar("INSERT INTO jornales (cultivo_id, fecha, liquidado, valor_jornal, trabajador_id) VALUES (?, ?, 0, 50000, ?)",
+                siembra, fecha, trabajadorId);
     }
 
     private long nomina(String estado) {
