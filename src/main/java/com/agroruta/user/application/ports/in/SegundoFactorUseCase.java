@@ -1,6 +1,8 @@
 package com.agroruta.user.application.ports.in;
 
+import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Segundo factor de autenticación (opcional por cuenta): además de la contraseña, un código de
@@ -31,4 +33,17 @@ public interface SegundoFactorUseCase {
      * Si la cuenta no tiene segundo factor, responde true.
      */
     boolean verificar(Long usuarioId, String codigo);
+
+    /** Cuánto tiempo deja de pedirse el código en un dispositivo después de escribirlo bien */
+    Duration RECORDAR_DISPOSITIVO = Duration.ofDays(30);
+
+    /**
+     * Marca firmada para que este dispositivo no vuelva a pedir el código durante
+     * {@link #RECORDAR_DISPOSITIVO}. Vacío si la cuenta no tiene segundo factor activo.
+     * Deja de valer sola si se cambia la contraseña o se vuelve a configurar el segundo factor.
+     */
+    Optional<String> recordarDispositivo(Long usuarioId);
+
+    /** ¿La marca es de esta cuenta, no venció y sigue valiendo? */
+    boolean dispositivoRecordado(Long usuarioId, String marca);
 }

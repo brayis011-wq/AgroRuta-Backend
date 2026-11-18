@@ -21,6 +21,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -120,9 +121,9 @@ class AuthControllerTest {
             request.setEmail("juan@agroruta.com");
             request.setPassword("password123");
 
-            when(authService.login(any(LoginRequest.class))).thenReturn(authResponseBase);
+            when(authService.login(any(LoginRequest.class), any())).thenReturn(authResponseBase);
 
-            ResponseEntity<AuthResponse> respuesta = authController.login(request, response);
+            ResponseEntity<AuthResponse> respuesta = authController.login(request, null, response);
 
             assertNotNull(respuesta);
             assertEquals(HttpStatus.OK,        respuesta.getStatusCode());
@@ -132,7 +133,7 @@ class AuthControllerTest {
             assertEquals("juan@agroruta.com",  respuesta.getBody().getEmail());
             assertEquals("Juan Pérez",         respuesta.getBody().getNombre());
             assertEquals("Agricultor",         respuesta.getBody().getRol());
-            verify(authService, times(1)).login(any(LoginRequest.class));
+            verify(authService, times(1)).login(any(LoginRequest.class), any());
         }
 
         @Test
@@ -146,14 +147,14 @@ class AuthControllerTest {
                     2L, "otro.jwt.token", "ana@agroruta.com", "Ana López", "Administrador"
             );
 
-            when(authService.login(any(LoginRequest.class))).thenReturn(otraRespuesta);
+            when(authService.login(any(LoginRequest.class), any())).thenReturn(otraRespuesta);
 
-            ResponseEntity<AuthResponse> respuesta = authController.login(request, response);
+            ResponseEntity<AuthResponse> respuesta = authController.login(request, null, response);
 
             assertEquals(HttpStatus.OK,      respuesta.getStatusCode());
             assertEquals("otro.jwt.token",   respuesta.getBody().getToken());
             assertEquals("ana@agroruta.com", respuesta.getBody().getEmail());
-            verify(authService, times(1)).login(any(LoginRequest.class));
+            verify(authService, times(1)).login(any(LoginRequest.class), any());
         }
     }
 
@@ -185,10 +186,10 @@ class AuthControllerTest {
         @Test
         @DisplayName("login abre una sesión y la manda en una cookie httpOnly, Strict, solo para /api/auth")
         void loginEscribeLaCookie() {
-            when(authService.login(any(LoginRequest.class))).thenReturn(authResponseBase);
+            when(authService.login(any(LoginRequest.class), any())).thenReturn(authResponseBase);
             when(sesiones.abrir(1L)).thenReturn("refresh-1");
 
-            authController.login(new LoginRequest(), response);
+            authController.login(new LoginRequest(), null, response);
 
             String cookie = response.getHeader("Set-Cookie");
             assertNotNull(cookie);
@@ -197,6 +198,55 @@ class AuthControllerTest {
             assertTrue(cookie.contains("Secure"));
             assertTrue(cookie.contains("SameSite=Strict"));
             assertTrue(cookie.contains("Path=/api/auth"));
+        }
+
+        @Test
+        @DisplayName("entrar con el código recuerda el dispositivo 30 días en otra cookie httpOnly")
+        void conCodigoRecuerdaElDispositivo() {
+            LoginRequest request = new LoginRequest();
+            request.setCodigo("123456");
+            when(authService.login(request, null)).thenReturn(authResponseBase);
+            when(sesiones.abrir(1L)).thenReturn("refresh-1");
+            when(authService.recordarDispositivo(1L)).thenReturn(java.util.Optional.of("1.999.firma"));
+
+            authController.login(request, null, response);
+
+            String cookie = response.getHeaders("Set-Cookie").stream()
+                    .filter(c -> c.startsWith("agroruta_dispositivo=")).findFirst().orElseThrow();
+            assertTrue(cookie.startsWith("agroruta_dispositivo=1.999.firma"));
+            assertTrue(cookie.contains("Max-Age=2592000"), "30 días");
+            assertTrue(cookie.contains("HttpOnly"));
+            assertTrue(cookie.contains("SameSite=Strict"));
+            assertTrue(cookie.contains("Path=/api/auth"));
+        }
+
+        @Test
+        @DisplayName("si desmarca la casilla no se recuerda (y se borra una marca anterior)")
+        void sinRecordar() {
+            LoginRequest request = new LoginRequest();
+            request.setCodigo("123456");
+            request.setRecordarDispositivo(false);
+            when(authService.login(request, null)).thenReturn(authResponseBase);
+            when(sesiones.abrir(1L)).thenReturn("refresh-1");
+
+            authController.login(request, null, response);
+
+            verify(authService, never()).recordarDispositivo(any());
+            assertTrue(response.getHeaders("Set-Cookie").stream()
+                    .anyMatch(c -> c.startsWith("agroruta_dispositivo=;") && c.contains("Max-Age=0")));
+        }
+
+        @Test
+        @DisplayName("entrando sin código (dispositivo ya recordado o sin dos pasos) no se renueva la marca")
+        void sinCodigoNoRenueva() {
+            when(authService.login(any(LoginRequest.class), eq("1.999.firma"))).thenReturn(authResponseBase);
+            when(sesiones.abrir(1L)).thenReturn("refresh-1");
+
+            authController.login(new LoginRequest(), "1.999.firma", response);
+
+            verify(authService).login(any(LoginRequest.class), eq("1.999.firma"));
+            verify(authService, never()).recordarDispositivo(any());
+            assertTrue(response.getHeaders("Set-Cookie").stream().noneMatch(c -> c.startsWith("agroruta_dispositivo")));
         }
 
         @Test

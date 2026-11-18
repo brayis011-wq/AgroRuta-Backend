@@ -543,6 +543,40 @@ class AuthServiceTest {
     }
 
     @Test
+    void conDispositivoRecordadoNoDeberiaPedirElCodigo() {
+        LoginRequest request = loginConCodigo(null);
+        when(segundoFactor.dispositivoRecordado(ID, "marca-valida")).thenReturn(true);
+        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+
+        assertEquals(TOKEN, authService.login(request, "marca-valida").getToken());
+        verify(segundoFactor, never()).verificar(any(), any());
+    }
+
+    @Test
+    void conMarcaDeDispositivoInvalidaDeberiaPedirElCodigo() {
+        LoginRequest request = loginConCodigo(null);
+        when(segundoFactor.dispositivoRecordado(ID, "marca-falsa")).thenReturn(false);
+
+        com.agroruta.shared.exception.BusinessException e = assertThrows(
+                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request, "marca-falsa"));
+
+        assertEquals(com.agroruta.shared.exception.ErrorCode.TWO_FACTOR_REQUIRED, e.getErrorCode());
+        verifyNoInteractions(tokenPort);
+    }
+
+    @Test
+    void laMarcaDeDispositivoNoSirveSinLaContrasena() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail(EMAIL);
+        request.setPassword("otra");
+        when(authenticationManager.authenticate(any())).thenThrow(new org.springframework.security.authentication.BadCredentialsException("mala"));
+
+        assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+                () -> authService.login(request, "marca-valida"));
+        verifyNoInteractions(segundoFactor, tokenPort);
+    }
+
+    @Test
     void reenviarVerificacionDeberiaNormalizarElCorreo() {
         authService.reenviarVerificacion("  Juan@AgroRuta.com ");
         verify(verificacion).reenviar("juan@agroruta.com");

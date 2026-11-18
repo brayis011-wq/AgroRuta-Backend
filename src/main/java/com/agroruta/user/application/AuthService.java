@@ -112,6 +112,14 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        return login(request, null);
+    }
+
+    /**
+     * @param dispositivo marca de "dispositivo recordado" que trae el navegador (cookie), o null.
+     *                    Si es válida, no se pide el código de la verificación en dos pasos.
+     */
+    public AuthResponse login(LoginRequest request, String dispositivo) {
         intentosLogin.exigirNoBloqueado(request.getEmail());
         try {
             authenticationManager.authenticate(
@@ -127,7 +135,7 @@ public class AuthService {
             throw e;
         }
         Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
-        exigirSegundoFactor(usuario, request);
+        exigirSegundoFactor(usuario, request, dispositivo);
         // Solo cuando pasó todo: un código equivocado cuenta como intento fallido
         intentosLogin.limpiar(request.getEmail());
 
@@ -144,8 +152,10 @@ public class AuthService {
      * TWO_FACTOR_REQUIRED (la pantalla muestra el campo); con un código equivocado, TWO_FACTOR_INVALID,
      * y cuenta para el bloqueo por intentos, para que nadie pruebe códigos al azar.
      */
-    private void exigirSegundoFactor(Usuario usuario, LoginRequest request) {
+    private void exigirSegundoFactor(Usuario usuario, LoginRequest request, String dispositivo) {
         if (!segundoFactor.activo(usuario.getId())) return;
+        // Este navegador ya escribió el código hace menos de un mes: basta con la contraseña
+        if (segundoFactor.dispositivoRecordado(usuario.getId(), dispositivo)) return;
         String codigo = request.getCodigo();
         if (codigo == null || codigo.isBlank()) {
             throw new BusinessException(ErrorCode.TWO_FACTOR_REQUIRED,
@@ -158,6 +168,11 @@ public class AuthService {
             throw new BusinessException(ErrorCode.TWO_FACTOR_INVALID,
                     "El código no es correcto. Usa el más reciente de tu app o un código de respaldo.");
         }
+    }
+
+    /** Marca para no volver a pedir el código en este dispositivo; vacía si la cuenta no tiene segundo factor. */
+    public java.util.Optional<String> recordarDispositivo(Long usuarioId) {
+        return segundoFactor.recordarDispositivo(usuarioId);
     }
 
     /** El enlace del correo de confirmación: confirma la cuenta y deja la sesión iniciada. */

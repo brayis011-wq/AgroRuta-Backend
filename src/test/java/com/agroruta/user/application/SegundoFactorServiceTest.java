@@ -143,6 +143,70 @@ class SegundoFactorServiceTest {
         assertThrows(BusinessException.class, () -> service.preparar(7L, "clave-buena"));
     }
 
+    // ── dispositivo recordado ──────────────────────────────────────────────
+
+    @Test
+    @DisplayName("sin segundo factor activo no hay marca de dispositivo")
+    void sinMarcaSinSegundoFactor() {
+        assertTrue(service.recordarDispositivo(7L).isEmpty());
+        assertFalse(service.dispositivoRecordado(7L, "7.9999999999.algo"));
+    }
+
+    @Test
+    @DisplayName("la marca vale 30 días para esa cuenta y después vence")
+    void marcaVence() {
+        activar(new java.util.ArrayList<>());
+        String marca = service.recordarDispositivo(7L).orElseThrow();
+
+        assertTrue(service.dispositivoRecordado(7L, marca));
+        reloj.avanzar(Duration.ofDays(29));
+        assertTrue(service.dispositivoRecordado(7L, marca));
+        reloj.avanzar(Duration.ofDays(1).plusSeconds(1));
+        assertFalse(service.dispositivoRecordado(7L, marca), "al mes vuelve a pedir el código");
+    }
+
+    @Test
+    @DisplayName("no sirve para otra cuenta, alterada, ni con basura")
+    void marcaFalsa() {
+        activar(new java.util.ArrayList<>());
+        String marca = service.recordarDispositivo(7L).orElseThrow();
+        String[] p = marca.split("\\.");
+
+        assertFalse(service.dispositivoRecordado(8L, marca));
+        assertFalse(service.dispositivoRecordado(7L, "8." + p[1] + "." + p[2]));
+        assertFalse(service.dispositivoRecordado(7L, p[0] + "." + (Long.parseLong(p[1]) + 86_400 * 365) + "." + p[2]),
+                "no se puede alargar la fecha");
+        assertFalse(service.dispositivoRecordado(7L, p[0] + "." + p[1] + ".firma-inventada"));
+        assertFalse(service.dispositivoRecordado(7L, "nada"));
+        assertFalse(service.dispositivoRecordado(7L, "a.b.c"));
+        assertFalse(service.dispositivoRecordado(7L, null));
+    }
+
+    @Test
+    @DisplayName("deja de valer si se cambia la contraseña")
+    void marcaYCambioDeContrasena() {
+        activar(new java.util.ArrayList<>());
+        String marca = service.recordarDispositivo(7L).orElseThrow();
+
+        when(usuarios.findById(7L)).thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash-nuevo", Rol.Administrador)));
+
+        assertFalse(service.dispositivoRecordado(7L, marca));
+    }
+
+    @Test
+    @DisplayName("deja de valer si se quita el segundo factor y se vuelve a configurar")
+    void marcaYReconfiguracion() {
+        String secreto = activar(new java.util.ArrayList<>());
+        String marca = service.recordarDispositivo(7L).orElseThrow();
+        reloj.avanzar(Duration.ofSeconds(60));
+        service.desactivar(7L, "clave-buena", codigoDeLaApp(secreto));
+
+        assertFalse(service.dispositivoRecordado(7L, marca), "sin segundo factor no hay nada que recordar");
+        reloj.avanzar(Duration.ofSeconds(60));
+        activar(new java.util.ArrayList<>());
+        assertFalse(service.dispositivoRecordado(7L, marca), "la marca vieja no sirve con la configuración nueva");
+    }
+
     @Test
     @DisplayName("el secreto cifrado se puede leer de vuelta y cada cifrado es distinto")
     void cifrado() {
