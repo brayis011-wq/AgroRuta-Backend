@@ -68,4 +68,28 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
         """)
     List<Object[]> resumenPorTrabajador(@Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio,
                                         @Param("fin") LocalDate fin);
+
+    /** [jornales desde inicioMes, jornales anteriores a inicioMes] entre desde y hoy, de trabajadores en ese estado */
+    @Query("""
+        SELECT SUM(CASE WHEN j.fecha >= :inicioMes THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.fecha < :inicioMes THEN 1 ELSE 0 END)
+        FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND j.trabajador.estado = :estado
+          AND j.fecha >= :desde AND j.fecha <= :hoy
+        """)
+    List<Object[]> conteoPorMes(@Param("agricultorId") Long agricultorId,
+                                @Param("estado") com.agroruta.worker.domain.EstadoTrabajador estado,
+                                @Param("desde") LocalDate desde, @Param("inicioMes") LocalDate inicioMes,
+                                @Param("hoy") LocalDate hoy);
+
+    @Query("""
+        SELECT DISTINCT j.trabajador.id FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND j.trabajador.estado = :estado
+          AND j.fecha = :hoy
+        """)
+    List<Long> trabajadoresConJornal(@Param("agricultorId") Long agricultorId,
+                                     @Param("estado") com.agroruta.worker.domain.EstadoTrabajador estado,
+                                     @Param("hoy") LocalDate hoy);
 }

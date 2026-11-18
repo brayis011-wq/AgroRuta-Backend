@@ -462,4 +462,35 @@ class JornalControllerTest {
             verify(jornalUseCase, times(1)).removerActividad(1L, 2L);
         }
     }
+
+    @Nested
+    @DisplayName("GET /api/workdays/home-summary")
+    class ResumenInicio {
+
+        private final com.agroruta.worker.domain.ResumenJornalesInicio resumen =
+                new com.agroruta.worker.domain.ResumenJornalesInicio(12, 9, List.of(1L, 3L));
+
+        @Test
+        @DisplayName("el agricultor solo ve lo suyo")
+        void agricultorVeLoSuyo() {
+            when(jornalUseCase.resumenInicio(5L, FECHA)).thenReturn(resumen);
+
+            ResponseEntity<com.agroruta.worker.domain.ResumenJornalesInicio> r =
+                    jornalController.resumenInicio(FECHA, auth(5L, Rol.Agricultor));
+
+            assertEquals(HttpStatus.OK, r.getStatusCode());
+            assertSame(resumen, r.getBody());
+            verify(jornalUseCase).resumenInicio(5L, FECHA);
+        }
+
+        @Test
+        @DisplayName("el administrador ve todo (sin filtro de dueño)")
+        void adminVeTodo() {
+            when(jornalUseCase.resumenInicio(null, null)).thenReturn(resumen);
+
+            jornalController.resumenInicio(null, auth(99L, Rol.Administrador));
+
+            verify(jornalUseCase).resumenInicio(null, null);
+        }
+    }
 }
