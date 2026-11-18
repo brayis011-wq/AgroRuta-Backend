@@ -35,6 +35,14 @@ public class AuthController {
         this.cookie = cookie;
     }
 
+    /** Cookie de "dispositivo recordado" (no pedir el código de dos pasos por 30 días) */
+    private CookieDispositivo cookieDispositivo = new CookieDispositivo(true);
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setCookieDispositivo(CookieDispositivo cookieDispositivo) {
+        this.cookieDispositivo = cookieDispositivo;
+    }
+
     @org.springframework.beans.factory.annotation.Autowired
     public void setAbiertas(com.agroruta.user.application.ports.in.SesionesAbiertasUseCase abiertas) {
         this.abiertas = abiertas;
@@ -72,8 +80,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                                              @CookieValue(name = CookieDispositivo.NOMBRE, required = false) String dispositivo,
                                               HttpServletResponse response) {
-        return conSesion(authService.login(request), response);
+        AuthResponse auth = authService.login(request, dispositivo);
+        // Entró escribiendo el código: se recuerda este dispositivo, salvo que haya desmarcado la casilla
+        boolean conCodigo = request.getCodigo() != null && !request.getCodigo().isBlank();
+        if (auth.getToken() != null && conCodigo) {
+            if (Boolean.FALSE.equals(request.getRecordarDispositivo())) {
+                cookieDispositivo.borrar(response);
+            } else {
+                authService.recordarDispositivo(auth.getId()).ifPresent(m -> cookieDispositivo.escribir(response, m));
+            }
+        }
+        return conSesion(auth, response);
     }
 
     /** Enlace del correo de confirmación: confirma la cuenta e inicia sesión */

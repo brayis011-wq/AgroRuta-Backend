@@ -21,4 +21,7 @@ public class LoginRequest {
     /** Código de la app de autenticación o de respaldo; solo si la cuenta tiene verificación en dos pasos */
     @Size(max = 20, message = "El código no puede superar 20 caracteres")
     private String codigo;
+
+    /** Con el código: no volver a pedirlo en este dispositivo durante 30 días (por defecto, sí) */
+    private Boolean recordarDispositivo;
 }

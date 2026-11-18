@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalLong;
 
 @Service
@@ -45,6 +46,8 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     private final UsuarioRepository usuarios;
     private final PasswordEncoder passwordEncoder;
     private final SecretKeySpec claveCifrado;
+    /** Para firmar las marcas de dispositivo recordado; distinta de la de cifrado */
+    private final byte[] claveDispositivo;
     private final Clock reloj;
     private final SecureRandom azar = new SecureRandom();
 
@@ -63,6 +66,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
         // Clave propia para cifrar los secretos, derivada del secreto del servidor
         this.claveCifrado = new SecretKeySpec(
                 hmacSha256(clave.getBytes(StandardCharsets.UTF_8), "agroruta/segundo-factor/v1"), "AES");
+        this.claveDispositivo = hmacSha256(clave.getBytes(StandardCharsets.UTF_8), "agroruta/dispositivo-recordado/v1");
     }
 
     @Override
@@ -141,6 +145,52 @@ public class SegundoFactorService implements SegundoFactorUseCase {
         if (!sf.usarRespaldo(hash(c))) return false;
         repo.guardar(sf);
         return true;
+    }
+
+    // ── Dispositivo recordado ───────────────────────────────────────────────
+
+    /** Formato: "usuarioId.venceEnSegundos.firma" */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<String> recordarDispositivo(Long usuarioId) {
+        if (usuarioId == null) return Optional.empty();
+        SegundoFactor sf = repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
+        Usuario usuario = usuarios.findById(usuarioId).orElse(null);
+        if (sf == null || usuario == null) return Optional.empty();
+        long vence = reloj.instant().plus(RECORDAR_DISPOSITIVO).getEpochSecond();
+        return Optional.of(usuarioId + "." + vence + "." + firma(usuarioId, vence, sf, usuario));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean dispositivoRecordado(Long usuarioId, String marca) {
+        if (usuarioId == null || marca == null || marca.isBlank()) return false;
+        String[] p = marca.split("\\.");
+        if (p.length != 3) return false;
+        long id;
+        long vence;
+        try {
+            id = Long.parseLong(p[0]);
+            vence = Long.parseLong(p[1]);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+        if (id != usuarioId || vence <= ahoraSegundos()) return false;
+        SegundoFactor sf = repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
+        Usuario usuario = usuarios.findById(usuarioId).orElse(null);
+        if (sf == null || usuario == null) return false;
+        byte[] esperada = firma(usuarioId, vence, sf, usuario).getBytes(StandardCharsets.US_ASCII);
+        // Comparación en tiempo constante: no deja adivinar la firma letra por letra
+        return MessageDigest.isEqual(esperada, p[2].getBytes(StandardCharsets.US_ASCII));
+    }
+
+    /**
+     * La firma cubre la fecha en que se activó el segundo factor y el hash de la contraseña:
+     * si se vuelve a configurar o se cambia la contraseña, las marcas anteriores dejan de valer.
+     */
+    private String firma(Long usuarioId, long vence, SegundoFactor sf, Usuario usuario) {
+        String datos = usuarioId + "|" + vence + "|" + sf.getActivadoEn() + "|" + usuario.getPassword();
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(hmacSha256(claveDispositivo, datos));
     }
 
     // ── Auxiliares ──────────────────────────────────────────────────────────
