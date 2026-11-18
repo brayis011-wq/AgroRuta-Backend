@@ -26,8 +26,9 @@ jobs:
           FORZAR: ${{ inputs.forzar || false }}
         run: |
           if [ -z "$API_URL" ] || [ -z "$TAREAS_TOKEN" ]; then
-            echo "::warning::Faltan los secretos API_URL o TAREAS_TOKEN; no se manda nada."
-            exit 0
+            # Antes salía en verde sin mandar nada y nadie se enteraba: ahora falla y GitHub avisa por correo
+            echo "::error::Faltan los secretos API_URL o TAREAS_TOKEN del repositorio (Settings > Secrets and variables > Actions). API_URL es la dirección del backend en Render y TAREAS_TOKEN el mismo valor que tiene esa variable en Render."
+            exit 1
           fi
           API_URL="${API_URL%/}"
           # Render puede tardar varios minutos en despertar
@@ -53,8 +54,8 @@ jobs:
           TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
         run: |
           if [ -z "$API_URL" ] || [ -z "$TAREAS_TOKEN" ]; then
-            echo "::warning::Faltan los secretos API_URL o TAREAS_TOKEN; no se limpia nada."
-            exit 0
+            echo "::error::Faltan los secretos API_URL o TAREAS_TOKEN; no se limpia nada."
+            exit 1
           fi
           curl -fsS --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors -X POST \
             -H "X-Tarea-Token: $TAREAS_TOKEN" \
