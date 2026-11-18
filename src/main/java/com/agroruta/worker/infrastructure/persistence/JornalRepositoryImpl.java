@@ -1,6 +1,8 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.ResumenJornales;
+import com.agroruta.worker.domain.ResumenJornalesInicio;
 import java.math.BigDecimal;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
@@ -85,6 +87,18 @@ class JornalRepositoryImpl implements JornalRepository {
                 f[0] == null ? 0 : ((Number) f[0]).longValue(), decimal(f[1]),
                 f[2] == null ? 0 : ((Number) f[2]).longValue(), decimal(f[3]),
                 (LocalDate) f[4], (LocalDate) f[5]);
+    }
+
+    @Override
+    public ResumenJornalesInicio resumenInicio(Long agricultorId, LocalDate hoy) {
+        LocalDate inicioMes = hoy.withDayOfMonth(1);
+        List<Object[]> filas = jpa.conteoPorMes(agricultorId, EstadoTrabajador.ACTIVO, inicioMes.minusMonths(1), inicioMes, hoy);
+        // Sin jornales en el rango, SUM devuelve null
+        Object[] f = filas.isEmpty() || filas.get(0) == null ? new Object[2] : filas.get(0);
+        return new ResumenJornalesInicio(
+                f[0] == null ? 0 : ((Number) f[0]).longValue(),
+                f[1] == null ? 0 : ((Number) f[1]).longValue(),
+                jpa.trabajadoresConJornal(agricultorId, EstadoTrabajador.ACTIVO, hoy));
     }
 
     private static <E, D> Pagina<D> aPagina(Page<E> p, java.util.function.Function<E, D> f) {

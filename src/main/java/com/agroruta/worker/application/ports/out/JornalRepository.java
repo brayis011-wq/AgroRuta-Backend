@@ -32,4 +32,10 @@ public interface JornalRepository {
 
     /** Totales de los jornales del trabajador en el mismo rango de fechas. */
     ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin);
+
+    /**
+     * Jornales de este mes (hasta hoy) y del mes anterior, y quiénes tienen jornal hoy, de los trabajadores
+     * activos del agricultor. Con agricultorId null (Administrador) cuenta los de todos.
+     */
+    com.agroruta.worker.domain.ResumenJornalesInicio resumenInicio(Long agricultorId, LocalDate hoy);
 }

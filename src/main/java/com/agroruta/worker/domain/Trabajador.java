@@ -52,6 +52,24 @@ public class Trabajador {
         return nombre + " " + apellido;
     }
 
+    /**
+     * Iniciales del avatar: primera letra del nombre y primera del apellido ("Juan Carlos Pérez" → "JP").
+     * Con el nombre completo ya unido no se sabe dónde empieza el apellido, por eso se calcula aquí.
+     */
+    public String getIniciales() {
+        return iniciales(nombre, apellido);
+    }
+
+    public static String iniciales(String nombre, String apellido) {
+        String r = (primera(nombre) + primera(apellido)).toUpperCase(java.util.Locale.ROOT);
+        return r.isEmpty() ? "?" : r;
+    }
+
+    private static String primera(String t) {
+        String s = t == null ? "" : t.strip();
+        return s.isEmpty() ? "" : new String(Character.toChars(s.codePointAt(0)));
+    }
+
     public boolean estaActivo() {
         return EstadoTrabajador.ACTIVO.equals(this.estado);
     }

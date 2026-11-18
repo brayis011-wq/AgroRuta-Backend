@@ -428,4 +428,56 @@ class JornalRepositoryImplTest {
             verify(jpa, times(1)).deleteById(1L);
         }
     }
+
+    @Nested
+    @DisplayName("resumenInicio")
+    class ResumenInicio {
+
+        private final LocalDate hoy = LocalDate.of(2026, 11, 16);
+
+        @Test
+        @DisplayName("cuenta el mes en curso y el anterior completo, solo de trabajadores activos")
+        void cuentaLosDosMeses() {
+            List<Object[]> filas = new java.util.ArrayList<>();
+            filas.add(new Object[]{12L, 9L});
+            when(jpa.conteoPorMes(7L, EstadoTrabajador.ACTIVO, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 1), hoy))
+                    .thenReturn(filas);
+            when(jpa.trabajadoresConJornal(7L, EstadoTrabajador.ACTIVO, hoy)).thenReturn(List.of(1L, 3L));
+
+            ResumenJornalesInicio r = repository.resumenInicio(7L, hoy);
+
+            assertEquals(12, r.mesActual());
+            assertEquals(9, r.mesAnterior());
+            assertEquals(List.of(1L, 3L), r.trabajadoresHoy());
+        }
+
+        @Test
+        @DisplayName("sin jornales en el rango, SUM llega en null y se toma como cero")
+        void sinJornales() {
+            List<Object[]> filas = new java.util.ArrayList<>();
+            filas.add(new Object[]{null, null});
+            when(jpa.conteoPorMes(any(), any(), any(), any(), any())).thenReturn(filas);
+            when(jpa.trabajadoresConJornal(any(), any(), any())).thenReturn(List.of());
+
+            ResumenJornalesInicio r = repository.resumenInicio(null, hoy);
+
+            assertEquals(0, r.mesActual());
+            assertEquals(0, r.mesAnterior());
+            assertTrue(r.trabajadoresHoy().isEmpty());
+        }
+
+        @Test
+        @DisplayName("el primer día de enero compara con todo diciembre del año anterior")
+        void cambioDeAnio() {
+            LocalDate enero = LocalDate.of(2027, 1, 1);
+            when(jpa.conteoPorMes(7L, EstadoTrabajador.ACTIVO, LocalDate.of(2026, 12, 1), enero, enero))
+                    .thenReturn(List.<Object[]>of(new Object[]{1L, 20L}));
+            when(jpa.trabajadoresConJornal(7L, EstadoTrabajador.ACTIVO, enero)).thenReturn(List.of(4L));
+
+            ResumenJornalesInicio r = repository.resumenInicio(7L, enero);
+
+            assertEquals(1, r.mesActual());
+            assertEquals(20, r.mesAnterior());
+        }
+    }
 }

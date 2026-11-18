@@ -32,6 +32,8 @@ final class PdfLienzo implements AutoCloseable {
     static final Color BORDE = new Color(0xE3, 0xE9, 0xE4);
     static final Color ZEBRA = new Color(0xF8, 0xFA, 0xF8);
     static final Color AMBAR = new Color(0xB2, 0x6A, 0x00);
+    /** Pérdidas */
+    static final Color ROJO = new Color(0xC6, 0x28, 0x28);
     static final Color BLANCO = Color.WHITE;
 
     static final float ANCHO = PDRectangle.A4.getWidth();
@@ -199,6 +201,19 @@ final class PdfLienzo implements AutoCloseable {
         y -= 20;
     }
 
+    /**
+     * Comienzo de una parte del reporte completo (nómina, cultivos...): título grande y una línea de
+     * explicación. Si no es la primera parte, empieza en una página nueva.
+     */
+    void parte(String t, String detalle, boolean primera) throws IOException {
+        if (!primera) nuevaPagina();
+        asegurar(60);
+        texto(t, NEGRITA, 17, MARGEN, y - 4, VERDE_OSCURO);
+        if (detalle != null) texto(detalle, NORMAL, 9, MARGEN, y - 19, TINTA_2);
+        linea(MARGEN, y - 27, MARGEN + CONTENIDO, y - 27, BORDE, 0.8f);
+        y -= 44;
+    }
+
     /** Párrafo gris de una línea (p. ej. "No hay datos todavía") */
     void nota(String t) throws IOException {
         asegurar(20);
@@ -230,7 +245,12 @@ final class PdfLienzo implements AutoCloseable {
 
     // ── Gráficas ───────────────────────────────────────────────────────────
 
-    record Barra(String etiqueta, double valor, String valorTexto, String detalle) {}
+    /** {@code color}: el de la barra horizontal (null = verde), p. ej. rojo para una pérdida */
+    record Barra(String etiqueta, double valor, String valorTexto, String detalle, Color color) {
+        Barra(String etiqueta, double valor, String valorTexto, String detalle) {
+            this(etiqueta, valor, valorTexto, detalle, null);
+        }
+    }
 
     /** Barras verticales (p. ej. pagos por mes), con el valor encima de cada barra */
     void barrasVerticales(List<Barra> barras, float alto) throws IOException {
@@ -269,7 +289,7 @@ final class PdfLienzo implements AutoCloseable {
             float x = MARGEN + colNombre;
             rectRedondo(x, base + 1, pista, 9, 4.5f, VERDE_SUAVE, null);
             float w = max > 0 ? (float) (b.valor() / max) * pista : 0;
-            if (w > 0) rectRedondo(x, base + 1, Math.max(w, 9), 9, 4.5f, VERDE, null);
+            if (w > 0) rectRedondo(x, base + 1, Math.max(w, 9), 9, 4.5f, b.color() != null ? b.color() : VERDE, null);
             float xv = MARGEN + CONTENIDO;
             if (b.detalle() != null) {
                 textoDerecha(b.detalle(), NORMAL, 7.8f, xv, base + 3, TINTA_3);

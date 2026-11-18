@@ -457,4 +457,21 @@ class JornalServiceTest {
 
         assertTrue(jornalService.listarPorCultivoYPeriodo(10L, inicio, fin).isEmpty());
     }
+
+    @Test
+    @DisplayName("resumenInicio usa la fecha pedida")
+    void resumenInicio_conFecha() {
+        com.agroruta.worker.domain.ResumenJornalesInicio r = new com.agroruta.worker.domain.ResumenJornalesInicio(3, 4, List.of(1L));
+        when(jornalRepository.resumenInicio(7L, fecha)).thenReturn(r);
+
+        assertSame(r, jornalService.resumenInicio(7L, fecha));
+    }
+
+    @Test
+    @DisplayName("resumenInicio sin fecha usa el día de hoy en Colombia")
+    void resumenInicio_sinFecha() {
+        jornalService.resumenInicio(7L, null);
+
+        verify(jornalRepository).resumenInicio(7L, LocalDate.now(java.time.ZoneId.of("America/Bogota")));
+    }
 }

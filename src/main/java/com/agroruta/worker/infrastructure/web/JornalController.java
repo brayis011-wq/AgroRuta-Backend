@@ -47,6 +47,18 @@ public class JornalController {
         return ResponseEntity.ok(jornalUseCase.cultivosDisponibles(CurrentUser.id(authentication)));
     }
 
+    /**
+     * Conteos para el Inicio en una sola consulta: jornales de este mes y del anterior, y qué trabajadores
+     * ya tienen jornal hoy. El agricultor ve lo suyo; el Administrador, lo de todos.
+     */
+    @GetMapping("/home-summary")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<com.agroruta.worker.domain.ResumenJornalesInicio> resumenInicio(
+            @RequestParam(required = false) LocalDate hoy, Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(jornalUseCase.resumenInicio(dueno, hoy));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("@ownership.jornalPropio(#id, authentication)")
     public ResponseEntity<JornalResponse> buscarPorId(@PathVariable Long id) {

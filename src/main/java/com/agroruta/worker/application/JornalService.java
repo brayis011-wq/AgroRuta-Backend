@@ -14,7 +14,9 @@ import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Trabajador;
 
+import com.agroruta.worker.domain.ResumenJornalesInicio;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class JornalService implements JornalUseCase {
+    private static final ZoneId ZONA = ZoneId.of("America/Bogota");
+
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;
     private final LaborRepository laborRepository;
@@ -142,5 +146,11 @@ public class JornalService implements JornalUseCase {
     @Override
     public ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin) {
         return jornalRepository.resumenPorTrabajador(trabajadorId, inicio, fin);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ResumenJornalesInicio resumenInicio(Long agricultorId, LocalDate hoy) {
+        return jornalRepository.resumenInicio(agricultorId, hoy != null ? hoy : LocalDate.now(ZONA));
     }
 }

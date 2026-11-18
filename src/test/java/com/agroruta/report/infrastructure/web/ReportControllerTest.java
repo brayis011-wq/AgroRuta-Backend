@@ -2,9 +2,12 @@ package com.agroruta.report.infrastructure.web;
 
 import com.agroruta.report.application.ports.in.GenerateCropReportUseCase;
 import com.agroruta.report.application.ports.in.GeneratePayrollReportUseCase;
+import com.agroruta.report.application.ports.in.GenerarReporteFinancieroUseCase;
 import com.agroruta.report.domain.CropDetail;
 import com.agroruta.report.domain.CropReport;
 import com.agroruta.report.domain.PayrollReport;
+import com.agroruta.report.domain.ReporteFinanciero;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.report.domain.WorkerPayrollDetail;
 import com.agroruta.report.infrastructure.pdf.PdfReportService;
 import com.agroruta.user.domain.Rol;
@@ -47,6 +50,9 @@ class ReportControllerTest {
 
     @Mock
     private PdfReportService pdfReportService;
+
+    @Mock
+    private GenerarReporteFinancieroUseCase generarReporteFinanciero;
 
     @InjectMocks
     private ReportController reportController;
@@ -303,4 +309,74 @@ class ReportControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("PDF de costos, rentabilidad y reporte completo")
+    class Financieros {
+
+        private final ReporteFinanciero finanzas = new ReporteFinanciero(LocalDateTime.now(), List.of());
+
+        @Test
+        @DisplayName("el agricultor descarga el PDF de costos solo con lo suyo")
+        void costos() throws Exception {
+            when(generarReporteFinanciero.generateFor(5L)).thenReturn(finanzas);
+            when(pdfReportService.generateCostsPdf(finanzas, "Nombre")).thenReturn(pdfBytes);
+
+            mockMvc.perform(get("/api/reports/costs").principal(auth(5L, Rol.Agricultor)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                    .andExpect(content().bytes(pdfBytes))
+                    .andExpect(header().string("Content-Disposition", "attachment; filename=\"reporte-costos.pdf\""));
+
+            verify(generarReporteFinanciero, never()).generate();
+        }
+
+        @Test
+        @DisplayName("el administrador descarga la rentabilidad de todos")
+        void rentabilidad() throws Exception {
+            when(generarReporteFinanciero.generate()).thenReturn(finanzas);
+            when(pdfReportService.generateProfitabilityPdf(finanzas, "Nombre")).thenReturn(pdfBytes);
+
+            mockMvc.perform(get("/api/reports/profitability").principal(admin))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Disposition", "attachment; filename=\"reporte-rentabilidad.pdf\""));
+        }
+
+        @Test
+        @DisplayName("sin partes elegidas, el reporte completo lleva las cuatro")
+        void completoTodo() throws Exception {
+            when(generatePayrollReport.generateFor(5L)).thenReturn(payrollReportEjemplo);
+            when(generateCropReport.generateFor(5L)).thenReturn(cropReportEjemplo);
+            when(generarReporteFinanciero.generateFor(5L)).thenReturn(finanzas);
+            when(pdfReportService.generateCompletePdf(payrollReportEjemplo, cropReportEjemplo, finanzas, true, true, "Nombre"))
+                    .thenReturn(pdfBytes);
+
+            mockMvc.perform(get("/api/reports/full").principal(auth(5L, Rol.Agricultor)))
+                    .andExpect(status().isOk())
+                    .andExpect(header().string("Content-Disposition", "attachment; filename=\"reporte-agroruta.pdf\""));
+        }
+
+        @Test
+        @DisplayName("con partes elegidas solo consulta esas")
+        void completoAlgunas() throws Exception {
+            when(generatePayrollReport.generateFor(5L)).thenReturn(payrollReportEjemplo);
+            when(generarReporteFinanciero.generateFor(5L)).thenReturn(finanzas);
+            when(pdfReportService.generateCompletePdf(payrollReportEjemplo, null, finanzas, false, true, "Nombre"))
+                    .thenReturn(pdfBytes);
+
+            mockMvc.perform(get("/api/reports/full").param("sections", "payroll", "Profitability")
+                            .principal(auth(5L, Rol.Agricultor)))
+                    .andExpect(status().isOk());
+
+            verifyNoInteractions(generateCropReport);
+        }
+
+        @Test
+        @DisplayName("una parte desconocida es un dato inválido")
+        void parteDesconocida() {
+            assertThatThrownBy(() -> mockMvc.perform(get("/api/reports/full").param("sections", "payroll,ventas")
+                    .principal(auth(5L, Rol.Agricultor))))
+                    .hasRootCauseInstanceOf(DatoInvalidoException.class);
+            verifyNoInteractions(pdfReportService);
+        }
+    }
 }
