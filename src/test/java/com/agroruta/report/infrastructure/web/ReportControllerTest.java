@@ -294,6 +294,30 @@ class ReportControllerTest {
         }
 
         @Test
+        @DisplayName("Con desde y hasta, la nómina se pide por periodo")
+        void payrollConPeriodo() throws Exception {
+            var periodo = com.agroruta.report.domain.Periodo.de(java.time.LocalDate.of(2026, 1, 1), java.time.LocalDate.of(2026, 12, 31));
+            when(generatePayrollReport.generateEn(5L, false, periodo)).thenReturn(payrollReportEjemplo);
+
+            mockMvc.perform(get("/api/reports/payroll/preview").param("desde", "2026-01-01").param("hasta", "2026-12-31")
+                            .principal(auth(5L, Rol.Agricultor))
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk());
+
+            verify(generatePayrollReport).generateEn(5L, false, periodo);
+            verify(generatePayrollReport, never()).generateFor(any());
+        }
+
+        @Test
+        @DisplayName("Un periodo al revés es un dato inválido")
+        void periodoAlReves() {
+            assertThatThrownBy(() -> mockMvc.perform(get("/api/reports/crops/preview").param("desde", "2026-12-31").param("hasta", "2026-01-01")
+                    .principal(auth(5L, Rol.Agricultor))))
+                    .hasRootCauseInstanceOf(DatoInvalidoException.class);
+            verifyNoInteractions(generateCropReport);
+        }
+
+        @Test
         @DisplayName("Un agricultor recibe solo su reporte de cultivos")
         void agricultorUsaGenerateForEnCrops() throws Exception {
 

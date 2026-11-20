@@ -60,6 +60,45 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
     @Query("SELECT p FROM PagoEntity p WHERE p.nomina.trabajador.agricultorId = :agricultorId")
     List<PagoEntity> findByAgricultorId(@Param("agricultorId") Long agricultorId);
 
+    // ── Reporte de nómina por periodo (fechas de pago entre desde y hasta, las dos incluidas) ──
+    // agricultorId null = todos (Administrador). Las fechas siempre llegan: el adaptador pone los extremos.
+
+    @Query("""
+        SELECT SUM(p.monto) FROM PagoEntity p
+        WHERE p.fechaPago BETWEEN :desde AND :hasta
+          AND (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId)
+        """)
+    BigDecimal sumMontoEnPeriodo(@Param("agricultorId") Long agricultorId,
+                                 @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
+
+    @Query("""
+        SELECT new com.agroruta.report.domain.WorkerPayrollDetail(
+            p.nomina.trabajador.id,
+            CONCAT(p.nomina.trabajador.nombre, ' ', p.nomina.trabajador.apellido),
+            CAST(COUNT(p) AS int),
+            SUM(p.monto),
+            MIN(p.nomina.periodoInicio),
+            MAX(p.nomina.periodoFin),
+            CAST(SUM(p.nomina.totalJornales) AS int),
+            UPPER(CONCAT(SUBSTRING(p.nomina.trabajador.nombre, 1, 1), SUBSTRING(p.nomina.trabajador.apellido, 1, 1)))
+        )
+        FROM PagoEntity p
+        WHERE p.fechaPago BETWEEN :desde AND :hasta
+          AND (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId)
+        GROUP BY p.nomina.trabajador.id, p.nomina.trabajador.nombre, p.nomina.trabajador.apellido
+        """)
+    List<WorkerPayrollDetail> findDetailPerWorkerEnPeriodo(@Param("agricultorId") Long agricultorId,
+                                                           @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
+
+    @Query("""
+        SELECT YEAR(p.fechaPago), MONTH(p.fechaPago), SUM(p.monto), COUNT(p) FROM PagoEntity p
+        WHERE p.fechaPago BETWEEN :desde AND :hasta
+          AND (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId)
+        GROUP BY YEAR(p.fechaPago), MONTH(p.fechaPago)
+        """)
+    List<Object[]> totalesPorMesEntre(@Param("agricultorId") Long agricultorId,
+                                      @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
+
     /**
      * Total y número de pagos de cada mes desde una fecha: [año, mes, total, pagos].
      * agricultorId null = todos (Administrador). Los meses sin pagos no salen.

@@ -133,6 +133,21 @@ class ConsultasConBaseRealTest extends ConBaseReal {
     }
 
     @Test
+    void elReporteDeNominaPorPeriodoSoloCuentaLosPagosDeEsasFechas() {
+        pago(nomina("PAGADA"), DIA.plusDays(2), "50000.50");
+        pago(nomina("PAGADA"), DIA.minusMonths(1), "30000.00");
+        LocalDate desde = DIA.withDayOfMonth(1);
+        LocalDate hasta = DIA.withDayOfMonth(DIA.lengthOfMonth());
+
+        assertEquals(0, new BigDecimal("150000.50").compareTo(pagos.sumMontoEnPeriodo(ana, desde, hasta)), "el pago del montaje y el de este mes");
+        assertEquals(0, new BigDecimal("180000.50").compareTo(pagos.sumMontoEnPeriodo(ana, DIA.minusMonths(2), hasta)));
+        assertEquals(2, pagos.findDetailPerWorkerEnPeriodo(ana, desde, hasta).get(0).totalPagos());
+        assertEquals(1, pagos.totalesPorMesEntre(ana, desde, hasta).size(), "solo el mes del periodo");
+        assertTrue(pagos.findDetailPerWorkerEnPeriodo(beto, desde, hasta).isEmpty(), "Beto no ha pagado nada");
+        assertTrue(pagos.findDetailPerWorkerEnPeriodo(null, desde, hasta).size() >= 1, "sin agricultor (Administrador) salen todos");
+    }
+
+    @Test
     void elDetalleDeNominaTraeLasInicialesDelNombreYDelApellido() {
         jdbc.update("UPDATE trabajadores SET nombre = 'luis eduardo', apellido = 'herrera díaz' WHERE id = ?", trabajador);
 

@@ -3,6 +3,7 @@ package com.agroruta.report.infrastructure.adapter;
 import com.agroruta.report.application.ports.out.PayrollQueryPort;
 import com.agroruta.report.domain.WorkerPayrollDetail;
 import com.agroruta.report.domain.MonthlyPayment;
+import com.agroruta.report.domain.Periodo;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.ResumenNominas;
 import com.agroruta.worker.application.ports.out.NominaRepository;
@@ -72,6 +73,46 @@ public class PayrollQueryAdapter implements PayrollQueryPort {
             }
         }
         return new PendingPayroll(n, total);
+    }
+
+    // ── Por periodo ──────────────────────────────────────────────────────
+
+    /** Sin fecha se usa un extremo que no deja nada por fuera (la consulta siempre recibe las dos) */
+    static final LocalDate SIN_INICIO = LocalDate.of(1900, 1, 1);
+    static final LocalDate SIN_FIN = LocalDate.of(9999, 12, 31);
+
+    @Override
+    public BigDecimal getTotalPaid(Long agricultorId, Periodo periodo) {
+        BigDecimal total = jpaPagoRepository.sumMontoEnPeriodo(agricultorId, inicio(periodo), fin(periodo));
+        return total != null ? total : BigDecimal.ZERO;
+    }
+
+    @Override
+    public List<WorkerPayrollDetail> getDetailPerWorker(Long agricultorId, Periodo periodo) {
+        return jpaPagoRepository.findDetailPerWorkerEnPeriodo(agricultorId, inicio(periodo), fin(periodo));
+    }
+
+    @Override
+    public List<MonthlyPayment> getMonthlyPayments(Long agricultorId, LocalDate desde, LocalDate hasta) {
+        Map<YearMonth, MonthlyPayment> porMes = new LinkedHashMap<>();
+        for (YearMonth m = YearMonth.from(desde); !m.isAfter(YearMonth.from(hasta)); m = m.plusMonths(1)) {
+            porMes.put(m, new MonthlyPayment(m.toString(), BigDecimal.ZERO, 0));
+        }
+        for (Object[] fila : jpaPagoRepository.totalesPorMesEntre(agricultorId, desde, hasta)) {
+            YearMonth mes = YearMonth.of(((Number) fila[0]).intValue(), ((Number) fila[1]).intValue());
+            if (porMes.containsKey(mes)) {
+                porMes.put(mes, new MonthlyPayment(mes.toString(), decimal(fila[2]), ((Number) fila[3]).intValue()));
+            }
+        }
+        return new ArrayList<>(porMes.values());
+    }
+
+    private static LocalDate inicio(Periodo p) {
+        return p == null || p.desde() == null ? SIN_INICIO : p.desde();
+    }
+
+    private static LocalDate fin(Periodo p) {
+        return p == null || p.hasta() == null ? SIN_FIN : p.hasta();
     }
 
     private static BigDecimal decimal(Object o) {

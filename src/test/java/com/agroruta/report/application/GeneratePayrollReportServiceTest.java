@@ -268,4 +268,50 @@ class GeneratePayrollReportServiceTest {
             assertThat(reporte.workerDetails()).isEmpty();
         }
     }
+
+    @Nested
+    @DisplayName("generateEn() con periodo")
+    class ConPeriodo {
+
+        private final com.agroruta.report.domain.Periodo anio =
+                com.agroruta.report.domain.Periodo.de(java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 12, 31));
+
+        @Test
+        @DisplayName("suma solo los pagos del periodo y la gráfica va de enero a diciembre")
+        void pagosDelPeriodo() {
+            when(payrollQueryPort.getTotalPaid(7L, anio)).thenReturn(new BigDecimal("900"));
+            when(payrollQueryPort.getDetailPerWorker(7L, anio)).thenReturn(List.of());
+
+            PayrollReport reporte = service.generateEn(7L, false, anio);
+
+            assertThat(reporte.totalAccumulated()).isEqualByComparingTo("900");
+            verify(payrollQueryPort).getMonthlyPayments(7L, java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 12, 31));
+            verify(payrollQueryPort, never()).getTotalAccumulatedByAgricultor(any());
+        }
+
+        @Test
+        @DisplayName("el administrador consulta a todos (agricultor null)")
+        void administrador() {
+            service.generateEn(1L, true, anio);
+            verify(payrollQueryPort).getTotalPaid(null, anio);
+            verify(payrollQueryPort).getPendingPayroll(null);
+        }
+
+        @Test
+        @DisplayName("sin periodo usa el reporte de siempre")
+        void sinPeriodo() {
+            when(payrollQueryPort.getTotalAccumulatedByAgricultor(7L)).thenReturn(BigDecimal.ZERO);
+            service.generateEn(7L, false, com.agroruta.report.domain.Periodo.TODO);
+            verify(payrollQueryPort).getTotalAccumulatedByAgricultor(7L);
+            verify(payrollQueryPort, never()).getTotalPaid(any(), any());
+        }
+
+        @Test
+        @DisplayName("un periodo de varios años muestra en la gráfica solo los últimos 24 meses")
+        void serieConTope() {
+            var largo = com.agroruta.report.domain.Periodo.de(java.time.LocalDate.of(2015, 1, 1), null);
+            java.time.LocalDate inicio = GeneratePayrollReportService.inicioSerie(largo);
+            assertThat(inicio).isEqualTo(java.time.LocalDate.now().withDayOfMonth(1).minusMonths(23));
+        }
+    }
 }
