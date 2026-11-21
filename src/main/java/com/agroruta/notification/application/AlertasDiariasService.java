@@ -90,6 +90,14 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         this.push = push;
     }
 
+    /** Avisos de presupuesto por temporada (null en pruebas antiguas) */
+    private com.agroruta.crop.application.PresupuestoService presupuestos;
+
+    @Autowired(required = false)
+    void setPresupuestos(com.agroruta.crop.application.PresupuestoService presupuestos) {
+        this.presupuestos = presupuestos;
+    }
+
     /** Bandeja de la app: el resumen queda en la campana aunque no tenga correo ni push */
     private com.agroruta.notification.application.ports.in.BandejaAvisosUseCase bandeja;
 
@@ -125,7 +133,14 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     }
 
     private boolean enviarA(Usuario u, LocalDate hoy, boolean porCorreo, boolean porPush) {
-        List<AlertaCultivo> alertas = alertasCultivo.alertasDelDia(u.getId(), hoy);
+        List<AlertaCultivo> alertas = new ArrayList<>(alertasCultivo.alertasDelDia(u.getId(), hoy));
+        if (presupuestos != null) {
+            try {
+                alertas.addAll(presupuestos.avisosNuevos(u.getId(), hoy));
+            } catch (RuntimeException e) {
+                log.warn("Sin avisos de presupuesto para el agricultor {}: {}", u.getId(), e.getMessage());
+            }
+        }
         List<ClimaFinca> tiempo = climaDe(u.getId(), alertas.stream().anyMatch(AlertaCultivo::esFumigacionPendiente));
         List<StockInsumo> stock = stockDe(u.getId());
         List<com.agroruta.weather.domain.ConsejoClima> consejos = consejosDe(u.getId());

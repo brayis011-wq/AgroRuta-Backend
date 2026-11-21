@@ -153,7 +153,7 @@ class CargoControllerTest {
         @Test
         @DisplayName("Debe retornar 201 con el cargo creado")
         void debeRetornar201AlCrear() {
-            when(cargoUseCase.crearCargo("Operario", "Cargo operario", new BigDecimal("80000"), 5L))
+            when(cargoUseCase.crearCargo("Operario", "Cargo operario", null, new BigDecimal("80000"), null, 5L))
                     .thenReturn(cargoBase);
 
             ResponseEntity<CargoResponse> response = cargoController.crear(
@@ -168,13 +168,13 @@ class CargoControllerTest {
             assertEquals(new BigDecimal("80000"), response.getBody().valorJornal);
             assertTrue(response.getBody().activo);
             verify(cargoUseCase, times(1))
-                    .crearCargo("Operario", "Cargo operario", new BigDecimal("80000"), 5L);
+                    .crearCargo("Operario", "Cargo operario", null, new BigDecimal("80000"), null, 5L);
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si el nombre ya existe")
         void debePropaglarExcepcionSiNombreDuplicado() {
-            when(cargoUseCase.crearCargo(any(), any(), any(), any()))
+            when(cargoUseCase.crearCargo(any(), any(), any(), any(), any(), any()))
                     .thenThrow(new BusinessException(
                             ErrorCode.RESOURCE_ALREADY_EXISTS, "Operario ya existe"));
 
@@ -186,7 +186,7 @@ class CargoControllerTest {
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             assertTrue(ex.getMessage().contains("Operario"));
-            verify(cargoUseCase, times(1)).crearCargo(any(), any(), any(), any());
+            verify(cargoUseCase, times(1)).crearCargo(any(), any(), any(), any(), any(), any());
         }
     }
 
@@ -201,7 +201,7 @@ class CargoControllerTest {
         @DisplayName("Debe retornar 200 con el cargo actualizado")
         void debeRetornar200AlActualizar() {
             Cargo actualizado = new Cargo(1L, "Supervisor", "Nuevo desc", new BigDecimal("120000"), true);
-            when(cargoUseCase.actualizarCargo(1L, "Supervisor", "Nuevo desc", new BigDecimal("120000")))
+            when(cargoUseCase.actualizarCargo(1L, "Supervisor", "Nuevo desc", null, new BigDecimal("120000"), null))
                     .thenReturn(actualizado);
 
             ResponseEntity<CargoResponse> response = cargoController.actualizar(
@@ -215,13 +215,13 @@ class CargoControllerTest {
             assertEquals("Nuevo desc",              response.getBody().descripcion);
             assertEquals(new BigDecimal("120000"),  response.getBody().valorJornal);
             verify(cargoUseCase, times(1))
-                    .actualizarCargo(1L, "Supervisor", "Nuevo desc", new BigDecimal("120000"));
+                    .actualizarCargo(1L, "Supervisor", "Nuevo desc", null, new BigDecimal("120000"), null);
         }
 
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
-            when(cargoUseCase.actualizarCargo(eq(99L), any(), any(), any()))
+            when(cargoUseCase.actualizarCargo(eq(99L), any(), any(), any(), any(), any()))
                     .thenThrow(new ResourceNotFoundException("Cargo", 99L));
 
             ResourceNotFoundException ex = assertThrows(
@@ -231,13 +231,13 @@ class CargoControllerTest {
             );
 
             assertTrue(ex.getMessage().contains("99"));
-            verify(cargoUseCase, times(1)).actualizarCargo(eq(99L), any(), any(), any());
+            verify(cargoUseCase, times(1)).actualizarCargo(eq(99L), any(), any(), any(), any(), any());
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si el nuevo nombre ya existe en otro cargo")
         void debePropaglarExcepcionSiNombreDuplicadoEnOtro() {
-            when(cargoUseCase.actualizarCargo(eq(1L), any(), any(), any()))
+            when(cargoUseCase.actualizarCargo(eq(1L), any(), any(), any(), any(), any()))
                     .thenThrow(new BusinessException(
                             ErrorCode.RESOURCE_ALREADY_EXISTS, "Supervisor ya existe"));
 
@@ -248,7 +248,7 @@ class CargoControllerTest {
             );
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
-            verify(cargoUseCase, times(1)).actualizarCargo(eq(1L), any(), any(), any());
+            verify(cargoUseCase, times(1)).actualizarCargo(eq(1L), any(), any(), any(), any(), any());
         }
     }
 

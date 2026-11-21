@@ -73,6 +73,18 @@ class JornalRepositoryImpl implements JornalRepository {
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 
     @Override
+    public List<Jornal> buscarDelEquipo(Long agricultorId, LocalDate inicio, LocalDate fin) {
+        return jpa.delEquipoEntre(agricultorId, inicio, fin).stream()
+                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public java.util.Set<Long> idsEnNomina(java.util.Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) return java.util.Set.of();
+        return new java.util.HashSet<>(jpa.idsEnNomina(ids));
+    }
+
+    @Override
     public Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
         var orden = Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"));
         return aPagina(jpa.paginaPorTrabajador(trabajadorId, inicio, fin, PageRequest.of(pagina, tamano, orden)),

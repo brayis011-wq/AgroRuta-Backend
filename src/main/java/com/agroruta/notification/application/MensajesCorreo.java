@@ -33,7 +33,7 @@ public class MensajesCorreo {
 
     static final Map<String, String> LABORES = Map.of(
             "DESHIERBE", "Deshierbe", "PODA", "Poda", "REVISION", "Revisión", "RIEGO", "Riego",
-            "TUTOREO", "Tutoreo", "OTRO", "Labor");
+            "TUTOREO", "Tutoreo", "OTRO", "Labor", "FERTILIZACION", "Fertilizar", "FUMIGACION", "Fumigar");
 
     private final String frontend;
 
@@ -169,7 +169,8 @@ public class MensajesCorreo {
                                 List<AlertaCultivo> alertas, List<ClimaFinca> clima, List<StockInsumo> stock,
                                 List<com.agroruta.weather.domain.ConsejoClima> consejos) {
         List<String[]> fumigar = new ArrayList<>(), labores = new ArrayList<>(),
-                restricciones = new ArrayList<>(), tiempo = new ArrayList<>(), bodega = new ArrayList<>();
+                restricciones = new ArrayList<>(), tiempo = new ArrayList<>(), bodega = new ArrayList<>(),
+                presupuesto = new ArrayList<>();
         for (StockInsumo s : stock) {
             switch (s.estado()) {
                 case NEGATIVO -> bodega.add(new String[]{s.nombre(), "· en negativo: falta registrar una compra o hacer un conteo."});
@@ -189,10 +190,16 @@ public class MensajesCorreo {
                 case FUMIGACION_MANANA -> fumigar.add(new String[]{donde, "· mañana toca fumigar."});
                 case LABOR_HOY -> labores.add(new String[]{donde, "· hoy: " + labor(a)});
                 case LABOR_MANANA -> labores.add(new String[]{donde, "· mañana: " + labor(a)});
+                case LABOR_ATRASADA -> labores.add(new String[]{donde, "· atrasada " + dias(a.detalle()) + ": "
+                        + LABORES.getOrDefault(a.titulo(), "Labor") + " (tocaba el " + a.fecha().format(DIA_CORTO) + ")."});
                 case REENTRADA_EN_CURSO -> restricciones.add(new String[]{donde, "· no entrar hasta el "
                         + a.fecha().format(DIA_CORTO) + " (se aplicó " + a.titulo() + ")."});
                 case REENTRADA_LIBRE -> restricciones.add(new String[]{donde, "· desde hoy ya se puede entrar ("
                         + a.titulo() + ")."});
+                case PRESUPUESTO_CERCA -> presupuesto.add(new String[]{donde, "· ya se gastó el " + a.titulo()
+                        + " % del presupuesto (" + a.detalle() + ")."});
+                case PRESUPUESTO_SUPERADO -> presupuesto.add(new String[]{donde, "· se pasó del presupuesto: van "
+                        + a.detalle() + " (" + a.titulo() + " %)."});
                 case CARENCIA_LIBRE -> restricciones.add(new String[]{donde, "· desde hoy ya se puede cosechar (terminó la carencia de "
                         + a.titulo() + ")."});
             }
@@ -218,7 +225,8 @@ public class MensajesCorreo {
             if (!partes.isEmpty()) tiempo.add(new String[]{c.finca(), "· " + String.join("; ", partes) + "."});
         }
 
-        int total = fumigar.size() + labores.size() + restricciones.size() + tiempo.size() + bodega.size();
+        int total = fumigar.size() + labores.size() + restricciones.size() + tiempo.size() + bodega.size()
+                + presupuesto.size();
         PlantillaCorreo p = PlantillaCorreo.con("Tu cultivo hoy, " + hoy.format(DIA))
                 .resumen(total == 1 ? "Tienes 1 aviso para hoy." : "Tienes " + total + " avisos para hoy.")
                 .parrafo("Hola " + primerNombre(nombre) + ", esto es lo que conviene tener en cuenta hoy:");
@@ -227,6 +235,7 @@ public class MensajesCorreo {
         if (!labores.isEmpty()) p.seccion("Labores programadas").lista(labores);
         if (!restricciones.isEmpty()) p.seccion("Reentrada y cosecha").lista(restricciones);
         if (!bodega.isEmpty()) p.seccion("Bodega de insumos").lista(bodega);
+        if (!presupuesto.isEmpty()) p.seccion("Presupuesto de la temporada").lista(presupuesto);
         boolean soloBodega = total == bodega.size();
         return p.boton(soloBodega ? "Abrir el inventario" : "Abrir el calendario",
                         url(soloBodega ? "/crops/inventory" : "/crops/calendar"))

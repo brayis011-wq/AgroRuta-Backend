@@ -13,6 +13,20 @@ public interface JornalUseCase {
     Jornal registrarJornal(Long trabajadorId, Long cultivoId, String nombreCultivo,
                            LocalDate fecha, List<Long> actividadIds, String observaciones);
 
+    /** @param kilos solo si el cargo del trabajador se paga por kilo (entonces es obligatorio) */
+    Jornal registrarJornal(Long trabajadorId, Long cultivoId, String nombreCultivo, LocalDate fecha,
+                           List<Long> actividadIds, String observaciones, java.math.BigDecimal kilos);
+
+    /** La cuadrícula de jornales del equipo entre dos fechas (máximo 16 días). agricultorId null: todos. */
+    com.agroruta.worker.domain.PlanillaSemanal planilla(Long agricultorId, LocalDate inicio, LocalDate fin);
+
+    /** Varios jornales a la vez desde la planilla; no repite el mismo trabajador, día y cultivo. */
+    List<Jornal> registrarVarios(Long agricultorId, Long cultivoId, List<Long> actividadIds,
+                                 List<com.agroruta.worker.domain.PlanillaSemanal.Entrada> entradas);
+
+    /** Quita un jornal que no está en ninguna nómina. */
+    void eliminarJornal(Long jornalId);
+
     Jornal agregarActividad(Long jornalId, Long actividadId);
 
     Jornal removerActividad(Long jornalId, Long actividadId);

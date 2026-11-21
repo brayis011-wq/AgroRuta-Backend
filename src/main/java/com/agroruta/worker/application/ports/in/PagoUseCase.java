@@ -16,6 +16,13 @@ public interface PagoUseCase {
                        MetodoPago metodoPago, String comprobante,
                        String observaciones);
 
+    /**
+     * Paga varias nóminas juntas, cada una por su valor total y con el mismo método. Con
+     * aprobarPendientes, las que siguen pendientes se aprueban antes. Todo o nada.
+     */
+    List<Pago> pagarVarias(Long agricultorId, List<Long> nominaIds, MetodoPago metodoPago,
+                           String observaciones, boolean aprobarPendientes);
+
     Pago buscarPorId(Long id);
 
     List<Pago> historialPorTrabajador(Long trabajadorId);

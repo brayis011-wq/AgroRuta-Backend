@@ -5,6 +5,7 @@ import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.CargoRepository;
 import com.agroruta.worker.domain.Cargo;
+import com.agroruta.worker.domain.ModalidadPago;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,7 +24,8 @@ public class CargoService implements CargoUseCase {
     }
 
     @Override
-    public Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal, Long agricultorId) {
+    public Cargo crearCargo(String nombre, String descripcion, ModalidadPago modalidad,
+                            BigDecimal valorJornal, BigDecimal valorKilo, Long agricultorId) {
 
         // El dueño lo pasa el controlador desde la sesión, nunca un valor enviado por el cliente
 
@@ -35,12 +37,14 @@ public class CargoService implements CargoUseCase {
         }
 
         Cargo cargo = new Cargo(null, nombre, descripcion, valorJornal, true);
+        cargo.fijarPago(modalidad, valorJornal, valorKilo);
         cargo.setAgricultorId(agricultorId);
         return cargoRepository.guardar(cargo);
     }
 
     @Override
-    public Cargo actualizarCargo(Long id, String nombre, String descripcion, BigDecimal valorJornal) {
+    public Cargo actualizarCargo(Long id, String nombre, String descripcion, ModalidadPago modalidad,
+                                 BigDecimal valorJornal, BigDecimal valorKilo) {
 
         Cargo cargo = cargoRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", id));
@@ -53,6 +57,7 @@ public class CargoService implements CargoUseCase {
         }
 
         cargo.actualizar(nombre, descripcion, valorJornal);
+        cargo.fijarPago(modalidad, valorJornal, valorKilo);
         return cargoRepository.guardar(cargo);
     }
 

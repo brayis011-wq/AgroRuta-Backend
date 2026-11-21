@@ -11,6 +11,19 @@ import java.util.List;
 
 interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
 
+    /** Jornales de todos los trabajadores del agricultor entre dos fechas (la planilla semanal) */
+    @Query("""
+        SELECT j FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND j.fecha BETWEEN :inicio AND :fin
+        """)
+    List<JornalEntity> delEquipoEntre(@Param("agricultorId") Long agricultorId,
+                                      @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+    /** De esos jornales, los que ya quedaron en alguna nómina */
+    @Query("SELECT jn.id FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")
+    List<Long> idsEnNomina(@Param("ids") java.util.Collection<Long> ids);
+
     List<JornalEntity> findByTrabajadorId(Long trabajadorId);
 
     List<JornalEntity> findByTrabajadorIdAndFechaBetween(

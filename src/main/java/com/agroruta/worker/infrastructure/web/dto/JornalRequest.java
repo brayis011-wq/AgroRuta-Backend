@@ -31,6 +31,11 @@ public class JornalRequest {
     @Size(max = 50, message = "Demasiadas actividades")
     public List<@NotNull(message = "Labor no válida") Long> actividadIds;
 
+    /** Kilos recogidos: obligatorio si el cargo del trabajador se paga por kilo */
+    @jakarta.validation.constraints.Positive(message = "Los kilos deben ser más de 0")
+    @jakarta.validation.constraints.DecimalMax(value = "2000", message = "Son demasiados kilos para un día")
+    public java.math.BigDecimal kilos;
+
     @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
     public String observaciones;
 }

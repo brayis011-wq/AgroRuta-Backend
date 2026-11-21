@@ -41,7 +41,8 @@ public class CargoController {
     @PostMapping
     public ResponseEntity<CargoResponse> crear(@Valid @RequestBody CargoRequest req, Authentication authentication) {
         CargoResponse response = CargoResponse.from(
-                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.valorJornal, CurrentUser.id(authentication))
+                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo,
+                        CurrentUser.id(authentication))
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -51,7 +52,7 @@ public class CargoController {
     public ResponseEntity<CargoResponse> actualizar(@PathVariable Long id,
                                                     @Valid @RequestBody CargoRequest req) {
         CargoResponse response = CargoResponse.from(
-                cargoUseCase.actualizarCargo(id, req.nombre, req.descripcion, req.valorJornal)
+                cargoUseCase.actualizarCargo(id, req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo)
         );
         return ResponseEntity.ok(response);
     }

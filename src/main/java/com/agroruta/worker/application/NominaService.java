@@ -54,6 +54,50 @@ public class NominaService implements NominaUseCase {
         return nominaRepository.guardar(nomina);
     }
 
+    @Override
+    public List<Nomina> generarParaTodos(Long agricultorId, LocalDate periodoInicio, LocalDate periodoFin) {
+        if (periodoInicio == null || periodoFin == null || periodoFin.isBefore(periodoInicio)) {
+            throw new com.agroruta.shared.exception.DatoInvalidoException("Revisa las fechas del periodo.");
+        }
+        List<Trabajador> equipo = agricultorId == null ? trabajadorRepository.listarTodos()
+                : trabajadorRepository.listarTodosPorAgricultor(agricultorId);
+        List<Nomina> creadas = new java.util.ArrayList<>();
+        for (Trabajador t : equipo) {
+            List<Jornal> disponibles = jornalRepository.buscarDisponiblesParaNomina(t.getId(), periodoInicio, periodoFin);
+            if (disponibles.isEmpty()) continue;
+            creadas.add(nominaRepository.guardar(new Nomina(null, t, periodoInicio, periodoFin, disponibles)));
+        }
+        if (creadas.isEmpty()) {
+            throw new EstadoInvalidoException("Nadie del equipo tiene jornales sin nómina en ese periodo.");
+        }
+        return creadas;
+    }
+
+    @Override
+    public List<Nomina> aprobarVarias(Long agricultorId, List<Long> nominaIds) {
+        List<Nomina> resultado = new java.util.ArrayList<>();
+        for (Long id : new java.util.LinkedHashSet<>(nominaIds)) {
+            Nomina n = nominaDe(agricultorId, id);
+            if (n.estaPendiente()) {
+                n.aprobar();
+                n = nominaRepository.guardar(n);
+            }
+            resultado.add(n);
+        }
+        return resultado;
+    }
+
+    /** La nómina existe y es del agricultor (null: Administrador, cualquiera). */
+    private Nomina nominaDe(Long agricultorId, Long id) {
+        Nomina n = nominaRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + id));
+        if (agricultorId != null && (n.getTrabajador() == null
+                || !agricultorId.equals(n.getTrabajador().getAgricultorId()))) {
+            throw new ResourceNotFoundException("Nómina no encontrada con id: " + id);
+        }
+        return n;
+    }
+
     /**
      * Solo aprueba: PENDIENTE → APROBADA.
      * La nómina pasa a PAGADA cuando se registra el pago (PagoService.registrarPago).

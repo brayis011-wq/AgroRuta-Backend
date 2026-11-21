@@ -48,7 +48,18 @@ public class JornalEntity {
     @Column(nullable = false)
     private boolean liquidado;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal kilos;
+
+    @Column(name = "valor_kilo", precision = 10, scale = 2)
+    private BigDecimal valorKilo;
+
     public JornalEntity() {}
+
+    public BigDecimal getKilos() { return kilos; }
+    public void setKilos(BigDecimal kilos) { this.kilos = kilos; }
+    public BigDecimal getValorKilo() { return valorKilo; }
+    public void setValorKilo(BigDecimal valorKilo) { this.valorKilo = valorKilo; }
 
     // Getters & Setters
     public Long getId() { return id; }

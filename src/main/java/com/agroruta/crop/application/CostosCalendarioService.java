@@ -60,6 +60,14 @@ public class CostosCalendarioService {
         this.manoObraPort = manoObraPort;
     }
 
+    /** Labores que se repiten (null en pruebas antiguas) */
+    private ActividadProgramadaService programadas;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setProgramadas(ActividadProgramadaService programadas) {
+        this.programadas = programadas;
+    }
+
     // ── Costos ────────────────────────────────────────────────────────
 
     public CostosSiembra costos(Long siembraId) {
@@ -81,8 +89,12 @@ public class CostosCalendarioService {
         LocalDate[] rango = rango(desde, hasta);
         DatosSiembra datos = datos(s, lote);
         Map<String, Historial> historial = CalendarioCultivo.historialPorCultivo(historialDe(agricultorId));
-        return CalendarioCultivo.entre(
-                CalendarioCultivo.eventos(datos, historial.get(s.getTipoCultivo()), hoy()), rango[0], rango[1]);
+        List<EventoCalendario> eventos = new ArrayList<>(
+                CalendarioCultivo.eventos(datos, historial.get(s.getTipoCultivo()), hoy()));
+        if (programadas != null) {
+            eventos.addAll(programadas.eventos(s, datos.loteId(), datos.loteNombre(), rango[0], rango[1], hoy()));
+        }
+        return CalendarioCultivo.entre(eventos, rango[0], rango[1]);
     }
 
     public List<EventoCalendario> calendarioFinca(Long fincaId, LocalDate desde, LocalDate hasta) {
@@ -97,6 +109,9 @@ public class CostosCalendarioService {
                 boolean seguiaAlInicio = s.estaActiva() || s.getFechaFin() == null || !s.getFechaFin().isBefore(rango[0]);
                 if (!empezoAntesDelFin || !seguiaAlInicio) continue;
                 eventos.addAll(CalendarioCultivo.eventos(datos(s, lote), historial.get(s.getTipoCultivo()), hoy));
+                if (programadas != null) {
+                    eventos.addAll(programadas.eventos(s, lote.getId(), lote.getNombre(), rango[0], rango[1], hoy));
+                }
             }
         }
         return CalendarioCultivo.entre(eventos, rango[0], rango[1]);

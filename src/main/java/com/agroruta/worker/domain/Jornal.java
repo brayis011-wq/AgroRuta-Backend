@@ -1,6 +1,8 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.math.RoundingMode;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
@@ -22,6 +24,10 @@ public class Jornal {
     private String observaciones;
     private BigDecimal valorJornal;
     private boolean liquidado;
+    /** Kilos recogidos ese día (solo cuando el cargo se paga por kilo) */
+    private BigDecimal kilos;
+    /** Valor del kilo el día del jornal (si el cargo cambia después, este jornal no cambia) */
+    private BigDecimal valorKilo;
 
     public Jornal() {
         this.actividades = new ArrayList<>();
@@ -57,6 +63,30 @@ public class Jornal {
             throw new EstadoInvalidoException("No se pueden modificar las labores de un jornal ya liquidado.");
         }
         this.actividades.remove(actividad);
+    }
+
+    /**
+     * Anota los kilos recogidos y calcula el valor del día: kilos × valor del kilo del cargo.
+     * Si el cargo se paga por día, no se aceptan kilos.
+     */
+    public void registrarKilos(BigDecimal kilos) {
+        Cargo cargo = trabajador == null ? null : trabajador.getCargo();
+        boolean porKilo = cargo != null && cargo.pagaPorKilo();
+        if (!porKilo) {
+            if (kilos != null) {
+                throw new DatoInvalidoException("El cargo de este trabajador se paga por día, no por kilo.");
+            }
+            return;
+        }
+        if (kilos == null || kilos.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuántos kilos recogió " + trabajador.getNombreCompleto() + ".");
+        }
+        if (this.liquidado) {
+            throw new EstadoInvalidoException("No se pueden cambiar los kilos de un jornal ya liquidado.");
+        }
+        this.kilos = kilos.setScale(2, RoundingMode.HALF_UP);
+        this.valorKilo = cargo.getValorKilo();
+        this.valorJornal = this.kilos.multiply(this.valorKilo).setScale(2, RoundingMode.HALF_UP);
     }
 
     public void marcarComoLiquidado() {

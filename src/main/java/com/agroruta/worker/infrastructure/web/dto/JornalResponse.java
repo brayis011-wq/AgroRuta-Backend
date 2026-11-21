@@ -16,6 +16,9 @@ public class JornalResponse {
     public String observaciones;
     public BigDecimal valorJornal;
     public boolean liquidado;
+    /** Solo en los jornales pagados por kilo */
+    public BigDecimal kilos;
+    public BigDecimal valorKilo;
 
     public static JornalResponse from(Jornal j) {
         JornalResponse r = new JornalResponse();
@@ -30,6 +33,8 @@ public class JornalResponse {
         r.observaciones = j.getObservaciones();
         r.valorJornal = j.getValorJornal();
         r.liquidado = j.isLiquidado();
+        r.kilos = j.getKilos();
+        r.valorKilo = j.getValorKilo();
         return r;
     }
 }

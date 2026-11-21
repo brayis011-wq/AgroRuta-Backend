@@ -34,6 +34,13 @@ public class CargoEntity {
     @Column(nullable = false)
     private boolean activo;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modalidad_pago", nullable = false, length = 10)
+    private com.agroruta.worker.domain.ModalidadPago modalidadPago = com.agroruta.worker.domain.ModalidadPago.JORNAL;
+
+    @Column(name = "valor_kilo", precision = 10, scale = 2)
+    private BigDecimal valorKilo;
+
     // Nullable a propósito: ddl-auto=update puede agregar la columna sobre filas
     // existentes. Se rellena con el SQL de migración.
     @Column(name = "agricultor_id")

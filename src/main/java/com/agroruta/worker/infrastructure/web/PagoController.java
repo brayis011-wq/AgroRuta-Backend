@@ -11,6 +11,7 @@ import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.infrastructure.web.dto.PagoRequest;
 import com.agroruta.worker.infrastructure.web.dto.PagoResponse;
+import com.agroruta.worker.infrastructure.web.dto.PagosLoteRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -38,6 +39,17 @@ public class PagoController {
                 )
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /** Paga varias nóminas juntas, cada una por su total (con aprobarPendientes, aprueba antes las pendientes). */
+    @PostMapping("/batch")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<List<PagoResponse>> pagarVarias(@Valid @RequestBody PagosLoteRequest req,
+                                                          Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        List<PagoResponse> pagos = pagoUseCase.pagarVarias(dueno, req.nominaIds, req.metodoPago,
+                req.observaciones, req.aprobarPendientes).stream().map(PagoResponse::from).toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(pagos);
     }
 
     @GetMapping("/{id}")

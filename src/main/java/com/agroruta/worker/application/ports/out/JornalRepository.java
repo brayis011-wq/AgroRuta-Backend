@@ -27,6 +27,12 @@ public interface JornalRepository {
 
     void eliminar(Long id);
 
+    /** Jornales de todos los trabajadores del agricultor entre dos fechas; agricultorId null: los de todos */
+    List<Jornal> buscarDelEquipo(Long agricultorId, LocalDate inicio, LocalDate fin);
+
+    /** De los jornales dados, los que ya están en alguna nómina */
+    java.util.Set<Long> idsEnNomina(java.util.Collection<Long> ids);
+
     /** Jornales del trabajador, más recientes primero. inicio y fin son opcionales. */
     Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
 

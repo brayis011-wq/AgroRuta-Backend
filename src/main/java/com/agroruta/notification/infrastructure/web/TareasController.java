@@ -25,12 +25,15 @@ public class TareasController {
 
     private final AlertasDiariasUseCase alertas;
     private final LimpiezaDatosVencidos limpieza;
+    private final com.agroruta.finance.application.ports.in.PreciosReferenciaUseCase precios;
     private final String token;
 
     public TareasController(AlertasDiariasUseCase alertas, LimpiezaDatosVencidos limpieza,
+                            com.agroruta.finance.application.ports.in.PreciosReferenciaUseCase precios,
                             @Value("${tareas.token:}") String token) {
         this.alertas = alertas;
         this.limpieza = limpieza;
+        this.precios = precios;
         this.token = token == null ? "" : token.trim();
     }
 
@@ -52,6 +55,17 @@ public class TareasController {
             return ResponseEntity.status(token.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN).build();
         }
         return ResponseEntity.ok(limpieza.limpiar());
+    }
+
+    /** Precios de SIPSA: solo los trae si los guardados tienen más de 3 días; responde cuántos guardó */
+    @PostMapping("/reference-prices")
+    public ResponseEntity<Map<String, Integer>> precios(
+            @RequestHeader(value = "X-Tarea-Token", required = false) String recibido) {
+        if (!autorizado(recibido)) {
+            return ResponseEntity.status(token.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN).build();
+        }
+        precios.actualizarSiHaceFalta();
+        return ResponseEntity.accepted().body(Map.of("pedido", 1));
     }
 
     /** Sin clave configurada no se acepta ninguna; la comparación tarda lo mismo acierte o no */

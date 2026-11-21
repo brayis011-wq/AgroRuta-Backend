@@ -84,6 +84,12 @@ class ConsultasConBaseRealTest extends ConBaseReal {
         ids.put(Recurso.JORNAL, jornal);
         ids.put(Recurso.NOMINA, nomina);
         ids.put(Recurso.PAGO, pago);
+        ids.put(Recurso.GASTO_FINCA, insertar("INSERT INTO gastos_finca (finca_id, fecha, categoria, descripcion, monto, creado_en) VALUES (?, ?, 'TRANSPORTE', 'Flete', 80000, ?)",
+                finca, DIA, LocalDateTime.now()));
+        ids.put(Recurso.VENTA, insertar("INSERT INTO ventas (agricultor_id, siembra_id, comprador, fecha, producto, total, creado_en) VALUES (?, ?, 'Cooperativa', ?, 'Fríjol', 300000, ?)",
+                ana, siembra, DIA, LocalDateTime.now()));
+        ids.put(Recurso.ACTIVIDAD_PROGRAMADA, insertar("INSERT INTO actividades_programadas (siembra_id, tipo, cada_dias, desde, creado_en) VALUES (?, 'DESHIERBE', 30, ?, ?)",
+                siembra, DIA, LocalDateTime.now()));
     }
 
     // ── propiedad ───────────────────────────────────────────────────────────

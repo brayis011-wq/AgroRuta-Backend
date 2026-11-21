@@ -4,6 +4,8 @@ import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.domain.ResumenJornales;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.worker.domain.PlanillaSemanal;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.application.ports.out.CultivoPort.CultivoInfo;
@@ -46,7 +48,85 @@ public class JornalService implements JornalUseCase {
 
     public Jornal registrarJornal(Long trabajadorId, Long cultivoId, String nombreCultivo,
                                   LocalDate fecha, List<Long> actividadIds, String observaciones) {
+        return registrarJornal(trabajadorId, cultivoId, nombreCultivo, fecha, actividadIds, observaciones, null);
+    }
 
+    @Override
+    public Jornal registrarJornal(Long trabajadorId, Long cultivoId, String nombreCultivo,
+                                  LocalDate fecha, List<Long> actividadIds, String observaciones,
+                                  java.math.BigDecimal kilos) {
+        Jornal jornal = nuevoJornal(trabajadorId, cultivoId, fecha, actividadIds, observaciones, kilos);
+        return jornalRepository.guardar(jornal);
+    }
+
+    // ── Planilla semanal ─────────────────────────────────────────────────────
+
+    /** Máximo de días que muestra la planilla (dos semanas, para las quincenas) */
+    static final int MAX_DIAS_PLANILLA = 16;
+
+    @Transactional(readOnly = true)
+    @Override
+    public PlanillaSemanal planilla(Long agricultorId, LocalDate inicio, LocalDate fin) {
+        if (inicio == null || fin == null || fin.isBefore(inicio)) {
+            throw new DatoInvalidoException("Indica el primer y el último día de la planilla.");
+        }
+        if (java.time.temporal.ChronoUnit.DAYS.between(inicio, fin) >= MAX_DIAS_PLANILLA) {
+            throw new DatoInvalidoException("La planilla muestra como máximo " + MAX_DIAS_PLANILLA + " días.");
+        }
+        List<Jornal> jornales = jornalRepository.buscarDelEquipo(agricultorId, inicio, fin);
+        // Los activos, más quien tuvo jornal esos días aunque ya no esté activo (para no esconder lo anotado)
+        java.util.Map<Long, Trabajador> filas = new java.util.LinkedHashMap<>();
+        List<Trabajador> activos = agricultorId == null ? trabajadorRepository.listarActivos()
+                : trabajadorRepository.listarActivosPorAgricultor(agricultorId);
+        activos.forEach(t -> filas.put(t.getId(), t));
+        jornales.stream().map(Jornal::getTrabajador).filter(Objects::nonNull)
+                .forEach(t -> filas.putIfAbsent(t.getId(), t));
+        List<Trabajador> ordenados = filas.values().stream()
+                .sorted(java.util.Comparator.comparing((Trabajador t) -> !t.estaActivo())
+                        .thenComparing(Trabajador::getNombreCompleto, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+        java.util.Set<Long> enNomina = jornalRepository.idsEnNomina(jornales.stream().map(Jornal::getId).toList());
+        return new PlanillaSemanal(inicio, fin, ordenados, jornales, enNomina);
+    }
+
+    /**
+     * Anota varios jornales de una vez (mismo cultivo y labores). Si un trabajador ya tiene jornal ese día
+     * en ese mismo cultivo, no se repite. Todo o nada: si uno falla, no queda ninguno.
+     */
+    @Override
+    public List<Jornal> registrarVarios(Long agricultorId, Long cultivoId, List<Long> actividadIds,
+                                        List<PlanillaSemanal.Entrada> entradas) {
+        List<Jornal> creados = new java.util.ArrayList<>();
+        java.util.Set<String> vistos = new java.util.HashSet<>();
+        for (PlanillaSemanal.Entrada e : entradas) {
+            Trabajador t = trabajadorRepository.buscarPorId(e.trabajadorId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + e.trabajadorId()));
+            if (agricultorId != null && !agricultorId.equals(t.getAgricultorId())) {
+                throw new BusinessException("Uno de los trabajadores no es de tu equipo.");
+            }
+            if (!vistos.add(e.trabajadorId() + "|" + e.fecha())) continue;
+            boolean yaEsta = jornalRepository.buscarPorTrabajadorYPeriodo(e.trabajadorId(), e.fecha(), e.fecha())
+                    .stream().anyMatch(j -> Objects.equals(j.getCultivoId(), cultivoId));
+            if (yaEsta) continue;
+            creados.add(jornalRepository.guardar(
+                    nuevoJornal(e.trabajadorId(), cultivoId, e.fecha(), actividadIds, null, e.kilos())));
+        }
+        return creados;
+    }
+
+    /** Quita un jornal anotado por error. No se puede si ya está en una nómina o se pagó. */
+    @Override
+    public void eliminarJornal(Long jornalId) {
+        Jornal jornal = jornalRepository.buscarPorId(jornalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
+        if (jornal.isLiquidado() || !jornalRepository.idsEnNomina(List.of(jornalId)).isEmpty()) {
+            throw new EstadoInvalidoException("Este jornal ya está en una nómina: para quitarlo, primero elimina esa nómina.");
+        }
+        jornalRepository.eliminar(jornalId);
+    }
+
+    private Jornal nuevoJornal(Long trabajadorId, Long cultivoId, LocalDate fecha, List<Long> actividadIds,
+                               String observaciones, java.math.BigDecimal kilos) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + trabajadorId));
 
@@ -70,8 +150,8 @@ public class JornalService implements JornalUseCase {
         for (Long actividadId : actividadIds) {
             jornal.agregarActividad(actividadUsable(actividadId, trabajador.getAgricultorId()));
         }
-
-        return jornalRepository.guardar(jornal);
+        jornal.registrarKilos(kilos);
+        return jornal;
     }
 
     public Jornal agregarActividad(Long jornalId, Long actividadId) {

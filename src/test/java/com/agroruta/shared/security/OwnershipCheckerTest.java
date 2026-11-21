@@ -76,6 +76,9 @@ class OwnershipCheckerTest {
         assertThat(ownership.jornalPropio(7L, dueno)).isTrue();
         assertThat(ownership.nominaPropia(7L, dueno)).isTrue();
         assertThat(ownership.pagoPropio(7L, dueno)).isTrue();
+        assertThat(ownership.gastoPropio(7L, dueno)).isTrue();
+        assertThat(ownership.ventaPropia(7L, dueno)).isTrue();
+        assertThat(ownership.programadaPropia(7L, dueno)).isTrue();
 
         assertThat(ownership.fincaPropia(7L, otro)).isFalse();
         assertThat(ownership.lotePropio(7L, otro)).isFalse();
@@ -89,6 +92,9 @@ class OwnershipCheckerTest {
         assertThat(ownership.jornalPropio(7L, otro)).isFalse();
         assertThat(ownership.nominaPropia(7L, otro)).isFalse();
         assertThat(ownership.pagoPropio(7L, otro)).isFalse();
+        assertThat(ownership.gastoPropio(7L, otro)).isFalse();
+        assertThat(ownership.ventaPropia(7L, otro)).isFalse();
+        assertThat(ownership.programadaPropia(7L, otro)).isFalse();
 
         for (Recurso recurso : Recurso.values()) {
             verify(consulta).esDueno(recurso, 7L, 1L);

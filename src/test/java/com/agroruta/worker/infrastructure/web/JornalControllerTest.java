@@ -38,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.isNull;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JornalController - Pruebas Unitarias")
@@ -95,7 +96,7 @@ class JornalControllerTest {
         void debeRetornar201AlRegistrar() {
             when(jornalUseCase.registrarJornal(
                     eq(1L), eq(10L), eq("Maíz"),
-                    eq(FECHA), eq(List.of(1L, 2L)), eq("Sin observaciones")))
+                    eq(FECHA), eq(List.of(1L, 2L)), eq("Sin observaciones"), isNull()))
                     .thenReturn(jornalBase);
 
             ResponseEntity<JornalResponse> response = jornalController.registrar(request());
@@ -110,13 +111,13 @@ class JornalControllerTest {
             assertFalse(response.getBody().liquidado);
             verify(jornalUseCase, times(1)).registrarJornal(
                     eq(1L), eq(10L), eq("Maíz"),
-                    eq(FECHA), eq(List.of(1L, 2L)), eq("Sin observaciones"));
+                    eq(FECHA), eq(List.of(1L, 2L)), eq("Sin observaciones"), isNull());
         }
 
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el trabajador no existe")
         void debePropaglarExcepcionSiTrabajadorNoExiste() {
-            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any()))
+            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new ResourceNotFoundException("Trabajador", 99L));
 
             ResourceNotFoundException ex = assertThrows(
@@ -125,13 +126,13 @@ class JornalControllerTest {
             );
 
             assertTrue(ex.getMessage().contains("99"));
-            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any());
+            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si el jornal viola una regla de negocio")
         void debePropaglarExcepcionPorReglaNegocio() {
-            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any()))
+            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new BusinessException(
                             ErrorCode.BUSINESS_RULE_VIOLATION, "El trabajador ya tiene un jornal en esa fecha"));
 
@@ -141,7 +142,7 @@ class JornalControllerTest {
             );
 
             assertEquals(ErrorCode.BUSINESS_RULE_VIOLATION, ex.getErrorCode());
-            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any());
+            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any(), any());
         }
     }
 
