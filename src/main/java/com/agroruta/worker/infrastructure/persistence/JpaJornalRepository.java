@@ -53,8 +53,9 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
                                     @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /** De esos jornales, los que ya quedaron en alguna nómina */
-    /** [id del jornal, estado de su nómina] */
-    @Query("SELECT jn.id, n.estado FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")
+    /** [id del jornal, estado de su nómina]; las anuladas no cuentan (sus jornales quedan libres) */
+    @Query("SELECT jn.id, n.estado FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids "
+            + "AND n.estado <> com.agroruta.worker.domain.EstadoNomina.ANULADA")
     List<Object[]> estadosDeNomina(@Param("ids") java.util.Collection<Long> ids);
 
     @Query("SELECT jn.id FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")
@@ -66,6 +67,8 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
             Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     List<JornalEntity> findByCultivoId(Long cultivoId);
+
+    List<JornalEntity> findByCosechaIdIn(java.util.Collection<Long> cosechaIds);
 
     List<JornalEntity> findByCultivoIdAndFechaBetween(
             Long cultivoId, LocalDate inicio, LocalDate fin);

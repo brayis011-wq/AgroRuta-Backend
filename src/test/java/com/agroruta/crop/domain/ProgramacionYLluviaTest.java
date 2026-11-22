@@ -89,7 +89,7 @@ class ProgramacionYLluviaTest {
 
     private static CostosSiembra costos(double manoObra, double insumos, double otros) {
         return new CostosSiembra(1L, manoObra, 0, insumos, otros, manoObra + insumos + otros, 0, 0, 0,
-                null, null, null, List.of(), List.of(), 0, 0);
+                null, null, null, List.of(), List.of(), 0, 0, null, 0);
     }
 
     @Test

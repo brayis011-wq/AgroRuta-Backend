@@ -28,6 +28,8 @@ public class Jornal {
     private BigDecimal kilos;
     /** Valor del kilo el día del jornal (si el cargo cambia después, este jornal no cambia) */
     private BigDecimal valorKilo;
+    /** La cosecha de la que salió (recolector); null si se anotó aparte */
+    private Long cosechaId;
 
     public Jornal() {
         this.actividades = new ArrayList<>();
@@ -87,6 +89,44 @@ public class Jornal {
         this.kilos = kilos.setScale(2, RoundingMode.HALF_UP);
         this.valorKilo = cargo.getValorKilo();
         this.valorJornal = this.kilos.multiply(this.valorKilo).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Recolector de una cosecha pagado por kilo: kilos × valor del kilo. El valor sale del que se indique
+     * o, si no, del cargo (aunque el cargo se pague por día: en la cosecha se decide por persona).
+     */
+    public void pagarPorKilo(BigDecimal kilos, BigDecimal valorKilo) {
+        if (this.liquidado) {
+            throw new EstadoInvalidoException("No se pueden cambiar los kilos de un jornal ya liquidado.");
+        }
+        String nombre = trabajador == null ? "el recolector" : trabajador.getNombreCompleto();
+        if (kilos == null || kilos.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuántos kilos recogió " + nombre + ".");
+        }
+        Cargo cargo = trabajador == null ? null : trabajador.getCargo();
+        BigDecimal valor = valorKilo != null ? valorKilo : (cargo == null ? null : cargo.getValorKilo());
+        if (valor == null || valor.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuánto se le paga el kilo a " + nombre + ".");
+        }
+        this.kilos = kilos.setScale(2, RoundingMode.HALF_UP);
+        this.valorKilo = valor.setScale(2, RoundingMode.HALF_UP);
+        this.valorJornal = this.kilos.multiply(this.valorKilo).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Recolector de una cosecha pagado por día: el valor indicado o, si no, el del cargo */
+    public void pagarPorDia(BigDecimal valorDia) {
+        if (this.liquidado) {
+            throw new EstadoInvalidoException("No se puede cambiar el valor de un jornal ya liquidado.");
+        }
+        Cargo cargo = trabajador == null ? null : trabajador.getCargo();
+        BigDecimal valor = valorDia != null ? valorDia : (cargo == null ? null : cargo.getValorJornal());
+        if (valor == null || valor.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuánto se le paga el día a "
+                    + (trabajador == null ? "el recolector" : trabajador.getNombreCompleto()) + ".");
+        }
+        this.kilos = null;
+        this.valorKilo = null;
+        this.valorJornal = valor.setScale(2, RoundingMode.HALF_UP);
     }
 
     public void marcarComoLiquidado() {

@@ -54,7 +54,14 @@ public class JornalEntity {
     @Column(name = "valor_kilo", precision = 10, scale = 2)
     private BigDecimal valorKilo;
 
+    /** La cosecha de la que salió este jornal (recolector); null si se anotó aparte */
+    @Column(name = "cosecha_id")
+    private Long cosechaId;
+
     public JornalEntity() {}
+
+    public Long getCosechaId() { return cosechaId; }
+    public void setCosechaId(Long cosechaId) { this.cosechaId = cosechaId; }
 
     public BigDecimal getKilos() { return kilos; }
     public void setKilos(BigDecimal kilos) { this.kilos = kilos; }

@@ -108,6 +108,7 @@ public class WorkerMapper {
         j.setLiquidado(e.isLiquidado());
         j.setKilos(e.getKilos());
         j.setValorKilo(e.getValorKilo());
+        j.setCosechaId(e.getCosechaId());
         List<Labor> actividades = e.getActividades().stream()
                 .map(WorkerMapper::toDomain)
                 .collect(Collectors.toList());
@@ -128,6 +129,7 @@ public class WorkerMapper {
         e.setLiquidado(d.isLiquidado());
         e.setKilos(d.getKilos());
         e.setValorKilo(d.getValorKilo());
+        e.setCosechaId(d.getCosechaId());
         List<LaborEntity> actividades = d.getActividades().stream()
                 .map(WorkerMapper::toEntity)
                 .collect(Collectors.toList());

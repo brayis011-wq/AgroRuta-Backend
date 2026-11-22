@@ -72,6 +72,11 @@ class JornalRepositoryImpl implements JornalRepository {
 
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 
+    @Override public List<Jornal> buscarPorCosechas(java.util.Collection<Long> cosechaIds) {
+        if (cosechaIds == null || cosechaIds.isEmpty()) return List.of();
+        return jpa.findByCosechaIdIn(cosechaIds).stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
     @Override
     public List<Jornal> buscarDelEquipo(Long agricultorId, LocalDate inicio, LocalDate fin) {
         return jpa.delEquipoEntre(agricultorId, inicio, fin).stream()

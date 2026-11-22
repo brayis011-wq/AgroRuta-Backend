@@ -45,10 +45,12 @@ public final class Respuestas {
     }
 
     public record CosechaResponse(Long id, LocalDate fecha, Double cantidadKg, CalidadCosecha calidad,
-                                  String observaciones, Long siembraId, BigDecimal precioKg, boolean enCarencia) {
+                                  String observaciones, Long siembraId, BigDecimal precioKg, boolean enCarencia,
+                                  List<com.agroruta.crop.domain.RecolectorCosecha> recolectores) {
         public static CosechaResponse from(Cosecha c) {
             return new CosechaResponse(c.getId(), c.getFecha(), c.getCantidadKg(), c.getCalidad(),
-                    c.getObservaciones(), c.getSiembraId(), c.getPrecioKg(), c.isEnCarencia());
+                    c.getObservaciones(), c.getSiembraId(), c.getPrecioKg(), c.isEnCarencia(),
+                    c.getRecolectores() == null ? List.of() : c.getRecolectores());
         }
     }
 

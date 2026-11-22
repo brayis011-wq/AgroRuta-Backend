@@ -108,6 +108,15 @@ public class Nomina {
         return jornales.size() - antes;
     }
 
+    /** Un jornal de la nómina pendiente se corrigió (p. ej. los kilos de una cosecha): se recalcula el total */
+    public void reemplazarJornal(Jornal corregido) {
+        if (!estaPendiente()) {
+            throw new EstadoInvalidoException("Solo se pueden corregir nóminas pendientes.");
+        }
+        jornales.replaceAll(j -> java.util.Objects.equals(j.getId(), corregido.getId()) ? corregido : j);
+        calcular();
+    }
+
     /** El día cae dentro del periodo de la nómina */
     public boolean cubre(LocalDate dia) {
         return dia != null && !dia.isBefore(periodoInicio) && !dia.isAfter(periodoFin);

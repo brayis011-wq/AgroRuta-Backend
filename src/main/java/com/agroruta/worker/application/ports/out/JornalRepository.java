@@ -27,6 +27,9 @@ public interface JornalRepository {
 
     void eliminar(Long id);
 
+    /** Los jornales de los recolectores de esas cosechas */
+    List<Jornal> buscarPorCosechas(java.util.Collection<Long> cosechaIds);
+
     /** Jornales de todos los trabajadores del agricultor entre dos fechas; agricultorId null: los de todos */
     List<Jornal> buscarDelEquipo(Long agricultorId, LocalDate inicio, LocalDate fin);
 

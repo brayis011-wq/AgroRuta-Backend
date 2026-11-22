@@ -27,6 +27,26 @@ public interface JornalUseCase {
     /** Quita un jornal que no está en ninguna nómina. */
     void eliminarJornal(Long jornalId);
 
+    // ── Recolectores de una cosecha ──
+
+    /** Quién recogió y cómo se le paga: porKilo = kilos × valorKilo; si no, valorDia (null = el del cargo) */
+    record Recoleccion(Long trabajadorId, boolean porKilo, java.math.BigDecimal kilos,
+                       java.math.BigDecimal valorKilo, java.math.BigDecimal valorDia) {}
+
+    /**
+     * Deja los jornales de la cosecha como vienen en la lista: los que están en una nómina aprobada o pagada
+     * deben venir igual (no se pueden cambiar ni quitar); los demás se vuelven a crear.
+     */
+    List<Jornal> guardarRecolectores(Long cosechaId, Long cultivoId, java.time.LocalDate fecha, List<Recoleccion> recolectores);
+
+    List<Jornal> jornalesDeCosechas(java.util.Collection<Long> cosechaIds);
+
+    /** Estado de la nómina de cada jornal que está en una (los que no, no aparecen) */
+    java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> estadosDeNomina(java.util.Collection<Long> jornalIds);
+
+    /** Al borrar la cosecha: borra sus jornales sin nómina (o en pendiente) y desliga los demás */
+    void quitarRecolectores(Long cosechaId);
+
     Jornal agregarActividad(Long jornalId, Long actividadId);
 
     Jornal removerActividad(Long jornalId, Long actividadId);

@@ -171,8 +171,159 @@ public class JornalService implements JornalUseCase {
         jornalRepository.eliminar(jornalId);
     }
 
+    // ── Recolectores de una cosecha ──────────────────────────────────────────
+
+    @Override
+    public List<Jornal> guardarRecolectores(Long cosechaId, Long cultivoId, LocalDate fecha, List<Recoleccion> recolectores) {
+        List<Recoleccion> lista = recolectores == null ? List.of() : recolectores;
+        java.util.Map<Long, Recoleccion> porTrabajador = new java.util.LinkedHashMap<>();
+        for (Recoleccion r : lista) {
+            if (r == null || r.trabajadorId() == null) throw new DatoInvalidoException("Elige quién recogió en cada fila.");
+            if (porTrabajador.put(r.trabajadorId(), r) != null) {
+                throw new DatoInvalidoException("Un recolector aparece dos veces en la cosecha.");
+            }
+        }
+        List<Jornal> actuales = jornalRepository.buscarPorCosechas(List.of(cosechaId));
+        java.util.Map<Long, EstadoNomina> estados = jornalRepository.estadosDeNomina(actuales.stream().map(Jornal::getId).toList());
+        java.util.Map<Long, Jornal> actualPorTrabajador = new java.util.HashMap<>();
+        actuales.forEach(j -> actualPorTrabajador.put(j.getTrabajador().getId(), j));
+
+        // Lo que ya está en una nómina aprobada o pagada no se toca: debe venir igual
+        for (Jornal j : actuales) {
+            EstadoNomina estado = estados.get(j.getId());
+            if (!fijo(j, estado)) continue;
+            Recoleccion r = porTrabajador.get(j.getTrabajador().getId());
+            if (r == null || !Objects.equals(fecha, j.getFecha()) || !mismoPago(j, r)) {
+                throw new EstadoInvalidoException("El jornal de " + j.getTrabajador().getNombreCompleto()
+                        + " en esta cosecha ya está en una nómina " + (estado == null ? "pagada" : estado.name().toLowerCase(java.util.Locale.ROOT))
+                        + ": para cambiarlo, primero anula esa nómina.");
+            }
+        }
+
+        List<Jornal> resultado = new java.util.ArrayList<>();
+        for (Jornal j : actuales) {
+            EstadoNomina estado = estados.get(j.getId());
+            if (fijo(j, estado)) { resultado.add(j); continue; }
+            Recoleccion r = porTrabajador.get(j.getTrabajador().getId());
+            if (r == null) eliminarJornal(j.getId());
+            else resultado.add(corregirRecolector(j, estado, fecha, r));
+        }
+        List<Long> labores = laborDeRecoleccion(cultivoId);
+        for (Recoleccion r : porTrabajador.values()) {
+            if (actualPorTrabajador.containsKey(r.trabajadorId())) continue;
+            // Si ya tiene jornal ese día en esta siembra (de la planilla), se le pagaría dos veces
+            boolean yaTiene = jornalRepository.buscarPorTrabajadorYPeriodo(r.trabajadorId(), fecha, fecha).stream()
+                    .anyMatch(x -> Objects.equals(x.getCultivoId(), cultivoId) && !Objects.equals(x.getCosechaId(), cosechaId));
+            Jornal j = nuevoJornalBase(r.trabajadorId(), cultivoId, fecha, labores, "Cosecha");
+            if (yaTiene) {
+                throw new BusinessException(j.getTrabajador().getNombreCompleto()
+                        + " ya tiene jornal ese día en esta siembra: quítalo de la planilla o no lo pongas en la cosecha.");
+            }
+            j.setCosechaId(cosechaId);
+            aplicarPago(j, r);
+            Jornal guardado = jornalRepository.guardar(j);
+            sumarANominaPendiente(guardado);
+            resultado.add(guardado);
+        }
+        return resultado;
+    }
+
+    /** Corrige el jornal de un recolector (sin nómina o en una pendiente) y lo deja en la nómina que le toca */
+    private Jornal corregirRecolector(Jornal j, EstadoNomina estado, LocalDate fecha, Recoleccion r) {
+        j.setFecha(fecha);
+        aplicarPago(j, r);
+        Jornal guardado = jornalRepository.guardar(j);
+        if (estado == EstadoNomina.PENDIENTE && nominaRepository != null) {
+            var nomina = nominaRepository.buscarPorJornal(j.getId());
+            if (nomina.isPresent() && nomina.get().cubre(fecha)) {
+                nomina.get().reemplazarJornal(guardado);
+                nominaRepository.guardar(nomina.get());
+                return guardado;
+            }
+            // La fecha se movió fuera de esa nómina: sale de ella y entra a la que le toque
+            nomina.ifPresent(n -> {
+                if (n.getJornales().size() <= 1) nominaRepository.eliminar(n.getId());
+                else { n.quitarJornal(j.getId()); nominaRepository.guardar(n); }
+            });
+        }
+        if (estado == null || estado == EstadoNomina.PENDIENTE) sumarANominaPendiente(guardado);
+        return guardado;
+    }
+
+    private static void aplicarPago(Jornal j, Recoleccion r) {
+        if (r.porKilo()) j.pagarPorKilo(r.kilos(), r.valorKilo());
+        else j.pagarPorDia(r.valorDia());
+    }
+
+    /** Aprobada, pagada o ya liquidada: no se cambia desde la cosecha */
+    private static boolean fijo(Jornal j, EstadoNomina estado) {
+        return j.isLiquidado() || (estado != null && estado != EstadoNomina.PENDIENTE && estado != EstadoNomina.ANULADA);
+    }
+
+    private static boolean mismoPago(Jornal j, Recoleccion r) {
+        if (r.porKilo() != (j.getKilos() != null)) return false;
+        if (r.porKilo()) {
+            return iguales(j.getKilos(), r.kilos()) && (r.valorKilo() == null || iguales(j.getValorKilo(), r.valorKilo()));
+        }
+        return r.valorDia() == null || iguales(j.getValorJornal(), r.valorDia());
+    }
+
+    private static boolean iguales(java.math.BigDecimal a, java.math.BigDecimal b) {
+        return a != null && b != null && a.compareTo(b) == 0;
+    }
+
+    /** La labor "Recolección" (o "Cosecha") del agricultor, si la tiene a la vista */
+    private List<Long> laborDeRecoleccion(Long cultivoId) {
+        Long agricultorId = cultivoPort.buscar(cultivoId).map(CultivoInfo::agricultorId).orElse(null);
+        return laborRepository.listarActivasPara(agricultorId).stream()
+                .filter(l -> {
+                    String n = java.text.Normalizer.normalize(l.getNombre() == null ? "" : l.getNombre(), java.text.Normalizer.Form.NFD)
+                            .replaceAll("\\p{M}", "").trim().toLowerCase(java.util.Locale.ROOT);
+                    return n.equals("recoleccion") || n.equals("cosecha");
+                })
+                .sorted(java.util.Comparator.comparing((Labor l) -> !l.getNombre().toLowerCase(java.util.Locale.ROOT).startsWith("recole")))
+                .map(Labor::getId)
+                .limit(1)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Jornal> jornalesDeCosechas(java.util.Collection<Long> cosechaIds) {
+        return jornalRepository.buscarPorCosechas(cosechaIds);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public java.util.Map<Long, EstadoNomina> estadosDeNomina(java.util.Collection<Long> jornalIds) {
+        return jornalIds == null || jornalIds.isEmpty() ? java.util.Map.of() : jornalRepository.estadosDeNomina(jornalIds);
+    }
+
+    @Override
+    public void quitarRecolectores(Long cosechaId) {
+        List<Jornal> actuales = jornalRepository.buscarPorCosechas(List.of(cosechaId));
+        java.util.Map<Long, EstadoNomina> estados = jornalRepository.estadosDeNomina(actuales.stream().map(Jornal::getId).toList());
+        for (Jornal j : actuales) {
+            if (fijo(j, estados.get(j.getId()))) {
+                // El trabajo se hizo y ya se aprobó o pagó: el jornal queda, solo deja de apuntar a la cosecha
+                j.setCosechaId(null);
+                jornalRepository.guardar(j);
+            } else {
+                eliminarJornal(j.getId());
+            }
+        }
+    }
+
     private Jornal nuevoJornal(Long trabajadorId, Long cultivoId, LocalDate fecha, List<Long> actividadIds,
                                String observaciones, java.math.BigDecimal kilos) {
+        Jornal jornal = nuevoJornalBase(trabajadorId, cultivoId, fecha, actividadIds, observaciones);
+        jornal.registrarKilos(kilos);
+        return jornal;
+    }
+
+    /** El jornal con el trabajador, el cultivo y las labores revisados; sin kilos ni valor especial */
+    private Jornal nuevoJornalBase(Long trabajadorId, Long cultivoId, LocalDate fecha, List<Long> actividadIds,
+                                   String observaciones) {
         Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + trabajadorId));
 
@@ -196,7 +347,6 @@ public class JornalService implements JornalUseCase {
         for (Long actividadId : actividadIds) {
             jornal.agregarActividad(actividadUsable(actividadId, trabajador.getAgricultorId()));
         }
-        jornal.registrarKilos(kilos);
         return jornal;
     }
 

@@ -151,6 +151,12 @@ public class VentasService implements VentasUseCase {
         return repositorio.compradores(agricultorId);
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public List<com.agroruta.finance.domain.KilosEnBodega> kilosEnBodega(Long agricultorId) {
+        return repositorio.kilosEnBodega(agricultorId);
+    }
+
     private static String pesos(BigDecimal v) {
         java.text.NumberFormat f = java.text.NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO"));
         f.setMaximumFractionDigits(0);

@@ -32,4 +32,7 @@ public interface VentasUseCase {
     Venta quitarAbono(Long ventaId, Long abonoId);
 
     List<String> compradores(Long agricultorId);
+
+    /** Kilos cosechados y vendidos por siembra: lo que queda para vender */
+    List<com.agroruta.finance.domain.KilosEnBodega> kilosEnBodega(Long agricultorId);
 }

@@ -76,7 +76,16 @@ public class CostosCalendarioService {
                 manoObraPort.jornalesDeSiembra(siembraId),
                 fumigacionRepository.findBySiembraId(siembraId),
                 actividadRepository.findBySiembraId(siembraId),
-                cosechaRepository.findBySiembraId(siembraId));
+                cosechaRepository.findBySiembraId(siembraId),
+                ventasPort == null ? List.of() : ventasPort.ventasDeSiembra(siembraId));
+    }
+
+    /** Ventas de la siembra (null en pruebas antiguas: los ingresos salen de las cosechas) */
+    private com.agroruta.crop.application.ports.out.VentasSiembraPort ventasPort;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setVentasPort(com.agroruta.crop.application.ports.out.VentasSiembraPort ventasPort) {
+        this.ventasPort = ventasPort;
     }
 
     // ── Calendario ────────────────────────────────────────────────────

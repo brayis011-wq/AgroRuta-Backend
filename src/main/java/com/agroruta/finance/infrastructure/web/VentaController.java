@@ -91,6 +91,12 @@ public class VentaController {
         return ResponseEntity.ok(ventas.resumen(dueno(authentication)));
     }
 
+    /** Lo cosechado menos lo vendido, por siembra: de aquí se escoge qué vender */
+    @GetMapping("/harvest-stock")
+    public ResponseEntity<List<com.agroruta.finance.domain.KilosEnBodega>> kilosEnBodega(Authentication authentication) {
+        return ResponseEntity.ok(ventas.kilosEnBodega(dueno(authentication)));
+    }
+
     @GetMapping("/buyers")
     public ResponseEntity<List<String>> compradores(Authentication authentication) {
         return ResponseEntity.ok(ventas.compradores(CurrentUser.id(authentication)));

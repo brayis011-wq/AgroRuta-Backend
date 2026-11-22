@@ -103,6 +103,34 @@ public class VentasJdbc implements VentasRepository {
     }
 
     @Override
+    public List<Venta> listarPorSiembra(Long siembraId) {
+        return jdbc.query(SELECT + " WHERE v.siembra_id = ? ORDER BY v.fecha, v.id", FILA, siembraId);
+    }
+
+    @Override
+    public List<com.agroruta.finance.domain.KilosEnBodega> kilosEnBodega(Long agricultorId) {
+        String sql = """
+                SELECT s.id, s.tipo_cultivo, s.variedad, l.nombre AS lote, f.nombre AS finca, s.estado_cultivo,
+                       c.kg AS cosechados, c.ultima, COALESCE(v.kg, 0) AS vendidos
+                  FROM siembras s
+                  JOIN lotes l ON l.id = s.lote_id
+                  JOIN fincas f ON f.id = l.finca_id
+                  JOIN (SELECT siembra_id, SUM(cantidad_kg) AS kg, MAX(fecha) AS ultima FROM cosechas GROUP BY siembra_id) c
+                    ON c.siembra_id = s.id
+                  LEFT JOIN (SELECT siembra_id, SUM(cantidad_kg) AS kg FROM ventas
+                              WHERE siembra_id IS NOT NULL AND cantidad_kg IS NOT NULL GROUP BY siembra_id) v
+                    ON v.siembra_id = s.id
+                 WHERE s.eliminado_en IS NULL""";
+        List<Object> args = new ArrayList<>();
+        if (agricultorId != null) { sql += " AND f.agricultor_id = ?"; args.add(agricultorId); }
+        return jdbc.query(sql + " ORDER BY c.ultima DESC, s.id DESC LIMIT 300", (rs, i) -> new com.agroruta.finance.domain.KilosEnBodega(
+                rs.getLong("id"), rs.getString("tipo_cultivo"), rs.getString("variedad"), rs.getString("lote"),
+                rs.getString("finca"), BigDecimal.valueOf(rs.getDouble("cosechados")).setScale(2, java.math.RoundingMode.HALF_UP),
+                rs.getBigDecimal("vendidos"), rs.getDate("ultima").toLocalDate(),
+                "FINALIZADO".equals(rs.getString("estado_cultivo"))), args.toArray());
+    }
+
+    @Override
     public List<Venta> listar(Long agricultorId, LocalDate desde, LocalDate hasta) {
         StringBuilder w = new StringBuilder(" WHERE 1 = 1");
         List<Object> args = new ArrayList<>();

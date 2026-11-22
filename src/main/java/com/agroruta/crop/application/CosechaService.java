@@ -2,6 +2,7 @@ package com.agroruta.crop.application;
 
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.RecolectoresPort;
 import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.CosechaUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
@@ -36,9 +37,18 @@ public class CosechaService implements CosechaUseCase {
         this.fumigacionRepository = fumigacionRepository;
     }
 
+    // ── Recolectores (jornales del equipo); null en pruebas que no los usan ──
+    private RecolectoresPort recolectoresPort;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setRecolectoresPort(RecolectoresPort recolectoresPort) {
+        this.recolectoresPort = recolectoresPort;
+    }
+
     @Override
     public Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg, String calidad, String observaciones,
-                                    Long siembraId, BigDecimal precioKg, boolean confirmarCarencia) {
+                                    Long siembraId, BigDecimal precioKg, boolean confirmarCarencia,
+                                    List<Recolector> recolectores) {
 
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
@@ -54,29 +64,74 @@ public class CosechaService implements CosechaUseCase {
         Cosecha cosecha = new Cosecha(null, fecha, cantidadKg, calidadCosecha, observaciones, siembraId);
         cosecha.setPrecioKg(precioKg);
         cosecha.setEnCarencia(revisarCarencia(siembraId, fecha, confirmarCarencia));
-        return cosechaRepository.save(cosecha);
+        revisarKilos(cantidadKg, recolectores);
+        Cosecha guardada = cosechaRepository.save(cosecha);
+        if (recolectores != null && !recolectores.isEmpty() && recolectoresPort != null) {
+            recolectoresPort.guardar(guardada.getId(), siembraId, guardada.getFecha(), recolectores);
+        }
+        return conRecolectores(guardada);
+    }
+
+    /** Los kilos de los recolectores pagados por kilo no pueden pasar de lo cosechado */
+    private static void revisarKilos(Double cantidadKg, List<Recolector> recolectores) {
+        if (recolectores == null || cantidadKg == null) return;
+        BigDecimal suma = recolectores.stream()
+                .filter(r -> r != null && r.porKilo() && r.kilos() != null)
+                .map(Recolector::kilos).reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (suma.compareTo(BigDecimal.valueOf(cantidadKg).add(new BigDecimal("0.01"))) > 0) {
+            throw new BusinessException(String.format(Locale.ROOT,
+                    "Los recolectores suman %s kg, más de lo cosechado (%s kg).",
+                    suma.stripTrailingZeros().toPlainString(), BigDecimal.valueOf(cantidadKg).stripTrailingZeros().toPlainString()));
+        }
+    }
+
+    private Cosecha conRecolectores(Cosecha c) {
+        if (recolectoresPort != null && c != null && c.getId() != null) {
+            c.setRecolectores(recolectoresPort.deCosechas(List.of(c.getId())).getOrDefault(c.getId(), List.of()));
+        }
+        return c;
+    }
+
+    private List<Cosecha> conRecolectores(List<Cosecha> lista) {
+        if (recolectoresPort == null || lista.isEmpty()) return lista;
+        var mapa = recolectoresPort.deCosechas(lista.stream().map(Cosecha::getId).toList());
+        lista.forEach(c -> c.setRecolectores(mapa.getOrDefault(c.getId(), List.of())));
+        return lista;
     }
 
     @Transactional(readOnly = true)
     @Override
     public List<Cosecha> listarCosechasPorSiembra(Long siembraId) {
         siembraUseCase.buscarSiembraPorId(siembraId);
-        return cosechaRepository.findBySiembraId(siembraId);
+        return conRecolectores(cosechaRepository.findBySiembraId(siembraId));
     }
 
     @Transactional(readOnly = true)
     @Override
     public Cosecha buscarCosechaPorId(Long id) {
-        return cosechaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cosecha no encontrada con ID: " + id));
+        return conRecolectores(cosechaRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cosecha no encontrada con ID: " + id)));
     }
 
     @Override
     public Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                                     String calidad, String observaciones, BigDecimal precioKg, boolean confirmarCarencia) {
+                                     String calidad, String observaciones, BigDecimal precioKg, boolean confirmarCarencia,
+                                     List<Recolector> recolectores) {
         Cosecha cosecha = buscarCosechaPorId(id);
         cosecha.setPrecioKg(precioKg);
-        return aplicarCambios(cosecha, fecha, cantidadKg, calidad, observaciones, confirmarCarencia);
+        LocalDate antes = cosecha.getFecha();
+        List<Recolector> lista = recolectores;
+        if (lista == null && fecha != null && !fecha.equals(antes) && !cosecha.getRecolectores().isEmpty()) {
+            // Sin lista nueva pero con otra fecha: los mismos recolectores pasan a la fecha nueva
+            lista = cosecha.getRecolectores().stream().map(r -> new Recolector(r.trabajadorId(), r.modalidad(), r.kilos(),
+                    r.valorKilo(), "DIA".equals(r.modalidad()) ? r.valor() : null)).toList();
+        }
+        revisarKilos(cantidadKg != null ? cantidadKg : cosecha.getCantidadKg(), lista);
+        Cosecha guardada = aplicarCambios(cosecha, fecha, cantidadKg, calidad, observaciones, confirmarCarencia);
+        if (lista != null && recolectoresPort != null) {
+            recolectoresPort.guardar(guardada.getId(), guardada.getSiembraId(), guardada.getFecha(), lista);
+        }
+        return conRecolectores(guardada);
     }
 
     @Override
@@ -126,6 +181,7 @@ public class CosechaService implements CosechaUseCase {
     @Override
     public void eliminarCosecha(Long id) {
         buscarCosechaPorId(id);
+        if (recolectoresPort != null) recolectoresPort.quitar(id);
         cosechaRepository.deleteById(id);
     }
 

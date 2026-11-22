@@ -107,4 +107,30 @@ class CalculadoraCostosSiembraTest {
         CostosSiembra c = CalculadoraCostosSiembra.calcular(1L, List.of(), List.of(), List.of(), List.of());
         assertNull(c.costoPorKg());
     }
+
+    @Test
+    void conVentasLosIngresosSonLoVendidoYNoElPrecioDeLaCosecha() {
+        var ventas = List.of(
+                new com.agroruta.crop.application.ports.out.VentasSiembraPort.VentaDeSiembra(LocalDate.parse("2026-10-22"), new BigDecimal("80"), new BigDecimal("960000")),
+                new com.agroruta.crop.application.ports.out.VentasSiembraPort.VentaDeSiembra(LocalDate.parse("2026-11-02"), null, new BigDecimal("40000")));
+        CostosSiembra c = CalculadoraCostosSiembra.calcular(1L, List.of(jornal("2026-10-20", 1, "Leo Paz", 63000)), List.of(), List.of(),
+                List.of(cosecha("2026-10-20", 100, 4500.0), cosecha("2026-10-27", 50, null)), ventas);
+
+        assertEquals("VENTAS", c.fuenteIngresos());
+        assertEquals(1_000_000, c.ingresos());
+        assertEquals(80, c.kgVendidos());
+        assertEquals(150, c.kgTotal());
+        assertEquals(12500, c.precioPromedioKg());
+        assertEquals(937_000, c.ganancia());
+        assertEquals(0, c.cosechasSinPrecio());
+        assertEquals(2, c.meses().size());
+    }
+
+    @Test
+    void sinVentasNiPreciosNoHayFuenteDeIngresos() {
+        CostosSiembra c = CalculadoraCostosSiembra.calcular(1L, List.of(), List.of(), List.of(),
+                List.of(cosecha("2026-10-20", 100, null)), List.of());
+        assertNull(c.fuenteIngresos());
+        assertNull(c.ganancia());
+    }
 }

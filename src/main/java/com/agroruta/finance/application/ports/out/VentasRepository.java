@@ -29,4 +29,10 @@ public interface VentasRepository {
 
     /** Nombres de compradores ya usados, para sugerirlos */
     List<String> compradores(Long agricultorId);
+
+    /** Ventas de una siembra (sin abonos), para los ingresos de la temporada */
+    List<Venta> listarPorSiembra(Long siembraId);
+
+    /** Por siembra con cosechas: kilos recogidos y vendidos. agricultorId null: todas */
+    List<com.agroruta.finance.domain.KilosEnBodega> kilosEnBodega(Long agricultorId);
 }

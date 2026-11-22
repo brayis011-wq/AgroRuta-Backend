@@ -3,6 +3,7 @@ package com.agroruta.crop.application;
 import com.agroruta.crop.domain.*;
 
 import com.agroruta.crop.application.ports.out.ManoObraPort.JornalDeSiembra;
+import com.agroruta.crop.application.ports.out.VentasSiembraPort.VentaDeSiembra;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -29,6 +30,12 @@ public final class CalculadoraCostosSiembra {
     public static CostosSiembra calcular(Long siembraId, List<JornalDeSiembra> jornales,
                                          List<Fumigacion> fumigaciones, List<ActividadCultivo> actividades,
                                          List<Cosecha> cosechas) {
+        return calcular(siembraId, jornales, fumigaciones, actividades, cosechas, List.of());
+    }
+
+    public static CostosSiembra calcular(Long siembraId, List<JornalDeSiembra> jornales,
+                                         List<Fumigacion> fumigaciones, List<ActividadCultivo> actividades,
+                                         List<Cosecha> cosechas, List<VentaDeSiembra> ventas) {
         TreeMap<YearMonth, BigDecimal[]> meses = new TreeMap<>(); // manoObra, insumos, otros, ingresos
 
         BigDecimal manoObra = BigDecimal.ZERO;
@@ -63,17 +70,31 @@ public final class CalculadoraCostosSiembra {
         }
 
         BigDecimal ingresos = BigDecimal.ZERO;
-        double kgTotal = 0, kgConPrecio = 0;
+        double kgTotal = 0, kgConPrecio = 0, kgVendidos = 0;
         int sinPrecio = 0;
+        boolean conVentas = ventas != null && !ventas.isEmpty();
         for (Cosecha c : cosechas) {
             double kg = c.getCantidadKg() == null ? 0 : c.getCantidadKg();
             kgTotal += kg;
+            if (conVentas) continue;
+            // Sin ventas: lo de antes, kilos × precio anotado en la cosecha (valor estimado)
             if (c.getPrecioKg() == null) { sinPrecio++; continue; }
             BigDecimal ingreso = BigDecimal.valueOf(kg).multiply(c.getPrecioKg());
             ingresos = ingresos.add(ingreso);
             kgConPrecio += kg;
             sumar(meses, c.getFecha(), INGRESOS, ingreso);
         }
+        if (conVentas) {
+            // Con ventas, los ingresos son lo vendido (lo que de verdad dejó la siembra)
+            for (VentaDeSiembra v : ventas) {
+                BigDecimal total = v.total() == null ? BigDecimal.ZERO : v.total();
+                ingresos = ingresos.add(total);
+                if (v.kg() != null) kgVendidos += v.kg().doubleValue();
+                sumar(meses, v.fecha(), INGRESOS, total);
+            }
+            kgConPrecio = kgVendidos;
+        }
+        String fuente = conVentas ? "VENTAS" : kgConPrecio > 0 ? "COSECHAS" : null;
 
         BigDecimal costoTotal = manoObra.add(insumos).add(otros);
         List<CostosSiembra.CostoTrabajador> trabajadores = new ArrayList<>();
@@ -89,9 +110,9 @@ public final class CalculadoraCostosSiembra {
                 siembraId, pesos(manoObra), jornales.size(), pesos(insumos), pesos(otros),
                 pesos(costoTotal), pesos(ingresos), kgTotal, kgConPrecio,
                 kgConPrecio > 0 ? pesos(dividir(ingresos, kgConPrecio)) : null,
-                kgConPrecio > 0 ? pesos(ingresos.subtract(costoTotal)) : null,
+                fuente != null ? pesos(ingresos.subtract(costoTotal)) : null,
                 kgTotal > 0 ? pesos(dividir(costoTotal, kgTotal)) : null,
-                trabajadores, lista, fumSinCosto, sinPrecio);
+                trabajadores, lista, fumSinCosto, sinPrecio, fuente, kgVendidos);
     }
 
     private static void sumar(TreeMap<YearMonth, BigDecimal[]> meses, LocalDate fecha, int i, BigDecimal v) {
