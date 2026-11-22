@@ -79,6 +79,14 @@ class JornalRepositoryImpl implements JornalRepository {
     }
 
     @Override
+    public java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> estadosDeNomina(java.util.Collection<Long> ids) {
+        java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> res = new java.util.HashMap<>();
+        if (ids == null || ids.isEmpty()) return res;
+        for (Object[] f : jpa.estadosDeNomina(ids)) res.put((Long) f[0], (com.agroruta.worker.domain.EstadoNomina) f[1]);
+        return res;
+    }
+
+    @Override
     public java.util.Set<Long> idsEnNomina(java.util.Collection<Long> ids) {
         if (ids == null || ids.isEmpty()) return java.util.Set.of();
         return new java.util.HashSet<>(jpa.idsEnNomina(ids));

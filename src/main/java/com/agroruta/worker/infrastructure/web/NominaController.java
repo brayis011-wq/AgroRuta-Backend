@@ -58,6 +58,20 @@ public class NominaController {
                 .stream().map(NominaResponse::from).toList());
     }
 
+    /** Corrige una nómina pendiente: le quita un jornal y recalcula el total. */
+    @DeleteMapping("/{id}/workdays/{jornalId}")
+    @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
+    public ResponseEntity<NominaResponse> quitarJornal(@PathVariable Long id, @PathVariable Long jornalId) {
+        return ResponseEntity.ok(NominaResponse.from(nominaUseCase.quitarJornal(id, jornalId)));
+    }
+
+    /** Suma a una nómina pendiente los jornales de su periodo anotados después de generarla. */
+    @PostMapping("/{id}/refresh")
+    @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
+    public ResponseEntity<NominaResponse> traerJornalesNuevos(@PathVariable Long id) {
+        return ResponseEntity.ok(NominaResponse.from(nominaUseCase.traerJornalesNuevos(id)));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
     public ResponseEntity<NominaResponse> buscarPorId(@PathVariable Long id) {

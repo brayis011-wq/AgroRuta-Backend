@@ -12,6 +12,8 @@ import com.agroruta.worker.application.ports.out.CultivoPort.CultivoInfo;
 import com.agroruta.worker.application.ports.out.LaborRepository;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
+import com.agroruta.worker.application.ports.out.NominaRepository;
+import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Trabajador;
@@ -56,7 +58,34 @@ public class JornalService implements JornalUseCase {
                                   LocalDate fecha, List<Long> actividadIds, String observaciones,
                                   java.math.BigDecimal kilos) {
         Jornal jornal = nuevoJornal(trabajadorId, cultivoId, fecha, actividadIds, observaciones, kilos);
-        return jornalRepository.guardar(jornal);
+        Jornal guardado = jornalRepository.guardar(jornal);
+        sumarANominaPendiente(guardado);
+        return guardado;
+    }
+
+    // ── Nóminas pendientes al día ────────────────────────────────────────────
+
+    /** null en pruebas antiguas: los jornales nuevos no se suman solos a la nómina pendiente */
+    private NominaRepository nominaRepository;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setNominaRepository(NominaRepository nominaRepository) {
+        this.nominaRepository = nominaRepository;
+    }
+
+    /**
+     * Si el trabajador ya tiene una nómina pendiente que cubre ese día (se generó la quincena y luego se
+     * anotó un día que faltaba), el jornal entra en ella y el total se recalcula.
+     */
+    private void sumarANominaPendiente(Jornal j) {
+        if (nominaRepository == null || j == null || j.getTrabajador() == null) return;
+        nominaRepository.buscarPorTrabajadorYEstado(j.getTrabajador().getId(), EstadoNomina.PENDIENTE).stream()
+                .filter(n -> n.cubre(j.getFecha()))
+                .findFirst()
+                .ifPresent(n -> {
+                    n.agregarJornales(List.of(j));
+                    nominaRepository.guardar(n);
+                });
     }
 
     // ── Planilla semanal ─────────────────────────────────────────────────────
@@ -85,7 +114,7 @@ public class JornalService implements JornalUseCase {
                 .sorted(java.util.Comparator.comparing((Trabajador t) -> !t.estaActivo())
                         .thenComparing(Trabajador::getNombreCompleto, String.CASE_INSENSITIVE_ORDER))
                 .toList();
-        java.util.Set<Long> enNomina = jornalRepository.idsEnNomina(jornales.stream().map(Jornal::getId).toList());
+        java.util.Map<Long, EstadoNomina> enNomina = jornalRepository.estadosDeNomina(jornales.stream().map(Jornal::getId).toList());
         return new PlanillaSemanal(inicio, fin, ordenados, jornales, enNomina);
     }
 
@@ -108,19 +137,36 @@ public class JornalService implements JornalUseCase {
             boolean yaEsta = jornalRepository.buscarPorTrabajadorYPeriodo(e.trabajadorId(), e.fecha(), e.fecha())
                     .stream().anyMatch(j -> Objects.equals(j.getCultivoId(), cultivoId));
             if (yaEsta) continue;
-            creados.add(jornalRepository.guardar(
-                    nuevoJornal(e.trabajadorId(), cultivoId, e.fecha(), actividadIds, null, e.kilos())));
+            Jornal guardado = jornalRepository.guardar(
+                    nuevoJornal(e.trabajadorId(), cultivoId, e.fecha(), actividadIds, null, e.kilos()));
+            sumarANominaPendiente(guardado);
+            creados.add(guardado);
         }
         return creados;
     }
 
-    /** Quita un jornal anotado por error. No se puede si ya está en una nómina o se pagó. */
+    /**
+     * Quita un jornal anotado por error. Si está en una nómina pendiente, sale de ella y el total se recalcula
+     * (si era el único, la nómina pendiente se elimina). No se puede si la nómina ya se aprobó o se pagó.
+     */
     @Override
     public void eliminarJornal(Long jornalId) {
         Jornal jornal = jornalRepository.buscarPorId(jornalId)
                 .orElseThrow(() -> new ResourceNotFoundException("Jornal no encontrado con id: " + jornalId));
-        if (jornal.isLiquidado() || !jornalRepository.idsEnNomina(List.of(jornalId)).isEmpty()) {
-            throw new EstadoInvalidoException("Este jornal ya está en una nómina: para quitarlo, primero elimina esa nómina.");
+        EstadoNomina estado = jornalRepository.estadosDeNomina(List.of(jornalId)).get(jornalId);
+        if (jornal.isLiquidado() || (estado != null && estado != EstadoNomina.PENDIENTE)) {
+            throw new EstadoInvalidoException("Este jornal está en una nómina "
+                    + (estado == null ? "pagada" : estado.name().toLowerCase(java.util.Locale.ROOT))
+                    + ": para cambiarlo, primero anula esa nómina.");
+        }
+        if (estado == EstadoNomina.PENDIENTE && nominaRepository != null) {
+            nominaRepository.buscarPorJornal(jornalId).ifPresent(n -> {
+                if (n.getJornales().size() <= 1) nominaRepository.eliminar(n.getId());
+                else {
+                    n.quitarJornal(jornalId);
+                    nominaRepository.guardar(n);
+                }
+            });
         }
         jornalRepository.eliminar(jornalId);
     }

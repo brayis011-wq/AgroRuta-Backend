@@ -78,13 +78,13 @@ class PlanillaYLotesTest {
         when(jornales.buscarDelEquipo(AGRICULTOR, LUNES, LUNES.plusDays(6)))
                 .thenReturn(List.of(jornal(10L, beto, LUNES), jornal(11L, beto, LUNES.plusDays(1))));
         when(trabajadores.listarActivosPorAgricultor(AGRICULTOR)).thenReturn(List.of(beto, ana));
-        when(jornales.idsEnNomina(anyCollection())).thenReturn(Set.of(10L));
+        when(jornales.estadosDeNomina(anyCollection())).thenReturn(java.util.Map.of(10L, EstadoNomina.APROBADA));
 
         PlanillaSemanal p = jornalService.planilla(AGRICULTOR, LUNES, LUNES.plusDays(6));
 
         assertThat(p.trabajadores()).extracting(Trabajador::getNombre).containsExactly("Ana", "Beto");
         assertThat(p.jornales()).hasSize(2);
-        assertThat(p.enNomina()).containsExactly(10L);
+        assertThat(p.enNomina()).containsOnlyKeys(10L);
     }
 
     @Test
@@ -110,16 +110,70 @@ class PlanillaYLotesTest {
     }
 
     @Test
-    void unJornalEnNominaNoSePuedeQuitar() {
+    void unJornalEnNominaAprobadaNoSePuedeQuitar() {
         when(jornales.buscarPorId(10L)).thenReturn(Optional.of(jornal(10L, ana, LUNES)));
-        when(jornales.idsEnNomina(List.of(10L))).thenReturn(Set.of(10L));
+        when(jornales.estadosDeNomina(List.of(10L))).thenReturn(java.util.Map.of(10L, EstadoNomina.APROBADA));
         assertThatThrownBy(() -> jornalService.eliminarJornal(10L)).isInstanceOf(EstadoInvalidoException.class);
         verify(jornales, never()).eliminar(any());
 
         when(jornales.buscarPorId(11L)).thenReturn(Optional.of(jornal(11L, ana, LUNES)));
-        when(jornales.idsEnNomina(List.of(11L))).thenReturn(Set.of());
+        when(jornales.estadosDeNomina(List.of(11L))).thenReturn(java.util.Map.of());
         jornalService.eliminarJornal(11L);
         verify(jornales).eliminar(11L);
+    }
+
+    @Test
+    void quitarUnJornalDeLaPlanillaCorrigeSuNominaPendiente() {
+        jornalService.setNominaRepository(nominas);
+        Jornal a = jornal(12L, ana, LUNES), b = jornal(13L, ana, LUNES.plusDays(1));
+        Nomina n = new Nomina(30L, ana, LUNES, LUNES.plusDays(14), new ArrayList<>(List.of(a, b)));
+        when(jornales.buscarPorId(12L)).thenReturn(Optional.of(a));
+        when(jornales.estadosDeNomina(List.of(12L))).thenReturn(java.util.Map.of(12L, EstadoNomina.PENDIENTE));
+        when(nominas.buscarPorJornal(12L)).thenReturn(Optional.of(n));
+
+        jornalService.eliminarJornal(12L);
+
+        assertThat(n.getJornales()).extracting(Jornal::getId).containsExactly(13L);
+        assertThat(n.getValorTotal()).isEqualByComparingTo("60000");
+        verify(nominas).guardar(n);
+        verify(jornales).eliminar(12L);
+    }
+
+    @Test
+    void siEraElUnicoJornalSeEliminaLaNominaPendiente() {
+        jornalService.setNominaRepository(nominas);
+        Jornal a = jornal(14L, ana, LUNES);
+        when(jornales.buscarPorId(14L)).thenReturn(Optional.of(a));
+        when(jornales.estadosDeNomina(List.of(14L))).thenReturn(java.util.Map.of(14L, EstadoNomina.PENDIENTE));
+        when(nominas.buscarPorJornal(14L)).thenReturn(Optional.of(new Nomina(31L, ana, LUNES, LUNES, new ArrayList<>(List.of(a)))));
+        jornalService.eliminarJornal(14L);
+        verify(nominas).eliminar(31L);
+        verify(jornales).eliminar(14L);
+    }
+
+    @Test
+    void unJornalNuevoEntraEnLaNominaPendienteQueCubreEseDia() {
+        jornalService.setNominaRepository(nominas);
+        Nomina n = new Nomina(32L, ana, LUNES, LUNES.plusDays(14), new ArrayList<>(List.of(jornal(15L, ana, LUNES))));
+        when(trabajadores.buscarPorId(1L)).thenReturn(Optional.of(ana));
+        when(jornales.buscarPorTrabajadorYPeriodo(any(), any(), any())).thenReturn(List.of());
+        when(cultivos.buscar(5L)).thenReturn(Optional.of(new CultivoPort.CultivoInfo(5L, AGRICULTOR, 7L, "La Esperanza", 2L, "Lote 1", "Café", "Castillo", "COSECHA")));
+        when(labores.buscarPorId(3L)).thenReturn(Optional.of(new Labor(3L, "Recolección", null)));
+        when(jornales.guardar(any())).thenAnswer(i -> { Jornal j = i.getArgument(0); j.setId(16L); return j; });
+        when(nominas.buscarPorTrabajadorYEstado(1L, EstadoNomina.PENDIENTE)).thenReturn(List.of(n));
+
+        jornalService.registrarVarios(AGRICULTOR, 5L, List.of(3L), List.of(new PlanillaSemanal.Entrada(1L, LUNES.plusDays(2), null)));
+
+        assertThat(n.getJornales()).hasSize(2);
+        assertThat(n.getValorTotal()).isEqualByComparingTo("120000");
+        verify(nominas).guardar(n);
+    }
+
+    @Test
+    void unaNominaAprobadaNoSeCorrige() {
+        Nomina n = new Nomina(33L, ana, LUNES, LUNES, new ArrayList<>(List.of(jornal(17L, ana, LUNES), jornal(18L, ana, LUNES))));
+        n.aprobar();
+        assertThatThrownBy(() -> n.quitarJornal(17L)).isInstanceOf(EstadoInvalidoException.class);
     }
 
     @Test

@@ -28,6 +28,10 @@ class NominaRepositoryImpl implements NominaRepository {
         return WorkerMapper.toDomain(jpa.save(WorkerMapper.toEntity(nomina)));
     }
 
+    @Override public Optional<Nomina> buscarPorJornal(Long jornalId) {
+        return jpa.conJornal(jornalId).stream().findFirst().map(WorkerMapper::toDomain);
+    }
+
     @Override public Optional<Nomina> buscarPorId(Long id) {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }

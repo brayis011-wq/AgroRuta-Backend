@@ -19,6 +19,12 @@ public interface NominaUseCase {
 
     /** Aprueba las nóminas pendientes de la lista (las demás se dejan como están). */
     List<Nomina> aprobarVarias(Long agricultorId, List<Long> nominaIds);
+
+    /** Corrige una nómina pendiente quitándole un jornal (se recalcula el total). */
+    Nomina quitarJornal(Long nominaId, Long jornalId);
+
+    /** Suma a una nómina pendiente los jornales de su periodo que se anotaron después de generarla. */
+    Nomina traerJornalesNuevos(Long nominaId);
     Nomina aprobarNomina(Long nominaId);
     void anularNomina(Long nominaId);
     void eliminarNomina(Long nominaId);

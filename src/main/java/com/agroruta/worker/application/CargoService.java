@@ -61,6 +61,37 @@ public class CargoService implements CargoUseCase {
         return cargoRepository.guardar(cargo);
     }
 
+    /** Cargos que tiene casi cualquier finca, con valores de referencia que la persona ajusta a su zona */
+    record CargoTipico(String nombre, String descripcion, ModalidadPago modalidad, String valorJornal, String valorKilo) {}
+
+    static final List<CargoTipico> TIPICOS = List.of(
+            new CargoTipico("Jornalero", "Labores generales del campo: desyerba, abonada, siembra, mantenimiento",
+                    ModalidadPago.JORNAL, "65000", null),
+            new CargoTipico("Recolector al kilo", "Recolección pagada por kilo recogido (café, mora, uchuva)",
+                    ModalidadPago.KILO, null, "900"),
+            new CargoTipico("Fumigador", "Aplica productos con bomba de espalda; conoce dosis, carencia y protección",
+                    ModalidadPago.JORNAL, "75000", null),
+            new CargoTipico("Guadañador", "Rocería de calles, linderos y potreros con guadaña",
+                    ModalidadPago.JORNAL, "80000", null),
+            new CargoTipico("Operario de beneficio", "Despulpa, lava y seca el café, o selecciona y empaca la cosecha",
+                    ModalidadPago.JORNAL, "65000", null),
+            new CargoTipico("Mayordomo", "Organiza al equipo, recibe insumos y responde por la finca",
+                    ModalidadPago.JORNAL, "100000", null),
+            new CargoTipico("Cocinera", "Prepara la alimentación de los trabajadores",
+                    ModalidadPago.JORNAL, "55000", null));
+
+    @Override
+    public List<Cargo> crearTipicos(Long agricultorId) {
+        List<Cargo> creados = new java.util.ArrayList<>();
+        for (CargoTipico t : TIPICOS) {
+            if (cargoRepository.existsByNombreAndAgricultorId(t.nombre(), agricultorId)) continue;
+            creados.add(crearCargo(t.nombre(), t.descripcion(), t.modalidad(),
+                    t.valorJornal() == null ? null : new BigDecimal(t.valorJornal()),
+                    t.valorKilo() == null ? null : new BigDecimal(t.valorKilo()), agricultorId));
+        }
+        return creados;
+    }
+
     @Override
     public void desactivarCargo(Long id) {
         Cargo cargo = cargoRepository.buscarPorId(id)

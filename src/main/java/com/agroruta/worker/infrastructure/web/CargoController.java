@@ -47,6 +47,14 @@ public class CargoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /** Agrega los cargos típicos de una finca que aún no tiene (jornalero, recolector al kilo, fumigador...) */
+    @PostMapping("/defaults")
+    @PreAuthorize("hasRole('Agricultor')")
+    public ResponseEntity<List<CargoResponse>> crearTipicos(Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(cargoUseCase.crearTipicos(CurrentUser.id(authentication))
+                .stream().map(CargoResponse::from).toList());
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.cargoPropio(#id, authentication)")
     public ResponseEntity<CargoResponse> actualizar(@PathVariable Long id,

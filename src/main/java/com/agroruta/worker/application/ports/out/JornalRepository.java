@@ -33,6 +33,9 @@ public interface JornalRepository {
     /** De los jornales dados, los que ya están en alguna nómina */
     java.util.Set<Long> idsEnNomina(java.util.Collection<Long> ids);
 
+    /** De los jornales dados que están en una nómina, el estado de esa nómina */
+    java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> estadosDeNomina(java.util.Collection<Long> ids);
+
     /** Jornales del trabajador, más recientes primero. inicio y fin son opcionales. */
     Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
 

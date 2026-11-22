@@ -87,6 +87,28 @@ public class NominaService implements NominaUseCase {
         return resultado;
     }
 
+    @Override
+    public Nomina quitarJornal(Long nominaId, Long jornalId) {
+        Nomina n = nominaRepository.buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
+        n.quitarJornal(jornalId);
+        return nominaRepository.guardar(n);
+    }
+
+    @Override
+    public Nomina traerJornalesNuevos(Long nominaId) {
+        Nomina n = nominaRepository.buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
+        List<Jornal> nuevos = jornalRepository.buscarDisponiblesParaNomina(
+                n.getTrabajador().getId(), n.getPeriodoInicio(), n.getPeriodoFin());
+        if (nuevos.isEmpty()) {
+            throw new EstadoInvalidoException("No hay jornales nuevos de " + n.getTrabajador().getNombreCompleto()
+                    + " en ese periodo: la nómina ya está al día.");
+        }
+        n.agregarJornales(nuevos);
+        return nominaRepository.guardar(n);
+    }
+
     /** La nómina existe y es del agricultor (null: Administrador, cualquiera). */
     private Nomina nominaDe(Long agricultorId, Long id) {
         Nomina n = nominaRepository.buscarPorId(id)

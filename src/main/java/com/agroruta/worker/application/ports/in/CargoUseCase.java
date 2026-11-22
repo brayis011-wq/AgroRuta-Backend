@@ -26,6 +26,9 @@ public interface CargoUseCase {
         return actualizarCargo(id, nombre, descripcion, ModalidadPago.JORNAL, valorJornal, null);
     }
 
+    /** Agrega los cargos típicos de una finca que el agricultor aún no tiene (por nombre). Devuelve los creados. */
+    List<Cargo> crearTipicos(Long agricultorId);
+
     void desactivarCargo(Long id);
 
     Cargo buscarPorId(Long id);

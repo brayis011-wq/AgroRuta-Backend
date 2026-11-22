@@ -21,6 +21,10 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
                                       @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /** De esos jornales, los que ya quedaron en alguna nómina */
+    /** [id del jornal, estado de su nómina] */
+    @Query("SELECT jn.id, n.estado FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")
+    List<Object[]> estadosDeNomina(@Param("ids") java.util.Collection<Long> ids);
+
     @Query("SELECT jn.id FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")
     List<Long> idsEnNomina(@Param("ids") java.util.Collection<Long> ids);
 

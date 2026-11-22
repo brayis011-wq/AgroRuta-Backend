@@ -152,6 +152,39 @@ class FuncionesNuevasConBaseRealTest extends ConBaseReal {
         assertThat(presupuestos.deSiembra(siembra)).get().satisfies(p -> assertThat(p.avisado()).isZero());
     }
 
+    @Autowired private com.agroruta.worker.application.ports.in.JornalUseCase jornalUseCase;
+    @jakarta.persistence.PersistenceContext private jakarta.persistence.EntityManager em;
+
+    @Test
+    void lasLaboresTipicasQuedanParaTodosSinRepetirFumigar() {
+        Integer comunes = jdbc.queryForObject("SELECT COUNT(*) FROM actividades WHERE agricultor_id IS NULL AND activa = b'1'", Integer.class);
+        assertThat(comunes).isGreaterThanOrEqualTo(15);
+        Integer recoleccion = jdbc.queryForObject("SELECT COUNT(*) FROM actividades WHERE agricultor_id IS NULL AND nombre = 'Recolección'", Integer.class);
+        assertThat(recoleccion).isEqualTo(1);
+    }
+
+    @Test
+    void quitarDeLaPlanillaUnJornalDeUnaNominaPendienteLaRecalcula() {
+        long cargo = insertar("INSERT INTO cargos (activo, nombre, valor_jornal, agricultor_id) VALUES (1, 'Jornalero', 60000, ?)", ana);
+        long t = insertar("INSERT INTO trabajadores (apellido, cedula, estado, fecha_ingreso, nombre, tipo_contrato, cargo_id, agricultor_id) "
+                + "VALUES ('Paz', '77', 'ACTIVO', ?, 'Leo', 'JORNAL', ?, ?)", DIA, cargo, ana);
+        long j1 = insertar("INSERT INTO jornales (cultivo_id, fecha, liquidado, valor_jornal, trabajador_id) VALUES (?, ?, 0, 60000, ?)", siembra, DIA, t);
+        long j2 = insertar("INSERT INTO jornales (cultivo_id, fecha, liquidado, valor_jornal, trabajador_id) VALUES (?, ?, 0, 60000, ?)", siembra, DIA.plusDays(1), t);
+        long n = insertar("INSERT INTO nominas (estado, fecha_generacion, periodo_fin, periodo_inicio, total_jornales, valor_total, trabajador_id) "
+                + "VALUES ('PENDIENTE', ?, ?, ?, 2, 120000, ?)", DIA, DIA.plusDays(5), DIA, t);
+        jdbc.update("INSERT INTO nomina_jornales (nomina_id, jornal_id) VALUES (?, ?), (?, ?)", n, j1, n, j2);
+
+        jornalUseCase.eliminarJornal(j1);
+        em.flush();
+
+        assertThat(jdbc.queryForObject("SELECT valor_total FROM nominas WHERE id = ?", BigDecimal.class, n)).isEqualByComparingTo("60000");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM jornales WHERE id = ?", Integer.class, j1)).isZero();
+
+        jornalUseCase.eliminarJornal(j2);
+        em.flush();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM nominas WHERE id = ?", Integer.class, n)).isZero();
+    }
+
     @Test
     void laPlanillaTraeLosJornalesDelEquipoYSabeCualesEstanEnNomina() {
         long cargo = insertar("INSERT INTO cargos (activo, nombre, valor_jornal, agricultor_id) VALUES (1, 'Recolector', 50000, ?)", ana);
