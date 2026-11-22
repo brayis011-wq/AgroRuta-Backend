@@ -52,6 +52,26 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
     List<Object[]> resumenDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
                                     @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
+    /**
+     * Rendimiento por trabajador: [id, nombre, apellido, cargo, modalidad del cargo, días por día, kilos por día,
+     * pagado por día, días por kilo, kilos por kilo, pagado por kilo]. Solo los jornales con kilos anotados.
+     */
+    @Query("""
+        SELECT t.id, t.nombre, t.apellido, c.nombre, c.modalidadPago,
+               SUM(CASE WHEN j.kilos IS NULL THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NULL THEN j.kilosRecogidos ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NULL THEN j.valorJornal ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NOT NULL THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NOT NULL THEN j.kilos ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NOT NULL THEN j.valorJornal ELSE 0 END)
+        FROM JornalEntity j JOIN j.trabajador t LEFT JOIN t.cargo c
+        WHERE (:agricultorId IS NULL OR t.agricultorId = :agricultorId)
+          AND (j.kilos IS NOT NULL OR j.kilosRecogidos IS NOT NULL)
+          AND j.fecha >= :inicio AND j.fecha <= :fin
+        GROUP BY t.id, t.nombre, t.apellido, c.nombre, c.modalidadPago
+        """)
+    List<Object[]> rendimiento(@Param("agricultorId") Long agricultorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
     /** De esos jornales, los que ya quedaron en alguna nómina */
     /** [id del jornal, estado de su nómina]; las anuladas no cuentan (sus jornales quedan libres) */
     @Query("SELECT jn.id, n.estado FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids "

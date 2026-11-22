@@ -171,6 +171,17 @@ public class JornalService implements JornalUseCase {
         jornalRepository.eliminar(jornalId);
     }
 
+    // ── Rendimiento por trabajador ───────────────────────────────────────────
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(Long agricultorId, LocalDate inicio, LocalDate fin) {
+        LocalDate hasta = fin != null ? fin : LocalDate.now(ZONA);
+        LocalDate desde = inicio != null ? inicio : hasta.minusDays(89);
+        if (hasta.isBefore(desde)) throw new DatoInvalidoException("La fecha final no puede ser antes de la inicial.");
+        return jornalRepository.rendimiento(agricultorId, desde, hasta);
+    }
+
     // ── Recolectores de una cosecha ──────────────────────────────────────────
 
     @Override
@@ -252,7 +263,10 @@ public class JornalService implements JornalUseCase {
 
     private static void aplicarPago(Jornal j, Recoleccion r) {
         if (r.porKilo()) j.pagarPorKilo(r.kilos(), r.valorKilo());
-        else j.pagarPorDia(r.valorDia());
+        else {
+            j.pagarPorDia(r.valorDia());
+            j.anotarKilosRecogidos(r.kilos());
+        }
     }
 
     /** Aprobada, pagada o ya liquidada: no se cambia desde la cosecha */

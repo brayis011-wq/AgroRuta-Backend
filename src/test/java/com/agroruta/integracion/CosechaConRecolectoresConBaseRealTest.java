@@ -202,4 +202,33 @@ class CosechaConRecolectoresConBaseRealTest extends ConBaseReal {
             assertThat(k.kgSinCosecha()).isEqualByComparingTo("75");
         });
     }
+    @Autowired private com.agroruta.worker.application.ports.in.JornalUseCase jornalUseCase;
+
+    @Test
+    void elDeDiaAnotaLosKilosQueRecogioYSaleElRendimiento() {
+        Recolector evaConKilos = new Recolector(eva, "DIA", new BigDecimal("50"), null, null);
+        assertThatThrownBy(() -> cosechas.registrarCosecha(DIA, 100.0, "PRIMERA", null, siembra, null, false,
+                List.of(porKilo(leo, "70"), evaConKilos))).hasMessageContaining("más de lo cosechado");
+
+        Cosecha c = cosechas.registrarCosecha(DIA, 120.0, "PRIMERA", null, siembra, null, false, List.of(porKilo(leo, "70"), evaConKilos));
+        em.flush();
+        // A Eva se le paga el día igual, pero quedan sus kilos
+        assertThat(valorDe(eva, c.getId())).isEqualByComparingTo("60000");
+        assertThat(jdbc.queryForObject("SELECT kilos_recogidos FROM jornales WHERE trabajador_id = ? AND cosecha_id = ?", BigDecimal.class, eva, c.getId()))
+                .isEqualByComparingTo("50");
+        assertThat(cosechas.buscarCosechaPorId(c.getId()).getRecolectores())
+                .filteredOn(r -> r.trabajadorId().equals(eva)).singleElement()
+                .satisfies(r -> { assertThat(r.modalidad()).isEqualTo("DIA"); assertThat(r.kilos()).isEqualByComparingTo("50"); });
+
+        var rend = jornalUseCase.rendimiento(ana, DIA.minusDays(7), DIA);
+        assertThat(rend).extracting(r -> r.nombre()).containsExactly("Eva Ruiz", "Leo Paz");
+        var deEva = rend.get(0);
+        assertThat(deEva.diasPorDia()).isEqualTo(1);
+        assertThat(deEva.kilosPorDia()).isEqualByComparingTo("50");
+        assertThat(deEva.costoKiloPorDia()).isEqualByComparingTo("1200");
+        var deLeo = rend.get(1);
+        assertThat(deLeo.diasPorKilo()).isEqualTo(1);
+        assertThat(deLeo.costoKiloPorKilo()).isEqualByComparingTo("900");
+        assertThat(deLeo.kilosAlDia()).isEqualByComparingTo("70");
+    }
 }

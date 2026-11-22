@@ -60,6 +60,12 @@ public class JornalEntity {
 
     public JornalEntity() {}
 
+    @Column(name = "kilos_recogidos", precision = 10, scale = 2)
+    private BigDecimal kilosRecogidos;
+
+    public BigDecimal getKilosRecogidos() { return kilosRecogidos; }
+    public void setKilosRecogidos(BigDecimal kilosRecogidos) { this.kilosRecogidos = kilosRecogidos; }
+
     public Long getCosechaId() { return cosechaId; }
     public void setCosechaId(Long cosechaId) { this.cosechaId = cosechaId; }
 

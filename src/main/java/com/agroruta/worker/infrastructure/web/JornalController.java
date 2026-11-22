@@ -86,6 +86,16 @@ public class JornalController {
                 Pagina.numero(page), Pagina.tamano(size)).map(JornalResponse::from));
     }
 
+    /** Cuánto recoge cada trabajador y cuánto sale el kilo pagando por día o por kilo */
+    @GetMapping("/yield")
+    public ResponseEntity<List<com.agroruta.worker.domain.RendimientoTrabajador>> rendimiento(
+            @RequestParam(required = false) LocalDate inicio,
+            @RequestParam(required = false) LocalDate fin,
+            Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(jornalUseCase.rendimiento(dueno, inicio, fin));
+    }
+
     /** Totales con los mismos filtros que /page */
     @GetMapping("/summary")
     @PreAuthorize("hasAnyRole('Agricultor','Administrador')")

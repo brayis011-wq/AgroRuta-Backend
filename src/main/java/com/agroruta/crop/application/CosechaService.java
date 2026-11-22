@@ -102,11 +102,11 @@ public class CosechaService implements CosechaUseCase {
         return conRecolectores(guardada);
     }
 
-    /** Los kilos de los recolectores pagados por kilo no pueden pasar de lo cosechado */
+    /** Los kilos de los recolectores (por kilo y los anotados por día) no pueden pasar de lo cosechado */
     private static void revisarKilos(Double cantidadKg, List<Recolector> recolectores) {
         if (recolectores == null || cantidadKg == null) return;
         BigDecimal suma = recolectores.stream()
-                .filter(r -> r != null && r.porKilo() && r.kilos() != null)
+                .filter(r -> r != null && r.kilos() != null)
                 .map(Recolector::kilos).reduce(BigDecimal.ZERO, BigDecimal::add);
         if (suma.compareTo(BigDecimal.valueOf(cantidadKg).add(new BigDecimal("0.01"))) > 0) {
             throw new BusinessException(String.format(Locale.ROOT,

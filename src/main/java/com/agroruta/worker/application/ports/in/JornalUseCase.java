@@ -27,9 +27,15 @@ public interface JornalUseCase {
     /** Quita un jornal que no está en ninguna nómina. */
     void eliminarJornal(Long jornalId);
 
+    /** Rendimiento de cada trabajador entre dos fechas (por defecto, los últimos 90 días) */
+    List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(Long agricultorId, java.time.LocalDate inicio, java.time.LocalDate fin);
+
     // ── Recolectores de una cosecha ──
 
-    /** Quién recogió y cómo se le paga: porKilo = kilos × valorKilo; si no, valorDia (null = el del cargo) */
+    /**
+     * Quién recogió y cómo se le paga: porKilo = kilos × valorKilo; si no, valorDia (null = el del cargo)
+     * y kilos son los que recogió (opcionales, no cambian el pago).
+     */
     record Recoleccion(Long trabajadorId, boolean porKilo, java.math.BigDecimal kilos,
                        java.math.BigDecimal valorKilo, java.math.BigDecimal valorDia) {}
 

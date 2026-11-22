@@ -46,7 +46,8 @@ public class RecolectoresPortAdapter implements RecolectoresPort {
                     boolean editable = !j.isLiquidado() && (estado == null || estado == EstadoNomina.PENDIENTE || estado == EstadoNomina.ANULADA);
                     resultado.computeIfAbsent(j.getCosechaId(), k -> new java.util.ArrayList<>()).add(new RecolectorCosecha(
                             j.getId(), j.getTrabajador().getId(), j.getTrabajador().getNombreCompleto(),
-                            j.getKilos() != null ? "KILO" : "DIA", j.getKilos(), j.getValorKilo(), j.getValorJornal(),
+                            j.getKilos() != null ? "KILO" : "DIA", j.getKilos() != null ? j.getKilos() : j.getKilosRecogidos(),
+                            j.getValorKilo(), j.getValorJornal(),
                             j.isLiquidado() && estado == null ? "PAGADA" : estado == null ? null : estado.name(), editable));
                 });
         return resultado;

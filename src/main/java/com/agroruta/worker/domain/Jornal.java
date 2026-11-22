@@ -30,6 +30,8 @@ public class Jornal {
     private BigDecimal valorKilo;
     /** La cosecha de la que salió (recolector); null si se anotó aparte */
     private Long cosechaId;
+    /** Kilos que recogió quien cobra por día (no cambian el pago; sirven para el total y el rendimiento) */
+    private BigDecimal kilosRecogidos;
 
     public Jornal() {
         this.actividades = new ArrayList<>();
@@ -109,6 +111,7 @@ public class Jornal {
             throw new DatoInvalidoException("Indica cuánto se le paga el kilo a " + nombre + ".");
         }
         this.kilos = kilos.setScale(2, RoundingMode.HALF_UP);
+        this.kilosRecogidos = null;
         this.valorKilo = valor.setScale(2, RoundingMode.HALF_UP);
         this.valorJornal = this.kilos.multiply(this.valorKilo).setScale(2, RoundingMode.HALF_UP);
     }
@@ -127,6 +130,15 @@ public class Jornal {
         this.kilos = null;
         this.valorKilo = null;
         this.valorJornal = valor.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Kilos que recogió quien cobra por día; null = no se anotaron */
+    public void anotarKilosRecogidos(BigDecimal kilos) {
+        if (kilos != null && kilos.signum() <= 0) {
+            throw new DatoInvalidoException("Los kilos que recogió " + (trabajador == null ? "el recolector" : trabajador.getNombreCompleto())
+                    + " deben ser mayores a 0.");
+        }
+        this.kilosRecogidos = kilos == null ? null : kilos.setScale(2, RoundingMode.HALF_UP);
     }
 
     public void marcarComoLiquidado() {

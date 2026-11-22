@@ -27,6 +27,9 @@ public interface JornalRepository {
 
     void eliminar(Long id);
 
+    /** Kilos y pagos por trabajador entre dos fechas (solo jornales con kilos). agricultorId null: todos */
+    List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(Long agricultorId, LocalDate inicio, LocalDate fin);
+
     /** Los jornales de los recolectores de esas cosechas */
     List<Jornal> buscarPorCosechas(java.util.Collection<Long> cosechaIds);
 
