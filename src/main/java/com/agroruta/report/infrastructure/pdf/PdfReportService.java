@@ -416,33 +416,31 @@ public class PdfReportService {
             if (aplicaciones.isEmpty()) {
                 pdf.nota("No hay fumigaciones ni fertilizaciones registradas en este periodo.");
             } else {
-                List<List<Celda>> filas = new ArrayList<>();
+                List<List<PdfLienzo.Celda2>> filas = new ArrayList<>();
                 for (var a : aplicaciones) {
                     String dosis = a.dosis() == null ? "—" : numeroCorto(a.dosis()) + " " + unidad(a.unidadDosis());
-                    if (a.cantidadUsada() != null) dosis += " (" + numeroCorto(a.cantidadUsada()) + " " + unidad(a.unidadCantidad()) + ")";
-                    String carencia = a.finCarencia() == null ? "—"
-                            : a.diasCarencia() + " d · " + a.finCarencia().format(DIA_CUADERNO);
+                    List<String> detalleDosis = new ArrayList<>();
+                    if (a.areaAplicada() != null) detalleDosis.add(numeroCorto(a.areaAplicada()) + " ha");
+                    if (a.cantidadUsada() != null) detalleDosis.add("gastado " + numeroCorto(a.cantidadUsada()) + " " + unidad(a.unidadCantidad()));
+                    boolean conCarencia = a.finCarencia() != null;
                     filas.add(List.of(
-                            Celda.de(a.fecha().format(DIA_CUADERNO)),
-                            Celda.de(a.finca() + " / " + a.lote()),
-                            Celda.de(a.cultivo()),
-                            Celda.negrita(a.producto() + (a.tipoProducto() != null ? " · " + tipoProducto(a.tipoProducto()) : "")),
-                            Celda.de(dosis),
-                            Celda.de(a.areaAplicada() == null ? "—" : numeroCorto(a.areaAplicada()) + " ha"),
-                            Celda.de(carencia),
-                            Celda.de(a.reentradaHoras() == null || a.reentradaHoras() <= 0 ? "—" : a.reentradaHoras() + " h")));
+                            new PdfLienzo.Celda2(a.fecha().format(DIA_CUADERNO), null, false),
+                            new PdfLienzo.Celda2(a.finca() + " / " + a.lote(), a.cultivo(), false),
+                            new PdfLienzo.Celda2(a.producto(), a.tipoProducto() != null ? tipoProducto(a.tipoProducto()) : null, true),
+                            new PdfLienzo.Celda2(dosis, detalleDosis.isEmpty() ? null : String.join(" · ", detalleDosis), false),
+                            new PdfLienzo.Celda2(conCarencia ? a.diasCarencia() + " días" : "—",
+                                    conCarencia ? "desde " + a.finCarencia().format(DIA_CUADERNO) : null, false),
+                            new PdfLienzo.Celda2(a.reentradaHoras() == null || a.reentradaHoras() <= 0 ? "—" : a.reentradaHoras() + " h", null, false)));
                 }
-                pdf.tabla(List.of(
-                        new Columna("Fecha", 52, false),
-                        new Columna("Finca / lote", 80, false),
-                        new Columna("Cultivo", 62, false),
-                        new Columna("Producto", 112, false),
-                        new Columna("Dosis", 72, false),
-                        new Columna("Área", 38, true),
+                pdf.tablaDosLineas(List.of(
+                        new Columna("Fecha", 60, false),
+                        new Columna("Finca / lote y cultivo", 120, false),
+                        new Columna("Producto", 128, false),
+                        new Columna("Dosis", 90, false),
                         new Columna("Carencia", 62, false),
-                        new Columna("Reentrada", 37, true)), filas);
-                pdf.nota("Carencia: días sin cosechar después de aplicar y primer día en que se puede cosechar. "
-                        + "Reentrada: horas sin entrar al lote. Entre paréntesis, el producto gastado en total.");
+                        new Columna("Reentrada", 55, true)), filas);
+                pdf.notaLarga("Carencia: días sin cosechar después de aplicar; debajo, el primer día en que se puede cosechar. "
+                        + "Reentrada: horas sin entrar al lote. En la dosis, el área aplicada y el producto gastado en total.");
             }
             pdf.asegurar(70);
             pdf.y -= 30;

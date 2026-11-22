@@ -86,8 +86,7 @@ public class ActividadProgramadaService implements ActividadProgramadaUseCase {
                 ev.add(new EventoCalendario(hoy, "PROGRAMADA", "ATRASADO", p.tipo(), p.descripcion(), s.getId(),
                         loteId, loteNombre, s.nombreCompleto(), p.id()));
             }
-            for (LocalDate f : ProgramacionActividades.fechas(p, e, desde, hasta)) {
-                if (e.atrasada() && f.equals(e.proxima())) continue;
+            for (LocalDate f : ProgramacionActividades.fechas(p, e, desde, hasta, hoy)) {
                 ev.add(new EventoCalendario(f, "PROGRAMADA", "PENDIENTE", p.tipo(), p.descripcion(), s.getId(),
                         loteId, loteNombre, s.nombreCompleto(), p.id()));
             }

@@ -48,7 +48,7 @@ public class VentaController {
             LocalDate vence,
             @Size(max = 255, message = "Máximo 255 caracteres") String observaciones,
             /** Solo al crear: ya te pagaron todo */
-            boolean pagadoDeContado,
+            Boolean pagadoDeContado,
             String metodo) {
         VentasUseCase.DatosVenta datos() {
             return new VentasUseCase.DatosVenta(siembraId, comprador, fecha, producto, cantidadKg, precioKg, total, vence, observaciones);
@@ -106,7 +106,7 @@ public class VentaController {
     @PreAuthorize("hasRole('Agricultor') and (#req.siembraId == null or @ownership.siembraPropia(#req.siembraId, authentication))")
     public ResponseEntity<VentaResponse> registrar(@Valid @RequestBody VentaRequest req, Authentication authentication) {
         return ResponseEntity.status(HttpStatus.CREATED).body(VentaResponse.from(
-                ventas.registrar(CurrentUser.id(authentication), req.datos(), req.pagadoDeContado(), req.metodo())));
+                ventas.registrar(CurrentUser.id(authentication), req.datos(), Boolean.TRUE.equals(req.pagadoDeContado()), req.metodo())));
     }
 
     @PutMapping("/{id}")

@@ -53,8 +53,18 @@ class ProgramacionYLluviaTest {
     void lasFechasDelRangoSeRepitenHastaElFinal() {
         var p = ActividadProgramada.nueva(1L, 9L, "RIEGO", null, 7, HOY, HOY.plusDays(20));
         var e = ProgramacionActividades.estado(p, List.of(), HOY);
-        assertThat(ProgramacionActividades.fechas(p, e, HOY, HOY.plusDays(60)))
+        assertThat(ProgramacionActividades.fechas(p, e, HOY, HOY.plusDays(60), HOY))
                 .containsExactly(HOY, HOY.plusDays(7), HOY.plusDays(14));
+    }
+
+    @Test
+    void siEstaAtrasadaLasSiguientesCuentanDesdeHoy() {
+        var p = cada30(LocalDate.of(2026, 10, 17));
+        var e = ProgramacionActividades.estado(p, List.of(), HOY);
+        assertThat(e.atrasada()).isTrue();
+        // No salen el 16 de noviembre (ya pasó) ni el 17 de octubre: la siguiente es hoy + 30
+        assertThat(ProgramacionActividades.fechas(p, e, HOY, HOY.plusDays(60), HOY))
+                .containsExactly(HOY.plusDays(30), HOY.plusDays(60));
     }
 
     @Test

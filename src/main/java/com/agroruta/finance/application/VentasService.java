@@ -58,7 +58,7 @@ public class VentasService implements VentasUseCase {
                 Dinero.redondear(d.total()), d.vence(), d.observaciones());
         if (v.total().compareTo(actual.abonado()) < 0) {
             throw new DatoInvalidoException("El total no puede quedar por debajo de lo que ya te abonaron ("
-                    + actual.abonado().toPlainString() + ").");
+                    + pesos(actual.abonado()) + ").");
         }
         repositorio.actualizar(v);
         return buscarPorId(id);
@@ -124,10 +124,11 @@ public class VentasService implements VentasUseCase {
         Venta v = buscarPorId(ventaId);
         if (fecha == null) throw new DatoInvalidoException("Indica la fecha del pago.");
         if (fecha.isBefore(v.fecha())) throw new DatoInvalidoException("El pago no puede ser anterior a la venta.");
+        if (v.saldo().signum() == 0) throw new DatoInvalidoException("Esta venta ya está pagada.");
         if (monto == null || monto.signum() <= 0) throw new DatoInvalidoException("El valor del pago debe ser mayor a 0.");
         BigDecimal m = Dinero.redondear(monto);
         if (m.compareTo(v.saldo()) > 0) {
-            throw new DatoInvalidoException("El pago es mayor que lo que te deben (" + v.saldo().toPlainString() + ").");
+            throw new DatoInvalidoException("El pago es mayor que lo que te deben (" + pesos(v.saldo()) + ").");
         }
         String obs = observaciones == null || observaciones.isBlank() ? null : observaciones.trim();
         repositorio.agregarAbono(new Venta.Abono(null, ventaId, fecha, m, metodo(metodo), obs));
@@ -148,6 +149,12 @@ public class VentasService implements VentasUseCase {
     @Transactional(readOnly = true)
     public List<String> compradores(Long agricultorId) {
         return repositorio.compradores(agricultorId);
+    }
+
+    private static String pesos(BigDecimal v) {
+        java.text.NumberFormat f = java.text.NumberFormat.getCurrencyInstance(Locale.forLanguageTag("es-CO"));
+        f.setMaximumFractionDigits(0);
+        return f.format(v);
     }
 
     private static String metodo(String m) {

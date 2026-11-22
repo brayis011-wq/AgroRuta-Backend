@@ -19,6 +19,14 @@ public final class BuscadorPrecio {
     /** Palabras que no cuentan al comparar la variedad */
     private static final Set<String> VACIAS = Set.of("de", "del", "la", "el", "con", "y", "en");
 
+    /**
+     * Productos procesados que no son lo que vende el agricultor ("Café molido", "Harina de maíz",
+     * "Fríjol enlatado"): no se sugieren aunque empiecen por el nombre del cultivo.
+     */
+    private static final Set<String> PROCESADOS = Set.of("molido", "instantaneo", "enlatado", "enlatada", "harina",
+            "precocida", "precocido", "fecula", "cuchuco", "pulpa", "jugo", "mermelada", "polvo", "pasta", "aceite",
+            "galleta", "tostado");
+
     private BuscadorPrecio() {}
 
     /** Los productos cuyo nombre empieza por el cultivo, del más parecido a la variedad al menos */
@@ -31,6 +39,7 @@ public final class BuscadorPrecio {
                     String n = normalizar(p.producto());
                     return n.equals(base) || n.startsWith(base + " ");
                 })
+                .filter(p -> !esProcesado(p.producto()))
                 .sorted(Comparator.comparingInt((PrecioReferencia p) -> -coincidencias(p.producto(), base, palabras))
                         .thenComparingInt(p -> comun(p.producto()) ? 0 : 1)
                         .thenComparingInt(p -> p.producto().length())
@@ -53,6 +62,10 @@ public final class BuscadorPrecio {
         if (palabras.isEmpty()) return 0;
         Set<String> delProducto = palabras(normalizar(producto).substring(base.length()));
         return (int) palabras.stream().filter(delProducto::contains).count();
+    }
+
+    static boolean esProcesado(String producto) {
+        return palabras(producto).stream().anyMatch(PROCESADOS::contains);
     }
 
     private static boolean comun(String producto) {

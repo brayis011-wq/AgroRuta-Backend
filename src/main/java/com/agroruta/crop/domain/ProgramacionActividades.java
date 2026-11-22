@@ -37,12 +37,16 @@ public final class ProgramacionActividades {
         return new Estado(proxima, ultima, atrasada, atrasada ? ChronoUnit.DAYS.between(proxima, hoy) : 0);
     }
 
-    /** Las fechas en que toca dentro del rango (incluida la próxima aunque esté atrasada, si cae en el rango) */
-    public static List<LocalDate> fechas(ActividadProgramada p, Estado e, LocalDate desde, LocalDate hasta) {
+    /**
+     * Las próximas fechas en que toca dentro del rango. Si está atrasada, la atrasada no sale aquí (se
+     * muestra aparte, hoy) y las siguientes cuentan desde hoy: se supone que se hará ahora.
+     */
+    public static List<LocalDate> fechas(ActividadProgramada p, Estado e, LocalDate desde, LocalDate hasta, LocalDate hoy) {
         List<LocalDate> res = new ArrayList<>();
         if (e.proxima() == null) return res;
         LocalDate fin = p.hasta() != null && p.hasta().isBefore(hasta) ? p.hasta() : hasta;
-        for (LocalDate f = e.proxima(); !f.isAfter(fin) && res.size() < 400; f = f.plusDays(p.cadaDias())) {
+        LocalDate primera = e.atrasada() ? hoy.plusDays(p.cadaDias()) : e.proxima();
+        for (LocalDate f = primera; !f.isAfter(fin) && res.size() < 400; f = f.plusDays(p.cadaDias())) {
             if (!f.isBefore(desde)) res.add(f);
         }
         return res;

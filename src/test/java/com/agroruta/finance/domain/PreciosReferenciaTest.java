@@ -54,9 +54,13 @@ class PreciosReferenciaTest {
     }
 
     @Test
-    void elCafeEnGranoNoEstaEnSipsa() {
-        // "Café molido" empieza por "Café", pero no es el café que vende el caficultor: la persona puede
-        // elegir otro producto o poner su propio precio. Aquí solo se comprueba que no falle.
+    void losProductosProcesadosNoSeSugieren() {
+        assertThat(BuscadorPrecio.candidatos(SEMANA_SIPSA, "Café", "Castillo")).isEmpty();
+    }
+
+    @Test
+    void elCacaoNoEstaEnSipsa() {
+        // Para el cacao y el café pergamino la persona pone su propio precio
         assertThat(BuscadorPrecio.candidatos(SEMANA_SIPSA, "Cacao", "CCN-51")).isEmpty();
     }
 

@@ -215,6 +215,64 @@ final class PdfLienzo implements AutoCloseable {
     }
 
     /** Párrafo gris de una línea (p. ej. "No hay datos todavía") */
+    /** Celda de dos renglones: el dato y, debajo, un detalle más pequeño (puede ser null) */
+    record Celda2(String linea1, String linea2, boolean negrita) {}
+
+    /** Tabla con filas de dos renglones, para cuando hay mucho que decir en poco ancho (cuaderno de campo) */
+    void tablaDosLineas(List<Columna> cols, List<List<Celda2>> filas) throws IOException {
+        float altoFila = 30;
+        cabeceraTabla(cols);
+        for (int i = 0; i < filas.size(); i++) {
+            if (asegurar(altoFila)) cabeceraTabla(cols);
+            float base = y - altoFila;
+            if (i % 2 == 1) rect(MARGEN, base, CONTENIDO, altoFila, ZEBRA);
+            float x = MARGEN;
+            List<Celda2> fila = filas.get(i);
+            for (int c = 0; c < cols.size(); c++) {
+                Columna col = cols.get(c);
+                Celda2 celda = c < fila.size() ? fila.get(c) : new Celda2("", null, false);
+                PDType1Font f = celda.negrita() ? NEGRITA : NORMAL;
+                String t1 = ajustar(celda.linea1(), f, 8.6f, col.ancho() - 10);
+                float tx1 = col.derecha() ? x + col.ancho() - 5 - ancho(t1, f, 8.6f) : x + 5;
+                texto(t1, f, 8.6f, tx1, base + (celda.linea2() == null ? 11.5f : 17), TINTA);
+                if (celda.linea2() != null) {
+                    String t2 = ajustar(celda.linea2(), NORMAL, 7.4f, col.ancho() - 10);
+                    float tx2 = col.derecha() ? x + col.ancho() - 5 - ancho(t2, NORMAL, 7.4f) : x + 5;
+                    texto(t2, NORMAL, 7.4f, tx2, base + 6.5f, TINTA_3);
+                }
+                x += col.ancho();
+            }
+            y = base;
+        }
+        linea(MARGEN, y, MARGEN + CONTENIDO, y, BORDE, 0.8f);
+        y -= 14;
+    }
+
+    /** Nota de varias líneas: parte el texto para que no se salga del margen */
+    void notaLarga(String t) throws IOException {
+        float size = 8.5f;
+        StringBuilder linea = new StringBuilder();
+        for (String palabra : seguro(t).split(" ")) {
+            String prueba = linea.isEmpty() ? palabra : linea + " " + palabra;
+            if (ancho(prueba, NORMAL, size) > CONTENIDO && !linea.isEmpty()) {
+                asegurar(14);
+                texto(linea.toString(), NORMAL, size, MARGEN, y, TINTA_3);
+                y -= 12;
+                linea.setLength(0);
+                linea.append(palabra);
+            } else {
+                linea.setLength(0);
+                linea.append(prueba);
+            }
+        }
+        if (!linea.isEmpty()) {
+            asegurar(14);
+            texto(linea.toString(), NORMAL, size, MARGEN, y, TINTA_3);
+            y -= 12;
+        }
+        y -= 6;
+    }
+
     void nota(String t) throws IOException {
         asegurar(20);
         texto(t, NORMAL, 9.5f, MARGEN, y, TINTA_3);
