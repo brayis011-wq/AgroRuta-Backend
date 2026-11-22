@@ -33,7 +33,8 @@ public class MensajesCorreo {
 
     static final Map<String, String> LABORES = Map.of(
             "DESHIERBE", "Deshierbe", "PODA", "Poda", "REVISION", "Revisión", "RIEGO", "Riego",
-            "TUTOREO", "Tutoreo", "OTRO", "Labor", "FERTILIZACION", "Fertilizar", "FUMIGACION", "Fumigar");
+            "TUTOREO", "Tutoreo", "OTRO", "Labor", "FERTILIZACION", "Fertilizar", "FUMIGACION", "Fumigar",
+            "ABONADO", "Abonado");
 
     private final String frontend;
 

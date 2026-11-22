@@ -54,6 +54,12 @@ public class InventarioRepositoryImpl implements InventarioRepository {
     }
 
     @Override
+    public Optional<MovimientoInventario> usoDeActividad(Long actividadId) {
+        if (actividadId == null) return Optional.empty();
+        return movimientos.findByActividadId(actividadId).map(InventarioRepositoryImpl::toDomain);
+    }
+
+    @Override
     public Map<Long, Double> minimosDe(Long agricultorId) {
         return minimos.findByAgricultorId(agricultorId).stream()
                 .collect(Collectors.toMap(StockMinimoEntity::getInsumoId, StockMinimoEntity::getMinimo, (a, b) -> b));
@@ -84,6 +90,7 @@ public class InventarioRepositoryImpl implements InventarioRepository {
         e.setCostoTotal(m.getCostoTotal());
         e.setProveedor(m.getProveedor());
         e.setFumigacionId(m.getFumigacionId());
+        e.setActividadId(m.getActividadId());
         e.setObservaciones(m.getObservaciones());
         e.setCreadoEn(m.getCreadoEn());
         return e;
@@ -100,6 +107,7 @@ public class InventarioRepositoryImpl implements InventarioRepository {
         m.setCostoTotal(e.getCostoTotal());
         m.setProveedor(e.getProveedor());
         m.setFumigacionId(e.getFumigacionId());
+        m.setActividadId(e.getActividadId());
         m.setObservaciones(e.getObservaciones());
         m.setCreadoEn(e.getCreadoEn());
         return m;

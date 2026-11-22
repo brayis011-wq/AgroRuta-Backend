@@ -56,6 +56,10 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         entity.setTipo(actividad.getTipo());
         entity.setDescripcion(actividad.getDescripcion());
         entity.setCosto(actividad.getCosto());
+        entity.setProducto(actividad.getProducto());
+        entity.setAgriculturalInputId(actividad.getAgriculturalInputId());
+        entity.setCantidadUsada(actividad.getCantidadUsada());
+        entity.setUnidadCantidad(actividad.getUnidadCantidad());
         entity.setFecha(actividad.getFecha());
         entity.setSiembraId(actividad.getSiembraId());
         return entity;
@@ -67,6 +71,10 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         actividad.setTipo(entity.getTipo());
         actividad.setDescripcion(entity.getDescripcion());
         actividad.setCosto(entity.getCosto());
+        actividad.setProducto(entity.getProducto());
+        actividad.setAgriculturalInputId(entity.getAgriculturalInputId());
+        actividad.setCantidadUsada(entity.getCantidadUsada());
+        actividad.setUnidadCantidad(entity.getUnidadCantidad());
         actividad.setFecha(entity.getFecha());
         actividad.setSiembraId(entity.getSiembraId());
         return actividad;

@@ -44,6 +44,9 @@ public class MovimientoInventarioEntity {
     @Column(name = "fumigacion_id")
     private Long fumigacionId;
 
+    @Column(name = "actividad_id")
+    private Long actividadId;
+
     @Column(length = 500)
     private String observaciones;
 

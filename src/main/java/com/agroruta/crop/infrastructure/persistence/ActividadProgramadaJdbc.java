@@ -84,7 +84,8 @@ public class ActividadProgramadaJdbc implements ActividadProgramadaRepository {
     @Override
     public Map<String, List<LocalDate>> fechasHechas(Long siembraId) {
         Map<String, List<LocalDate>> res = new HashMap<>();
-        jdbc.query("SELECT tipo, fecha FROM actividades_cultivo WHERE siembra_id = ? "
+        // El abonado cumple también lo programado como FERTILIZACION
+        jdbc.query("SELECT CASE WHEN tipo = 'ABONADO' THEN 'FERTILIZACION' ELSE tipo END, fecha FROM actividades_cultivo WHERE siembra_id = ? "
                         + "UNION ALL "
                         + "SELECT CASE WHEN ai.tipo LIKE 'FERTILIZANTE%' THEN 'FERTILIZACION' ELSE 'FUMIGACION' END, f.fecha "
                         + "FROM fumigaciones f LEFT JOIN agricultural_inputs ai ON ai.id = f.agricultural_input_id "

@@ -137,7 +137,9 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
                 .filter(x -> Objects.equals(x.getAgricultorId(), agricultorId))
                 .orElseThrow(() -> new ResourceNotFoundException("Movimiento no encontrado con ID: " + movimientoId));
         if (m.getTipo() == TipoMovimiento.USO) {
-            throw new BusinessException("Este gasto viene de una fumigación: corrígelo editando o eliminando la fumigación.");
+            throw new BusinessException(m.getActividadId() != null
+                    ? "Este gasto viene de una actividad de la siembra: corrígelo editando o eliminando la actividad."
+                    : "Este gasto viene de una fumigación: corrígelo editando o eliminando la fumigación.");
         }
         repositorio.eliminarMovimiento(movimientoId);
     }
@@ -166,6 +168,32 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     @Transactional
     public void quitarUso(Long fumigacionId) {
         repositorio.usoDeFumigacion(fumigacionId).ifPresent(m -> repositorio.eliminarMovimiento(m.getId()));
+    }
+
+    // ── Gasto de las actividades (abonado...) ─────────────────────────
+
+    @Override
+    @Transactional
+    public Optional<BigDecimal> registrarUsoDeActividad(Long actividadId, Long agricultorId, Long insumoId,
+                                                        double cantidad, String unidad, LocalDate fecha) {
+        InsumoCatalogo insumo = insumo(insumoId);
+        if (cantidad <= 0) throw new BusinessException("La cantidad usada debe ser mayor a 0.");
+        double base = UnidadBase.aBaseDe(cantidad, unidad(unidad), insumo.unidadBase(), insumo.nombre());
+        MovimientoInventario uso = repositorio.usoDeActividad(actividadId)
+                .orElseGet(() -> MovimientoInventario.usoDeActividad(agricultorId, insumoId, base, fecha, actividadId));
+        uso.setAgricultorId(agricultorId);
+        uso.setInsumoId(insumoId);
+        uso.setCantidad(base);
+        uso.setFecha(fecha != null ? fecha : hoy());
+        repositorio.guardar(uso);
+        Double promedio = CalculadoraStock.costoPromedio(repositorio.movimientosDe(agricultorId, insumoId));
+        return Optional.ofNullable(promedio).map(p -> pesos(base * p));
+    }
+
+    @Override
+    @Transactional
+    public void quitarUsoDeActividad(Long actividadId) {
+        repositorio.usoDeActividad(actividadId).ifPresent(m -> repositorio.eliminarMovimiento(m.getId()));
     }
 
     // ── apoyo ─────────────────────────────────────────────────────────

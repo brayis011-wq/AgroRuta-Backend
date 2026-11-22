@@ -231,4 +231,32 @@ class CosechaConRecolectoresConBaseRealTest extends ConBaseReal {
         assertThat(deLeo.costoKiloPorKilo()).isEqualByComparingTo("900");
         assertThat(deLeo.kilosAlDia()).isEqualByComparingTo("70");
     }
+    @Autowired private com.agroruta.crop.application.ports.in.ActividadCultivoUseCase actividades;
+
+    @Test
+    void elAbonadoDescuentaDeLaBodegaYCalculaSuCosto() {
+        long abono = insertar("INSERT INTO agricultural_inputs (activo, creado_en, dosis_sugerida, nombre, reentrada_horas, tipo, unidad_sugerida) "
+                + "VALUES (1, NOW(), 0, 'Abono 15-15-15', 0, 'FERTILIZANTE_SUELO', 'KG')");
+        // Se compraron 100 kg por $ 300.000: el kilo sale a $ 3.000
+        jdbc.update("INSERT INTO movimientos_inventario (agricultor_id, agricultural_input_id, tipo, cantidad, fecha, costo_total, creado_en) "
+                + "VALUES (?, ?, 'COMPRA', 100000, ?, 300000, NOW())", ana, abono, DIA.minusDays(10));
+        var uso = new com.agroruta.crop.domain.UsoInsumo(abono, "Abono 15-15-15", 50.0, "KG");
+        var a = actividades.registrarActividad("ABONADO", "Abonado del lote", DIA, siembra, null, uso);
+        em.flush();
+        assertThat(a.getCosto()).isEqualByComparingTo("150000");
+        String usado = "SELECT cantidad FROM movimientos_inventario WHERE actividad_id = ? AND tipo = 'USO'";
+        assertThat(jdbc.queryForObject(usado, Double.class, a.getId())).isEqualTo(50000.0);
+
+        // Corregir la cantidad corrige lo descontado; con costo escrito se respeta
+        actividades.actualizarActividad(a.getId(), "ABONADO", "Abonado del lote", DIA, new BigDecimal("120000"),
+                new com.agroruta.crop.domain.UsoInsumo(abono, "Abono 15-15-15", 40.0, "KG"));
+        em.flush();
+        assertThat(jdbc.queryForObject(usado, Double.class, a.getId())).isEqualTo(40000.0);
+        assertThat(actividades.buscarActividadPorId(a.getId()).getCosto()).isEqualByComparingTo("120000");
+
+        // Sin insumo, o al borrar la actividad, el producto vuelve a la bodega
+        actividades.eliminarActividad(a.getId());
+        em.flush();
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM movimientos_inventario WHERE actividad_id = ?", Integer.class, a.getId())).isZero();
+    }
 }
