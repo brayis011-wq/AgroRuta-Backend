@@ -163,4 +163,43 @@ class CosechaConRecolectoresConBaseRealTest extends ConBaseReal {
         assertThat(conVentas.ingresos()).isEqualTo(600_000);
         assertThat(conVentas.kgVendidos()).isEqualTo(50);
     }
+    @Test
+    void noSeVendeMasDeLoCosechadoNiSeBorraLaCosechaYaVendida() {
+        Cosecha c = cosechas.registrarCosecha(DIA, 80.0, "PRIMERA", null, siembra, null, false, null);
+        em.flush();
+        var datos = new VentasUseCase.DatosVenta(siembra, "Cooperativa", DIA, "Café", new BigDecimal("90"), new BigDecimal("10000"), null, null, null);
+        assertThatThrownBy(() -> ventas.registrar(ana, datos, false, null))
+                .isInstanceOf(com.agroruta.shared.exception.DatoInvalidoException.class).hasMessageContaining("solo quedan 80 kg");
+        var sinKilos = new VentasUseCase.DatosVenta(siembra, "Cooperativa", DIA, "Café", null, null, new BigDecimal("500000"), null, null);
+        assertThatThrownBy(() -> ventas.registrar(ana, sinKilos, false, null)).hasMessageContaining("cuántos kilos");
+
+        var venta = ventas.registrar(ana, new VentasUseCase.DatosVenta(siembra, "Cooperativa", DIA, "Café",
+                new BigDecimal("60"), new BigDecimal("10000"), null, null, null), false, null);
+        em.flush();
+        // Al editar cuentan los kilos que ya tenía: 60 + 20 que quedan
+        ventas.actualizar(venta.id(), new VentasUseCase.DatosVenta(siembra, "Cooperativa", DIA, "Café",
+                new BigDecimal("80"), new BigDecimal("10000"), null, null, null));
+        em.flush();
+        assertThatThrownBy(() -> ventas.actualizar(venta.id(), new VentasUseCase.DatosVenta(siembra, "Cooperativa", DIA, "Café",
+                new BigDecimal("81"), new BigDecimal("10000"), null, null, null))).hasMessageContaining("solo quedan 80 kg");
+
+        // La cosecha ya vendida no se baja ni se borra
+        assertThatThrownBy(() -> cosechas.actualizarCosecha(c.getId(), DIA, 70.0, "PRIMERA", null, null, false, null))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("Ya vendiste 80 kg");
+        assertThatThrownBy(() -> cosechas.eliminarCosecha(c.getId())).hasMessageContaining("Ya vendiste 80 kg");
+        cosechas.actualizarCosecha(c.getId(), DIA, 95.0, "PRIMERA", null, null, false, null);
+    }
+
+    @Test
+    void lasVentasDeAntesQuePasanDeLoCosechadoSeVenEnLaBodega() {
+        // Venta anotada antes de que existiera la cosecha (como se podía antes)
+        jdbc.update("INSERT INTO ventas (agricultor_id, siembra_id, comprador, fecha, producto, cantidad_kg, precio_kg, total, creado_en) "
+                + "VALUES (?, ?, 'Cooperativa', ?, 'Café', 150, 4000, 600000, NOW())", ana, siembra, DIA);
+        cosechas.registrarCosecha(DIA, 75.0, "PRIMERA", null, siembra, null, false, null);
+        em.flush();
+        assertThat(ventas.kilosEnBodega(ana)).singleElement().satisfies(k -> {
+            assertThat(k.kgDisponibles()).isEqualByComparingTo("0");
+            assertThat(k.kgSinCosecha()).isEqualByComparingTo("75");
+        });
+    }
 }

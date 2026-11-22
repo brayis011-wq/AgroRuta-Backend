@@ -43,6 +43,7 @@ public class VentasService implements VentasUseCase {
 
     @Override
     public Venta registrar(Long agricultorId, DatosVenta d, boolean pagadoDeContado, String metodo) {
+        revisarKilos(d.siembraId(), d.cantidadKg(), null);
         Venta v = repositorio.crear(agricultorId, Venta.nueva(null, d.siembraId(), d.comprador(), d.fecha(), d.producto(),
                 d.cantidadKg(), d.precioKg(), Dinero.redondear(d.total()), d.vence(), d.observaciones()));
         if (pagadoDeContado) {
@@ -54,6 +55,7 @@ public class VentasService implements VentasUseCase {
     @Override
     public Venta actualizar(Long id, DatosVenta d) {
         Venta actual = buscarPorId(id);
+        revisarKilos(d.siembraId(), d.cantidadKg(), actual);
         Venta v = Venta.nueva(id, d.siembraId(), d.comprador(), d.fecha(), d.producto(), d.cantidadKg(), d.precioKg(),
                 Dinero.redondear(d.total()), d.vence(), d.observaciones());
         if (v.total().compareTo(actual.abonado()) < 0) {
@@ -62,6 +64,34 @@ public class VentasService implements VentasUseCase {
         }
         repositorio.actualizar(v);
         return buscarPorId(id);
+    }
+
+    /**
+     * Lo que se vende de una siembra sale de su bodega de cosecha: hay que decir cuántos kilos y no pueden ser
+     * más de los que quedan. Al editar, cuentan también los kilos que ya tenía la venta; bajar los kilos (o
+     * dejarlos igual) siempre se puede, aunque la siembra tenga ventas de antes que pasan de lo cosechado.
+     */
+    private void revisarKilos(Long siembraId, BigDecimal kg, Venta anterior) {
+        if (siembraId == null) return;
+        if (kg == null || kg.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuántos kilos vendes de esa siembra.");
+        }
+        BigDecimal antes = anterior != null && siembraId.equals(anterior.siembraId()) && anterior.cantidadKg() != null
+                ? anterior.cantidadKg() : BigDecimal.ZERO;
+        if (antes.signum() > 0 && kg.compareTo(antes) <= 0) return;
+        var bodega = repositorio.kilosDeSiembra(siembraId);
+        if (bodega.isEmpty()) {
+            throw new DatoInvalidoException("Esa siembra no tiene cosechas registradas: registra la cosecha antes de venderla.");
+        }
+        BigDecimal quedan = bodega.get().kgCosechados().subtract(bodega.get().kgVendidos()).add(antes);
+        if (kg.compareTo(quedan) > 0) {
+            throw new DatoInvalidoException("De esa siembra solo quedan " + kilos(quedan.max(BigDecimal.ZERO)) + " kg por vender.");
+        }
+    }
+
+    private static String kilos(BigDecimal kg) {
+        return new java.text.DecimalFormat("#,##0.##", java.text.DecimalFormatSymbols.getInstance(Locale.forLanguageTag("es-CO")))
+                .format(kg);
     }
 
     @Override

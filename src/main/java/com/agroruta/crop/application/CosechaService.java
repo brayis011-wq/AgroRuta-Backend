@@ -37,6 +37,36 @@ public class CosechaService implements CosechaUseCase {
         this.fumigacionRepository = fumigacionRepository;
     }
 
+    // ── Ventas de la siembra (lo vendido sale de lo cosechado); null en pruebas que no las usan ──
+    private com.agroruta.crop.application.ports.out.VentasSiembraPort ventasPort;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setVentasPort(com.agroruta.crop.application.ports.out.VentasSiembraPort ventasPort) {
+        this.ventasPort = ventasPort;
+    }
+
+    /**
+     * Bajar o borrar una cosecha no puede dejar menos kilos cosechados que los ya vendidos de la siembra
+     * (se quedarían ventas sin de dónde salir). Subirla siempre se puede.
+     */
+    private void revisarVendido(Long siembraId, double cambio) {
+        if (ventasPort == null || cambio >= 0) return;
+        double vendido = ventasPort.ventasDeSiembra(siembraId).stream()
+                .map(com.agroruta.crop.application.ports.out.VentasSiembraPort.VentaDeSiembra::kg)
+                .filter(java.util.Objects::nonNull).mapToDouble(BigDecimal::doubleValue).sum();
+        Double total = cosechaRepository.totalKgBySiembraId(siembraId);
+        double quedaria = (total == null ? 0 : total) + cambio;
+        if (quedaria + 0.005 < vendido) {
+            throw new BusinessException(String.format(Locale.ROOT,
+                    "Ya vendiste %s kg de esta siembra y con este cambio quedarían %s kg cosechados. Corrige primero las ventas en Finanzas.",
+                    kilos(vendido), kilos(Math.max(0, quedaria))));
+        }
+    }
+
+    private static String kilos(double kg) {
+        return BigDecimal.valueOf(kg).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+    }
+
     // ── Recolectores (jornales del equipo); null en pruebas que no los usan ──
     private RecolectoresPort recolectoresPort;
 
@@ -156,6 +186,7 @@ public class CosechaService implements CosechaUseCase {
             LocalDate fechaFinal = fecha != null ? fecha : cosecha.getFecha();
             cosecha.setEnCarencia(revisarCarencia(cosecha.getSiembraId(), fechaFinal, confirmarCarencia));
         }
+        if (cantidadKg != null && cosecha.getCantidadKg() != null) revisarVendido(cosecha.getSiembraId(), cantidadKg - cosecha.getCantidadKg());
         if (fecha != null) cosecha.setFecha(fecha);
         if (cantidadKg != null) cosecha.setCantidadKg(cantidadKg);
         cosecha.setCalidad(calidadFinal);
@@ -180,7 +211,8 @@ public class CosechaService implements CosechaUseCase {
 
     @Override
     public void eliminarCosecha(Long id) {
-        buscarCosechaPorId(id);
+        Cosecha cosecha = buscarCosechaPorId(id);
+        revisarVendido(cosecha.getSiembraId(), -(cosecha.getCantidadKg() == null ? 0 : cosecha.getCantidadKg()));
         if (recolectoresPort != null) recolectoresPort.quitar(id);
         cosechaRepository.deleteById(id);
     }

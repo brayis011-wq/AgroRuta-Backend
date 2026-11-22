@@ -109,6 +109,16 @@ public class VentasJdbc implements VentasRepository {
 
     @Override
     public List<com.agroruta.finance.domain.KilosEnBodega> kilosEnBodega(Long agricultorId) {
+        return agricultorId == null ? bodega("", " LIMIT 300") : bodega(" AND f.agricultor_id = ?", " LIMIT 300", agricultorId);
+    }
+
+    @Override
+    public java.util.Optional<com.agroruta.finance.domain.KilosEnBodega> kilosDeSiembra(Long siembraId) {
+        return bodega(" AND s.id = ?", "", siembraId).stream().findFirst();
+    }
+
+    /** Siembras con cosechas: kilos recogidos y vendidos (filtro: condición extra del WHERE) */
+    private List<com.agroruta.finance.domain.KilosEnBodega> bodega(String filtro, String limite, Object... args) {
         String sql = """
                 SELECT s.id, s.tipo_cultivo, s.variedad, l.nombre AS lote, f.nombre AS finca, s.estado_cultivo,
                        c.kg AS cosechados, c.ultima, COALESCE(v.kg, 0) AS vendidos
@@ -121,13 +131,11 @@ public class VentasJdbc implements VentasRepository {
                               WHERE siembra_id IS NOT NULL AND cantidad_kg IS NOT NULL GROUP BY siembra_id) v
                     ON v.siembra_id = s.id
                  WHERE s.eliminado_en IS NULL""";
-        List<Object> args = new ArrayList<>();
-        if (agricultorId != null) { sql += " AND f.agricultor_id = ?"; args.add(agricultorId); }
-        return jdbc.query(sql + " ORDER BY c.ultima DESC, s.id DESC LIMIT 300", (rs, i) -> new com.agroruta.finance.domain.KilosEnBodega(
+        return jdbc.query(sql + filtro + " ORDER BY c.ultima DESC, s.id DESC" + limite, (rs, i) -> new com.agroruta.finance.domain.KilosEnBodega(
                 rs.getLong("id"), rs.getString("tipo_cultivo"), rs.getString("variedad"), rs.getString("lote"),
                 rs.getString("finca"), BigDecimal.valueOf(rs.getDouble("cosechados")).setScale(2, java.math.RoundingMode.HALF_UP),
                 rs.getBigDecimal("vendidos"), rs.getDate("ultima").toLocalDate(),
-                "FINALIZADO".equals(rs.getString("estado_cultivo"))), args.toArray());
+                "FINALIZADO".equals(rs.getString("estado_cultivo"))), args);
     }
 
     @Override

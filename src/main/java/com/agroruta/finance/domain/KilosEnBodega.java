@@ -12,6 +12,13 @@ public record KilosEnBodega(Long siembraId, String cultivo, String variedad, Str
                             BigDecimal kgCosechados, BigDecimal kgVendidos, LocalDate ultimaCosecha, boolean finalizada) {
 
     /** Lo que queda por vender (nunca negativo: si se vendió de más, queda en cero) */
+    /** Se vendió más de lo cosechado (ventas de antes de registrar la cosecha): cuánto falta por anotar */
+    @com.fasterxml.jackson.annotation.JsonProperty("kgSinCosecha")
+    public BigDecimal kgSinCosecha() {
+        BigDecimal resta = kgVendidos.subtract(kgCosechados).setScale(2, RoundingMode.HALF_UP);
+        return resta.signum() > 0 ? resta : BigDecimal.ZERO.setScale(2);
+    }
+
     @com.fasterxml.jackson.annotation.JsonProperty("kgDisponibles")
     public BigDecimal kgDisponibles() {
         BigDecimal resta = kgCosechados.subtract(kgVendidos).setScale(2, RoundingMode.HALF_UP);

@@ -35,4 +35,7 @@ public interface VentasRepository {
 
     /** Por siembra con cosechas: kilos recogidos y vendidos. agricultorId null: todas */
     List<com.agroruta.finance.domain.KilosEnBodega> kilosEnBodega(Long agricultorId);
+
+    /** La bodega de una siembra; vacío si no tiene cosechas */
+    java.util.Optional<com.agroruta.finance.domain.KilosEnBodega> kilosDeSiembra(Long siembraId);
 }
