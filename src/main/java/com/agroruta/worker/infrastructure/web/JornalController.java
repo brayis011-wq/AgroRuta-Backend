@@ -68,6 +68,36 @@ public class JornalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(creados);
     }
 
+    /**
+     * Jornales de todo el equipo por páginas, más recientes primero. trabajadorId, inicio y fin son opcionales:
+     * sin trabajador se ven los de todos. El agricultor ve solo lo suyo; el Administrador, todo.
+     */
+    @GetMapping("/page")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<Pagina<JornalResponse>> paginaDelEquipo(
+            @RequestParam(required = false) Long trabajadorId,
+            @RequestParam(required = false) LocalDate inicio,
+            @RequestParam(required = false) LocalDate fin,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(jornalUseCase.paginaDelEquipo(dueno, trabajadorId, inicio, fin,
+                Pagina.numero(page), Pagina.tamano(size)).map(JornalResponse::from));
+    }
+
+    /** Totales con los mismos filtros que /page */
+    @GetMapping("/summary")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<ResumenJornales> resumenDelEquipo(
+            @RequestParam(required = false) Long trabajadorId,
+            @RequestParam(required = false) LocalDate inicio,
+            @RequestParam(required = false) LocalDate fin,
+            Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(jornalUseCase.resumenDelEquipo(dueno, trabajadorId, inicio, fin));
+    }
+
     /** Quita un jornal anotado por error (si no está en ninguna nómina). */
     @DeleteMapping("/{id}")
     @PreAuthorize("@ownership.jornalPropio(#id, authentication)")

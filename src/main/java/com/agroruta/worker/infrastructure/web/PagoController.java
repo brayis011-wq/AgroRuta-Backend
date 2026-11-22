@@ -79,18 +79,20 @@ public class PagoController {
     public ResponseEntity<Pagina<PagoResponse>> pagina(@RequestParam(required = false) Integer page,
                                                        @RequestParam(required = false) Integer size,
                                                        @RequestParam(required = false) Long nominaId,
+                                                       @RequestParam(required = false) Long trabajadorId,
                                                        Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(pagoUseCase.pagina(dueno, nominaId, Pagina.numero(page), Pagina.tamano(size))
+        return ResponseEntity.ok(pagoUseCase.pagina(dueno, nominaId, trabajadorId, Pagina.numero(page), Pagina.tamano(size))
                 .map(PagoResponse::from));
     }
 
     /** Totales de los pagos para las tarjetas de la lista, con el mismo filtro de nómina. */
     @GetMapping("/summary")
     public ResponseEntity<ResumenPagos> resumen(@RequestParam(required = false) Long nominaId,
+                                                @RequestParam(required = false) Long trabajadorId,
                                                 Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId));
+        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId, trabajadorId));
     }
 
     /**

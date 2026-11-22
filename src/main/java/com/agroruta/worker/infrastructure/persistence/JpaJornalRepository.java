@@ -20,6 +20,38 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
     List<JornalEntity> delEquipoEntre(@Param("agricultorId") Long agricultorId,
                                       @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
+    /** Jornales del equipo (o de un trabajador), más recientes primero; todo opcional salvo el dueño */
+    @Query(value = """
+        SELECT j FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR j.trabajador.id = :trabajadorId)
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """, countQuery = """
+        SELECT COUNT(j) FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR j.trabajador.id = :trabajadorId)
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """)
+    Page<JornalEntity> paginaDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
+                                       @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin, Pageable pageable);
+
+    @Query("""
+        SELECT COUNT(j), SUM(j.valorJornal),
+               SUM(CASE WHEN j.liquidado = false THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.liquidado = false THEN j.valorJornal ELSE 0 END),
+               MIN(CASE WHEN j.liquidado = false THEN j.fecha END),
+               MAX(CASE WHEN j.liquidado = false THEN j.fecha END)
+        FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR j.trabajador.id = :trabajadorId)
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """)
+    List<Object[]> resumenDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
+                                    @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
     /** De esos jornales, los que ya quedaron en alguna nómina */
     /** [id del jornal, estado de su nómina] */
     @Query("SELECT jn.id, n.estado FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")

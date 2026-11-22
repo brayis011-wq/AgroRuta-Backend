@@ -139,13 +139,13 @@ public class PagoService implements PagoUseCase {
     }
 
     @Override
-    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano) {
-        return pagoRepository.pagina(agricultorId, nominaId, pagina, tamano);
+    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, Long trabajadorId, int pagina, int tamano) {
+        return pagoRepository.pagina(agricultorId, nominaId, trabajadorId, pagina, tamano);
     }
 
     @Override
-    public ResumenPagos resumen(Long agricultorId, Long nominaId) {
-        return pagoRepository.resumen(agricultorId, nominaId);
+    public ResumenPagos resumen(Long agricultorId, Long nominaId, Long trabajadorId) {
+        return pagoRepository.resumen(agricultorId, nominaId, trabajadorId);
     }
 
     @Override

@@ -56,9 +56,9 @@ class PagoRepositoryImpl implements PagoRepository {
     }
 
     @Override
-    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano) {
+    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, Long trabajadorId, int pagina, int tamano) {
         var orden = Sort.by(Sort.Order.desc("fechaPago"), Sort.Order.desc("id"));
-        return aPagina(jpa.pagina(agricultorId, nominaId, PageRequest.of(pagina, tamano, orden)), WorkerMapper::toDomain);
+        return aPagina(jpa.pagina(agricultorId, nominaId, trabajadorId, PageRequest.of(pagina, tamano, orden)), WorkerMapper::toDomain);
     }
 
     private static <E, D> Pagina<D> aPagina(Page<E> p, java.util.function.Function<E, D> f) {
@@ -71,8 +71,8 @@ class PagoRepositoryImpl implements PagoRepository {
     }
 
     @Override
-    public ResumenPagos resumen(Long agricultorId, Long nominaId) {
-        List<Object[]> filas = jpa.resumen(agricultorId, nominaId);
+    public ResumenPagos resumen(Long agricultorId, Long nominaId, Long trabajadorId) {
+        List<Object[]> filas = jpa.resumen(agricultorId, nominaId, trabajadorId);
         Object[] f = filas.isEmpty() ? new Object[3] : filas.get(0);
         return new ResumenPagos(f[0] == null ? 0 : ((Number) f[0]).longValue(), decimal(f[1]),
                 f[2] == null ? 0 : ((Number) f[2]).longValue());

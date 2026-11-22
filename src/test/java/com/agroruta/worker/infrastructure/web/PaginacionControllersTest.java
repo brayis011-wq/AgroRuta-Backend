@@ -92,9 +92,9 @@ class PaginacionControllersTest {
     @Test
     void pagosDelAgricultorFiltradosPorNomina() {
         Pago pago = new Pago(4L, nomina, LocalDate.of(2025, 2, 1), new BigDecimal("80000"), MetodoPago.EFECTIVO, null);
-        when(pagos.pagina(7L, 1L, 0, 10)).thenReturn(pagina(pago));
+        when(pagos.pagina(7L, 1L, null, 0, 10)).thenReturn(pagina(pago));
 
-        Pagina<PagoResponse> r = new PagoController(pagos).pagina(0, 10, 1L, auth(7L, Rol.Agricultor)).getBody();
+        Pagina<PagoResponse> r = new PagoController(pagos).pagina(0, 10, 1L, null, auth(7L, Rol.Agricultor)).getBody();
 
         assertThat(r.contenido()).singleElement().satisfies(p -> assertThat(p.id).isEqualTo(4L));
     }
@@ -102,9 +102,9 @@ class PaginacionControllersTest {
     @Test
     void resumenDePagosDelAgricultor() {
         ResumenPagos resumen = new ResumenPagos(3, new BigDecimal("240000"), 2);
-        when(pagos.resumen(7L, null)).thenReturn(resumen);
+        when(pagos.resumen(7L, null, 5L)).thenReturn(resumen);
 
-        assertThat(new PagoController(pagos).resumen(null, auth(7L, Rol.Agricultor)).getBody()).isEqualTo(resumen);
+        assertThat(new PagoController(pagos).resumen(null, 5L, auth(7L, Rol.Agricultor)).getBody()).isEqualTo(resumen);
     }
 
     @Test

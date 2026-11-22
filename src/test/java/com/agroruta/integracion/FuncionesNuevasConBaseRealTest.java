@@ -185,6 +185,32 @@ class FuncionesNuevasConBaseRealTest extends ConBaseReal {
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM nominas WHERE id = ?", Integer.class, n)).isZero();
     }
 
+    @Autowired private com.agroruta.worker.application.ports.in.NominaUseCase nominaUseCase;
+
+    @Test
+    void borrarUnaNominaAnuladaLiberaSusJornalesYLosJornalesSeFiltranPorTrabajador() {
+        long cargo = insertar("INSERT INTO cargos (activo, nombre, valor_jornal, agricultor_id) VALUES (1, 'Jornalero', 60000, ?)", ana);
+        long t1 = insertar("INSERT INTO trabajadores (apellido, cedula, estado, fecha_ingreso, nombre, tipo_contrato, cargo_id, agricultor_id) "
+                + "VALUES ('Paz', '81', 'ACTIVO', ?, 'Leo', 'JORNAL', ?, ?)", DIA, cargo, ana);
+        long t2 = insertar("INSERT INTO trabajadores (apellido, cedula, estado, fecha_ingreso, nombre, tipo_contrato, cargo_id, agricultor_id) "
+                + "VALUES ('Ruiz', '82', 'ACTIVO', ?, 'Eva', 'JORNAL', ?, ?)", DIA, cargo, ana);
+        long j1 = insertar("INSERT INTO jornales (cultivo_id, fecha, liquidado, valor_jornal, trabajador_id) VALUES (?, ?, 0, 60000, ?)", siembra, DIA, t1);
+        insertar("INSERT INTO jornales (cultivo_id, fecha, liquidado, valor_jornal, trabajador_id) VALUES (?, ?, 0, 60000, ?)", siembra, DIA, t2);
+        long n = insertar("INSERT INTO nominas (estado, fecha_generacion, periodo_fin, periodo_inicio, total_jornales, valor_total, trabajador_id) "
+                + "VALUES ('ANULADA', ?, ?, ?, 1, 60000, ?)", DIA, DIA, DIA, t1);
+        jdbc.update("INSERT INTO nomina_jornales (nomina_id, jornal_id) VALUES (?, ?)", n, j1);
+
+        nominaUseCase.eliminarNomina(n);
+        em.flush();
+
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM nominas WHERE id = ?", Integer.class, n)).isZero();
+        assertThat(jornales.buscarDisponiblesParaNomina(t1, DIA, DIA)).extracting(j -> j.getId()).containsExactly(j1);
+
+        assertThat(jornales.paginaDelEquipo(ana, null, DIA, DIA, 0, 20).total()).isEqualTo(2);
+        assertThat(jornales.paginaDelEquipo(ana, t2, null, null, 0, 20).total()).isEqualTo(1);
+        assertThat(jornales.resumenDelEquipo(ana, null, null, null).cantidad()).isEqualTo(2);
+    }
+
     @Test
     void laPlanillaTraeLosJornalesDelEquipoYSabeCualesEstanEnNomina() {
         long cargo = insertar("INSERT INTO cargos (activo, nombre, valor_jornal, agricultor_id) VALUES (1, 'Recolector', 50000, ?)", ana);

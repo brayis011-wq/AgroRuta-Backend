@@ -39,6 +39,12 @@ public interface JornalRepository {
     /** Jornales del trabajador, más recientes primero. inicio y fin son opcionales. */
     Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
 
+    /** Jornales del equipo del agricultor (o de un trabajador si viene), más recientes primero. agricultorId null: todos. */
+    Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+
+    /** Totales con los mismos filtros */
+    ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin);
+
     /** Totales de los jornales del trabajador en el mismo rango de fechas. */
     ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin);
 

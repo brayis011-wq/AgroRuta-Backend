@@ -100,8 +100,23 @@ class JornalRepositoryImpl implements JornalRepository {
     }
 
     @Override
+    public Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
+        var orden = Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"));
+        return aPagina(jpa.paginaDelEquipo(agricultorId, trabajadorId, inicio, fin, PageRequest.of(pagina, tamano, orden)),
+                WorkerMapper::toDomain);
+    }
+
+    @Override
+    public ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin) {
+        return resumenDe(jpa.resumenDelEquipo(agricultorId, trabajadorId, inicio, fin));
+    }
+
+    @Override
     public ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin) {
-        List<Object[]> filas = jpa.resumenPorTrabajador(trabajadorId, inicio, fin);
+        return resumenDe(jpa.resumenPorTrabajador(trabajadorId, inicio, fin));
+    }
+
+    private ResumenJornales resumenDe(List<Object[]> filas) {
         Object[] f = filas.isEmpty() ? new Object[6] : filas.get(0);
         return new ResumenJornales(
                 f[0] == null ? 0 : ((Number) f[0]).longValue(), decimal(f[1]),

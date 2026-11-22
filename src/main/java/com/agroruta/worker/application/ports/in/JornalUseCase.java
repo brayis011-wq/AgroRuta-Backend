@@ -47,6 +47,11 @@ public interface JornalUseCase {
     Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
     ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin);
 
+    /** Jornales de todo el equipo (o de un trabajador), por páginas. agricultorId null: todos (Administrador). */
+    Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+
+    ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin);
+
     /** Conteos de jornales para el Inicio; hoy null = la fecha de Colombia. */
     com.agroruta.worker.domain.ResumenJornalesInicio resumenInicio(Long agricultorId, LocalDate hoy);
 }

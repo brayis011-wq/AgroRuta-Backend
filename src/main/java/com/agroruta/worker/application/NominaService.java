@@ -163,9 +163,11 @@ public class NominaService implements NominaUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Nómina no encontrada con id: " + nominaId));
 
-        if (!EstadoNomina.PENDIENTE.equals(nomina.getEstado())) {
+        // Una nómina pendiente o anulada se puede borrar: sus jornales quedan libres para otra nómina.
+        // Las aprobadas o pagadas no (hay que anularlas antes; las pagadas no se anulan).
+        if (!EstadoNomina.PENDIENTE.equals(nomina.getEstado()) && !EstadoNomina.ANULADA.equals(nomina.getEstado())) {
             throw new EstadoInvalidoException(
-                    "Solo se pueden eliminar nóminas en estado PENDIENTE.");
+                    "Solo se pueden eliminar nóminas pendientes o anuladas. Si está aprobada, anúlala primero.");
         }
 
         nominaRepository.eliminar(nominaId);

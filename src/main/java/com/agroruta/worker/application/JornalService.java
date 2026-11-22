@@ -270,6 +270,18 @@ public class JornalService implements JornalUseCase {
 
     @Transactional(readOnly = true)
     @Override
+    public Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
+        return jornalRepository.paginaDelEquipo(agricultorId, trabajadorId, inicio, fin, pagina, tamano);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin) {
+        return jornalRepository.resumenDelEquipo(agricultorId, trabajadorId, inicio, fin);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
     public ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin) {
         return jornalRepository.resumenPorTrabajador(trabajadorId, inicio, fin);
     }
