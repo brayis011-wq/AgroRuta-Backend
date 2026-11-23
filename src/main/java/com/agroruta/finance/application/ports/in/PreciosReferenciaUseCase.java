@@ -28,4 +28,7 @@ public interface PreciosReferenciaUseCase {
 
     /** Si los precios tienen más de una semana, los trae en segundo plano (no espera). */
     void actualizarSiHaceFalta();
+
+    /** Si hay precios, de qué semana, si se están trayendo y el último error (y los pide si hace falta) */
+    com.agroruta.finance.domain.EstadoPrecios estado();
 }
