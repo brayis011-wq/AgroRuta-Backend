@@ -73,6 +73,54 @@ class PreciosReferenciaServiceTest {
         assertThat(bien.actualizadoEn()).isNotNull();
     }
 
+    /** SIPSA que solo lee respuestas descargadas (el DANE directo siempre falla, como desde Render) */
+    static class SoloArchivo implements com.agroruta.finance.application.ports.out.SipsaPort {
+        @Override public List<PrecioReferencia> preciosRecientes(int semanas) {
+            throw new ExternalApiException("No se pudo consultar SIPSA: Remote host terminated the handshake");
+        }
+        @Override public List<PrecioReferencia> desdeRespuesta(java.io.InputStream xml, int semanas) {
+            return com.agroruta.finance.infrastructure.sipsa.SipsaSoapAdapter.leer(xml).ultimasSemanas(semanas);
+        }
+    }
+
+    private static final String RESPUESTA = """
+            <S:Envelope xmlns:S="http://www.w3.org/2003/05/soap-envelope"><S:Body>
+            <ns2:promediosSipsaSemanaMadrResponse xmlns:ns2="http://servicios.sipsa.co.gov.dane/">
+            <return><artiNombre>Papa criolla</artiNombre><fechaIni>2026-11-14T00:00:00-05:00</fechaIni>
+            <promedioKg>2500</promedioKg><minimoKg>2000</minimoKg><maximoKg>3000</maximoKg></return>
+            </ns2:promediosSipsaSemanaMadrResponse></S:Body></S:Envelope>""";
+
+    @Test
+    void unaRespuestaSubidaDesdeElPcSeGuardaYBorraElError() {
+        Memoria repo = new Memoria();
+        var servicio = new PreciosReferenciaService(repo, new SoloArchivo(),
+                Clock.fixed(Instant.parse("2026-11-23T12:00:00Z"), BOGOTA), Runnable::run);
+        assertThat(servicio.estado().ultimoError()).contains("handshake");
+
+        EstadoPrecios e = servicio.cargarRespuesta(new java.io.ByteArrayInputStream(RESPUESTA.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        assertThat(e.hayPrecios()).isTrue();
+        assertThat(e.ultimaSemana()).isEqualTo(LocalDate.of(2026, 11, 14));
+        assertThat(e.ultimoError()).isNull();
+        assertThat(repo.precios).singleElement().satisfies(p -> assertThat(p.producto()).isEqualTo("Papa criolla"));
+        assertThat(servicio.estado().ultimoError()).isNull();
+    }
+
+    @Test
+    void unArchivoQueNoEsDeSipsaSeRechazaSinBorrarLoGuardado() {
+        Memoria repo = new Memoria();
+        repo.guardar(List.of(PAPA), LocalDateTime.of(2026, 11, 22, 8, 0));
+        var servicio = new PreciosReferenciaService(repo, new SoloArchivo(),
+                Clock.fixed(Instant.parse("2026-11-23T12:00:00Z"), BOGOTA), Runnable::run);
+        var vacio = "<S:Envelope xmlns:S=\"http://www.w3.org/2003/05/soap-envelope\"><S:Body/></S:Envelope>";
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> servicio.cargarRespuesta(
+                new java.io.ByteArrayInputStream(vacio.getBytes(java.nio.charset.StandardCharsets.UTF_8))))
+                .isInstanceOf(com.agroruta.shared.exception.DatoInvalidoException.class);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> servicio.cargarRespuesta(
+                new java.io.ByteArrayInputStream("esto no es xml".getBytes(java.nio.charset.StandardCharsets.UTF_8))))
+                .isInstanceOf(com.agroruta.shared.exception.DatoInvalidoException.class);
+        assertThat(repo.precios).containsExactly(PAPA);
+    }
+
     @Test
     void despuesDeMediaHoraSeVuelveAIntentar() {
         Memoria repo = new Memoria();

@@ -9,12 +9,14 @@ import com.agroruta.finance.domain.PrecioCultivo;
 import com.agroruta.finance.domain.PrecioReferencia;
 import com.agroruta.finance.domain.PreferenciaPrecio;
 import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.ExternalApiException;
 import com.agroruta.shared.util.Dinero;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
@@ -153,6 +155,24 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
         } finally {
             trayendo.set(false);
         }
+    }
+
+    @Override
+    public EstadoPrecios cargarRespuesta(InputStream xml) {
+        List<PrecioReferencia> precios;
+        try {
+            precios = sipsa.desdeRespuesta(xml, SEMANAS);
+        } catch (ExternalApiException e) {
+            throw new DatoInvalidoException("El archivo no es una respuesta de SIPSA: " + e.getMessage());
+        }
+        if (precios.isEmpty()) throw new DatoInvalidoException("El archivo no trae precios de SIPSA.");
+        LocalDateTime ahora = LocalDateTime.now(reloj);
+        repositorio.guardar(precios, ahora);
+        ultimoError.set(null);
+        log.info("Precios de SIPSA cargados desde un archivo: {} filas", precios.size());
+        List<PrecioReferencia> semana = repositorio.ultimaSemana();
+        return new EstadoPrecios(!semana.isEmpty(), semana.isEmpty() ? null : semana.get(0).semana(),
+                ahora, trayendo.get(), ultimoIntento.get(), null);
     }
 
     @Override
