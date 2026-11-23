@@ -20,12 +20,28 @@ public final class BuscadorPrecio {
     private static final Set<String> VACIAS = Set.of("de", "del", "la", "el", "con", "y", "en");
 
     /**
-     * Productos procesados que no son lo que vende el agricultor ("Café molido", "Harina de maíz",
-     * "Fríjol enlatado"): no se sugieren aunque empiecen por el nombre del cultivo.
+     * Palabras de productos que no salen de un cultivo. SIPSA también publica carnes, pollo, pescados,
+     * huevos, lácteos y procesados ("Café molido", "Harina de maíz", "Fríjol enlatado", "Carne de cerdo,
+     * tocino papada"): no se sugieren ni salen en el buscador.
      */
-    private static final Set<String> PROCESADOS = Set.of("molido", "instantaneo", "enlatado", "enlatada", "harina",
-            "precocida", "precocido", "fecula", "cuchuco", "pulpa", "jugo", "mermelada", "polvo", "pasta", "aceite",
-            "galleta", "tostado");
+    private static final Set<String> NO_SON_CULTIVO = Set.of(
+            // Procesados
+            "molido", "molida", "instantaneo", "enlatado", "enlatada", "lata", "harina", "precocida", "precocido",
+            "fecula", "cuchuco", "pulpa", "jugo", "mermelada", "polvo", "pasta", "pastas", "aceite", "galleta",
+            "galletas", "tostado", "panela", "chocolate", "cafe", "avena", "gelatina", "mayonesa", "mostaza",
+            "salsa", "sal", "vinagre", "color", "margarina", "manteca",
+            // Carnes y pollo
+            "carne", "cerdo", "res", "pollo", "alas", "muslos", "pechuga", "menudencias", "rabadillas", "pierna",
+            "piernas", "pernil",
+            // Huevos y lácteos
+            "huevo", "queso", "leche",
+            // Pescados y mariscos
+            "pescado", "bagre", "basa", "blanquillo", "bocachico", "cachama", "capaz", "corvina", "merluza",
+            "mojarra", "nicuro", "pargo", "robalo", "salmon", "sierra", "tilapia", "toyo", "trucha", "calamar",
+            "camaron", "langostino", "almejas", "mariscos", "atun", "sardinas", "mar");
+
+    /** Procesados solo si el nombre empieza así: "Azúcar morena" sí, "Mango de azúcar" (variedad) no */
+    private static final Set<String> NO_SON_CULTIVO_AL_INICIO = Set.of("azucar", "bocadillo");
 
     private BuscadorPrecio() {}
 
@@ -39,7 +55,7 @@ public final class BuscadorPrecio {
                     String n = normalizar(p.producto());
                     return n.equals(base) || n.startsWith(base + " ");
                 })
-                .filter(p -> !esProcesado(p.producto()))
+                .filter(p -> esCultivo(p.producto()))
                 .sorted(Comparator.comparingInt((PrecioReferencia p) -> -coincidencias(p.producto(), base, palabras))
                         .thenComparingInt(p -> comun(p.producto()) ? 0 : 1)
                         .thenComparingInt(p -> p.producto().length())
@@ -64,8 +80,37 @@ public final class BuscadorPrecio {
         return (int) palabras.stream().filter(delProducto::contains).count();
     }
 
-    static boolean esProcesado(String producto) {
-        return palabras(producto).stream().anyMatch(PROCESADOS::contains);
+    /** Si el producto sale de un cultivo (no es carne, pescado, huevo, lácteo ni procesado) */
+    public static boolean esCultivo(String producto) {
+        String primera = normalizar(producto).split(" ")[0];
+        return !NO_SON_CULTIVO_AL_INICIO.contains(primera) && palabras(producto).stream().noneMatch(NO_SON_CULTIVO::contains);
+    }
+
+    /**
+     * Buscador de productos: solo los de cultivo, y cada palabra escrita debe ser el comienzo de una palabra
+     * del producto ("papa cri" → "Papa criolla limpia"; "lim tah" → "Limón Tahití"). Primero los que empiezan
+     * por lo escrito, luego por orden alfabético.
+     */
+    public static List<PrecioReferencia> buscar(List<PrecioReferencia> precios, String texto, int maximo) {
+        String q = normalizar(texto);
+        if (q.length() < 2) return List.of();
+        List<String> buscadas = Arrays.stream(q.split(" ")).filter(p -> !p.isEmpty()).toList();
+        return precios.stream()
+                .filter(p -> esCultivo(p.producto()))
+                .filter(p -> {
+                    List<String> delProducto = Arrays.asList(normalizar(p.producto()).split(" "));
+                    return buscadas.stream().allMatch(b -> delProducto.stream().anyMatch(w -> w.startsWith(b)));
+                })
+                .sorted(Comparator.comparingInt((PrecioReferencia p) -> rango(normalizar(p.producto()), q))
+                        .thenComparing(p -> normalizar(p.producto())))
+                .limit(maximo)
+                .toList();
+    }
+
+    /** 0: empieza por lo escrito como palabra completa ("papa" → "Papa capira"); 1: lo empieza ("Papaya"); 2: el resto */
+    private static int rango(String producto, String q) {
+        if (producto.equals(q) || producto.startsWith(q + " ")) return 0;
+        return producto.startsWith(q) ? 1 : 2;
     }
 
     private static boolean comun(String producto) {

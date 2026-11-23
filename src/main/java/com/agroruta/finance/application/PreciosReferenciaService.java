@@ -22,7 +22,6 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
@@ -94,13 +93,7 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
     @Override
     public List<PrecioReferencia> buscar(String texto) {
         actualizarSiHaceFalta();
-        String q = BuscadorPrecio.normalizar(texto);
-        if (q.length() < 2) return List.of();
-        return repositorio.ultimaSemana().stream()
-                .filter(p -> BuscadorPrecio.normalizar(p.producto()).contains(q))
-                .sorted(Comparator.comparing(PrecioReferencia::producto))
-                .limit(30)
-                .toList();
+        return BuscadorPrecio.buscar(repositorio.ultimaSemana(), texto, 30);
     }
 
     @Override
