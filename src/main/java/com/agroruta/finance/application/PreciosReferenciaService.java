@@ -3,6 +3,7 @@ package com.agroruta.finance.application;
 import com.agroruta.finance.application.ports.in.PreciosReferenciaUseCase;
 import com.agroruta.finance.application.ports.out.PreciosReferenciaRepository;
 import com.agroruta.finance.application.ports.out.SipsaPort;
+import com.agroruta.finance.domain.EstadoPrecios;
 import com.agroruta.finance.domain.BuscadorPrecio;
 import com.agroruta.finance.domain.PrecioCultivo;
 import com.agroruta.finance.domain.PrecioReferencia;
@@ -36,8 +37,8 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
     static final int SEMANAS = 4;
     /** SIPSA publica una vez por semana: no vale la pena preguntar más seguido */
     static final Duration VIGENCIA = Duration.ofDays(3);
-    /** Si falla, no se vuelve a intentar antes de esto */
-    static final Duration ESPERA_TRAS_FALLO = Duration.ofHours(6);
+    /** Si falla, no se vuelve a intentar antes de esto (un fallo pasajero no deja la pantalla vacía medio día) */
+    static final Duration ESPERA_TRAS_FALLO = Duration.ofMinutes(30);
     static final int MAX_ALTERNATIVAS = 8;
 
     private final PreciosReferenciaRepository repositorio;
@@ -46,6 +47,8 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
     private final Executor segundoPlano;
     private final AtomicBoolean trayendo = new AtomicBoolean(false);
     private final AtomicReference<LocalDateTime> ultimoIntento = new AtomicReference<>();
+    /** Por qué falló la última vez (null si la última salió bien o no se ha intentado) */
+    private final AtomicReference<String> ultimoError = new AtomicReference<>();
 
     @Autowired
     public PreciosReferenciaService(PreciosReferenciaRepository repositorio, SipsaPort sipsa) {
@@ -136,17 +139,28 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
             List<PrecioReferencia> precios = sipsa.preciosRecientes(SEMANAS);
             if (precios.isEmpty()) {
                 log.warn("SIPSA no devolvió precios");
+                ultimoError.set("SIPSA no devolvió precios");
                 return 0;
             }
             repositorio.guardar(precios, ahora);
+            ultimoError.set(null);
             log.info("Precios de referencia de SIPSA actualizados: {} filas", precios.size());
             return precios.size();
         } catch (RuntimeException e) {
             log.warn("No se pudieron traer los precios de SIPSA: {}", e.getMessage());
+            ultimoError.set(e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage());
             return 0;
         } finally {
             trayendo.set(false);
         }
+    }
+
+    @Override
+    public EstadoPrecios estado() {
+        actualizarSiHaceFalta();
+        List<PrecioReferencia> semana = repositorio.ultimaSemana();
+        return new EstadoPrecios(!semana.isEmpty(), semana.isEmpty() ? null : semana.get(0).semana(),
+                repositorio.ultimaActualizacion().orElse(null), trayendo.get(), ultimoIntento.get(), ultimoError.get());
     }
 
     @Override

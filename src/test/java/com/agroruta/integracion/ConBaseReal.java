@@ -46,6 +46,7 @@ abstract class ConBaseReal {
         registro.add("JWT_SECRET", () -> SECRETO);
         registro.add("WEATHER_API_KEY", () -> "sin-clave");
         registro.add("BACKUP_SCHEDULER_ENABLED", () -> "false");
+        registro.add("sipsa.al-arrancar", () -> "false"); // no salir a internet a traer los precios de SIPSA
     }
 
     /** Inserta una fila y devuelve su id. */

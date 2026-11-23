@@ -43,6 +43,12 @@ public class PrecioReferenciaController {
         return ResponseEntity.ok(precios.precioDe(CurrentUser.id(authentication), cultivo, variedad));
     }
 
+    /** Cómo van los precios de SIPSA (para avisar mientras se traen o si falló) */
+    @GetMapping("/status")
+    public ResponseEntity<com.agroruta.finance.domain.EstadoPrecios> estado() {
+        return ResponseEntity.ok(precios.estado());
+    }
+
     /** Buscar un producto de SIPSA para elegirlo a mano: ?q=papa */
     @GetMapping
     public ResponseEntity<List<PrecioReferencia>> buscar(@RequestParam("q") String texto) {

@@ -5,6 +5,9 @@ import com.agroruta.finance.domain.AgregadorSipsa;
 import com.agroruta.finance.domain.PrecioReferencia;
 import com.agroruta.shared.exception.ExternalApiException;
 import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import javax.net.ssl.SSLParameters;
 import org.springframework.stereotype.Component;
 
 import javax.xml.stream.XMLInputFactory;
@@ -36,34 +39,93 @@ public class SipsaSoapAdapter implements SipsaPort {
             + " xmlns:s=\"http://servicios.sipsa.co.gov.dane/\"><soap12:Body><s:promediosSipsaSemanaMadr/>"
             + "</soap12:Body></soap12:Envelope>";
 
-    private final String url;
-    private final HttpClient http;
+    /** Intentos por consulta: el servidor del DANE a veces corta la conexión segura desde fuera de Colombia */
+    static final int INTENTOS = 3;
 
+    private static final Logger log = LoggerFactory.getLogger(SipsaSoapAdapter.class);
+
+    private final String url;
+    /** Primer intento: HTTP/1.1 (el DANE no habla HTTP/2) con la negociación TLS normal */
+    private final HttpClient http;
+    /** Reintentos: solo TLS 1.2, lo más compatible con servidores y cortafuegos viejos */
+    private final HttpClient compatible;
+    private final Duration espera;
+
+    @org.springframework.beans.factory.annotation.Autowired
     public SipsaSoapAdapter(@Value("${sipsa.url:https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService}") String url) {
+        this(url, Duration.ofSeconds(5));
+    }
+
+    SipsaSoapAdapter(String url, Duration espera) {
         this.url = url;
+        this.espera = espera;
         this.http = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .connectTimeout(Duration.ofSeconds(20))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
+        SSLParameters tls12 = new SSLParameters();
+        tls12.setProtocols(new String[] {"TLSv1.2"});
+        this.compatible = HttpClient.newBuilder()
+                .version(HttpClient.Version.HTTP_1_1)
+                .sslParameters(tls12)
                 .connectTimeout(Duration.ofSeconds(20))
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
     }
 
+    /**
+     * Trae los precios. Si la conexión se cae (p. ej. "Remote host terminated the handshake") o el DANE
+     * responde con un error del servidor, se reintenta hasta {@link #INTENTOS} veces con unos segundos de espera,
+     * desde el segundo intento solo con TLS 1.2.
+     */
     @Override
     public List<PrecioReferencia> preciosRecientes(int semanas) {
+        ExternalApiException ultimo = null;
+        for (int intento = 1; intento <= INTENTOS; intento++) {
+            try {
+                return consultar(intento == 1 ? http : compatible, semanas);
+            } catch (Reintentable e) {
+                ultimo = new ExternalApiException(e.getMessage());
+                log.warn("SIPSA, intento {} de {}: {}", intento, INTENTOS, e.getMessage());
+                if (intento < INTENTOS) esperar();
+            }
+        }
+        throw ultimo;
+    }
+
+    /** Falla de la red o del servidor del DANE: vale la pena volver a intentar */
+    static final class Reintentable extends RuntimeException {
+        Reintentable(String mensaje) { super(mensaje); }
+    }
+
+    private void esperar() {
+        try {
+            Thread.sleep(espera.toMillis());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new ExternalApiException("Se interrumpió la consulta a SIPSA");
+        }
+    }
+
+    /** Una consulta con ese cliente */
+    List<PrecioReferencia> consultar(HttpClient cliente, int semanas) {
         HttpRequest pedido = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofMinutes(3))
                 .header("Content-Type", "application/soap+xml; charset=utf-8")
                 .POST(HttpRequest.BodyPublishers.ofString(SOBRE))
                 .build();
         try {
-            HttpResponse<InputStream> r = http.send(pedido, HttpResponse.BodyHandlers.ofInputStream());
+            HttpResponse<InputStream> r = cliente.send(pedido, HttpResponse.BodyHandlers.ofInputStream());
             try (InputStream cuerpo = r.body()) {
+                if (r.statusCode() >= 500) throw new Reintentable("SIPSA respondió " + r.statusCode());
                 if (r.statusCode() != 200) {
                     throw new ExternalApiException("SIPSA respondió " + r.statusCode());
                 }
                 return leer(cuerpo).ultimasSemanas(semanas);
             }
         } catch (IOException e) {
-            throw new ExternalApiException("No se pudo consultar SIPSA: " + e.getMessage());
+            throw new Reintentable("No se pudo consultar SIPSA: " + e.getMessage());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ExternalApiException("Se interrumpió la consulta a SIPSA");
