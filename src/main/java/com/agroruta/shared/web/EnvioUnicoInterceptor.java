@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 /**
  * Evita registros duplicados cuando el teléfono reenvía lo que guardó sin conexión.
  * <p>
- * Los POST de jornales, fumigaciones, cosechas y actividades pueden traer la cabecera
+ * Los POST de jornales (uno o la planilla), fumigaciones, cosechas, actividades, ventas, abonos,
+ * gastos de la finca y compras de la bodega pueden traer la cabecera
  * {@value #CABECERA} con una clave que el dispositivo genera una sola vez por registro.
  * Si la misma persona manda dos veces la misma clave, la segunda responde 409 (AGR-036)
  * y no llega al controlador. Si el registro falla, la clave se libera para reintentar.

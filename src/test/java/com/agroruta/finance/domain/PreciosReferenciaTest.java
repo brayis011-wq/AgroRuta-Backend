@@ -28,6 +28,42 @@ class PreciosReferenciaTest {
             p("Uchuva con cáscara"), p("Lulo"), p("Café molido"), p("Papaya Maradol"));
 
     @Test
+    @DisplayName("el buscador solo trae productos de cultivo y busca por el comienzo de cada palabra")
+    void buscadorSoloCultivos() {
+        var semana = List.of(p("Papa criolla limpia"), p("Papa Morasurco"), p("Carne de cerdo, tocino papada"),
+                p("Papaya Maradol"), p("Limón Tahití"), p("Limón común"), p("Café molido"), p("Huevo rojo AA"),
+                p("Tilapia roja entera fresca"), p("Banano bocadillo"), p("Bocadillo veleño"), p("Mango de azúcar"),
+                p("Azúcar morena"), p("Fríjol enlatado"), p("Fríjol cargamanto rojo"), p("Arroz sopa cristal"));
+
+        assertThat(BuscadorPrecio.buscar(semana, "papa", 30)).extracting(PrecioReferencia::producto)
+                .containsExactly("Papa criolla limpia", "Papa Morasurco", "Papaya Maradol");
+        assertThat(BuscadorPrecio.buscar(semana, "lim tah", 30)).extracting(PrecioReferencia::producto)
+                .containsExactly("Limón Tahití");
+        assertThat(BuscadorPrecio.buscar(semana, "ROJ", 30)).extracting(PrecioReferencia::producto)
+                .containsExactly("Fríjol cargamanto rojo");
+        assertThat(BuscadorPrecio.buscar(semana, "bocadillo", 30)).extracting(PrecioReferencia::producto)
+                .containsExactly("Banano bocadillo");
+        assertThat(BuscadorPrecio.buscar(semana, "azucar", 30)).extracting(PrecioReferencia::producto)
+                .containsExactly("Mango de azúcar");
+        assertThat(BuscadorPrecio.buscar(semana, "frijol", 30)).extracting(PrecioReferencia::producto)
+                .containsExactly("Fríjol cargamanto rojo");
+        assertThat(BuscadorPrecio.buscar(semana, "arroz", 30)).hasSize(1);
+        assertThat(BuscadorPrecio.buscar(semana, "p", 30)).isEmpty();
+        assertThat(BuscadorPrecio.buscar(semana, "papa", 1)).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("carnes, pescados, huevos y procesados no son de cultivo")
+    void queEsDeCultivo() {
+        assertThat(BuscadorPrecio.esCultivo("Aguacate Hass")).isTrue();
+        assertThat(BuscadorPrecio.esCultivo("Pierna pernil con rabadilla")).isFalse();
+        assertThat(BuscadorPrecio.esCultivo("Lomitos de atún en lata")).isFalse();
+        assertThat(BuscadorPrecio.esCultivo("Queso campesino")).isFalse();
+        assertThat(BuscadorPrecio.esCultivo("Panela redonda morena")).isFalse();
+        assertThat(BuscadorPrecio.esCultivo("Fresa")).isTrue();
+    }
+
+    @Test
     void encuentraLaVariedad() {
         assertThat(BuscadorPrecio.mejor(SEMANA_SIPSA, "Aguacate", "Hass")).get()
                 .extracting(PrecioReferencia::producto).isEqualTo("Aguacate Hass");
