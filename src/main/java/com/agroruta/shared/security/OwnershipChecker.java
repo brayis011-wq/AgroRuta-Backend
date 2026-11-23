@@ -81,6 +81,20 @@ public class OwnershipChecker {
         return propio(Recurso.PAGO, pagoId, auth);
     }
 
+    // ── finance ──────────────────────────────────────────────────────────
+
+    public boolean gastoPropio(Long gastoId, Authentication auth) {
+        return propio(Recurso.GASTO_FINCA, gastoId, auth);
+    }
+
+    public boolean ventaPropia(Long ventaId, Authentication auth) {
+        return propio(Recurso.VENTA, ventaId, auth);
+    }
+
+    public boolean programadaPropia(Long programadaId, Authentication auth) {
+        return propio(Recurso.ACTIVIDAD_PROGRAMADA, programadaId, auth);
+    }
+
     private boolean propio(Recurso recurso, Long recursoId, Authentication auth) {
         if (CurrentUser.esAdmin(auth)) return true;
         Long userId = CurrentUser.id(auth);

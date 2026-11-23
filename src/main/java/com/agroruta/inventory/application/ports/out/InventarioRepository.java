@@ -22,6 +22,8 @@ public interface InventarioRepository {
     /** El gasto de producto registrado por una fumigación, si hay */
     Optional<MovimientoInventario> usoDeFumigacion(Long fumigacionId);
 
+    Optional<MovimientoInventario> usoDeActividad(Long actividadId);
+
     /** Mínimos definidos por el agricultor: insumoId → cantidad en unidad base */
     Map<Long, Double> minimosDe(Long agricultorId);
 

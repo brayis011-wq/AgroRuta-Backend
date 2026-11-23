@@ -41,9 +41,18 @@ public class CargoController {
     @PostMapping
     public ResponseEntity<CargoResponse> crear(@Valid @RequestBody CargoRequest req, Authentication authentication) {
         CargoResponse response = CargoResponse.from(
-                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.valorJornal, CurrentUser.id(authentication))
+                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo,
+                        CurrentUser.id(authentication))
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /** Agrega los cargos típicos de una finca que aún no tiene (jornalero, recolector al kilo, fumigador...) */
+    @PostMapping("/defaults")
+    @PreAuthorize("hasRole('Agricultor')")
+    public ResponseEntity<List<CargoResponse>> crearTipicos(Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(cargoUseCase.crearTipicos(CurrentUser.id(authentication))
+                .stream().map(CargoResponse::from).toList());
     }
 
     @PutMapping("/{id}")
@@ -51,7 +60,7 @@ public class CargoController {
     public ResponseEntity<CargoResponse> actualizar(@PathVariable Long id,
                                                     @Valid @RequestBody CargoRequest req) {
         CargoResponse response = CargoResponse.from(
-                cargoUseCase.actualizarCargo(id, req.nombre, req.descripcion, req.valorJornal)
+                cargoUseCase.actualizarCargo(id, req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo)
         );
         return ResponseEntity.ok(response);
     }

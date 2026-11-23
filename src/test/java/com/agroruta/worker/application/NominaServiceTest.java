@@ -308,6 +308,16 @@ class NominaServiceTest {
         verify(nominaRepository, never()).eliminar(any());
     }
 
+    @Test
+    @DisplayName("eliminarNomina elimina una nómina anulada (sus jornales quedan libres)")
+    void eliminarNomina_nominaAnulada_debeEliminar() {
+        when(nominaRepository.buscarPorId(3L)).thenReturn(Optional.of(nominaAnulada));
+
+        nominaService.eliminarNomina(3L);
+
+        verify(nominaRepository).eliminar(3L);
+    }
+
     // ── buscarPorId ───────────────────────────────────────────────────────
 
     @Test

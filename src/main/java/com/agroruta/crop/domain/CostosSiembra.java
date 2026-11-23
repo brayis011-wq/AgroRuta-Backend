@@ -5,7 +5,8 @@ import java.util.List;
 /**
  * Cuánto costó y cuánto dejó una temporada (pesos colombianos).
  * Mano de obra = jornales registrados a la siembra; insumos = costo de las fumigaciones;
- * otros = costo de materiales de las actividades; ingresos = kilos × precio de cada cosecha.
+ * otros = costo de materiales de las actividades; ingresos = lo vendido de la siembra (Ventas) o, si no tiene
+ * ventas, kilos × precio de cada cosecha (como se registraba antes).
  */
 public record CostosSiembra(
         Long siembraId,
@@ -27,7 +28,11 @@ public record CostosSiembra(
         List<CostoTrabajador> trabajadores,
         List<CostoMes> meses,
         int fumigacionesSinCosto,
-        int cosechasSinPrecio
+        int cosechasSinPrecio,
+        /** De dónde salen los ingresos: VENTAS, COSECHAS (precio anotado en la cosecha) o null si no hay */
+        String fuenteIngresos,
+        /** Kilos vendidos de la siembra (de sus ventas) */
+        double kgVendidos
 ) {
     public record CostoTrabajador(Long trabajadorId, String nombre, int jornales, double valor) {}
 

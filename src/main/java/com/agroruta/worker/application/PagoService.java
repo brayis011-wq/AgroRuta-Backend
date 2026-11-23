@@ -94,6 +94,29 @@ public class PagoService implements PagoUseCase {
     }
 
     @Override
+    public List<Pago> pagarVarias(Long agricultorId, List<Long> nominaIds, MetodoPago metodoPago,
+                                  String observaciones, boolean aprobarPendientes) {
+        if (nominaIds == null || nominaIds.isEmpty()) {
+            throw new DatoInvalidoException("Elige al menos una nómina para pagar.");
+        }
+        List<Pago> pagos = new java.util.ArrayList<>();
+        for (Long id : new java.util.LinkedHashSet<>(nominaIds)) {
+            Nomina nomina = nominaRepository.buscarPorId(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + id));
+            if (agricultorId != null && (nomina.getTrabajador() == null
+                    || !agricultorId.equals(nomina.getTrabajador().getAgricultorId()))) {
+                throw new ResourceNotFoundException("Nómina no encontrada con id: " + id);
+            }
+            if (aprobarPendientes && nomina.estaPendiente()) {
+                nomina.aprobar();
+                nominaRepository.guardar(nomina);
+            }
+            pagos.add(registrarPago(id, nomina.getValorTotal(), metodoPago, null, observaciones));
+        }
+        return pagos;
+    }
+
+    @Override
     public Pago buscarPorId(Long id) {
         return pagoRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -116,13 +139,13 @@ public class PagoService implements PagoUseCase {
     }
 
     @Override
-    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano) {
-        return pagoRepository.pagina(agricultorId, nominaId, pagina, tamano);
+    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, Long trabajadorId, int pagina, int tamano) {
+        return pagoRepository.pagina(agricultorId, nominaId, trabajadorId, pagina, tamano);
     }
 
     @Override
-    public ResumenPagos resumen(Long agricultorId, Long nominaId) {
-        return pagoRepository.resumen(agricultorId, nominaId);
+    public ResumenPagos resumen(Long agricultorId, Long nominaId, Long trabajadorId) {
+        return pagoRepository.resumen(agricultorId, nominaId, trabajadorId);
     }
 
     @Override

@@ -11,6 +11,7 @@ import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.infrastructure.web.dto.PagoRequest;
 import com.agroruta.worker.infrastructure.web.dto.PagoResponse;
+import com.agroruta.worker.infrastructure.web.dto.PagosLoteRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,6 +41,17 @@ public class PagoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    /** Paga varias nóminas juntas, cada una por su total (con aprobarPendientes, aprueba antes las pendientes). */
+    @PostMapping("/batch")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<List<PagoResponse>> pagarVarias(@Valid @RequestBody PagosLoteRequest req,
+                                                          Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        List<PagoResponse> pagos = pagoUseCase.pagarVarias(dueno, req.nominaIds, req.metodoPago,
+                req.observaciones, req.aprobarPendientes).stream().map(PagoResponse::from).toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(pagos);
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("@ownership.pagoPropio(#id, authentication)")
     public ResponseEntity<PagoResponse> buscarPorId(@PathVariable Long id) {
@@ -67,18 +79,20 @@ public class PagoController {
     public ResponseEntity<Pagina<PagoResponse>> pagina(@RequestParam(required = false) Integer page,
                                                        @RequestParam(required = false) Integer size,
                                                        @RequestParam(required = false) Long nominaId,
+                                                       @RequestParam(required = false) Long trabajadorId,
                                                        Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(pagoUseCase.pagina(dueno, nominaId, Pagina.numero(page), Pagina.tamano(size))
+        return ResponseEntity.ok(pagoUseCase.pagina(dueno, nominaId, trabajadorId, Pagina.numero(page), Pagina.tamano(size))
                 .map(PagoResponse::from));
     }
 
     /** Totales de los pagos para las tarjetas de la lista, con el mismo filtro de nómina. */
     @GetMapping("/summary")
     public ResponseEntity<ResumenPagos> resumen(@RequestParam(required = false) Long nominaId,
+                                                @RequestParam(required = false) Long trabajadorId,
                                                 Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId));
+        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId, trabajadorId));
     }
 
     /**

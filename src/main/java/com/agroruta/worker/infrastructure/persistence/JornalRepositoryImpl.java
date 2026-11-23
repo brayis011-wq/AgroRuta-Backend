@@ -73,6 +73,43 @@ class JornalRepositoryImpl implements JornalRepository {
     @Override public void eliminar(Long id) { jpa.deleteById(id); }
 
     @Override
+    public List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(Long agricultorId, LocalDate inicio, LocalDate fin) {
+        return jpa.rendimiento(agricultorId, inicio, fin).stream().map(f -> new com.agroruta.worker.domain.RendimientoTrabajador(
+                (Long) f[0], ((f[1] == null ? "" : f[1]) + " " + (f[2] == null ? "" : f[2])).trim(), (String) f[3],
+                f[4] == null ? null : f[4].toString(),
+                entero(f[5]), decimal(f[6]), decimal(f[7]), entero(f[8]), decimal(f[9]), decimal(f[10])))
+                .sorted(java.util.Comparator.comparing(com.agroruta.worker.domain.RendimientoTrabajador::nombre, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    private static int entero(Object o) { return o == null ? 0 : ((Number) o).intValue(); }
+
+    @Override public List<Jornal> buscarPorCosechas(java.util.Collection<Long> cosechaIds) {
+        if (cosechaIds == null || cosechaIds.isEmpty()) return List.of();
+        return jpa.findByCosechaIdIn(cosechaIds).stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Jornal> buscarDelEquipo(Long agricultorId, LocalDate inicio, LocalDate fin) {
+        return jpa.delEquipoEntre(agricultorId, inicio, fin).stream()
+                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> estadosDeNomina(java.util.Collection<Long> ids) {
+        java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> res = new java.util.HashMap<>();
+        if (ids == null || ids.isEmpty()) return res;
+        for (Object[] f : jpa.estadosDeNomina(ids)) res.put((Long) f[0], (com.agroruta.worker.domain.EstadoNomina) f[1]);
+        return res;
+    }
+
+    @Override
+    public java.util.Set<Long> idsEnNomina(java.util.Collection<Long> ids) {
+        if (ids == null || ids.isEmpty()) return java.util.Set.of();
+        return new java.util.HashSet<>(jpa.idsEnNomina(ids));
+    }
+
+    @Override
     public Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
         var orden = Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"));
         return aPagina(jpa.paginaPorTrabajador(trabajadorId, inicio, fin, PageRequest.of(pagina, tamano, orden)),
@@ -80,8 +117,23 @@ class JornalRepositoryImpl implements JornalRepository {
     }
 
     @Override
+    public Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano) {
+        var orden = Sort.by(Sort.Order.desc("fecha"), Sort.Order.desc("id"));
+        return aPagina(jpa.paginaDelEquipo(agricultorId, trabajadorId, inicio, fin, PageRequest.of(pagina, tamano, orden)),
+                WorkerMapper::toDomain);
+    }
+
+    @Override
+    public ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin) {
+        return resumenDe(jpa.resumenDelEquipo(agricultorId, trabajadorId, inicio, fin));
+    }
+
+    @Override
     public ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin) {
-        List<Object[]> filas = jpa.resumenPorTrabajador(trabajadorId, inicio, fin);
+        return resumenDe(jpa.resumenPorTrabajador(trabajadorId, inicio, fin));
+    }
+
+    private ResumenJornales resumenDe(List<Object[]> filas) {
         Object[] f = filas.isEmpty() ? new Object[6] : filas.get(0);
         return new ResumenJornales(
                 f[0] == null ? 0 : ((Number) f[0]).longValue(), decimal(f[1]),

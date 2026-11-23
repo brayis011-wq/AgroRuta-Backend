@@ -40,6 +40,7 @@ public class ReportController {
     private final GenerateCropReportUseCase generateCropReport;
     private final PdfReportService pdfReportService;
     private final GenerarReporteFinancieroUseCase generarReporteFinanciero;
+    private final com.agroruta.report.application.ports.out.CampoQueryPort campo;
 
     @GetMapping(value = "/payroll", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> payrollReport(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
@@ -107,6 +108,23 @@ public class ReportController {
         return adjunto(pdf, "reporte-agroruta.pdf");
     }
 
+    /**
+     * Cuaderno de campo en PDF: todas las fumigaciones y fertilizaciones del periodo (producto, dosis,
+     * carencia y fecha). ?farmId=3 para una sola finca.
+     */
+    @GetMapping(value = "/field-book", produces = MediaType.APPLICATION_PDF_VALUE)
+    @org.springframework.security.access.prepost.PreAuthorize("#fincaId == null or @ownership.fincaPropia(#fincaId, authentication)")
+    public ResponseEntity<byte[]> fieldBook(@RequestParam(value = "farmId", required = false) Long fincaId,
+                                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+                                            Authentication authentication) {
+        Periodo periodo = Periodo.de(desde, hasta);
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        byte[] pdf = pdfReportService.generateFieldBookPdf(campo.aplicaciones(dueno, fincaId, periodo), periodo,
+                campo.nombreFinca(fincaId), CurrentUser.nombre(authentication));
+        return adjunto(pdf, "cuaderno-de-campo.pdf");
+    }
+
     private static final List<String> PARTES = List.of("payroll", "crops", "costs", "profitability");
 
     private static ResponseEntity<byte[]> adjunto(byte[] pdf, String nombre) {
@@ -143,13 +161,16 @@ public class ReportController {
         CropReport reporte = CurrentUser.esAdmin(authentication)
                 ? generateCropReport.generate()
                 : generateCropReport.generateFor(CurrentUser.id(authentication));
-        return reporte == null ? null : reporte.en(periodo);
+        if (reporte == null) return null;
+        return reporte.en(periodo);
     }
 
     private ReporteFinanciero finanzas(Authentication authentication, Periodo periodo) {
         ReporteFinanciero reporte = CurrentUser.esAdmin(authentication)
                 ? generarReporteFinanciero.generate()
                 : generarReporteFinanciero.generateFor(CurrentUser.id(authentication));
-        return reporte == null ? null : reporte.en(periodo);
+        if (reporte == null) return null;
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return reporte.en(periodo).conGastos(campo.gastosGenerales(dueno, periodo));
     }
 }

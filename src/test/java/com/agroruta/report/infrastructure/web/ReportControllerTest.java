@@ -54,6 +54,9 @@ class ReportControllerTest {
     @Mock
     private GenerarReporteFinancieroUseCase generarReporteFinanciero;
 
+    @Mock
+    private com.agroruta.report.application.ports.out.CampoQueryPort campo;
+
     @InjectMocks
     private ReportController reportController;
 

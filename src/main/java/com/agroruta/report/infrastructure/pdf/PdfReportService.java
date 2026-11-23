@@ -365,6 +365,122 @@ public class PdfReportService {
                 new Columna("Ganancia", 80, true),
                 new Columna("Vs. anterior", 80, true)), filas);
         pdf.nota("Vs. anterior: cuánto ganó de más (o de menos) frente a la temporada anterior del mismo lote.");
+        gastosGenerales(pdf, r.gastos(), ganancia);
+    }
+
+    /** Gastos de las fincas que no son de una siembra: se restan para ver la ganancia real */
+    private void gastosGenerales(PdfLienzo pdf, com.agroruta.report.domain.GastosGenerales g, Double ganancia) throws IOException {
+        if (g == null || g.total() <= 0) return;
+        pdf.seccion("Gastos generales de las fincas");
+        double real = (ganancia == null ? 0 : ganancia) - g.total();
+        pdf.tarjetas(List.of(
+                new Tarjeta("Gastos generales", pesosDe(g.total()), "transporte, herramientas, servicios…", AMBAR),
+                new Tarjeta("Ganancia real", pesosConSigno(real), "lotes menos gastos generales",
+                        real < 0 ? ROJO : VERDE_OSCURO)));
+        List<List<Celda>> filas = new ArrayList<>();
+        for (var p : g.porCategoria()) {
+            filas.add(List.of(Celda.de(CATEGORIAS_GASTO.getOrDefault(p.categoria(), capitalizar(p.categoria()))),
+                    Celda.de(pesosDe(p.total()))));
+        }
+        pdf.tabla(List.of(new Columna("Categoría", 300, false), new Columna("Total", 215, true)), filas);
+    }
+
+    private static final Map<String, String> CATEGORIAS_GASTO = Map.of(
+            "TRANSPORTE", "Transporte", "HERRAMIENTAS", "Herramientas", "SERVICIOS", "Servicios",
+            "MANTENIMIENTO", "Mantenimiento", "ADMINISTRACION", "Administración", "IMPUESTOS", "Impuestos",
+            "OTRO", "Otros");
+
+    // ══ Cuaderno de campo ══════════════════════════════════════════════════
+
+    private static final java.time.format.DateTimeFormatter DIA_CUADERNO = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    /**
+     * Cuaderno de campo: todas las aplicaciones de producto del periodo (fecha, lugar, producto, dosis,
+     * carencia y reentrada), como lo piden las certificaciones y algunos compradores.
+     */
+    public byte[] generateFieldBookPdf(List<com.agroruta.report.domain.AplicacionCampo> aplicaciones,
+                                       com.agroruta.report.domain.Periodo periodo, String finca, String preparadoPara) {
+        String sub = "Registro de aplicaciones de productos" + (finca != null ? " · " + finca : "")
+                + " · " + textoPeriodo(periodo);
+        try (PdfLienzo pdf = new PdfLienzo("Cuaderno de campo", sub)) {
+            pdf.encabezadoDerecha("Generado el " + fechaHora(LocalDateTime.now()),
+                    preparadoPara != null ? "Productor: " + preparadoPara : null);
+            long productos = aplicaciones.stream().map(a -> a.producto() == null ? "" : a.producto().toLowerCase())
+                    .distinct().count();
+            long lotes = aplicaciones.stream().map(a -> a.finca() + "|" + a.lote()).distinct().count();
+            pdf.tarjetas(List.of(
+                    new Tarjeta("Aplicaciones", String.valueOf(aplicaciones.size()), "en el periodo", VERDE_OSCURO),
+                    new Tarjeta("Productos", String.valueOf(productos), "distintos", new Color(0x1F, 0x5F, 0xA8)),
+                    new Tarjeta("Lotes", String.valueOf(lotes), "con aplicaciones", AMBAR)));
+            pdf.seccion("Aplicaciones");
+            if (aplicaciones.isEmpty()) {
+                pdf.nota("No hay fumigaciones ni fertilizaciones registradas en este periodo.");
+            } else {
+                List<List<PdfLienzo.Celda2>> filas = new ArrayList<>();
+                for (var a : aplicaciones) {
+                    String dosis = a.dosis() == null ? "—" : numeroCorto(a.dosis()) + " " + unidad(a.unidadDosis());
+                    List<String> detalleDosis = new ArrayList<>();
+                    if (a.areaAplicada() != null) detalleDosis.add(numeroCorto(a.areaAplicada()) + " ha");
+                    if (a.cantidadUsada() != null) detalleDosis.add("gastado " + numeroCorto(a.cantidadUsada()) + " " + unidad(a.unidadCantidad()));
+                    boolean conCarencia = a.finCarencia() != null;
+                    filas.add(List.of(
+                            new PdfLienzo.Celda2(a.fecha().format(DIA_CUADERNO), null, false),
+                            new PdfLienzo.Celda2(a.finca() + " / " + a.lote(), a.cultivo(), false),
+                            new PdfLienzo.Celda2(a.producto(), a.tipoProducto() != null ? tipoProducto(a.tipoProducto()) : null, true),
+                            new PdfLienzo.Celda2(dosis, detalleDosis.isEmpty() ? null : String.join(" · ", detalleDosis), false),
+                            new PdfLienzo.Celda2(conCarencia ? a.diasCarencia() + " días" : "—",
+                                    conCarencia ? "desde " + a.finCarencia().format(DIA_CUADERNO) : null, false),
+                            new PdfLienzo.Celda2(a.reentradaHoras() == null || a.reentradaHoras() <= 0 ? "—" : a.reentradaHoras() + " h", null, false)));
+                }
+                pdf.tablaDosLineas(List.of(
+                        new Columna("Fecha", 60, false),
+                        new Columna("Finca / lote y cultivo", 120, false),
+                        new Columna("Producto", 128, false),
+                        new Columna("Dosis", 90, false),
+                        new Columna("Carencia", 62, false),
+                        new Columna("Reentrada", 55, true)), filas);
+                pdf.notaLarga("Carencia: días sin cosechar después de aplicar; debajo, el primer día en que se puede cosechar. "
+                        + "Reentrada: horas sin entrar al lote. En la dosis, el área aplicada y el producto gastado en total.");
+            }
+            pdf.asegurar(70);
+            pdf.y -= 30;
+            pdf.linea(MARGEN, pdf.y, MARGEN + 220, pdf.y, TINTA_3, 0.6f);
+            pdf.texto("Firma del responsable técnico", NORMAL, 8.5f, MARGEN, pdf.y - 12, TINTA_2);
+            pdf.linea(MARGEN + 280, pdf.y, MARGEN + CONTENIDO, pdf.y, TINTA_3, 0.6f);
+            pdf.texto("Firma del productor", NORMAL, 8.5f, MARGEN + 280, pdf.y - 12, TINTA_2);
+            pdf.y -= 24;
+            return pdf.terminar();
+        } catch (IOException e) {
+            throw new IllegalStateException("Error generando el cuaderno de campo", e);
+        }
+    }
+
+    private static String textoPeriodo(com.agroruta.report.domain.Periodo p) {
+        if (p == null || p.esTodo()) return "todo el historial";
+        if (p.desde() == null) return "hasta el " + p.hasta().format(DIA_CUADERNO);
+        if (p.hasta() == null) return "desde el " + p.desde().format(DIA_CUADERNO);
+        return p.desde().format(DIA_CUADERNO) + " a " + p.hasta().format(DIA_CUADERNO);
+    }
+
+    private static String numeroCorto(double v) {
+        java.text.NumberFormat f = java.text.NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag("es-CO"));
+        f.setMaximumFractionDigits(2);
+        return f.format(v);
+    }
+
+    private static String unidad(String u) {
+        if (u == null) return "";
+        return switch (u) {
+            case "LITROS" -> "L";
+            case "ML" -> "ml";
+            case "GRAMOS" -> "g";
+            case "KG" -> "kg";
+            default -> u.toLowerCase();
+        };
+    }
+
+    private static String tipoProducto(String t) {
+        return capitalizar(t.replace('_', ' ').toLowerCase());
     }
 
     // ══ Reporte completo ═══════════════════════════════════════════════════

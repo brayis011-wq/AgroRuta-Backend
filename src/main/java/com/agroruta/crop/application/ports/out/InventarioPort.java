@@ -21,4 +21,11 @@ public interface InventarioPort {
 
     /** Devuelve a la bodega el producto de una fumigación (se borró o ya no usa un insumo del catálogo) */
     void quitarUso(Long fumigacionId);
+
+    /** Igual que registrarUso, para una actividad (abonado, fertilización al suelo...) */
+    Optional<BigDecimal> registrarUsoDeActividad(Long actividadId, Long agricultorId, Long insumoId,
+                                                 double cantidad, String unidad, LocalDate fecha);
+
+    /** Devuelve a la bodega el producto de una actividad */
+    void quitarUsoDeActividad(Long actividadId);
 }

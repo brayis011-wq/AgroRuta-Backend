@@ -12,6 +12,10 @@ import java.util.List;
 
 interface JpaNominaRepository extends JpaRepository<NominaEntity, Long> {
 
+    /** La nómina en la que quedó un jornal (un jornal está en una sola) */
+    @Query("SELECT n FROM NominaEntity n JOIN n.jornales j WHERE j.id = :jornalId")
+    List<NominaEntity> conJornal(@Param("jornalId") Long jornalId);
+
     List<NominaEntity> findByTrabajadorId(Long trabajadorId);
 
     List<NominaEntity> findByTrabajadorIdAndEstado(Long trabajadorId, EstadoNomina estado);

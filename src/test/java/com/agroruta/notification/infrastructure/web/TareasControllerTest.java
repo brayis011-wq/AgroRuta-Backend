@@ -23,7 +23,7 @@ class TareasControllerTest {
     @DisplayName("con la clave correcta manda el resumen")
     void claveCorrecta() {
         when(alertas.enviarResumenDelDia(false)).thenReturn(4);
-        var r = new TareasController(alertas, limpieza,"clave-larga").alertasDiarias("clave-larga", false);
+        var r = new TareasController(alertas, limpieza, null, "clave-larga").alertasDiarias("clave-larga", false);
         assertThat(r.getStatusCode().value()).isEqualTo(200);
         assertThat(r.getBody()).containsEntry("enviados", 4);
     }
@@ -31,9 +31,9 @@ class TareasControllerTest {
     @Test
     @DisplayName("clave equivocada: 403; sin clave configurada: 404 y nunca corre")
     void sinPermiso() {
-        assertThat(new TareasController(alertas, limpieza,"clave-larga").alertasDiarias("otra", false).getStatusCode().value()).isEqualTo(403);
-        assertThat(new TareasController(alertas, limpieza,"clave-larga").alertasDiarias(null, false).getStatusCode().value()).isEqualTo(403);
-        assertThat(new TareasController(alertas, limpieza,"").alertasDiarias("", false).getStatusCode().value()).isEqualTo(404);
+        assertThat(new TareasController(alertas, limpieza, null, "clave-larga").alertasDiarias("otra", false).getStatusCode().value()).isEqualTo(403);
+        assertThat(new TareasController(alertas, limpieza, null, "clave-larga").alertasDiarias(null, false).getStatusCode().value()).isEqualTo(403);
+        assertThat(new TareasController(alertas, limpieza, null, "").alertasDiarias("", false).getStatusCode().value()).isEqualTo(404);
         verify(alertas, never()).enviarResumenDelDia(false);
     }
 
@@ -41,7 +41,7 @@ class TareasControllerTest {
     @DisplayName("limpieza: con la clave correcta responde cuántas filas borró")
     void limpiezaConClave() {
         when(limpieza.limpiar()).thenReturn(Map.of("sesiones", 12));
-        var r = new TareasController(alertas, limpieza, "clave-larga").limpiar("clave-larga");
+        var r = new TareasController(alertas, limpieza, null, "clave-larga").limpiar("clave-larga");
         assertThat(r.getStatusCode().value()).isEqualTo(200);
         assertThat(r.getBody()).containsEntry("sesiones", 12);
     }
@@ -49,8 +49,8 @@ class TareasControllerTest {
     @Test
     @DisplayName("limpieza: clave equivocada 403, sin clave configurada 404 y nunca corre")
     void limpiezaSinPermiso() {
-        assertThat(new TareasController(alertas, limpieza, "clave-larga").limpiar("otra").getStatusCode().value()).isEqualTo(403);
-        assertThat(new TareasController(alertas, limpieza, "").limpiar("").getStatusCode().value()).isEqualTo(404);
+        assertThat(new TareasController(alertas, limpieza, null, "clave-larga").limpiar("otra").getStatusCode().value()).isEqualTo(403);
+        assertThat(new TareasController(alertas, limpieza, null, "").limpiar("").getStatusCode().value()).isEqualTo(404);
         verify(limpieza, never()).limpiar();
     }
 }

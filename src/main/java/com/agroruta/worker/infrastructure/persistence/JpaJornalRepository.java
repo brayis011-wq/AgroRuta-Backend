@@ -11,12 +11,84 @@ import java.util.List;
 
 interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
 
+    /** Jornales de todos los trabajadores del agricultor entre dos fechas (la planilla semanal) */
+    @Query("""
+        SELECT j FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND j.fecha BETWEEN :inicio AND :fin
+        """)
+    List<JornalEntity> delEquipoEntre(@Param("agricultorId") Long agricultorId,
+                                      @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+    /** Jornales del equipo (o de un trabajador), más recientes primero; todo opcional salvo el dueño */
+    @Query(value = """
+        SELECT j FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR j.trabajador.id = :trabajadorId)
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """, countQuery = """
+        SELECT COUNT(j) FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR j.trabajador.id = :trabajadorId)
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """)
+    Page<JornalEntity> paginaDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
+                                       @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin, Pageable pageable);
+
+    @Query("""
+        SELECT COUNT(j), SUM(j.valorJornal),
+               SUM(CASE WHEN j.liquidado = false THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.liquidado = false THEN j.valorJornal ELSE 0 END),
+               MIN(CASE WHEN j.liquidado = false THEN j.fecha END),
+               MAX(CASE WHEN j.liquidado = false THEN j.fecha END)
+        FROM JornalEntity j
+        WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
+          AND (:trabajadorId IS NULL OR j.trabajador.id = :trabajadorId)
+          AND (:inicio IS NULL OR j.fecha >= :inicio)
+          AND (:fin IS NULL OR j.fecha <= :fin)
+        """)
+    List<Object[]> resumenDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
+                                    @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+    /**
+     * Rendimiento por trabajador: [id, nombre, apellido, cargo, modalidad del cargo, días por día, kilos por día,
+     * pagado por día, días por kilo, kilos por kilo, pagado por kilo]. Solo los jornales con kilos anotados.
+     */
+    @Query("""
+        SELECT t.id, t.nombre, t.apellido, c.nombre, c.modalidadPago,
+               SUM(CASE WHEN j.kilos IS NULL THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NULL THEN j.kilosRecogidos ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NULL THEN j.valorJornal ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NOT NULL THEN 1 ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NOT NULL THEN j.kilos ELSE 0 END),
+               SUM(CASE WHEN j.kilos IS NOT NULL THEN j.valorJornal ELSE 0 END)
+        FROM JornalEntity j JOIN j.trabajador t LEFT JOIN t.cargo c
+        WHERE (:agricultorId IS NULL OR t.agricultorId = :agricultorId)
+          AND (j.kilos IS NOT NULL OR j.kilosRecogidos IS NOT NULL)
+          AND j.fecha >= :inicio AND j.fecha <= :fin
+        GROUP BY t.id, t.nombre, t.apellido, c.nombre, c.modalidadPago
+        """)
+    List<Object[]> rendimiento(@Param("agricultorId") Long agricultorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+
+    /** De esos jornales, los que ya quedaron en alguna nómina */
+    /** [id del jornal, estado de su nómina]; las anuladas no cuentan (sus jornales quedan libres) */
+    @Query("SELECT jn.id, n.estado FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids "
+            + "AND n.estado <> com.agroruta.worker.domain.EstadoNomina.ANULADA")
+    List<Object[]> estadosDeNomina(@Param("ids") java.util.Collection<Long> ids);
+
+    @Query("SELECT jn.id FROM NominaEntity n JOIN n.jornales jn WHERE jn.id IN :ids")
+    List<Long> idsEnNomina(@Param("ids") java.util.Collection<Long> ids);
+
     List<JornalEntity> findByTrabajadorId(Long trabajadorId);
 
     List<JornalEntity> findByTrabajadorIdAndFechaBetween(
             Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     List<JornalEntity> findByCultivoId(Long cultivoId);
+
+    List<JornalEntity> findByCosechaIdIn(java.util.Collection<Long> cosechaIds);
 
     List<JornalEntity> findByCultivoIdAndFechaBetween(
             Long cultivoId, LocalDate inicio, LocalDate fin);

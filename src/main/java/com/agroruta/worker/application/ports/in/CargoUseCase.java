@@ -1,15 +1,33 @@
 package com.agroruta.worker.application.ports.in;
 
 import com.agroruta.worker.domain.Cargo;
+import com.agroruta.worker.domain.ModalidadPago;
 import java.math.BigDecimal;
 import java.util.List;
 
 public interface CargoUseCase {
 
-    /** @param agricultorId dueño del cargo: el usuario autenticado (lo pasa el controlador) */
-    Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal, Long agricultorId);
+    /**
+     * @param agricultorId dueño del cargo: el usuario autenticado (lo pasa el controlador)
+     * @param valorKilo    solo si se paga por kilo
+     */
+    Cargo crearCargo(String nombre, String descripcion, ModalidadPago modalidad,
+                     BigDecimal valorJornal, BigDecimal valorKilo, Long agricultorId);
 
-    Cargo actualizarCargo(Long id, String nombre, String descripcion, BigDecimal valorJornal);
+    /** Cargo pagado por día */
+    default Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal, Long agricultorId) {
+        return crearCargo(nombre, descripcion, ModalidadPago.JORNAL, valorJornal, null, agricultorId);
+    }
+
+    Cargo actualizarCargo(Long id, String nombre, String descripcion, ModalidadPago modalidad,
+                          BigDecimal valorJornal, BigDecimal valorKilo);
+
+    default Cargo actualizarCargo(Long id, String nombre, String descripcion, BigDecimal valorJornal) {
+        return actualizarCargo(id, nombre, descripcion, ModalidadPago.JORNAL, valorJornal, null);
+    }
+
+    /** Agrega los cargos típicos de una finca que el agricultor aún no tiene (por nombre). Devuelve los creados. */
+    List<Cargo> crearTipicos(Long agricultorId);
 
     void desactivarCargo(Long id);
 

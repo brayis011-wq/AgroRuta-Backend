@@ -50,6 +50,11 @@ public class ConsultaPropiedadJdbc implements ConsultaPropiedad {
         CONSULTAS.put(Recurso.PAGO,
                 "SELECT COUNT(*) FROM pagos p JOIN nominas n ON n.id = p.nomina_id"
               + " JOIN trabajadores t ON t.id = n.trabajador_id WHERE p.id = ? AND t.agricultor_id = ?");
+        CONSULTAS.put(Recurso.GASTO_FINCA,
+                "SELECT COUNT(*) FROM gastos_finca g JOIN fincas f ON f.id = g.finca_id WHERE g.id = ? AND f.agricultor_id = ?");
+        CONSULTAS.put(Recurso.VENTA,
+                "SELECT COUNT(*) FROM ventas v WHERE v.id = ? AND v.agricultor_id = ?");
+        CONSULTAS.put(Recurso.ACTIVIDAD_PROGRAMADA, "SELECT COUNT(*) FROM actividades_programadas x" + HASTA_FINCA);
     }
 
     private final JdbcTemplate jdbc;

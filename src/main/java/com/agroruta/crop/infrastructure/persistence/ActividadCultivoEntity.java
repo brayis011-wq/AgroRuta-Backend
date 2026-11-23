@@ -34,6 +34,27 @@ public class ActividadCultivoEntity {
     @Column(precision = 14, scale = 2)
     private BigDecimal costo;
 
+    @Column(length = 150)
+    private String producto;
+
+    @Column(name = "agricultural_input_id")
+    private Long agriculturalInputId;
+
+    @Column(name = "cantidad_usada")
+    private Double cantidadUsada;
+
+    @Column(name = "unidad_cantidad", length = 10)
+    private String unidadCantidad;
+
+    public String getProducto() { return producto; }
+    public void setProducto(String producto) { this.producto = producto; }
+    public Long getAgriculturalInputId() { return agriculturalInputId; }
+    public void setAgriculturalInputId(Long agriculturalInputId) { this.agriculturalInputId = agriculturalInputId; }
+    public Double getCantidadUsada() { return cantidadUsada; }
+    public void setCantidadUsada(Double cantidadUsada) { this.cantidadUsada = cantidadUsada; }
+    public String getUnidadCantidad() { return unidadCantidad; }
+    public void setUnidadCantidad(String unidadCantidad) { this.unidadCantidad = unidadCantidad; }
+
     public ActividadCultivoEntity() {}
 
     public Long getId() { return id; }

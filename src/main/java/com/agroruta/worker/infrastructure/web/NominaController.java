@@ -9,6 +9,8 @@ import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.infrastructure.web.dto.NominaRequest;
 import com.agroruta.worker.infrastructure.web.dto.NominaResponse;
+import com.agroruta.worker.infrastructure.web.dto.NominasEquipoRequest;
+import com.agroruta.worker.infrastructure.web.dto.IdsRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +36,40 @@ public class NominaController {
                 nominaUseCase.generarNomina(req.trabajadorId, req.periodoInicio, req.periodoFin)
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /** La quincena de todo el equipo en un paso (una nómina por trabajador con jornales en el periodo). */
+    @PostMapping("/generate-all")
+    @PreAuthorize("hasRole('Agricultor')")
+    public ResponseEntity<List<NominaResponse>> generarParaTodos(@Valid @RequestBody NominasEquipoRequest req,
+                                                                 Authentication authentication) {
+        List<NominaResponse> creadas = nominaUseCase
+                .generarParaTodos(CurrentUser.id(authentication), req.periodoInicio, req.periodoFin)
+                .stream().map(NominaResponse::from).toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(creadas);
+    }
+
+    /** Aprueba varias nóminas pendientes a la vez. */
+    @PatchMapping("/approve-batch")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<List<NominaResponse>> aprobarVarias(@Valid @RequestBody IdsRequest req,
+                                                              Authentication authentication) {
+        return ResponseEntity.ok(nominaUseCase.aprobarVarias(dueno(authentication), req.ids)
+                .stream().map(NominaResponse::from).toList());
+    }
+
+    /** Corrige una nómina pendiente: le quita un jornal y recalcula el total. */
+    @DeleteMapping("/{id}/workdays/{jornalId}")
+    @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
+    public ResponseEntity<NominaResponse> quitarJornal(@PathVariable Long id, @PathVariable Long jornalId) {
+        return ResponseEntity.ok(NominaResponse.from(nominaUseCase.quitarJornal(id, jornalId)));
+    }
+
+    /** Suma a una nómina pendiente los jornales de su periodo anotados después de generarla. */
+    @PostMapping("/{id}/refresh")
+    @PreAuthorize("@ownership.nominaPropia(#id, authentication)")
+    public ResponseEntity<NominaResponse> traerJornalesNuevos(@PathVariable Long id) {
+        return ResponseEntity.ok(NominaResponse.from(nominaUseCase.traerJornalesNuevos(id)));
     }
 
     @GetMapping("/{id}")

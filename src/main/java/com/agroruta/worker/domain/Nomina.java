@@ -77,6 +77,51 @@ public class Nomina {
         this.jornales.forEach(Jornal::marcarComoLiquidado);
     }
 
+    /**
+     * Corrige una nómina pendiente quitándole un jornal (anotado por error o de otro periodo).
+     * Una nómina no se deja sin jornales: en ese caso se elimina la nómina.
+     */
+    public void quitarJornal(Long jornalId) {
+        if (!estaPendiente()) {
+            throw new EstadoInvalidoException("Solo se pueden corregir nóminas pendientes. Si ya la aprobaste, anúlala y genérala de nuevo.");
+        }
+        if (jornales.size() == 1 && java.util.Objects.equals(jornales.get(0).getId(), jornalId)) {
+            throw new EstadoInvalidoException("La nómina quedaría sin jornales: mejor elimínala.");
+        }
+        if (!jornales.removeIf(j -> java.util.Objects.equals(j.getId(), jornalId))) {
+            throw new EstadoInvalidoException("Ese jornal no está en esta nómina.");
+        }
+        calcular();
+    }
+
+    /** Suma a una nómina pendiente jornales que se anotaron después de generarla. Devuelve cuántos sumó. */
+    public int agregarJornales(List<Jornal> nuevos) {
+        if (!estaPendiente()) {
+            throw new EstadoInvalidoException("Solo se pueden corregir nóminas pendientes.");
+        }
+        int antes = jornales.size();
+        for (Jornal j : nuevos) {
+            boolean ya = jornales.stream().anyMatch(x -> java.util.Objects.equals(x.getId(), j.getId()));
+            if (!ya) jornales.add(j);
+        }
+        calcular();
+        return jornales.size() - antes;
+    }
+
+    /** Un jornal de la nómina pendiente se corrigió (p. ej. los kilos de una cosecha): se recalcula el total */
+    public void reemplazarJornal(Jornal corregido) {
+        if (!estaPendiente()) {
+            throw new EstadoInvalidoException("Solo se pueden corregir nóminas pendientes.");
+        }
+        jornales.replaceAll(j -> java.util.Objects.equals(j.getId(), corregido.getId()) ? corregido : j);
+        calcular();
+    }
+
+    /** El día cae dentro del periodo de la nómina */
+    public boolean cubre(LocalDate dia) {
+        return dia != null && !dia.isBefore(periodoInicio) && !dia.isAfter(periodoFin);
+    }
+
     public boolean estaPendiente() {
         return EstadoNomina.PENDIENTE.equals(this.estado);
     }

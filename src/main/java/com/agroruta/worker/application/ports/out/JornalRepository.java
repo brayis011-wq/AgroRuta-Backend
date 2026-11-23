@@ -27,8 +27,29 @@ public interface JornalRepository {
 
     void eliminar(Long id);
 
+    /** Kilos y pagos por trabajador entre dos fechas (solo jornales con kilos). agricultorId null: todos */
+    List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(Long agricultorId, LocalDate inicio, LocalDate fin);
+
+    /** Los jornales de los recolectores de esas cosechas */
+    List<Jornal> buscarPorCosechas(java.util.Collection<Long> cosechaIds);
+
+    /** Jornales de todos los trabajadores del agricultor entre dos fechas; agricultorId null: los de todos */
+    List<Jornal> buscarDelEquipo(Long agricultorId, LocalDate inicio, LocalDate fin);
+
+    /** De los jornales dados, los que ya están en alguna nómina */
+    java.util.Set<Long> idsEnNomina(java.util.Collection<Long> ids);
+
+    /** De los jornales dados que están en una nómina, el estado de esa nómina */
+    java.util.Map<Long, com.agroruta.worker.domain.EstadoNomina> estadosDeNomina(java.util.Collection<Long> ids);
+
     /** Jornales del trabajador, más recientes primero. inicio y fin son opcionales. */
     Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+
+    /** Jornales del equipo del agricultor (o de un trabajador si viene), más recientes primero. agricultorId null: todos. */
+    Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+
+    /** Totales con los mismos filtros */
+    ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     /** Totales de los jornales del trabajador en el mismo rango de fechas. */
     ResumenJornales resumenPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin);

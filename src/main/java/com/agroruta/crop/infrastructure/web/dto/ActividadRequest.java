@@ -31,6 +31,26 @@ public class ActividadRequest {
     @DecimalMax(value = "999999999999.99", message = "El valor es demasiado grande")
     private BigDecimal costo;
 
+    // Opcional: el insumo que se gastó (abonado...). De la bodega y con cantidad, se descuenta de ella
+    @Size(max = 150, message = "El producto no puede superar 150 caracteres")
+    private String producto;
+
+    @Positive(message = "El insumo no es válido")
+    private Long agriculturalInputId;
+
+    @Positive(message = "La cantidad usada debe ser mayor a 0")
+    @DecimalMax(value = "99999999", message = "La cantidad es demasiado grande")
+    private Double cantidadUsada;
+
+    /** LITROS, ML, KG o GRAMOS (lo valida el servicio) */
+    @Size(max = 10, message = "La unidad no es válida")
+    private String unidadCantidad;
+
+    public com.agroruta.crop.domain.UsoInsumo insumo() {
+        boolean hay = (producto != null && !producto.isBlank()) || agriculturalInputId != null;
+        return hay ? new com.agroruta.crop.domain.UsoInsumo(agriculturalInputId, producto, cantidadUsada, unidadCantidad) : null;
+    }
+
     @NotNull(message = "La siembra es obligatoria")
     @Positive(message = "La siembra no es válida")
     private Long siembraId;

@@ -1,6 +1,8 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.math.RoundingMode;
 import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
@@ -22,6 +24,14 @@ public class Jornal {
     private String observaciones;
     private BigDecimal valorJornal;
     private boolean liquidado;
+    /** Kilos recogidos ese día (solo cuando el cargo se paga por kilo) */
+    private BigDecimal kilos;
+    /** Valor del kilo el día del jornal (si el cargo cambia después, este jornal no cambia) */
+    private BigDecimal valorKilo;
+    /** La cosecha de la que salió (recolector); null si se anotó aparte */
+    private Long cosechaId;
+    /** Kilos que recogió quien cobra por día (no cambian el pago; sirven para el total y el rendimiento) */
+    private BigDecimal kilosRecogidos;
 
     public Jornal() {
         this.actividades = new ArrayList<>();
@@ -57,6 +67,78 @@ public class Jornal {
             throw new EstadoInvalidoException("No se pueden modificar las labores de un jornal ya liquidado.");
         }
         this.actividades.remove(actividad);
+    }
+
+    /**
+     * Anota los kilos recogidos y calcula el valor del día: kilos × valor del kilo del cargo.
+     * Si el cargo se paga por día, no se aceptan kilos.
+     */
+    public void registrarKilos(BigDecimal kilos) {
+        Cargo cargo = trabajador == null ? null : trabajador.getCargo();
+        boolean porKilo = cargo != null && cargo.pagaPorKilo();
+        if (!porKilo) {
+            if (kilos != null) {
+                throw new DatoInvalidoException("El cargo de este trabajador se paga por día, no por kilo.");
+            }
+            return;
+        }
+        if (kilos == null || kilos.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuántos kilos recogió " + trabajador.getNombreCompleto() + ".");
+        }
+        if (this.liquidado) {
+            throw new EstadoInvalidoException("No se pueden cambiar los kilos de un jornal ya liquidado.");
+        }
+        this.kilos = kilos.setScale(2, RoundingMode.HALF_UP);
+        this.valorKilo = cargo.getValorKilo();
+        this.valorJornal = this.kilos.multiply(this.valorKilo).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Recolector de una cosecha pagado por kilo: kilos × valor del kilo. El valor sale del que se indique
+     * o, si no, del cargo (aunque el cargo se pague por día: en la cosecha se decide por persona).
+     */
+    public void pagarPorKilo(BigDecimal kilos, BigDecimal valorKilo) {
+        if (this.liquidado) {
+            throw new EstadoInvalidoException("No se pueden cambiar los kilos de un jornal ya liquidado.");
+        }
+        String nombre = trabajador == null ? "el recolector" : trabajador.getNombreCompleto();
+        if (kilos == null || kilos.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuántos kilos recogió " + nombre + ".");
+        }
+        Cargo cargo = trabajador == null ? null : trabajador.getCargo();
+        BigDecimal valor = valorKilo != null ? valorKilo : (cargo == null ? null : cargo.getValorKilo());
+        if (valor == null || valor.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuánto se le paga el kilo a " + nombre + ".");
+        }
+        this.kilos = kilos.setScale(2, RoundingMode.HALF_UP);
+        this.kilosRecogidos = null;
+        this.valorKilo = valor.setScale(2, RoundingMode.HALF_UP);
+        this.valorJornal = this.kilos.multiply(this.valorKilo).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Recolector de una cosecha pagado por día: el valor indicado o, si no, el del cargo */
+    public void pagarPorDia(BigDecimal valorDia) {
+        if (this.liquidado) {
+            throw new EstadoInvalidoException("No se puede cambiar el valor de un jornal ya liquidado.");
+        }
+        Cargo cargo = trabajador == null ? null : trabajador.getCargo();
+        BigDecimal valor = valorDia != null ? valorDia : (cargo == null ? null : cargo.getValorJornal());
+        if (valor == null || valor.signum() <= 0) {
+            throw new DatoInvalidoException("Indica cuánto se le paga el día a "
+                    + (trabajador == null ? "el recolector" : trabajador.getNombreCompleto()) + ".");
+        }
+        this.kilos = null;
+        this.valorKilo = null;
+        this.valorJornal = valor.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /** Kilos que recogió quien cobra por día; null = no se anotaron */
+    public void anotarKilosRecogidos(BigDecimal kilos) {
+        if (kilos != null && kilos.signum() <= 0) {
+            throw new DatoInvalidoException("Los kilos que recogió " + (trabajador == null ? "el recolector" : trabajador.getNombreCompleto())
+                    + " deben ser mayores a 0.");
+        }
+        this.kilosRecogidos = kilos == null ? null : kilos.setScale(2, RoundingMode.HALF_UP);
     }
 
     public void marcarComoLiquidado() {

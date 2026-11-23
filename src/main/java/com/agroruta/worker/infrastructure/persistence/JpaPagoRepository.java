@@ -111,14 +111,17 @@ public interface JpaPagoRepository extends JpaRepository<PagoEntity, Long> {
         """)
     List<Object[]> totalesPorMes(@Param("agricultorId") Long agricultorId, @Param("desde") LocalDate desde);
 
-    @Query(value = "SELECT p FROM PagoEntity p WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId) AND (:nominaId IS NULL OR p.nomina.id = :nominaId)",
-           countQuery = "SELECT COUNT(p) FROM PagoEntity p WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId) AND (:nominaId IS NULL OR p.nomina.id = :nominaId)")
-    Page<PagoEntity> pagina(@Param("agricultorId") Long agricultorId, @Param("nominaId") Long nominaId, Pageable pageable);
+    @Query(value = "SELECT p FROM PagoEntity p WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId) AND (:nominaId IS NULL OR p.nomina.id = :nominaId) AND (:trabajadorId IS NULL OR p.nomina.trabajador.id = :trabajadorId)",
+           countQuery = "SELECT COUNT(p) FROM PagoEntity p WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId) AND (:nominaId IS NULL OR p.nomina.id = :nominaId) AND (:trabajadorId IS NULL OR p.nomina.trabajador.id = :trabajadorId)")
+    Page<PagoEntity> pagina(@Param("agricultorId") Long agricultorId, @Param("nominaId") Long nominaId,
+                            @Param("trabajadorId") Long trabajadorId, Pageable pageable);
 
     @Query("""
         SELECT COUNT(p), SUM(p.monto), COUNT(DISTINCT p.nomina.trabajador.id) FROM PagoEntity p
         WHERE (:agricultorId IS NULL OR p.nomina.trabajador.agricultorId = :agricultorId)
           AND (:nominaId IS NULL OR p.nomina.id = :nominaId)
+          AND (:trabajadorId IS NULL OR p.nomina.trabajador.id = :trabajadorId)
         """)
-    List<Object[]> resumen(@Param("agricultorId") Long agricultorId, @Param("nominaId") Long nominaId);
+    List<Object[]> resumen(@Param("agricultorId") Long agricultorId, @Param("nominaId") Long nominaId,
+                           @Param("trabajadorId") Long trabajadorId);
 }

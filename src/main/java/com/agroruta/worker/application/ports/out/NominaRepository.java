@@ -13,6 +13,9 @@ public interface NominaRepository {
 
     Nomina guardar(Nomina nomina);
     Optional<Nomina> buscarPorId(Long id);
+
+    /** La nómina en la que está el jornal, si está en alguna */
+    Optional<Nomina> buscarPorJornal(Long jornalId);
     List<Nomina> buscarPorTrabajador(Long trabajadorId);
     List<Nomina> buscarPorTrabajadorYEstado(Long trabajadorId, EstadoNomina estado);
     List<Nomina> buscarPorPeriodo(LocalDate inicio, LocalDate fin);

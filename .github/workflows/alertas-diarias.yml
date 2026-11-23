@@ -61,3 +61,17 @@ jobs:
             -H "X-Tarea-Token: $TAREAS_TOKEN" \
             "${API_URL%/}/api/jobs/cleanup"
           echo
+
+      # Precios mayoristas de SIPSA (DANE) para estimar lo que vale una cosecha sin precio.
+      # El backend solo los vuelve a pedir si tienen más de 3 días; si SIPSA no responde, no pasa nada.
+      - name: Traer los precios de referencia
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          curl -fsS --max-time 240 -X POST \
+            -H "X-Tarea-Token: $TAREAS_TOKEN" \
+            "${API_URL%/}/api/jobs/reference-prices"
+          echo

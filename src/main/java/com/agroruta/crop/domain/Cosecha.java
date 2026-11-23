@@ -22,6 +22,8 @@ public class Cosecha {
     private BigDecimal precioKg;
     /** Se registró dentro del periodo de carencia de una fumigación (la persona lo confirmó) */
     private boolean enCarencia;
+    /** Quién la recogió (sus jornales); no se guarda aquí, lo llena el servicio al leerla */
+    private java.util.List<RecolectorCosecha> recolectores = java.util.List.of();
 
     public Cosecha(Long id, LocalDate fecha, Double cantidadKg,
                    CalidadCosecha calidad, String observaciones, Long siembraId) {

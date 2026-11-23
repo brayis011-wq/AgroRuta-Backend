@@ -45,10 +45,12 @@ public final class Respuestas {
     }
 
     public record CosechaResponse(Long id, LocalDate fecha, Double cantidadKg, CalidadCosecha calidad,
-                                  String observaciones, Long siembraId, BigDecimal precioKg, boolean enCarencia) {
+                                  String observaciones, Long siembraId, BigDecimal precioKg, boolean enCarencia,
+                                  List<com.agroruta.crop.domain.RecolectorCosecha> recolectores) {
         public static CosechaResponse from(Cosecha c) {
             return new CosechaResponse(c.getId(), c.getFecha(), c.getCantidadKg(), c.getCalidad(),
-                    c.getObservaciones(), c.getSiembraId(), c.getPrecioKg(), c.isEnCarencia());
+                    c.getObservaciones(), c.getSiembraId(), c.getPrecioKg(), c.isEnCarencia(),
+                    c.getRecolectores() == null ? List.of() : c.getRecolectores());
         }
     }
 
@@ -65,10 +67,12 @@ public final class Respuestas {
 
     /** Labor registrada en una siembra (poda, riego…), no confundir con el catálogo de labores de los trabajadores */
     public record ActividadCultivoResponse(Long id, TipoActividad tipo, String descripcion, LocalDate fecha,
-                                           Long siembraId, BigDecimal costo) {
+                                           Long siembraId, BigDecimal costo, String producto, Long agriculturalInputId,
+                                           Double cantidadUsada, String unidadCantidad) {
         public static ActividadCultivoResponse from(ActividadCultivo a) {
             return new ActividadCultivoResponse(a.getId(), a.getTipo(), a.getDescripcion(), a.getFecha(),
-                    a.getSiembraId(), a.getCosto());
+                    a.getSiembraId(), a.getCosto(), a.getProducto(), a.getAgriculturalInputId(),
+                    a.getCantidadUsada(), a.getUnidadCantidad());
         }
     }
 

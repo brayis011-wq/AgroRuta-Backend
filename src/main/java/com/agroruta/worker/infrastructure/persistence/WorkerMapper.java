@@ -17,6 +17,8 @@ public class WorkerMapper {
         if (e == null) return null;
         Cargo c = new Cargo(e.getId(), e.getNombre(), e.getDescripcion(), e.getValorJornal(), e.isActivo());
         c.setAgricultorId(e.getAgricultorId());
+        if (e.getModalidadPago() != null) c.setModalidadPago(e.getModalidadPago());
+        c.setValorKilo(e.getValorKilo());
         return c;
     }
 
@@ -29,6 +31,8 @@ public class WorkerMapper {
         e.setValorJornal(d.getValorJornal());
         e.setActivo(d.isActivo());
         e.setAgricultorId(d.getAgricultorId());
+        e.setModalidadPago(d.getModalidadPago() == null ? ModalidadPago.JORNAL : d.getModalidadPago());
+        e.setValorKilo(d.getValorKilo());
         return e;
     }
 
@@ -102,6 +106,10 @@ public class WorkerMapper {
         );
         j.setValorJornal(e.getValorJornal());
         j.setLiquidado(e.isLiquidado());
+        j.setKilos(e.getKilos());
+        j.setValorKilo(e.getValorKilo());
+        j.setCosechaId(e.getCosechaId());
+        j.setKilosRecogidos(e.getKilosRecogidos());
         List<Labor> actividades = e.getActividades().stream()
                 .map(WorkerMapper::toDomain)
                 .collect(Collectors.toList());
@@ -120,6 +128,10 @@ public class WorkerMapper {
         e.setObservaciones(d.getObservaciones());
         e.setValorJornal(d.getValorJornal());
         e.setLiquidado(d.isLiquidado());
+        e.setKilos(d.getKilos());
+        e.setValorKilo(d.getValorKilo());
+        e.setCosechaId(d.getCosechaId());
+        e.setKilosRecogidos(d.getKilosRecogidos());
         List<LaborEntity> actividades = d.getActividades().stream()
                 .map(WorkerMapper::toEntity)
                 .collect(Collectors.toList());

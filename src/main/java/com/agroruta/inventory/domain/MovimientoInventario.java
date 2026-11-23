@@ -30,6 +30,8 @@ public class MovimientoInventario {
     private String proveedor;
     /** Fumigación que gastó el producto (solo en USO) */
     private Long fumigacionId;
+    /** Actividad (abonado...) que gastó el producto (solo en USO) */
+    private Long actividadId;
     private String observaciones;
     private LocalDateTime creadoEn;
 
@@ -46,6 +48,13 @@ public class MovimientoInventario {
                                            LocalDate fecha, Long fumigacionId) {
         MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.USO, cantidadBase, fecha);
         m.fumigacionId = fumigacionId;
+        return m;
+    }
+
+    public static MovimientoInventario usoDeActividad(Long agricultorId, Long insumoId, double cantidadBase,
+                                                      LocalDate fecha, Long actividadId) {
+        MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.USO, cantidadBase, fecha);
+        m.actividadId = actividadId;
         return m;
     }
 

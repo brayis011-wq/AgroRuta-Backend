@@ -26,7 +26,7 @@ public class ActividadCultivoController {
     public ResponseEntity<ActividadCultivoResponse> registrar(@Valid @RequestBody ActividadRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ActividadCultivoResponse.from(actividadUseCase.registrarActividad(
                         req.getTipo(), req.getDescripcion(),
-                        req.getFecha(), req.getSiembraId(), req.getCosto()
+                        req.getFecha(), req.getSiembraId(), req.getCosto(), req.insumo()
                 )));
     }
 
@@ -42,7 +42,7 @@ public class ActividadCultivoController {
     public ResponseEntity<ActividadCultivoResponse> actualizar(@PathVariable Long id,
                                                        @Valid @RequestBody ActividadRequest req) {
         return ResponseEntity.ok(ActividadCultivoResponse.from(actividadUseCase.actualizarActividad(
-                id, req.getTipo(), req.getDescripcion(), req.getFecha(), req.getCosto())));
+                id, req.getTipo(), req.getDescripcion(), req.getFecha(), req.getCosto(), req.insumo())));
     }
 
     @DeleteMapping("/{id}")

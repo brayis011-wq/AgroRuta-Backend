@@ -9,4 +9,6 @@ public interface JpaMovimientoInventarioRepository extends JpaRepository<Movimie
     List<MovimientoInventarioEntity> findByAgricultorIdOrderByFechaDescIdDesc(Long agricultorId);
     List<MovimientoInventarioEntity> findByAgricultorIdAndInsumoIdOrderByFechaDescIdDesc(Long agricultorId, Long insumoId);
     Optional<MovimientoInventarioEntity> findByFumigacionId(Long fumigacionId);
+
+    Optional<MovimientoInventarioEntity> findByActividadId(Long actividadId);
 }

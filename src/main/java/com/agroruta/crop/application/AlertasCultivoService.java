@@ -38,6 +38,14 @@ public class AlertasCultivoService implements AlertasCultivoUseCase {
         this.fumigacionRepository = fumigacionRepository;
     }
 
+    /** Labores que se repiten (null en pruebas antiguas) */
+    private ActividadProgramadaService programadas;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setProgramadas(ActividadProgramadaService programadas) {
+        this.programadas = programadas;
+    }
+
     @Override
     public List<AlertaCultivo> alertasDelDia(Long agricultorId, LocalDate hoy) {
         List<AlertaCultivo> alertas = new ArrayList<>();
@@ -49,6 +57,7 @@ public class AlertasCultivoService implements AlertasCultivoUseCase {
                             actividadRepository.findBySiembraId(s.getId()),
                             fumigacionRepository.findBySiembraId(s.getId()), List.of());
                     alertas.addAll(AlertasCultivo.delDia(datos, finca.getNombre(), hoy));
+                    if (programadas != null) alertas.addAll(programadas.alertas(s, finca.getNombre(), lote.getNombre(), hoy));
                 });
             }
         }

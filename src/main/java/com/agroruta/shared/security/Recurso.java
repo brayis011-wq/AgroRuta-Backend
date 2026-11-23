@@ -13,5 +13,11 @@ public enum Recurso {
     CARGO,
     JORNAL,
     NOMINA,
-    PAGO
+    PAGO,
+    /** Gasto general de una finca */
+    GASTO_FINCA,
+    /** Venta a un comprador (cuentas por cobrar) */
+    VENTA,
+    /** Actividad que se repite en una siembra */
+    ACTIVIDAD_PROGRAMADA
 }
