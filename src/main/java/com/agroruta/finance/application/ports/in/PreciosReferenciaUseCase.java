@@ -29,6 +29,12 @@ public interface PreciosReferenciaUseCase {
     /** Si los precios tienen más de una semana, los trae en segundo plano (no espera). */
     void actualizarSiHaceFalta();
 
+    /**
+     * Guarda los precios de una respuesta del DANE descargada en otro lado (un PC en Colombia la sube,
+     * porque el DANE no deja conectar desde Render) y devuelve cómo quedaron.
+     */
+    com.agroruta.finance.domain.EstadoPrecios cargarRespuesta(java.io.InputStream xml);
+
     /** Si hay precios, de qué semana, si se están trayendo y el último error (y los pide si hace falta) */
     com.agroruta.finance.domain.EstadoPrecios estado();
 }

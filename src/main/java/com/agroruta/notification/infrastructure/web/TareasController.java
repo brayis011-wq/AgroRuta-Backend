@@ -11,7 +11,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.GZIPInputStream;
 import java.security.MessageDigest;
 import java.util.Map;
 
@@ -66,6 +72,35 @@ public class TareasController {
         }
         precios.actualizarSiHaceFalta();
         return ResponseEntity.accepted().body(Map.of("pedido", 1));
+    }
+
+    /**
+     * Precios de SIPSA descargados en un PC en Colombia (el DANE no deja conectar desde Render).
+     * El cuerpo es la respuesta SOAP tal cual, o comprimida con gzip. Responde de qué semana quedaron.
+     */
+    @PostMapping("/reference-prices/upload")
+    public ResponseEntity<Map<String, Object>> subirPrecios(
+            @RequestHeader(value = "X-Tarea-Token", required = false) String recibido,
+            HttpServletRequest pedido) throws IOException {
+        if (!autorizado(recibido)) {
+            return ResponseEntity.status(token.isEmpty() ? HttpStatus.NOT_FOUND : HttpStatus.FORBIDDEN).build();
+        }
+        try (InputStream cuerpo = descomprimir(pedido.getInputStream())) {
+            var estado = precios.cargarRespuesta(cuerpo);
+            Map<String, Object> r = new java.util.LinkedHashMap<>();
+            r.put("semana", String.valueOf(estado.ultimaSemana()));
+            r.put("actualizadoEn", String.valueOf(estado.actualizadoEn()));
+            return ResponseEntity.ok(r);
+        }
+    }
+
+    /** Si empieza con la marca de gzip (1f 8b) se descomprime al leer */
+    static InputStream descomprimir(InputStream entrada) throws IOException {
+        BufferedInputStream b = new BufferedInputStream(entrada);
+        b.mark(2);
+        int x = b.read(), y = b.read();
+        b.reset();
+        return x == 0x1f && y == 0x8b ? new GZIPInputStream(b) : b;
     }
 
     /** Sin clave configurada no se acepta ninguna; la comparación tarda lo mismo acierte o no */

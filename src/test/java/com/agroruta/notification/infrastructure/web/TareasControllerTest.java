@@ -47,6 +47,43 @@ class TareasControllerTest {
     }
 
     @Test
+    @DisplayName("precios subidos desde el PC: con la clave se guardan, comprimidos o no")
+    void subirPrecios() throws Exception {
+        var precios = mock(com.agroruta.finance.application.ports.in.PreciosReferenciaUseCase.class);
+        java.util.List<String> leidos = new java.util.ArrayList<>();
+        when(precios.cargarRespuesta(org.mockito.ArgumentMatchers.any())).thenAnswer(inv -> {
+            leidos.add(new String(((java.io.InputStream) inv.getArgument(0)).readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+            return new com.agroruta.finance.domain.EstadoPrecios(true, java.time.LocalDate.of(2026, 11, 14),
+                    java.time.LocalDateTime.of(2026, 11, 23, 7, 0), false, null, null);
+        });
+        var c = new TareasController(alertas, limpieza, precios, "clave-larga");
+
+        var plano = new org.springframework.mock.web.MockHttpServletRequest();
+        plano.setContent("<xml/>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        var r = c.subirPrecios("clave-larga", plano);
+        assertThat(r.getStatusCode().value()).isEqualTo(200);
+        assertThat(r.getBody()).containsEntry("semana", "2026-11-14");
+
+        var buf = new java.io.ByteArrayOutputStream();
+        try (var gz = new java.util.zip.GZIPOutputStream(buf)) { gz.write("<comprimido/>".getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
+        var comprimido = new org.springframework.mock.web.MockHttpServletRequest();
+        comprimido.setContent(buf.toByteArray());
+        c.subirPrecios("clave-larga", comprimido);
+        assertThat(leidos).containsExactly("<xml/>", "<comprimido/>");
+    }
+
+    @Test
+    @DisplayName("precios subidos desde el PC: sin la clave no se lee nada")
+    void subirPreciosSinPermiso() throws Exception {
+        var precios = mock(com.agroruta.finance.application.ports.in.PreciosReferenciaUseCase.class);
+        var pedido = new org.springframework.mock.web.MockHttpServletRequest();
+        pedido.setContent("<xml/>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        assertThat(new TareasController(alertas, limpieza, precios, "clave-larga").subirPrecios("otra", pedido).getStatusCode().value()).isEqualTo(403);
+        assertThat(new TareasController(alertas, limpieza, precios, "").subirPrecios("", pedido).getStatusCode().value()).isEqualTo(404);
+        verify(precios, never()).cargarRespuesta(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
     @DisplayName("limpieza: clave equivocada 403, sin clave configurada 404 y nunca corre")
     void limpiezaSinPermiso() {
         assertThat(new TareasController(alertas, limpieza, null, "clave-larga").limpiar("otra").getStatusCode().value()).isEqualTo(403);

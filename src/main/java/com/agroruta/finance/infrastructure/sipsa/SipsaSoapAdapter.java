@@ -132,6 +132,11 @@ public class SipsaSoapAdapter implements SipsaPort {
         }
     }
 
+    @Override
+    public List<PrecioReferencia> desdeRespuesta(InputStream xml, int semanas) {
+        return leer(xml).ultimasSemanas(semanas);
+    }
+
     /** Lee las filas {@code <return>} de la respuesta y las suma por producto y semana */
     public static AgregadorSipsa leer(InputStream xml) {
         AgregadorSipsa agregador = new AgregadorSipsa();
