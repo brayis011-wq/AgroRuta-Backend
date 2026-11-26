@@ -38,18 +38,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDuplicate(
             DataIntegrityViolationException ex, HttpServletRequest req) {
 
-        log.warn("[{}] Duplicado detectado en {}: {}",
-                MDC.get(MdcKeys.TRACE_ID),
-                req.getRequestURI(),
-                ex.getMostSpecificCause().getMessage());
-
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.CONFLICT.value(),
-                ErrorCode.RESOURCE_ALREADY_EXISTS,
-                "Ya existe un registro con esos datos. Verifique e intente de nuevo.",
-                MDC.get(MdcKeys.TRACE_ID)
-        );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return advertir(HttpStatus.CONFLICT, ErrorCode.RESOURCE_ALREADY_EXISTS, "Ya existe un registro con esos datos. Verifique e intente de nuevo.",
+                "Duplicado detectado", req, ex.getMostSpecificCause().getMessage());
     }
 
     // ── Recurso no encontrado ────────────────────────────────────────────────
@@ -57,18 +47,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNotFound(
             ResourceNotFoundException ex, HttpServletRequest req) {
 
-        log.warn("[{}] Recurso no encontrado en {}: {}",
-                MDC.get(MdcKeys.TRACE_ID),
-                req.getRequestURI(),
-                ex.getMessage());
-
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.NOT_FOUND.value(),
-                ex.getErrorCode(),
-                ex.getMessage(),
-                MDC.get(MdcKeys.TRACE_ID)
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        return advertir(HttpStatus.NOT_FOUND, ex.getErrorCode(), ex.getMessage(),
+                "Recurso no encontrado", req, ex.getMessage());
     }
 
     // ── Regla de negocio violada ─────────────────────────────────────────────
@@ -129,19 +109,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNotReadable(
             HttpMessageNotReadableException ex, HttpServletRequest req) {
 
-        log.warn("[{}] Cuerpo de la petición ilegible en {}: {}",
-                MDC.get(MdcKeys.TRACE_ID),
-                req.getRequestURI(),
-                ex.getMostSpecificCause().getMessage());
-
-        // No se expone el detalle del parser al cliente.
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                ErrorCode.VALIDATION_FAILED,
-                "El cuerpo de la petición no es válido. Revisa el formato de fechas, números y opciones.",
-                MDC.get(MdcKeys.TRACE_ID)
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return advertir(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED, "El cuerpo de la petición no es válido. Revisa el formato de fechas, números y opciones.",
+                "Cuerpo de la petición ilegible", req, ex.getMostSpecificCause().getMessage());
     }
 
     // ── Argumento inválido ───────────────────────────────────────────────────
@@ -149,18 +118,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleIllegalArgument(
             IllegalArgumentException ex, HttpServletRequest req) {
 
-        log.warn("[{}] Argumento inválido en {}: {}",
-                MDC.get(MdcKeys.TRACE_ID),
-                req.getRequestURI(),
-                ex.getMessage());
-
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.BAD_REQUEST.value(),
-                ErrorCode.INVALID_ARGUMENT,
-                ex.getMessage(),
-                MDC.get(MdcKeys.TRACE_ID)
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+        return advertir(HttpStatus.BAD_REQUEST, ErrorCode.INVALID_ARGUMENT, ex.getMessage(),
+                "Argumento inválido", req, ex.getMessage());
     }
 
     // ── Fallo interno (FalloInternoException o de una librería): 500 sin exponer el detalle ──
@@ -363,6 +322,13 @@ public class GlobalExceptionHandler {
             case EMAIL_NOT_VERIFIED, TWO_FACTOR_REQUIRED -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
+    }
+
+    /** Deja en el log (warn) qué pasó y dónde, y responde con el mensaje que ve la persona. */
+    private ResponseEntity<ErrorResponse> advertir(HttpStatus status, ErrorCode code, String mensaje,
+                                                   String que, HttpServletRequest req, Object detalle) {
+        log.warn("[{}] {} en {}: {}", MDC.get(MdcKeys.TRACE_ID), que, req.getRequestURI(), detalle);
+        return simple(status, code, mensaje);
     }
 
     private ResponseEntity<ErrorResponse> simple(HttpStatus status, ErrorCode code, String message) {

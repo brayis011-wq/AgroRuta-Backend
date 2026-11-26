@@ -148,7 +148,7 @@ public class PdfReportService {
             long activas = cs.stream().filter(c -> !"FINALIZADO".equals(c.estado())).count();
             double kg = cs.stream().mapToDouble(c -> c.totalKgCosechado() != null ? c.totalKgCosechado() : 0).sum();
             int cosechas = cs.stream().mapToInt(CropDetail::totalCosechas).sum();
-            long tipos = cs.stream().map(PdfReportService::cultivoDe).distinct().count();
+            long tipos = cs.stream().map(FormatoReporte::cultivoDe).distinct().count();
 
             pdf.tarjetas(List.of(
                     new Tarjeta("Siembras", String.valueOf(cs.size()), tipos + (tipos == 1 ? " cultivo" : " cultivos"), VERDE),
@@ -393,7 +393,6 @@ public class PdfReportService {
 
     // ══ Cuaderno de campo ══════════════════════════════════════════════════
 
-    private static final java.time.format.DateTimeFormatter DIA_CUADERNO = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
      * Cuaderno de campo: todas las aplicaciones de producto del periodo (fecha, lugar, producto, dosis,
@@ -456,34 +455,6 @@ public class PdfReportService {
         }
     }
 
-    private static String textoPeriodo(com.agroruta.report.domain.Periodo p) {
-        if (p == null || p.esTodo()) return "todo el historial";
-        if (p.desde() == null) return "hasta el " + p.hasta().format(DIA_CUADERNO);
-        if (p.hasta() == null) return "desde el " + p.desde().format(DIA_CUADERNO);
-        return p.desde().format(DIA_CUADERNO) + " a " + p.hasta().format(DIA_CUADERNO);
-    }
-
-    private static String numeroCorto(double v) {
-        java.text.NumberFormat f = java.text.NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag("es-CO"));
-        f.setMaximumFractionDigits(2);
-        return f.format(v);
-    }
-
-    private static String unidad(String u) {
-        if (u == null) return "";
-        return switch (u) {
-            case "LITROS" -> "L";
-            case "ML" -> "ml";
-            case "GRAMOS" -> "g";
-            case "KG" -> "kg";
-            default -> u.toLowerCase();
-        };
-    }
-
-    private static String tipoProducto(String t) {
-        return capitalizar(t.replace('_', ' ').toLowerCase());
-    }
-
     // ══ Reporte completo ═══════════════════════════════════════════════════
 
     /**
@@ -530,70 +501,10 @@ public class PdfReportService {
 
     // ── Apoyo ──────────────────────────────────────────────────────────────
 
-    /** 420,5 o 1.240 (sin decimales cuando es exacto) */
-    private static String kg(Double v) {
-        double x = v != null ? v : 0;
-        return numero(x, x % 1 == 0 ? 0 : 1);
-    }
-
-    private static double valor(BigDecimal v) {
-        return v != null ? v.doubleValue() : 0;
-    }
-
-    private static String pesosDe(double v) {
-        return FormatoReporte.pesos(BigDecimal.valueOf(v).setScale(0, RoundingMode.HALF_UP));
-    }
-
-    /** "-$300.000" para una pérdida (la fuente del PDF no tiene el signo menos tipográfico) */
-    private static String pesosConSigno(double v) {
-        return v < 0 ? "-" + pesosDe(-v) : pesosDe(v);
-    }
-
-    private static String porcentaje(double v) {
-        return numero(v, Math.abs(v) < 10 ? 1 : 0) + " %";
-    }
-
-    private static String porcentajeDe(double parte, double total) {
-        return total > 0 ? numero(parte * 100 / total, 0) + " %" : null;
-    }
-
-    private static String kgTexto(double kg) {
-        return numero(kg, kg % 1 == 0 ? 0 : 1) + " kg";
-    }
-
     /** Ganancia en verde, pérdida en rojo, y "Sin precio" cuando no hay ventas con precio */
     private static Celda celdaGanancia(Double g) {
         if (g == null) return new Celda("Sin precio", null, TINTA_3, false);
         return new Celda(pesosConSigno(g), null, g < 0 ? ROJO : VERDE_OSCURO, true);
-    }
-
-    private static String nombreLote(RentabilidadLote l) {
-        return l.fincaNombre() != null ? l.loteNombre() + " · " + l.fincaNombre() : l.loteNombre();
-    }
-
-    /** "nómina, cultivos y costos" */
-    private static String enumerar(List<String> partes) {
-        if (partes.size() == 1) return partes.get(0);
-        return String.join(", ", partes.subList(0, partes.size() - 1)) + " y " + partes.get(partes.size() - 1);
-    }
-
-    private static String capitalizar(String t) {
-        return t.isEmpty() ? t : Character.toUpperCase(t.charAt(0)) + t.substring(1);
-    }
-
-    /** Cultivo para agrupar: el tipo si existe, si no lo que va antes de " · " */
-    private static String cultivoDe(CropDetail c) {
-        if (c.cultivo() != null && !c.cultivo().isBlank()) return c.cultivo();
-        String v = c.variedad() != null ? c.variedad() : "—";
-        int i = v.indexOf(" · ");
-        return i > 0 ? v.substring(0, i) : v;
-    }
-
-    private static String ubicacion(CropDetail c) {
-        if (c.fincaNombre() == null && c.loteNombre() == null) return "—";
-        if (c.fincaNombre() == null) return c.loteNombre();
-        if (c.loteNombre() == null) return c.fincaNombre();
-        return c.fincaNombre() + " · " + c.loteNombre();
     }
 
     /** Versión clara del color de una etapa, para el fondo de la píldora */
