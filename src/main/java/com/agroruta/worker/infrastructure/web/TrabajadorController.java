@@ -1,19 +1,18 @@
 package com.agroruta.worker.infrastructure.web;
 
-import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.domain.Trabajador;
 import com.agroruta.worker.infrastructure.web.dto.TrabajadorRequest;
 import com.agroruta.worker.infrastructure.web.dto.TrabajadorResponse;
 import com.agroruta.worker.infrastructure.web.dto.TrabajadorUpdateRequest;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/workers")
@@ -51,35 +50,35 @@ public class TrabajadorController {
     // El cargo asignado debe pertenecer al usuario autenticado
     @PostMapping
     @PreAuthorize("@ownership.cargoPropio(#req.cargoId, authentication)")
-    public ResponseEntity<TrabajadorResponse> registrar(@Valid @RequestBody TrabajadorRequest req,
-                                                        Authentication authentication) {
-        TrabajadorResponse response = TrabajadorResponse.from(
-                trabajadorUseCase.registrarTrabajador(
-                        req.nombre, req.apellido, req.cedula, req.telefono,
-                        req.direccion, req.fechaIngreso, req.tipoContrato, req.cargoId,
-                        CurrentUser.id(authentication)
-                )
-        );
+    public ResponseEntity<TrabajadorResponse> registrar(
+            @Valid @RequestBody TrabajadorRequest req, Authentication authentication) {
+        TrabajadorResponse response = TrabajadorResponse.from(trabajadorUseCase.registrarTrabajador(
+                req.nombre,
+                req.apellido,
+                req.cedula,
+                req.telefono,
+                req.direccion,
+                req.fechaIngreso,
+                req.tipoContrato,
+                req.cargoId,
+                CurrentUser.id(authentication)));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.trabajadorPropio(#id, authentication)")
-    public ResponseEntity<TrabajadorResponse> actualizar(@PathVariable Long id,
-                                                         @Valid @RequestBody TrabajadorUpdateRequest req) {
-        TrabajadorResponse response = TrabajadorResponse.from(
-                trabajadorUseCase.actualizarTrabajador(
-                        id, req.nombre, req.apellido, req.telefono, req.direccion, req.tipoContrato
-                )
-        );
+    public ResponseEntity<TrabajadorResponse> actualizar(
+            @PathVariable Long id, @Valid @RequestBody TrabajadorUpdateRequest req) {
+        TrabajadorResponse response = TrabajadorResponse.from(trabajadorUseCase.actualizarTrabajador(
+                id, req.nombre, req.apellido, req.telefono, req.direccion, req.tipoContrato));
         return ResponseEntity.ok(response);
     }
 
     // Tanto el trabajador como el nuevo cargo deben ser del usuario autenticado
     @PatchMapping("/{id}/position/{cargoId}")
-    @PreAuthorize("@ownership.trabajadorPropio(#id, authentication) and @ownership.cargoPropio(#cargoId, authentication)")
-    public ResponseEntity<TrabajadorResponse> cambiarCargo(@PathVariable Long id,
-                                                           @PathVariable Long cargoId) {
+    @PreAuthorize(
+            "@ownership.trabajadorPropio(#id, authentication) and @ownership.cargoPropio(#cargoId, authentication)")
+    public ResponseEntity<TrabajadorResponse> cambiarCargo(@PathVariable Long id, @PathVariable Long cargoId) {
         return ResponseEntity.ok(TrabajadorResponse.from(trabajadorUseCase.cambiarCargo(id, cargoId)));
     }
 

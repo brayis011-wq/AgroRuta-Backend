@@ -1,7 +1,6 @@
 package com.agroruta.inventory.application.ports.out;
 
 import com.agroruta.inventory.domain.MovimientoInventario;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,6 +20,8 @@ public interface InventarioRepository {
 
     /** El gasto de producto registrado por una fumigación, si hay */
     Optional<MovimientoInventario> usoDeFumigacion(Long fumigacionId);
+
+    Optional<MovimientoInventario> usoDeActividad(Long actividadId);
 
     /** Mínimos definidos por el agricultor: insumoId → cantidad en unidad base */
     Map<Long, Double> minimosDe(Long agricultorId);

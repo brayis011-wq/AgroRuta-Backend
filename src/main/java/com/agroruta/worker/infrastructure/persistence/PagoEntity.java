@@ -36,24 +36,59 @@ public class PagoEntity {
     public PagoEntity() {}
 
     // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public NominaEntity getNomina() { return nomina; }
-    public void setNomina(NominaEntity nomina) { this.nomina = nomina; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDate getFechaPago() { return fechaPago; }
-    public void setFechaPago(LocalDate fechaPago) { this.fechaPago = fechaPago; }
+    public NominaEntity getNomina() {
+        return nomina;
+    }
 
-    public BigDecimal getMonto() { return monto; }
-    public void setMonto(BigDecimal monto) { this.monto = monto; }
+    public void setNomina(NominaEntity nomina) {
+        this.nomina = nomina;
+    }
 
-    public MetodoPago getMetodoPago() { return metodoPago; }
-    public void setMetodoPago(MetodoPago metodoPago) { this.metodoPago = metodoPago; }
+    public LocalDate getFechaPago() {
+        return fechaPago;
+    }
 
-    public String getComprobante() { return comprobante; }
-    public void setComprobante(String comprobante) { this.comprobante = comprobante; }
+    public void setFechaPago(LocalDate fechaPago) {
+        this.fechaPago = fechaPago;
+    }
 
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public BigDecimal getMonto() {
+        return monto;
+    }
+
+    public void setMonto(BigDecimal monto) {
+        this.monto = monto;
+    }
+
+    public MetodoPago getMetodoPago() {
+        return metodoPago;
+    }
+
+    public void setMetodoPago(MetodoPago metodoPago) {
+        this.metodoPago = metodoPago;
+    }
+
+    public String getComprobante() {
+        return comprobante;
+    }
+
+    public void setComprobante(String comprobante) {
+        this.comprobante = comprobante;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
 }

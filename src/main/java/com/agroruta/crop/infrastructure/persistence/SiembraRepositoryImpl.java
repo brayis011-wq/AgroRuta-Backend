@@ -1,13 +1,12 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Siembra;
-import com.agroruta.crop.application.ports.out.SiembraRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class SiembraRepositoryImpl implements SiembraRepository {
@@ -24,10 +23,12 @@ public class SiembraRepositoryImpl implements SiembraRepository {
         SiembraEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
     }
+
     @Override
     public boolean existsActivaByLoteId(Long loteId) {
         return jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(loteId, EstadoCultivo.FINALIZADO);
     }
+
     @Override
     public Optional<Siembra> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);
@@ -43,14 +44,16 @@ public class SiembraRepositoryImpl implements SiembraRepository {
 
     @Override
     public List<Siembra> findHistorialByLoteId(Long loteId) {
-        return jpaRepository.findByLoteIdAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(loteId)
-                .stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByLoteIdAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(loteId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<Siembra> findByEstadoCultivo(EstadoCultivo estado) {
-        return jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(estado)
-                .stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(estado).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     private SiembraEntity toEntity(Siembra siembra) {

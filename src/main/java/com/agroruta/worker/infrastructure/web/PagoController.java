@@ -1,20 +1,23 @@
 package com.agroruta.worker.infrastructure.web;
 
-import com.agroruta.worker.domain.ResumenPagos;
-import com.agroruta.shared.util.Pagina;
-import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.domain.Pago;
+import com.agroruta.worker.domain.PagosDelMes;
+import com.agroruta.worker.domain.ResumenPagos;
 import com.agroruta.worker.infrastructure.web.dto.PagoRequest;
 import com.agroruta.worker.infrastructure.web.dto.PagoResponse;
+import com.agroruta.worker.infrastructure.web.dto.PagosLoteRequest;
+import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -30,11 +33,23 @@ public class PagoController {
     @PreAuthorize("@ownership.nominaPropia(#req.nominaId, authentication)")
     public ResponseEntity<PagoResponse> registrar(@Valid @RequestBody PagoRequest req) {
         PagoResponse response = PagoResponse.from(
-                pagoUseCase.registrarPago(
-                        req.nominaId, req.monto, req.metodoPago, req.comprobante, req.observaciones
-                )
-        );
+                pagoUseCase.registrarPago(req.nominaId, req.monto, req.metodoPago, req.comprobante, req.observaciones));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    /** Paga varias nóminas juntas, cada una por su total (con aprobarPendientes, aprueba antes las pendientes). */
+    @PostMapping("/batch")
+    @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
+    public ResponseEntity<List<PagoResponse>> pagarVarias(
+            @Valid @RequestBody PagosLoteRequest req, Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        List<PagoResponse> pagos =
+                pagoUseCase
+                        .pagarVarias(dueno, req.nominaIds, req.metodoPago, req.observaciones, req.aprobarPendientes)
+                        .stream()
+                        .map(PagoResponse::from)
+                        .toList();
+        return ResponseEntity.status(HttpStatus.CREATED).body(pagos);
     }
 
     @GetMapping("/{id}")
@@ -46,8 +61,9 @@ public class PagoController {
     @GetMapping("/worker/{trabajadorId}")
     @PreAuthorize("@ownership.trabajadorPropio(#trabajadorId, authentication)")
     public ResponseEntity<List<PagoResponse>> historialPorTrabajador(@PathVariable Long trabajadorId) {
-        List<PagoResponse> pagos = pagoUseCase.historialPorTrabajador(trabajadorId)
-                .stream().map(PagoResponse::from).toList();
+        List<PagoResponse> pagos = pagoUseCase.historialPorTrabajador(trabajadorId).stream()
+                .map(PagoResponse::from)
+                .toList();
         return ResponseEntity.ok(pagos);
     }
 
@@ -61,20 +77,37 @@ public class PagoController {
 
     /** Lista de pagos por páginas, más recientes primero. Filtro opcional: la nómina. */
     @GetMapping("/page")
-    public ResponseEntity<Pagina<PagoResponse>> pagina(@RequestParam(required = false) Integer page,
-                                                       @RequestParam(required = false) Integer size,
-                                                       @RequestParam(required = false) Long nominaId,
-                                                       Authentication authentication) {
+    public ResponseEntity<Pagina<PagoResponse>> pagina(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
+            @RequestParam(required = false) Long nominaId,
+            @RequestParam(required = false) Long trabajadorId,
+            Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(pagoUseCase.pagina(dueno, nominaId, Pagina.numero(page), Pagina.tamano(size))
+        return ResponseEntity.ok(pagoUseCase
+                .pagina(dueno, nominaId, trabajadorId, Pagina.numero(page), Pagina.tamano(size))
                 .map(PagoResponse::from));
     }
 
     /** Totales de los pagos para las tarjetas de la lista, con el mismo filtro de nómina. */
     @GetMapping("/summary")
-    public ResponseEntity<ResumenPagos> resumen(@RequestParam(required = false) Long nominaId,
-                                                Authentication authentication) {
+    public ResponseEntity<ResumenPagos> resumen(
+            @RequestParam(required = false) Long nominaId,
+            @RequestParam(required = false) Long trabajadorId,
+            Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId));
+        return ResponseEntity.ok(pagoUseCase.resumen(dueno, nominaId, trabajadorId));
+    }
+
+    /**
+     * Lo pagado cada mes desde una fecha (?since=2026-10-01), para comparar un mes con el anterior
+     * sin traer todos los pagos. Los meses sin pagos no salen.
+     */
+    @GetMapping("/monthly")
+    public ResponseEntity<List<PagosDelMes>> porMes(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate since,
+            Authentication authentication) {
+        Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
+        return ResponseEntity.ok(pagoUseCase.totalesPorMes(dueno, since));
     }
 }

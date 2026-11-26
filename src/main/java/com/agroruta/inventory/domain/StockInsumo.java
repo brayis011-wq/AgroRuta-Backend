@@ -19,5 +19,4 @@ public record StockInsumo(
         Double costoPromedio,
         Double valorStock,
         EstadoStock estado,
-        LocalDate ultimoMovimiento
-) {}
+        LocalDate ultimoMovimiento) {}

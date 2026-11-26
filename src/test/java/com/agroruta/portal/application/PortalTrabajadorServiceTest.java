@@ -1,15 +1,23 @@
 package com.agroruta.portal.application;
 
-import com.agroruta.worker.application.ports.out.TrabajadorRepository;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.portal.domain.EstadoPortal;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -19,37 +27,46 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("PortalTrabajadorService")
 class PortalTrabajadorServiceTest {
 
-    @Mock private TrabajadorRepository trabajadorRepository;
-    @Mock private UsuarioRepository usuarioRepository;
-    @Mock private JornalUseCase jornalUseCase;
-    @Mock private NominaUseCase nominaUseCase;
-    @Mock private PagoUseCase pagoUseCase;
+    @Mock
+    private TrabajadorRepository trabajadorRepository;
 
-    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
-    @InjectMocks private PortalTrabajadorService service;
+    @Mock
+    private JornalUseCase jornalUseCase;
+
+    @Mock
+    private NominaUseCase nominaUseCase;
+
+    @Mock
+    private PagoUseCase pagoUseCase;
+
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventos;
+
+    @InjectMocks
+    private PortalTrabajadorService service;
 
     private Trabajador luis;
 
     @BeforeEach
     void setUp() {
         Cargo cargo = new Cargo(1L, "Recolector", "", new BigDecimal("60000"), true);
-        luis = new Trabajador(5L, "Luis", "Herrera", "1.052.334.120", null, null,
-                LocalDate.of(2025, 1, 10), TipoContrato.JORNAL, cargo);
+        luis = new Trabajador(
+                5L,
+                "Luis",
+                "Herrera",
+                "1.052.334.120",
+                null,
+                null,
+                LocalDate.of(2025, 1, 10),
+                TipoContrato.JORNAL,
+                cargo);
         luis.setAgricultorId(3L);
     }
 
@@ -66,7 +83,7 @@ class PortalTrabajadorServiceTest {
         @Test
         @DisplayName("busca la cédula normalizada y deja la solicitud pendiente")
         void creaSolicitud() {
-            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(Optional.of(luis));
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(List.of(luis));
             when(trabajadorRepository.buscarPorUsuarioId(9L)).thenReturn(Optional.empty());
 
             service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1.052.334.120");
@@ -78,7 +95,7 @@ class PortalTrabajadorServiceTest {
         @Test
         @DisplayName("rechaza una cédula que ningún agricultor registró")
         void cedulaDesconocida() {
-            when(trabajadorRepository.buscarPorCedulaNormalizada("123456")).thenReturn(Optional.empty());
+            when(trabajadorRepository.buscarPorCedulaNormalizada("123456")).thenReturn(List.of());
 
             assertThatThrownBy(() -> service.validarCedulaDisponible("123456"))
                     .isInstanceOf(BusinessException.class)
@@ -89,7 +106,7 @@ class PortalTrabajadorServiceTest {
         @DisplayName("rechaza una cédula que ya usa otra cuenta")
         void cedulaOcupada() {
             luis.solicitarAcceso(7L, "Otra", "otra@gmail.com");
-            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(Optional.of(luis));
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(List.of(luis));
 
             assertThatThrownBy(() -> service.validarCedulaDisponible("1052334120"))
                     .isInstanceOf(BusinessException.class)
@@ -97,13 +114,80 @@ class PortalTrabajadorServiceTest {
         }
 
         @Test
+        @DisplayName("con la cédula en dos agricultores, la solicitud va al registro activo más antiguo")
+        void cedulaConDosAgricultores() {
+            Trabajador conOtroAgricultor = new Trabajador(
+                    30L,
+                    "Luis",
+                    "Rojas",
+                    "1052334120",
+                    null,
+                    null,
+                    LocalDate.of(2026, 3, 1),
+                    TipoContrato.JORNAL,
+                    luis.getCargo());
+            Trabajador inactivo = new Trabajador(
+                    2L,
+                    "Luis",
+                    "Rojas",
+                    "1052334120",
+                    null,
+                    null,
+                    LocalDate.of(2024, 1, 1),
+                    TipoContrato.JORNAL,
+                    luis.getCargo());
+            inactivo.desactivar();
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120"))
+                    .thenReturn(List.of(conOtroAgricultor, inactivo, luis));
+            when(trabajadorRepository.buscarPorUsuarioId(9L)).thenReturn(Optional.empty());
+
+            service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1052334120");
+
+            assertThat(luis.getAccesoEstado()).isEqualTo(EstadoAccesoPortal.PENDIENTE);
+            assertThat(conOtroAgricultor.getUsuarioId()).isNull();
+            assertThat(inactivo.getUsuarioId()).isNull();
+            verify(trabajadorRepository).guardar(luis);
+        }
+
+        @Test
+        @DisplayName("rechaza la cédula si otra cuenta ya la usa con cualquiera de sus agricultores")
+        void cedulaOcupadaConOtroAgricultor() {
+            Trabajador conOtroAgricultor = new Trabajador(
+                    30L,
+                    "Luis",
+                    "Rojas",
+                    "1052334120",
+                    null,
+                    null,
+                    LocalDate.of(2026, 3, 1),
+                    TipoContrato.JORNAL,
+                    luis.getCargo());
+            conOtroAgricultor.solicitarAcceso(7L, "Otra", "otra@gmail.com");
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120"))
+                    .thenReturn(List.of(luis, conOtroAgricultor));
+
+            assertThatThrownBy(() -> service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1052334120"))
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("ya tiene una cuenta");
+            assertThat(luis.getUsuarioId()).isNull();
+        }
+
+        @Test
         @DisplayName("libera la solicitud rechazada anterior de la misma cuenta")
         void liberaAnterior() {
-            Trabajador anterior = new Trabajador(8L, "Otro", "Señor", "777777", null, null,
-                    LocalDate.of(2025, 1, 1), TipoContrato.JORNAL, luis.getCargo());
+            Trabajador anterior = new Trabajador(
+                    8L,
+                    "Otro",
+                    "Señor",
+                    "777777",
+                    null,
+                    null,
+                    LocalDate.of(2025, 1, 1),
+                    TipoContrato.JORNAL,
+                    luis.getCargo());
             anterior.solicitarAcceso(9L, "Luis", "luis@gmail.com");
             anterior.rechazarAcceso();
-            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(Optional.of(luis));
+            when(trabajadorRepository.buscarPorCedulaNormalizada("1052334120")).thenReturn(List.of(luis));
             when(trabajadorRepository.buscarPorUsuarioId(9L)).thenReturn(Optional.of(anterior));
 
             service.solicitarAcceso(9L, "Luis", "luis@gmail.com", "1052334120");

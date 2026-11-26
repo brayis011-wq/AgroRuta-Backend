@@ -9,12 +9,12 @@ import lombok.Getter;
 @Builder
 public class ProfileResponse {
 
-    private Long   id;
+    private Long id;
     private String nombre;
     private String email;
     private String telefono;
     private String fotoPerfil;
-    private Rol    rol;
+    private Rol rol;
 
     public static ProfileResponse from(Perfil p) {
         return ProfileResponse.builder()

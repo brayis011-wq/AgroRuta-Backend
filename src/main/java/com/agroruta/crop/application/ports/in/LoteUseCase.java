@@ -6,11 +6,16 @@ import java.util.List;
 
 public interface LoteUseCase {
     Lote registrarLote(String nombre, Double area, Long fincaId);
+
     Lote buscarLotePorId(Long id);
+
     List<Lote> listarLotesPorFinca(Long fincaId);
+
     void eliminarLote(Long id);
-    Lote actualizarGeometriaLote(Long loteId, String coordenadas,
-                                 Double area, Double centroideLat, Double centroideLng);
+
+    Lote actualizarGeometriaLote(
+            Long loteId, String coordenadas, Double area, Double centroideLat, Double centroideLng);
+
     Lote actualizarLote(Long id, String nombre, Double area);
     /** Cambio hecho por el agricultor: solo DISPONIBLE o EN_DESCANSO y sin siembra en curso */
     Lote cambiarEstado(Long id, String estado);

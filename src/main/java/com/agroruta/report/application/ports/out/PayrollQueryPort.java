@@ -1,15 +1,19 @@
 package com.agroruta.report.application.ports.out;
 
 import com.agroruta.report.domain.MonthlyPayment;
-import java.time.LocalDate;
+import com.agroruta.report.domain.Periodo;
 import com.agroruta.report.domain.WorkerPayrollDetail;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public interface PayrollQueryPort {
     BigDecimal getTotalAccumulated();
+
     List<WorkerPayrollDetail> getDetailPerWorker();
+
     BigDecimal getTotalAccumulatedByAgricultor(Long agricultorId);
+
     List<WorkerPayrollDetail> getDetailPerWorkerByAgricultor(Long agricultorId);
 
     /** Pagos agrupados por mes desde {@code desde} (inclusive). agricultorId null = todos. */
@@ -17,6 +21,15 @@ public interface PayrollQueryPort {
 
     /** Nóminas pendientes o aprobadas que aún no se pagan. agricultorId null = todos. */
     PendingPayroll getPendingPayroll(Long agricultorId);
+
+    // ── Por periodo (fecha de pago). agricultorId null = todos ──
+
+    BigDecimal getTotalPaid(Long agricultorId, Periodo periodo);
+
+    List<WorkerPayrollDetail> getDetailPerWorker(Long agricultorId, Periodo periodo);
+
+    /** Todos los meses entre {@code desde} y {@code hasta} (incluidos), también los que no tienen pagos */
+    List<MonthlyPayment> getMonthlyPayments(Long agricultorId, LocalDate desde, LocalDate hasta);
 
     record PendingPayroll(int nominas, BigDecimal total) {}
 }

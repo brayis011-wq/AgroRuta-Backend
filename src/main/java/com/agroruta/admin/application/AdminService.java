@@ -8,23 +8,23 @@ import com.agroruta.admin.domain.ConteoAgricultor;
 import com.agroruta.admin.domain.ResumenSistema;
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -41,12 +41,13 @@ public class AdminService implements AdministrarSistemaUseCase {
     private static final Comparator<Usuario> POR_NOMBRE = Comparator.comparing(
             (Usuario u) -> u.getNombre() == null ? "" : u.getNombre(), String.CASE_INSENSITIVE_ORDER);
 
-    public AdminService(UsuarioRepository usuarioRepository,
-                        AdminEstadisticasPort estadisticasPort,
-                        FincaUseCase fincaUseCase,
-                        TrabajadorUseCase trabajadorUseCase,
-                        NominaUseCase nominaUseCase,
-                        TrabajadorRepository trabajadorRepository) {
+    public AdminService(
+            UsuarioRepository usuarioRepository,
+            AdminEstadisticasPort estadisticasPort,
+            FincaUseCase fincaUseCase,
+            TrabajadorUseCase trabajadorUseCase,
+            NominaUseCase nominaUseCase,
+            TrabajadorRepository trabajadorRepository) {
         this.usuarioRepository = usuarioRepository;
         this.estadisticasPort = estadisticasPort;
         this.fincaUseCase = fincaUseCase;
@@ -66,8 +67,7 @@ public class AdminService implements AdministrarSistemaUseCase {
                 contarActivos(usuarios, Rol.Administrador),
                 contarActivos(usuarios, Rol.Agricultor),
                 contarActivos(usuarios, Rol.Trabajador),
-                estadisticasPort.estadisticasSistema()
-        );
+                estadisticasPort.estadisticasSistema());
     }
 
     @Override
@@ -82,8 +82,7 @@ public class AdminService implements AdministrarSistemaUseCase {
 
         if (!activo) {
             if (Objects.equals(adminId, usuarioId)) {
-                throw new BusinessException(ErrorCode.INVALID_OPERATION,
-                        "No puedes desactivar tu propia cuenta.");
+                throw new BusinessException(ErrorCode.INVALID_OPERATION, "No puedes desactivar tu propia cuenta.");
             }
             exigirOtroAdministrador(usuario);
             usuario.desactivar();
@@ -99,8 +98,7 @@ public class AdminService implements AdministrarSistemaUseCase {
         Usuario usuario = buscarUsuario(usuarioId);
 
         if (Objects.equals(adminId, usuarioId)) {
-            throw new BusinessException(ErrorCode.INVALID_OPERATION,
-                    "No puedes cambiar tu propio rol.");
+            throw new BusinessException(ErrorCode.INVALID_OPERATION, "No puedes cambiar tu propio rol.");
         }
         if (usuario.getRol() == nuevoRol) {
             return usuario;
@@ -131,21 +129,21 @@ public class AdminService implements AdministrarSistemaUseCase {
         if (usuario.getRol() != Rol.Agricultor) {
             throw new ResourceNotFoundException("Agricultor no encontrado con id: " + agricultorId);
         }
-        ConteoAgricultor conteo = estadisticasPort.conteosPorAgricultor()
-                .getOrDefault(agricultorId, ConteoAgricultor.VACIO);
+        ConteoAgricultor conteo =
+                estadisticasPort.conteosPorAgricultor().getOrDefault(agricultorId, ConteoAgricultor.VACIO);
 
         return new AgricultorDetalle(
                 new AgricultorResumen(usuario, conteo),
                 fincaUseCase.listarFincasPorAgricultor(agricultorId),
                 trabajadorUseCase.listarTodosDe(agricultorId),
-                nominaUseCase.listarTodasDe(agricultorId)
-        );
+                nominaUseCase.listarTodasDe(agricultorId));
     }
 
     // ── Auxiliares ──────────────────────────────────────────────────────────
 
     private Usuario buscarUsuario(Long id) {
-        return usuarioRepository.findById(id)
+        return usuarioRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
     }
 
@@ -153,8 +151,7 @@ public class AdminService implements AdministrarSistemaUseCase {
     private void exigirOtroAdministrador(Usuario usuario) {
         boolean esAdminActivo = usuario.getRol() == Rol.Administrador && usuario.isActivo();
         if (esAdminActivo && usuarioRepository.countActivosPorRol(Rol.Administrador) <= 1) {
-            throw new BusinessException(ErrorCode.INVALID_OPERATION,
-                    "Debe quedar al menos un administrador activo.");
+            throw new BusinessException(ErrorCode.INVALID_OPERATION, "Debe quedar al menos un administrador activo.");
         }
     }
 
@@ -169,13 +166,16 @@ public class AdminService implements AdministrarSistemaUseCase {
                     || !trabajadorUseCase.listarTodosDe(id).isEmpty()
                     || !nominaUseCase.listarTodasDe(id).isEmpty();
             if (tieneDatos) {
-                throw new BusinessException(ErrorCode.INVALID_OPERATION,
+                throw new BusinessException(
+                        ErrorCode.INVALID_OPERATION,
                         "No se puede cambiar el rol: este agricultor ya tiene fincas, trabajadores o nóminas. "
                                 + "Si ya no usa la cuenta, desactívala.");
             }
         }
-        if (usuario.getRol() == Rol.Trabajador && trabajadorRepository.buscarPorUsuarioId(id).isPresent()) {
-            throw new BusinessException(ErrorCode.INVALID_OPERATION,
+        if (usuario.getRol() == Rol.Trabajador
+                && trabajadorRepository.buscarPorUsuarioId(id).isPresent()) {
+            throw new BusinessException(
+                    ErrorCode.INVALID_OPERATION,
                     "No se puede cambiar el rol: esta cuenta está vinculada a un trabajador de una finca. "
                             + "Si ya no la usa, desactívala.");
         }
@@ -187,12 +187,12 @@ public class AdminService implements AdministrarSistemaUseCase {
 
     private static Rol parsearRol(String texto) {
         if (texto == null || texto.isBlank()) {
-            throw new IllegalArgumentException("El rol es obligatorio.");
+            throw new DatoInvalidoException("El rol es obligatorio.");
         }
         return Arrays.stream(Rol.values())
                 .filter(r -> r.name().equalsIgnoreCase(texto.trim()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new DatoInvalidoException(
                         "Rol no válido: '" + texto + "'. Opciones: Administrador, Agricultor, Trabajador"));
     }
 }

@@ -21,23 +21,21 @@ public class WeatherController {
     }
 
     @GetMapping("/coordinates")
-    public ResponseEntity<WeatherResponseDto> getByCoordinates(
-            @RequestParam double lat,
-            @RequestParam double lon) {
+    public ResponseEntity<WeatherResponseDto> getByCoordinates(@RequestParam double lat, @RequestParam double lon) {
         Weather weather = weatherUseCase.getWeatherByCoordinates(lat, lon);
         return ResponseEntity.ok(toDto(weather));
     }
 
     private WeatherResponseDto toDto(Weather w) {
         return WeatherResponseDto.builder()
-                .city(w.getCity())
-                .country(w.getCountry())
-                .temperature(w.getTemperature())
-                .feelsLike(w.getFeelsLike())
-                .humidity(w.getHumidity())
-                .windSpeed(w.getWindSpeed())
-                .description(w.getDescription())
-                .iconUrl("https://openweathermap.org/img/wn/" + w.getIcon() + "@2x.png")
+                .city(w.city())
+                .country(w.country())
+                .temperature(w.temperature())
+                .feelsLike(w.feelsLike())
+                .humidity(w.humidity())
+                .windSpeed(w.windSpeed())
+                .description(w.description())
+                .iconUrl("https://openweathermap.org/img/wn/" + w.icon() + "@2x.png")
                 .build();
     }
 }

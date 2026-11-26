@@ -1,10 +1,17 @@
 package com.agroruta.worker.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.application.ports.out.LaborRepository;
+import com.agroruta.worker.domain.Labor;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -12,13 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias - LaborService")
@@ -57,10 +57,8 @@ class LaborServiceTest {
     void crearActividad_nombreDuplicado_debeLanzarBusinessException() {
         when(laborRepository.existeNombreVisible("Siembra", null, null)).thenReturn(true);
 
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> laborService.crearActividad("Siembra", "Descripción")
-        );
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> laborService.crearActividad("Siembra", "Descripción"));
 
         assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Siembra"));
@@ -100,9 +98,7 @@ class LaborServiceTest {
         when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> laborService.actualizarActividad(99L, "Cosecha", "Descripción")
-        );
+                ResourceNotFoundException.class, () -> laborService.actualizarActividad(99L, "Cosecha", "Descripción"));
 
         assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("99"));
@@ -116,9 +112,7 @@ class LaborServiceTest {
         when(laborRepository.existeNombreVisible("Cosecha", null, 1L)).thenReturn(true);
 
         BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> laborService.actualizarActividad(1L, "Cosecha", "Descripción")
-        );
+                BusinessException.class, () -> laborService.actualizarActividad(1L, "Cosecha", "Descripción"));
 
         assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Cosecha"));
@@ -144,10 +138,8 @@ class LaborServiceTest {
     void desactivarActividad_idInexistente_debeLanzarResourceNotFoundException() {
         when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> laborService.desactivarActividad(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> laborService.desactivarActividad(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(laborRepository, never()).guardar(any());
@@ -172,10 +164,8 @@ class LaborServiceTest {
     void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> laborService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> laborService.buscarPorId(99L));
 
         assertTrue(ex.getMessage().contains("99"));
     }
@@ -185,10 +175,7 @@ class LaborServiceTest {
     @Test
     @DisplayName("listarActivas debe retornar solo las actividades activas")
     void listarActivas_debeRetornarListaDeActivas() {
-        List<Labor> activas = List.of(
-                new Labor(1L, "Siembra", "Desc 1"),
-                new Labor(2L, "Riego",   "Desc 2")
-        );
+        List<Labor> activas = List.of(new Labor(1L, "Siembra", "Desc 1"), new Labor(2L, "Riego", "Desc 2"));
         when(laborRepository.listarActivas()).thenReturn(activas);
 
         List<Labor> resultado = laborService.listarActivas();
@@ -252,7 +239,7 @@ class LaborServiceTest {
     @Test
     @DisplayName("crearActividad rechaza un nombre vacío")
     void crearActividad_nombreVacio_lanzaIllegalArgument() {
-        assertThrows(IllegalArgumentException.class, () -> laborService.crearActividad("   ", "", 7L));
+        assertThrows(DatoInvalidoException.class, () -> laborService.crearActividad("   ", "", 7L));
         verify(laborRepository, never()).guardar(any());
     }
 

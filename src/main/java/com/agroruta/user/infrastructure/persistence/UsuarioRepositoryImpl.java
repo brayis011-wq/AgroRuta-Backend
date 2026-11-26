@@ -1,13 +1,12 @@
 package com.agroruta.user.infrastructure.persistence;
 
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 // ¡ESTA ANOTACIÓN ES LA CLAVE!
 // Le dice a Spring "Aquí está la implementación del repositorio que el UserService estaba pidiendo".
@@ -40,16 +39,15 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
         if (email == null) return Optional.empty();
         String limpio = email.trim();
         // Primero exacto; si no, sin distinguir mayúsculas (la base de producción sí las distingue)
-        return jpaRepository.findByEmail(limpio)
+        return jpaRepository
+                .findByEmail(limpio)
                 .or(() -> jpaRepository.findFirstByEmailIgnoreCaseOrderByIdAsc(limpio))
                 .map(this::toDomain);
     }
 
     @Override
     public List<Usuario> findAllActivos() {
-        return jpaRepository.findByActivoTrue().stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
+        return jpaRepository.findByActivoTrue().stream().map(this::toDomain).collect(Collectors.toList());
     }
 
     @Override
@@ -76,27 +74,19 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
                 domain.getRol(),
                 domain.isActivo(),
                 domain.getFechaCreacion(),
-                domain.getTelefono(),       // NUEVO
-                domain.getFotoPerfil()      // NUEVO
-        );
+                domain.getTelefono());
         entity.setEmailVerificado(domain.isEmailVerificado());
         return entity;
     }
 
     private Usuario toDomain(UsuarioEntity entity) {
         Usuario usuario = new Usuario(
-                entity.getId(),
-                entity.getNombre(),
-                entity.getEmail(),
-                entity.getPassword(),
-                entity.getRol()
-        );
+                entity.getId(), entity.getNombre(), entity.getEmail(), entity.getPassword(), entity.getRol());
         if (!entity.isActivo()) {
             usuario.desactivar();
         }
         usuario.setFechaCreacion(entity.getFechaCreacion());
-        usuario.setTelefono(entity.getTelefono());      // NUEVO
-        usuario.setFotoPerfil(entity.getFotoPerfil());  // NUEVO
+        usuario.setTelefono(entity.getTelefono());
         usuario.setEmailVerificado(entity.isEmailVerificado());
         return usuario;
     }

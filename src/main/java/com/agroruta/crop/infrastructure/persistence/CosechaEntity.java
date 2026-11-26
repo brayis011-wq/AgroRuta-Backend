@@ -2,15 +2,17 @@ package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.CalidadCosecha;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "cosechas", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_cosecha_fecha_siembra",
-                columnNames = {"fecha", "siembraId"}
-        )
-})
+@Table(
+        name = "cosechas",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_cosecha_fecha_siembra_calidad",
+                    columnNames = {"fecha", "siembraId", "calidad"})
+        })
 public class CosechaEntity {
 
     @Id
@@ -29,32 +31,78 @@ public class CosechaEntity {
 
     private String observaciones;
 
-    @Column(name = "precio_kg")
-    private Double precioKg;
+    @Column(name = "precio_kg", precision = 14, scale = 2)
+    private BigDecimal precioKg;
+
+    @Column(name = "en_carencia", nullable = false)
+    private boolean enCarencia;
 
     @Column(nullable = false)
     private Long siembraId;
 
     public CosechaEntity() {}
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Double getCantidadKg() { return cantidadKg; }
-    public void setCantidadKg(Double cantidadKg) { this.cantidadKg = cantidadKg; }
+    public LocalDate getFecha() {
+        return fecha;
+    }
 
-    public CalidadCosecha getCalidad() { return calidad; }
-    public void setCalidad(CalidadCosecha calidad) { this.calidad = calidad; }
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
 
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public Double getCantidadKg() {
+        return cantidadKg;
+    }
 
-    public Double getPrecioKg() { return precioKg; }
-    public void setPrecioKg(Double precioKg) { this.precioKg = precioKg; }
+    public void setCantidadKg(Double cantidadKg) {
+        this.cantidadKg = cantidadKg;
+    }
 
-    public Long getSiembraId() { return siembraId; }
-    public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }
+    public CalidadCosecha getCalidad() {
+        return calidad;
+    }
+
+    public void setCalidad(CalidadCosecha calidad) {
+        this.calidad = calidad;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public BigDecimal getPrecioKg() {
+        return precioKg;
+    }
+
+    public void setPrecioKg(BigDecimal precioKg) {
+        this.precioKg = precioKg;
+    }
+
+    public boolean isEnCarencia() {
+        return enCarencia;
+    }
+
+    public void setEnCarencia(boolean enCarencia) {
+        this.enCarencia = enCarencia;
+    }
+
+    public Long getSiembraId() {
+        return siembraId;
+    }
+
+    public void setSiembraId(Long siembraId) {
+        this.siembraId = siembraId;
+    }
 }

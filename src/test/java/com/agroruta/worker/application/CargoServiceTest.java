@@ -1,13 +1,17 @@
 package com.agroruta.worker.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.user.domain.Rol;
-import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.infrastructure.security.CustomUserDetails;
-import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.application.ports.out.CargoRepository;
+import com.agroruta.worker.domain.Cargo;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,16 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias - CargoService")
@@ -83,8 +78,7 @@ class CargoServiceTest {
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"), 7L)
-        );
+                () -> cargoService.crearCargo("Operario", "Desc", new BigDecimal("80000"), 7L));
 
         assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Operario"));
@@ -109,7 +103,8 @@ class CargoServiceTest {
     @DisplayName("actualizarCargo debe modificar y guardar cuando el id existe y el nombre es único")
     void actualizarCargo_idExisteNombreUnico_debeActualizarYGuardar() {
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
-        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", null, 1L)).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", null, 1L))
+                .thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(cargoBase);
 
         Cargo resultado = cargoService.actualizarCargo(1L, "Supervisor", "Nueva desc", new BigDecimal("120000"));
@@ -125,8 +120,7 @@ class CargoServiceTest {
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
-                () -> cargoService.actualizarCargo(99L, "Supervisor", "Desc", new BigDecimal("120000"))
-        );
+                () -> cargoService.actualizarCargo(99L, "Supervisor", "Desc", new BigDecimal("120000")));
 
         assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("99"));
@@ -137,12 +131,12 @@ class CargoServiceTest {
     @DisplayName("actualizarCargo debe lanzar BusinessException cuando el nombre pertenece a otro cargo")
     void actualizarCargo_nombreDuplicadoEnOtro_debeLanzarBusinessException() {
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
-        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", null, 1L)).thenReturn(true);
+        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", null, 1L))
+                .thenReturn(true);
 
         BusinessException ex = assertThrows(
                 BusinessException.class,
-                () -> cargoService.actualizarCargo(1L, "Supervisor", "Desc", new BigDecimal("120000"))
-        );
+                () -> cargoService.actualizarCargo(1L, "Supervisor", "Desc", new BigDecimal("120000")));
 
         assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("Supervisor"));
@@ -154,7 +148,8 @@ class CargoServiceTest {
     void actualizarCargo_validaNombreContraElDuenoDelCargo() {
         cargoBase.setAgricultorId(7L);
         when(cargoRepository.buscarPorId(1L)).thenReturn(Optional.of(cargoBase));
-        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", 7L, 1L)).thenReturn(false);
+        when(cargoRepository.existsByNombreAndAgricultorIdAndIdNot("Supervisor", 7L, 1L))
+                .thenReturn(false);
         when(cargoRepository.guardar(any(Cargo.class))).thenReturn(cargoBase);
 
         cargoService.actualizarCargo(1L, "Supervisor", "Desc", new BigDecimal("120000"));
@@ -181,10 +176,8 @@ class CargoServiceTest {
     void desactivarCargo_idInexistente_debeLanzarResourceNotFoundException() {
         when(cargoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> cargoService.desactivarCargo(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> cargoService.desactivarCargo(99L));
 
         assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("99"));
@@ -210,10 +203,8 @@ class CargoServiceTest {
     void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(cargoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> cargoService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> cargoService.buscarPorId(99L));
 
         assertEquals(ErrorCode.RESOURCE_NOT_FOUND, ex.getErrorCode());
         assertTrue(ex.getMessage().contains("99"));
@@ -225,9 +216,8 @@ class CargoServiceTest {
     @DisplayName("listarActivos debe retornar solo los cargos activos")
     void listarActivos_debeRetornarListaDeActivos() {
         List<Cargo> activos = List.of(
-                new Cargo(1L, "Operario",   "Desc 1", new BigDecimal("80000"),  true),
-                new Cargo(2L, "Supervisor", "Desc 2", new BigDecimal("120000"), true)
-        );
+                new Cargo(1L, "Operario", "Desc 1", new BigDecimal("80000"), true),
+                new Cargo(2L, "Supervisor", "Desc 2", new BigDecimal("120000"), true));
         when(cargoRepository.listarActivos()).thenReturn(activos);
 
         List<Cargo> resultado = cargoService.listarActivos();

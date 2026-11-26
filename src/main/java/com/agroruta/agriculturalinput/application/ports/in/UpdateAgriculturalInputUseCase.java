@@ -12,10 +12,10 @@ public interface UpdateAgriculturalInputUseCase {
             String unidadSugerida,
             Double dosisSugerida,
             Integer reentradaHoras,
-            Integer diasCarencia
-    ) {
+            Integer diasCarencia) {
         /** Sin días de carencia (compatibilidad) */
-        public UpdateAgriculturalInputCommand(String nombre, String tipo, String unidadSugerida, Double dosisSugerida, Integer reentradaHoras) {
+        public UpdateAgriculturalInputCommand(
+                String nombre, String tipo, String unidadSugerida, Double dosisSugerida, Integer reentradaHoras) {
             this(nombre, tipo, unidadSugerida, dosisSugerida, reentradaHoras, null);
         }
     }

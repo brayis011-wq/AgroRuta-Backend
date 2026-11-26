@@ -1,5 +1,6 @@
 package com.agroruta.shared.util;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -13,15 +14,14 @@ public final class EnumParser {
 
     public static <E extends Enum<E>> E parse(Class<E> type, String value, String campo) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException("Falta el valor de " + campo + ".");
+            throw new DatoInvalidoException("Falta el valor de " + campo + ".");
         }
         try {
             return Enum.valueOf(type, value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            String opciones = Arrays.stream(type.getEnumConstants())
-                    .map(Enum::name)
-                    .collect(Collectors.joining(", "));
-            throw new IllegalArgumentException(
+            String opciones =
+                    Arrays.stream(type.getEnumConstants()).map(Enum::name).collect(Collectors.joining(", "));
+            throw new DatoInvalidoException(
                     "Valor no válido para " + campo + ": '" + value + "'. Opciones: " + opciones);
         }
     }

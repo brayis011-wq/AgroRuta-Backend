@@ -2,6 +2,7 @@ package com.agroruta.user.infrastructure.web;
 
 import com.agroruta.shared.security.CookieSesion;
 import com.agroruta.user.application.AuthService;
+import com.agroruta.user.application.ports.in.SesionIniciada;
 import com.agroruta.user.application.ports.in.SesionUseCase;
 import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.infrastructure.web.dto.LoginRequest;
@@ -10,10 +11,9 @@ import com.agroruta.user.infrastructure.web.dto.RegisterRequest;
 import com.agroruta.user.infrastructure.web.dto.VerificarRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * Inicio y cierre de sesión. El token de acceso (JWT, 15 min) va en el cuerpo y el frontend lo
@@ -27,6 +27,7 @@ public class AuthController {
     private final AuthService authService;
     private final SesionUseCase sesiones;
     private final CookieSesion cookie;
+    private com.agroruta.user.application.ports.in.SesionesAbiertasUseCase abiertas;
 
     public AuthController(AuthService authService, SesionUseCase sesiones, CookieSesion cookie) {
         this.authService = authService;
@@ -34,29 +35,81 @@ public class AuthController {
         this.cookie = cookie;
     }
 
+    /** Cookie de "dispositivo recordado" (no pedir el código de dos pasos por 30 días) */
+    private CookieDispositivo cookieDispositivo =
+            new CookieDispositivo(new com.agroruta.shared.config.SesionProperties(30, true));
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setCookieDispositivo(CookieDispositivo cookieDispositivo) {
+        this.cookieDispositivo = cookieDispositivo;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public void setAbiertas(com.agroruta.user.application.ports.in.SesionesAbiertasUseCase abiertas) {
+        this.abiertas = abiertas;
+    }
+
+    // ── Sesiones abiertas ────────────────────────────────────────────────────
+    // Van bajo /api/auth porque la cookie de sesión solo viaja a esta ruta, y es ella la que
+    // dice quién pregunta y cuál es "esta" sesión.
+
+    @GetMapping("/sessions")
+    public ResponseEntity<java.util.List<com.agroruta.user.domain.SesionAbierta>> sesionesAbiertas(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token) {
+        return ResponseEntity.ok(abiertas.listar(token));
+    }
+
+    /** Cierra una sesión. Si es la de este dispositivo, también borra la cookie. */
+    @DeleteMapping("/sessions/{id}")
+    public ResponseEntity<Void> cerrarSesion(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
+            @PathVariable Long id,
+            HttpServletResponse response) {
+        if (abiertas.cerrar(token, id)) cookie.borrar(response);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/sessions/close-others")
+    public ResponseEntity<Map<String, Integer>> cerrarOtrasSesiones(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token) {
+        return ResponseEntity.ok(Map.of("cerradas", abiertas.cerrarOtras(token)));
+    }
+
     /** No abre sesión: después de registrarse la persona entra por el login (o confirma su correo). */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.registrar(request));
+        return ResponseEntity.ok(AuthResponse.de(authService.registrar(request.aDatos())));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
-                                              HttpServletResponse response) {
-        return conSesion(authService.login(request), response);
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            @CookieValue(name = CookieDispositivo.NOMBRE, required = false) String dispositivo,
+            HttpServletResponse response) {
+        SesionIniciada auth = authService.login(request.aDatos(), dispositivo);
+        // Entró escribiendo el código: se recuerda este dispositivo, salvo que haya desmarcado la casilla
+        boolean conCodigo = request.codigo() != null && !request.codigo().isBlank();
+        if (auth.token() != null && conCodigo) {
+            if (Boolean.FALSE.equals(request.recordarDispositivo())) {
+                cookieDispositivo.borrar(response);
+            } else {
+                authService.recordarDispositivo(auth.id()).ifPresent(m -> cookieDispositivo.escribir(response, m));
+            }
+        }
+        return conSesion(auth, response);
     }
 
     /** Enlace del correo de confirmación: confirma la cuenta e inicia sesión */
     @PostMapping("/verify")
-    public ResponseEntity<AuthResponse> verificar(@Valid @RequestBody VerificarRequest request,
-                                                  HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> verificar(
+            @Valid @RequestBody VerificarRequest request, HttpServletResponse response) {
         return conSesion(authService.verificarCorreo(request.token()), response);
     }
 
     /** Cambia la cookie de sesión por una nueva y entrega un token de acceso nuevo. */
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> renovar(@CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
-                                                HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> renovar(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token, HttpServletResponse response) {
         SesionUseCase.Renovacion r;
         try {
             r = sesiones.renovar(token);
@@ -65,12 +118,12 @@ public class AuthController {
             throw e;
         }
         cookie.escribir(response, r.token());
-        return ResponseEntity.ok(authService.respuestaDeSesion(r.usuario()));
+        return ResponseEntity.ok(AuthResponse.de(authService.respuestaDeSesion(r.usuario())));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
-                                       HttpServletResponse response) {
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token, HttpServletResponse response) {
         sesiones.cerrar(token);
         cookie.borrar(response);
         return ResponseEntity.noContent().build();
@@ -78,17 +131,18 @@ public class AuthController {
 
     /** Siempre responde lo mismo, exista o no la cuenta */
     @PostMapping("/resend-verification")
-    public ResponseEntity<Map<String, String>> reenviarVerificacion(@Valid @RequestBody ReenviarVerificacionRequest request) {
+    public ResponseEntity<Map<String, String>> reenviarVerificacion(
+            @Valid @RequestBody ReenviarVerificacionRequest request) {
         authService.reenviarVerificacion(request.email());
-        return ResponseEntity.ok(Map.of("mensaje",
-                "Si la cuenta existe y falta confirmarla, te enviamos un enlace nuevo."));
+        return ResponseEntity.ok(
+                Map.of("mensaje", "Si la cuenta existe y falta confirmarla, te enviamos un enlace nuevo."));
     }
 
     /** Si la respuesta trae token de acceso (la cuenta ya puede entrar), abre la sesión renovable. */
-    private ResponseEntity<AuthResponse> conSesion(AuthResponse auth, HttpServletResponse response) {
-        if (auth.getToken() != null) {
-            cookie.escribir(response, sesiones.abrir(auth.getId()));
+    private ResponseEntity<AuthResponse> conSesion(SesionIniciada auth, HttpServletResponse response) {
+        if (auth.token() != null) {
+            cookie.escribir(response, sesiones.abrir(auth.id()));
         }
-        return ResponseEntity.ok(auth);
+        return ResponseEntity.ok(AuthResponse.de(auth));
     }
 }

@@ -7,7 +7,14 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "trabajadores")
+@Table(
+        name = "trabajadores",
+        uniqueConstraints = {
+            // Única por agricultor: la misma persona puede trabajar para dos agricultores
+            @UniqueConstraint(
+                    name = "uk_trabajador_cedula_agricultor",
+                    columnNames = {"cedula", "agricultor_id"})
+        })
 public class TrabajadorEntity {
 
     @Id
@@ -20,7 +27,7 @@ public class TrabajadorEntity {
     @Column(nullable = false, length = 100)
     private String apellido;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String cedula;
 
     @Column(length = 20)
@@ -66,48 +73,123 @@ public class TrabajadorEntity {
     public TrabajadorEntity() {}
 
     // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getApellido() { return apellido; }
-    public void setApellido(String apellido) { this.apellido = apellido; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public String getCedula() { return cedula; }
-    public void setCedula(String cedula) { this.cedula = cedula; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getTelefono() { return telefono; }
-    public void setTelefono(String telefono) { this.telefono = telefono; }
+    public String getApellido() {
+        return apellido;
+    }
 
-    public String getDireccion() { return direccion; }
-    public void setDireccion(String direccion) { this.direccion = direccion; }
+    public void setApellido(String apellido) {
+        this.apellido = apellido;
+    }
 
-    public LocalDate getFechaIngreso() { return fechaIngreso; }
-    public void setFechaIngreso(LocalDate fechaIngreso) { this.fechaIngreso = fechaIngreso; }
+    public String getCedula() {
+        return cedula;
+    }
 
-    public EstadoTrabajador getEstado() { return estado; }
-    public void setEstado(EstadoTrabajador estado) { this.estado = estado; }
+    public void setCedula(String cedula) {
+        this.cedula = cedula;
+    }
 
-    public TipoContrato getTipoContrato() { return tipoContrato; }
-    public void setTipoContrato(TipoContrato tipoContrato) { this.tipoContrato = tipoContrato; }
+    public String getTelefono() {
+        return telefono;
+    }
 
-    public CargoEntity getCargo() { return cargo; }
-    public void setCargo(CargoEntity cargo) { this.cargo = cargo; }
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
+    }
 
-    public Long getAgricultorId() { return agricultorId; }
-    public void setAgricultorId(Long agricultorId) { this.agricultorId = agricultorId; }
+    public String getDireccion() {
+        return direccion;
+    }
 
-    public Long getUsuarioId() { return usuarioId; }
-    public void setUsuarioId(Long usuarioId) { this.usuarioId = usuarioId; }
+    public void setDireccion(String direccion) {
+        this.direccion = direccion;
+    }
 
-    public EstadoAccesoPortal getAccesoEstado() { return accesoEstado; }
-    public void setAccesoEstado(EstadoAccesoPortal accesoEstado) { this.accesoEstado = accesoEstado; }
+    public LocalDate getFechaIngreso() {
+        return fechaIngreso;
+    }
 
-    public String getAccesoNombre() { return accesoNombre; }
-    public void setAccesoNombre(String accesoNombre) { this.accesoNombre = accesoNombre; }
+    public void setFechaIngreso(LocalDate fechaIngreso) {
+        this.fechaIngreso = fechaIngreso;
+    }
 
-    public String getAccesoEmail() { return accesoEmail; }
-    public void setAccesoEmail(String accesoEmail) { this.accesoEmail = accesoEmail; }
+    public EstadoTrabajador getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoTrabajador estado) {
+        this.estado = estado;
+    }
+
+    public TipoContrato getTipoContrato() {
+        return tipoContrato;
+    }
+
+    public void setTipoContrato(TipoContrato tipoContrato) {
+        this.tipoContrato = tipoContrato;
+    }
+
+    public CargoEntity getCargo() {
+        return cargo;
+    }
+
+    public void setCargo(CargoEntity cargo) {
+        this.cargo = cargo;
+    }
+
+    public Long getAgricultorId() {
+        return agricultorId;
+    }
+
+    public void setAgricultorId(Long agricultorId) {
+        this.agricultorId = agricultorId;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public void setUsuarioId(Long usuarioId) {
+        this.usuarioId = usuarioId;
+    }
+
+    public EstadoAccesoPortal getAccesoEstado() {
+        return accesoEstado;
+    }
+
+    public void setAccesoEstado(EstadoAccesoPortal accesoEstado) {
+        this.accesoEstado = accesoEstado;
+    }
+
+    public String getAccesoNombre() {
+        return accesoNombre;
+    }
+
+    public void setAccesoNombre(String accesoNombre) {
+        this.accesoNombre = accesoNombre;
+    }
+
+    public String getAccesoEmail() {
+        return accesoEmail;
+    }
+
+    public void setAccesoEmail(String accesoEmail) {
+        this.accesoEmail = accesoEmail;
+    }
 }

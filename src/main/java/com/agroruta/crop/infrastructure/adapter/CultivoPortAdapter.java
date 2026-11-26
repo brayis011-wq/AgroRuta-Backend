@@ -1,18 +1,16 @@
 package com.agroruta.crop.infrastructure.adapter;
 
-import com.agroruta.crop.domain.EstadoCultivo;
-import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.application.ports.out.FincaRepository;
-import com.agroruta.crop.domain.Lote;
 import com.agroruta.crop.application.ports.out.LoteRepository;
-import com.agroruta.crop.domain.Siembra;
 import com.agroruta.crop.application.ports.out.SiembraRepository;
+import com.agroruta.crop.domain.Finca;
+import com.agroruta.crop.domain.Lote;
+import com.agroruta.crop.domain.Siembra;
 import com.agroruta.worker.application.ports.out.CultivoPort;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
 /** Expone las siembras al módulo de trabajadores (para registrar jornales). */
 @Component
@@ -22,9 +20,8 @@ public class CultivoPortAdapter implements CultivoPort {
     private final LoteRepository loteRepository;
     private final SiembraRepository siembraRepository;
 
-    public CultivoPortAdapter(FincaRepository fincaRepository,
-                              LoteRepository loteRepository,
-                              SiembraRepository siembraRepository) {
+    public CultivoPortAdapter(
+            FincaRepository fincaRepository, LoteRepository loteRepository, SiembraRepository siembraRepository) {
         this.fincaRepository = fincaRepository;
         this.loteRepository = loteRepository;
         this.siembraRepository = siembraRepository;
@@ -33,9 +30,11 @@ public class CultivoPortAdapter implements CultivoPort {
     @Override
     public Optional<CultivoInfo> buscar(Long cultivoId) {
         if (cultivoId == null) return Optional.empty();
-        return siembraRepository.findById(cultivoId).flatMap(s ->
-                loteRepository.findById(s.getLoteId()).flatMap(l ->
-                        fincaRepository.findById(l.getFincaId()).map(f -> info(s, l, f))));
+        return siembraRepository
+                .findById(cultivoId)
+                .flatMap(s -> loteRepository
+                        .findById(s.getLoteId())
+                        .flatMap(l -> fincaRepository.findById(l.getFincaId()).map(f -> info(s, l, f))));
     }
 
     @Override
@@ -44,8 +43,7 @@ public class CultivoPortAdapter implements CultivoPort {
         if (agricultorId == null) return cultivos;
         for (Finca finca : fincaRepository.findByAgricultorId(agricultorId)) {
             for (Lote lote : loteRepository.findByFincaId(finca.getId())) {
-                siembraRepository.findActivaByLoteId(lote.getId())
-                        .ifPresent(s -> cultivos.add(info(s, lote, finca)));
+                siembraRepository.findActivaByLoteId(lote.getId()).ifPresent(s -> cultivos.add(info(s, lote, finca)));
             }
         }
         return cultivos;
@@ -53,10 +51,14 @@ public class CultivoPortAdapter implements CultivoPort {
 
     private static CultivoInfo info(Siembra s, Lote l, Finca f) {
         return new CultivoInfo(
-                s.getId(), f.getAgricultorId(),
-                f.getId(), f.getNombre(),
-                l.getId(), l.getNombre(),
-                s.getTipoCultivo(), s.getVariedad(),
+                s.getId(),
+                f.getAgricultorId(),
+                f.getId(),
+                f.getNombre(),
+                l.getId(),
+                l.getNombre(),
+                s.getTipoCultivo(),
+                s.getVariedad(),
                 s.getEstadoCultivo() != null ? s.getEstadoCultivo().name() : null);
     }
 }

@@ -1,5 +1,7 @@
 package com.agroruta.report.infrastructure.pdf;
 
+import com.agroruta.report.domain.CropDetail;
+import com.agroruta.report.domain.RentabilidadLote;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -7,6 +9,7 @@ import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -14,7 +17,9 @@ import java.util.Map;
 final class FormatoReporte {
 
     private static final Locale ES_CO = Locale.forLanguageTag("es-CO");
-    private static final String[] MESES = {"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"};
+    private static final String[] MESES = {
+        "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"
+    };
 
     static final Map<String, String> ETAPAS = Map.of(
             "GERMINACION", "Germinación",
@@ -22,6 +27,9 @@ final class FormatoReporte {
             "PRODUCCION", "Producción",
             "COSECHA", "Cosecha",
             "FINALIZADO", "Finalizado");
+
+    static final java.time.format.DateTimeFormatter DIA_CUADERNO =
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private FormatoReporte() {}
 
@@ -50,7 +58,8 @@ final class FormatoReporte {
     }
 
     static String numero(double v, int decimales) {
-        return formato(decimales > 0 ? "#,##0." + "0".repeat(decimales) : "#,##0").format(v);
+        return formato(decimales > 0 ? "#,##0." + "0".repeat(decimales) : "#,##0")
+                .format(v);
     }
 
     static String fecha(LocalDate d) {
@@ -71,7 +80,7 @@ final class FormatoReporte {
             YearMonth m = YearMonth.parse(mes);
             String base = MESES[m.getMonthValue() - 1];
             return conAnio ? base + " " + String.valueOf(m.getYear()).substring(2) : base;
-        } catch (Exception e) {
+        } catch (java.time.format.DateTimeParseException | NullPointerException e) {
             return mes;
         }
     }
@@ -83,5 +92,95 @@ final class FormatoReporte {
     static String periodo(LocalDate a, LocalDate b) {
         if (a == null && b == null) return "—";
         return fecha(a) + " – " + fecha(b);
+    }
+
+    // ── Textos de los reportes (antes en PdfReportService) ──
+
+    static String textoPeriodo(com.agroruta.report.domain.Periodo p) {
+        if (p == null || p.esTodo()) return "todo el historial";
+        if (p.desde() == null) return "hasta el " + p.hasta().format(DIA_CUADERNO);
+        if (p.hasta() == null) return "desde el " + p.desde().format(DIA_CUADERNO);
+        return p.desde().format(DIA_CUADERNO) + " a " + p.hasta().format(DIA_CUADERNO);
+    }
+
+    static String numeroCorto(double v) {
+        java.text.NumberFormat f = java.text.NumberFormat.getNumberInstance(java.util.Locale.forLanguageTag("es-CO"));
+        f.setMaximumFractionDigits(2);
+        return f.format(v);
+    }
+
+    static String unidad(String u) {
+        if (u == null) return "";
+        return switch (u) {
+            case "LITROS" -> "L";
+            case "ML" -> "ml";
+            case "GRAMOS" -> "g";
+            case "KG" -> "kg";
+            default -> u.toLowerCase();
+        };
+    }
+
+    static String tipoProducto(String t) {
+        return capitalizar(t.replace('_', ' ').toLowerCase());
+    }
+
+    /** 420,5 o 1.240 (sin decimales cuando es exacto) */
+    static String kg(Double v) {
+        double x = v != null ? v : 0;
+        return numero(x, x % 1 == 0 ? 0 : 1);
+    }
+
+    static double valor(BigDecimal v) {
+        return v != null ? v.doubleValue() : 0;
+    }
+
+    static String pesosDe(double v) {
+        return FormatoReporte.pesos(BigDecimal.valueOf(v).setScale(0, RoundingMode.HALF_UP));
+    }
+
+    /** "-$300.000" para una pérdida (la fuente del PDF no tiene el signo menos tipográfico) */
+    static String pesosConSigno(double v) {
+        return v < 0 ? "-" + pesosDe(-v) : pesosDe(v);
+    }
+
+    static String porcentaje(double v) {
+        return numero(v, Math.abs(v) < 10 ? 1 : 0) + " %";
+    }
+
+    static String porcentajeDe(double parte, double total) {
+        return total > 0 ? numero(parte * 100 / total, 0) + " %" : null;
+    }
+
+    static String kgTexto(double kg) {
+        return numero(kg, kg % 1 == 0 ? 0 : 1) + " kg";
+    }
+
+    static String nombreLote(RentabilidadLote l) {
+        return l.fincaNombre() != null ? l.loteNombre() + " · " + l.fincaNombre() : l.loteNombre();
+    }
+
+    /** "nómina, cultivos y costos" */
+    static String enumerar(List<String> partes) {
+        if (partes.size() == 1) return partes.get(0);
+        return String.join(", ", partes.subList(0, partes.size() - 1)) + " y " + partes.get(partes.size() - 1);
+    }
+
+    static String capitalizar(String t) {
+        return t.isEmpty() ? t : Character.toUpperCase(t.charAt(0)) + t.substring(1);
+    }
+
+    /** Cultivo para agrupar: el tipo si existe, si no lo que va antes de " · " */
+    static String cultivoDe(CropDetail c) {
+        if (c.cultivo() != null && !c.cultivo().isBlank()) return c.cultivo();
+        String v = c.variedad() != null ? c.variedad() : "—";
+        int i = v.indexOf(" · ");
+        return i > 0 ? v.substring(0, i) : v;
+    }
+
+    static String ubicacion(CropDetail c) {
+        if (c.fincaNombre() == null && c.loteNombre() == null) return "—";
+        if (c.fincaNombre() == null) return c.loteNombre();
+        if (c.loteNombre() == null) return c.fincaNombre();
+        return c.fincaNombre() + " · " + c.loteNombre();
     }
 }

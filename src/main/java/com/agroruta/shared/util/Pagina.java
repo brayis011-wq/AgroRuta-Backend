@@ -16,6 +16,7 @@ public record Pagina<T>(List<T> contenido, int pagina, int tamano, long total, i
 
     /** Tamaño por defecto y máximo para las listas paginadas. */
     public static final int TAMANO_POR_DEFECTO = 20;
+
     public static final int TAMANO_MAXIMO = 100;
 
     public <R> Pagina<R> map(Function<T, R> f) {

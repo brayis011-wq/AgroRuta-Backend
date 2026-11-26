@@ -2,12 +2,11 @@ package com.agroruta.inventory.infrastructure.persistence;
 
 import com.agroruta.inventory.application.ports.out.InventarioRepository;
 import com.agroruta.inventory.domain.MovimientoInventario;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InventarioRepositoryImpl implements InventarioRepository {
@@ -38,19 +37,27 @@ public class InventarioRepositoryImpl implements InventarioRepository {
     @Override
     public List<MovimientoInventario> movimientosDe(Long agricultorId) {
         return movimientos.findByAgricultorIdOrderByFechaDescIdDesc(agricultorId).stream()
-                .map(InventarioRepositoryImpl::toDomain).toList();
+                .map(InventarioRepositoryImpl::toDomain)
+                .toList();
     }
 
     @Override
     public List<MovimientoInventario> movimientosDe(Long agricultorId, Long insumoId) {
         return movimientos.findByAgricultorIdAndInsumoIdOrderByFechaDescIdDesc(agricultorId, insumoId).stream()
-                .map(InventarioRepositoryImpl::toDomain).toList();
+                .map(InventarioRepositoryImpl::toDomain)
+                .toList();
     }
 
     @Override
     public Optional<MovimientoInventario> usoDeFumigacion(Long fumigacionId) {
         if (fumigacionId == null) return Optional.empty();
         return movimientos.findByFumigacionId(fumigacionId).map(InventarioRepositoryImpl::toDomain);
+    }
+
+    @Override
+    public Optional<MovimientoInventario> usoDeActividad(Long actividadId) {
+        if (actividadId == null) return Optional.empty();
+        return movimientos.findByActividadId(actividadId).map(InventarioRepositoryImpl::toDomain);
     }
 
     @Override
@@ -84,6 +91,7 @@ public class InventarioRepositoryImpl implements InventarioRepository {
         e.setCostoTotal(m.getCostoTotal());
         e.setProveedor(m.getProveedor());
         e.setFumigacionId(m.getFumigacionId());
+        e.setActividadId(m.getActividadId());
         e.setObservaciones(m.getObservaciones());
         e.setCreadoEn(m.getCreadoEn());
         return e;
@@ -100,6 +108,7 @@ public class InventarioRepositoryImpl implements InventarioRepository {
         m.setCostoTotal(e.getCostoTotal());
         m.setProveedor(e.getProveedor());
         m.setFumigacionId(e.getFumigacionId());
+        m.setActividadId(e.getActividadId());
         m.setObservaciones(e.getObservaciones());
         m.setCreadoEn(e.getCreadoEn());
         return m;

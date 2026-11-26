@@ -1,7 +1,12 @@
 package com.agroruta.shared.exception;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.shared.logging.MdcKeys;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,12 +29,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("GlobalExceptionHandler")
@@ -175,8 +174,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("debe propagar el errorCode personalizado si la excepción lo trae")
         void shouldPropagateCustomErrorCode() {
-            ResourceNotFoundException ex = new ResourceNotFoundException(
-                    ErrorCode.RESOURCE_ALREADY_EXISTS, "Código duplicado detectado");
+            ResourceNotFoundException ex =
+                    new ResourceNotFoundException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Código duplicado detectado");
 
             ErrorResponse body = handler.handleNotFound(ex, request).getBody();
 
@@ -210,6 +209,49 @@ class GlobalExceptionHandlerTest {
 
             assertThat(body).isNotNull();
             assertThat(body.getErrorCode()).isEqualTo(ErrorCode.INVALID_OPERATION.getCode());
+        }
+
+        @Test
+        @DisplayName("un dato inválido responde 400 con AGR-020 y su mensaje")
+        void datoInvalidoResponde400() {
+            BusinessException ex = new DatoInvalidoException("El nombre de la finca es obligatorio.");
+
+            ResponseEntity<ErrorResponse> response = handler.handleBusiness(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getStatus()).isEqualTo(400);
+            assertThat(response.getBody().getErrorCode()).isEqualTo("AGR-020");
+            assertThat(response.getBody().getMessage()).isEqualTo("El nombre de la finca es obligatorio.");
+        }
+
+        @Test
+        @DisplayName("una operación que no cabe en el estado actual responde 409 con AGR-011 y su mensaje")
+        void estadoInvalidoResponde409() {
+            BusinessException ex = new EstadoInvalidoException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+
+            ResponseEntity<ErrorResponse> response = handler.handleBusiness(ex, request);
+
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+            assertThat(response.getBody()).isNotNull();
+            assertThat(response.getBody().getStatus()).isEqualTo(409);
+            assertThat(response.getBody().getErrorCode()).isEqualTo("AGR-011");
+            assertThat(response.getBody().getMessage())
+                    .isEqualTo("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+        }
+
+        @Test
+        @DisplayName("los mismos códigos lanzados como BusinessException siguen respondiendo 422")
+        void losCodigosSueltosSiguenEn422() {
+            assertThat(handler.handleBusiness(
+                                    new BusinessException(ErrorCode.INVALID_ARGUMENT, "Falta la foto."), request)
+                            .getStatusCode())
+                    .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
+            assertThat(handler.handleBusiness(
+                                    new BusinessException(ErrorCode.INVALID_OPERATION, "La contraseña no es correcta."),
+                                    request)
+                            .getStatusCode())
+                    .isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         @Test
@@ -255,8 +297,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("debe retornar status 400 BAD_REQUEST")
         void shouldReturn400() {
-            MethodArgumentNotValidException ex = buildValidationException(
-                    List.of(fieldError("nombre", "No puede estar vacío")));
+            MethodArgumentNotValidException ex =
+                    buildValidationException(List.of(fieldError("nombre", "No puede estar vacío")));
 
             ResponseEntity<ErrorResponse> response = handler.handleValidation(ex, request);
 
@@ -266,8 +308,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("debe retornar errorCode AGR-021 (VALIDATION_FAILED)")
         void shouldReturnValidationFailedCode() {
-            MethodArgumentNotValidException ex = buildValidationException(
-                    List.of(fieldError("rut", "Formato inválido")));
+            MethodArgumentNotValidException ex =
+                    buildValidationException(List.of(fieldError("rut", "Formato inválido")));
 
             ErrorResponse body = handler.handleValidation(ex, request).getBody();
 
@@ -302,9 +344,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("debe incluir los fieldErrors en el body")
         void shouldIncludeFieldErrors() {
-            MethodArgumentNotValidException ex = buildValidationException(List.of(
-                    fieldError("nombre", "No puede estar vacío"),
-                    fieldError("rut", "Formato inválido")));
+            MethodArgumentNotValidException ex = buildValidationException(
+                    List.of(fieldError("nombre", "No puede estar vacío"), fieldError("rut", "Formato inválido")));
 
             ErrorResponse body = handler.handleValidation(ex, request).getBody();
 
@@ -318,8 +359,7 @@ class GlobalExceptionHandlerTest {
         @DisplayName("ante dos errores en el mismo campo debe conservar el primero (merge strategy)")
         void shouldKeepFirstErrorWhenSameFieldHasMultiple() {
             MethodArgumentNotValidException ex = buildValidationException(List.of(
-                    fieldError("email", "primer error"),
-                    fieldError("email", "segundo error que debe ignorarse")));
+                    fieldError("email", "primer error"), fieldError("email", "segundo error que debe ignorarse")));
 
             ErrorResponse body = handler.handleValidation(ex, request).getBody();
 
@@ -330,8 +370,7 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("debe incluir el traceId del MDC")
         void shouldIncludeTraceId() {
-            MethodArgumentNotValidException ex = buildValidationException(
-                    List.of(fieldError("campo", "error")));
+            MethodArgumentNotValidException ex = buildValidationException(List.of(fieldError("campo", "error")));
 
             ErrorResponse body = handler.handleValidation(ex, request).getBody();
 
@@ -375,8 +414,9 @@ class GlobalExceptionHandlerTest {
         @DisplayName("debe retornar 400 sin exponer el detalle del parser")
         void shouldReturnBadRequestWithoutParserDetails() {
             HttpMessageNotReadableException ex = mock(HttpMessageNotReadableException.class);
-            when(ex.getMostSpecificCause()).thenReturn(
-                    new IllegalArgumentException("Cannot deserialize value of type `MetodoPago` from String \"BITCOIN\""));
+            when(ex.getMostSpecificCause())
+                    .thenReturn(new IllegalArgumentException(
+                            "Cannot deserialize value of type `MetodoPago` from String \"BITCOIN\""));
 
             ResponseEntity<ErrorResponse> response = handler.handleNotReadable(ex, request);
 
@@ -564,7 +604,8 @@ class GlobalExceptionHandlerTest {
         void shouldInclude500InBody() {
             when(request.getMethod()).thenReturn("GET");
 
-            ErrorResponse body = handler.handleGeneral(new RuntimeException("err"), request).getBody();
+            ErrorResponse body =
+                    handler.handleGeneral(new RuntimeException("err"), request).getBody();
 
             assertThat(body).isNotNull();
             assertThat(body.getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
@@ -579,8 +620,8 @@ class GlobalExceptionHandlerTest {
         @Test
         @DisplayName("BusinessException de duplicado debe retornar 409 CONFLICT")
         void duplicateBusinessExceptionShouldReturn409() {
-            BusinessException ex = new BusinessException(
-                    ErrorCode.RESOURCE_ALREADY_EXISTS, "Ya existe un trabajador con cédula: 123");
+            BusinessException ex =
+                    new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Ya existe un trabajador con cédula: 123");
 
             ResponseEntity<ErrorResponse> response = handler.handleBusiness(ex, request);
 
@@ -589,24 +630,23 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
-        @DisplayName("IllegalStateException de AgroRuta debe retornar 409 con su mensaje")
-        void ownIllegalStateShouldReturn409() {
-            IllegalStateException ex =
-                    new IllegalStateException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+        @DisplayName("Un fallo interno de AgroRuta debe retornar 500 sin exponer el detalle")
+        void falloInternoShouldReturn500() {
+            FalloInternoException ex = new FalloInternoException("No se pudo descifrar: clave AES vencida");
 
             ResponseEntity<ErrorResponse> response = handler.handleIllegalState(ex, request);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.INVALID_OPERATION.getCode());
-            assertThat(response.getBody().getMessage()).contains("PENDIENTE");
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getBody().getMessage()).doesNotContain("AES");
         }
 
         @Test
         @DisplayName("IllegalStateException de una librería debe retornar 500 sin exponer el mensaje")
         void libraryIllegalStateShouldReturn500() {
             IllegalStateException ex = new IllegalStateException("detalle interno de hibernate");
-            ex.setStackTrace(new StackTraceElement[]{
-                    new StackTraceElement("org.hibernate.Session", "flush", "Session.java", 10)});
+            ex.setStackTrace(
+                    new StackTraceElement[] {new StackTraceElement("org.hibernate.Session", "flush", "Session.java", 10)
+                    });
 
             ResponseEntity<ErrorResponse> response = handler.handleIllegalState(ex, request);
 

@@ -1,7 +1,10 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.EstadoInvalidoException;
+import org.junit.jupiter.api.Test;
 
 class LoteTest {
 
@@ -39,7 +42,7 @@ class LoteTest {
         Lote lote = new Lote(1L, "Lote A", 10.0, 5L);
         lote.iniciarCultivo();
 
-        assertThrows(IllegalStateException.class, () -> lote.iniciarCultivo());
+        assertThrows(EstadoInvalidoException.class, () -> lote.iniciarCultivo());
     }
 
     @Test
@@ -87,16 +90,14 @@ class LoteTest {
     void deberiaLanzarExcepcionSiCoordenadasSonNulas() {
         Lote lote = new Lote(1L, "Lote A", 10.0, 5L);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> lote.actualizarGeometria(null, 15.0, 4.71, -74.07));
+        assertThrows(DatoInvalidoException.class, () -> lote.actualizarGeometria(null, 15.0, 4.71, -74.07));
     }
 
     @Test
     void deberiaLanzarExcepcionSiCoordenadasEstanVacias() {
         Lote lote = new Lote(1L, "Lote A", 10.0, 5L);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> lote.actualizarGeometria("   ", 15.0, 4.71, -74.07));
+        assertThrows(DatoInvalidoException.class, () -> lote.actualizarGeometria("   ", 15.0, 4.71, -74.07));
     }
 
     @Test

@@ -26,9 +26,14 @@ public final class CalendarioCultivo {
     private CalendarioCultivo() {}
 
     /** Todo lo que se sabe de una siembra */
-    public record DatosSiembra(Siembra siembra, Long loteId, String loteNombre,
-                               List<EtapaSiembra> etapas, List<ActividadCultivo> actividades,
-                               List<Fumigacion> fumigaciones, List<Cosecha> cosechas) {}
+    public record DatosSiembra(
+            Siembra siembra,
+            Long loteId,
+            String loteNombre,
+            List<EtapaSiembra> etapas,
+            List<ActividadCultivo> actividades,
+            List<Fumigacion> fumigaciones,
+            List<Cosecha> cosechas) {}
 
     /** Promedios de temporadas terminadas de un cultivo */
     public record Historial(Map<EstadoCultivo, Double> diasPorEtapa, Double diasHastaPrimeraCosecha) {
@@ -40,7 +45,9 @@ public final class CalendarioCultivo {
         Map<String, List<DatosSiembra>> porCultivo = new HashMap<>();
         for (DatosSiembra d : todas) {
             if (d.siembra().estaActiva() || d.siembra().getTipoCultivo() == null) continue;
-            porCultivo.computeIfAbsent(d.siembra().getTipoCultivo(), k -> new ArrayList<>()).add(d);
+            porCultivo
+                    .computeIfAbsent(d.siembra().getTipoCultivo(), k -> new ArrayList<>())
+                    .add(d);
         }
         Map<String, Historial> res = new HashMap<>();
         porCultivo.forEach((cultivo, lista) -> {
@@ -49,17 +56,23 @@ public final class CalendarioCultivo {
             for (DatosSiembra d : lista) {
                 List<EtapaSiembra> etapas = d.etapas().stream()
                         .filter(e -> e.getFecha() != null)
-                        .sorted(Comparator.comparing(EtapaSiembra::getFecha).thenComparing(e -> e.getId() == null ? 0 : e.getId()))
+                        .sorted(Comparator.comparing(EtapaSiembra::getFecha)
+                                .thenComparing(e -> e.getId() == null ? 0 : e.getId()))
                         .toList();
                 for (int i = 0; i + 1 < etapas.size(); i++) {
                     EtapaSiembra a = etapas.get(i), b = etapas.get(i + 1);
                     if (b.getEtapa().ordinal() == a.getEtapa().ordinal() + 1) {
-                        duraciones.computeIfAbsent(a.getEtapa(), k -> new ArrayList<>())
+                        duraciones
+                                .computeIfAbsent(a.getEtapa(), k -> new ArrayList<>())
                                 .add(ChronoUnit.DAYS.between(a.getFecha(), b.getFecha()));
                     }
                 }
-                d.cosechas().stream().map(Cosecha::getFecha).filter(Objects::nonNull).min(LocalDate::compareTo)
-                        .ifPresent(primera -> hastaCosecha.add(ChronoUnit.DAYS.between(d.siembra().getFechaSiembra(), primera)));
+                d.cosechas().stream()
+                        .map(Cosecha::getFecha)
+                        .filter(Objects::nonNull)
+                        .min(LocalDate::compareTo)
+                        .ifPresent(primera -> hastaCosecha.add(
+                                ChronoUnit.DAYS.between(d.siembra().getFechaSiembra(), primera)));
             }
             Map<EstadoCultivo, Double> prom = new EnumMap<>(EstadoCultivo.class);
             duraciones.forEach((etapa, dias) -> prom.put(etapa, promedio(dias)));
@@ -80,40 +93,69 @@ public final class CalendarioCultivo {
         }
         for (ActividadCultivo a : d.actividades()) {
             if (a.getFecha() == null) continue;
-            ev.add(b.evento(a.getFecha(), "ACTIVIDAD", a.getFecha().isAfter(hoy) ? "PENDIENTE" : "HECHO",
-                    a.getTipo() == null ? "OTRO" : a.getTipo().name(), a.getDescripcion(), a.getId()));
+            ev.add(b.evento(
+                    a.getFecha(),
+                    "ACTIVIDAD",
+                    a.getFecha().isAfter(hoy) ? "PENDIENTE" : "HECHO",
+                    a.getTipo() == null ? "OTRO" : a.getTipo().name(),
+                    a.getDescripcion(),
+                    a.getId()));
         }
         for (Fumigacion f : d.fumigaciones()) {
             if (f.getFecha() == null) continue;
             ev.add(b.evento(f.getFecha(), "FUMIGACION", "HECHO", f.getProducto(), null, f.getId()));
             if (f.getDiasCarencia() != null && f.getDiasCarencia() > 0) {
                 LocalDate libre = f.getFecha().plusDays(f.getDiasCarencia());
-                ev.add(b.evento(libre, "FIN_CARENCIA", libre.isAfter(hoy) ? "PENDIENTE" : "HECHO",
-                        f.getProducto(), String.valueOf(f.getDiasCarencia()), f.getId()));
+                ev.add(b.evento(
+                        libre,
+                        "FIN_CARENCIA",
+                        libre.isAfter(hoy) ? "PENDIENTE" : "HECHO",
+                        f.getProducto(),
+                        String.valueOf(f.getDiasCarencia()),
+                        f.getId()));
             }
             if (f.getReentradaHoras() != null && f.getReentradaHoras() > 0) {
                 LocalDate libre = f.getFecha().plusDays((long) Math.ceil(f.getReentradaHoras() / 24.0));
-                ev.add(b.evento(libre, "FIN_REENTRADA", libre.isAfter(hoy) ? "PENDIENTE" : "HECHO",
-                        f.getProducto(), String.valueOf(f.getReentradaHoras()), f.getId()));
+                ev.add(b.evento(
+                        libre,
+                        "FIN_REENTRADA",
+                        libre.isAfter(hoy) ? "PENDIENTE" : "HECHO",
+                        f.getProducto(),
+                        String.valueOf(f.getReentradaHoras()),
+                        f.getId()));
             }
         }
         for (Cosecha c : d.cosechas()) {
             if (c.getFecha() == null) continue;
-            ev.add(b.evento(c.getFecha(), "COSECHA", "HECHO",
+            ev.add(b.evento(
+                    c.getFecha(),
+                    "COSECHA",
+                    "HECHO",
                     c.getCantidadKg() == null ? "" : String.valueOf(c.getCantidadKg()),
-                    c.getCalidad() == null ? null : c.getCalidad().name(), c.getId()));
+                    c.getCalidad() == null ? null : c.getCalidad().name(),
+                    c.getId()));
         }
 
         if (s.estaActiva()) {
-            proximaFumigacion(d.fumigaciones(), hoy).ifPresent(f ->
-                    ev.add(b.evento(f.fecha, "FUMIGACION_SUGERIDA", f.atrasada ? "ATRASADO" : "ESTIMADO",
-                            null, String.valueOf(f.intervalo), null)));
+            proximaFumigacion(d.fumigaciones(), hoy)
+                    .ifPresent(f -> ev.add(b.evento(
+                            f.fecha,
+                            "FUMIGACION_SUGERIDA",
+                            f.atrasada ? "ATRASADO" : "ESTIMADO",
+                            null,
+                            String.valueOf(f.intervalo),
+                            null)));
             Historial h = historial == null ? Historial.VACIO : historial;
             proximaEtapa(s, d.etapas(), h, hoy, d.loteId(), d.loteNombre()).ifPresent(ev::add);
             if (d.cosechas().isEmpty() && h.diasHastaPrimeraCosecha() != null && s.getFechaSiembra() != null) {
                 LocalDate fecha = maximo(s.getFechaSiembra().plusDays(Math.round(h.diasHastaPrimeraCosecha())), hoy);
-                ev.add(b.evento(fecha, "COSECHA_ESTIMADA", "ESTIMADO", null,
-                        String.valueOf(Math.round(h.diasHastaPrimeraCosecha())), null));
+                ev.add(b.evento(
+                        fecha,
+                        "COSECHA_ESTIMADA",
+                        "ESTIMADO",
+                        null,
+                        String.valueOf(Math.round(h.diasHastaPrimeraCosecha())),
+                        null));
             }
         }
         return ev;
@@ -121,8 +163,10 @@ public final class CalendarioCultivo {
 
     /** Eventos entre dos fechas (incluidas), ordenados por fecha */
     public static List<EventoCalendario> entre(List<EventoCalendario> eventos, LocalDate desde, LocalDate hasta) {
-        Predicate<EventoCalendario> dentro = e -> !e.fecha().isBefore(desde) && !e.fecha().isAfter(hasta);
-        return eventos.stream().filter(dentro)
+        Predicate<EventoCalendario> dentro =
+                e -> !e.fecha().isBefore(desde) && !e.fecha().isAfter(hasta);
+        return eventos.stream()
+                .filter(dentro)
                 .sorted(Comparator.comparing(EventoCalendario::fecha).thenComparing(EventoCalendario::tipo))
                 .toList();
     }
@@ -133,8 +177,12 @@ public final class CalendarioCultivo {
 
     /** Última fumigación + intervalo habitual (mediana entre fumigaciones, o 7 días si hay una sola) */
     static Optional<Sugerencia> proximaFumigacion(List<Fumigacion> fumigaciones, LocalDate hoy) {
-        List<LocalDate> fechas = fumigaciones.stream().map(Fumigacion::getFecha).filter(Objects::nonNull)
-                .distinct().sorted().toList();
+        List<LocalDate> fechas = fumigaciones.stream()
+                .map(Fumigacion::getFecha)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
         if (fechas.isEmpty()) return Optional.empty();
         int intervalo = INTERVALO_FUMIGACION_DEFECTO;
         if (fechas.size() >= 2) {
@@ -149,20 +197,31 @@ public final class CalendarioCultivo {
         return Optional.of(new Sugerencia(atrasada ? hoy : fecha, intervalo, atrasada));
     }
 
-    static Optional<EventoCalendario> proximaEtapa(Siembra s, List<EtapaSiembra> etapas, Historial h, LocalDate hoy,
-                                                            Long loteId, String loteNombre) {
+    static Optional<EventoCalendario> proximaEtapa(
+            Siembra s, List<EtapaSiembra> etapas, Historial h, LocalDate hoy, Long loteId, String loteNombre) {
         EstadoCultivo actual = s.getEstadoCultivo();
         if (actual == null || actual == EstadoCultivo.FINALIZADO) return Optional.empty();
         Double dias = h.diasPorEtapa().get(actual);
         if (dias == null) return Optional.empty();
-        LocalDate desde = etapas.stream().filter(e -> e.getEtapa() == actual && e.getFecha() != null)
-                .map(EtapaSiembra::getFecha).max(LocalDate::compareTo)
+        LocalDate desde = etapas.stream()
+                .filter(e -> e.getEtapa() == actual && e.getFecha() != null)
+                .map(EtapaSiembra::getFecha)
+                .max(LocalDate::compareTo)
                 .orElse(actual == EstadoCultivo.GERMINACION ? s.getFechaSiembra() : null);
         if (desde == null) return Optional.empty();
         EstadoCultivo siguiente = EstadoCultivo.values()[actual.ordinal() + 1];
         LocalDate fecha = maximo(desde.plusDays(Math.round(dias)), hoy);
-        return Optional.of(new EventoCalendario(fecha, "PROXIMA_ETAPA", "ESTIMADO", siguiente.name(),
-                String.valueOf(Math.round(dias)), s.getId(), loteId, loteNombre, s.nombreCompleto(), null));
+        return Optional.of(new EventoCalendario(
+                fecha,
+                "PROXIMA_ETAPA",
+                "ESTIMADO",
+                siguiente.name(),
+                String.valueOf(Math.round(dias)),
+                s.getId(),
+                loteId,
+                loteNombre,
+                s.nombreCompleto(),
+                null));
     }
 
     private static LocalDate maximo(LocalDate a, LocalDate b) {
@@ -174,8 +233,10 @@ public final class CalendarioCultivo {
     }
 
     private record Base(Long siembraId, Long loteId, String loteNombre, String cultivo) {
-        EventoCalendario evento(LocalDate fecha, String tipo, String estado, String titulo, String detalle, Long refId) {
-            return new EventoCalendario(fecha, tipo, estado, titulo, detalle, siembraId, loteId, loteNombre, cultivo, refId);
+        EventoCalendario evento(
+                LocalDate fecha, String tipo, String estado, String titulo, String detalle, Long refId) {
+            return new EventoCalendario(
+                    fecha, tipo, estado, titulo, detalle, siembraId, loteId, loteNombre, cultivo, refId);
         }
     }
 }

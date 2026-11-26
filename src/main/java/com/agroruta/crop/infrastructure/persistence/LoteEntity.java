@@ -38,30 +38,75 @@ public class LoteEntity {
 
     public LoteEntity() {}
 
-    public LocalDateTime getEliminadoEn() { return eliminadoEn; }
-    public void setEliminadoEn(LocalDateTime eliminadoEn) { this.eliminadoEn = eliminadoEn; }
+    public LocalDateTime getEliminadoEn() {
+        return eliminadoEn;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setEliminadoEn(LocalDateTime eliminadoEn) {
+        this.eliminadoEn = eliminadoEn;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public Long getId() {
+        return id;
+    }
 
-    public Double getArea() { return area; }
-    public void setArea(Double area) { this.area = area; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public EstadoLote getEstado() { return estado; }
-    public void setEstado(EstadoLote estado) { this.estado = estado; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public Long getFincaId() { return fincaId; }
-    public void setFincaId(Long fincaId) { this.fincaId = fincaId; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public String getCoordenadas() { return coordenadas; }
-    public void setCoordenadas(String coordenadas) { this.coordenadas = coordenadas; }
+    public Double getArea() {
+        return area;
+    }
 
-    public Double getCentroideLat() { return centroideLat; }
-    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
+    public void setArea(Double area) {
+        this.area = area;
+    }
 
-    public Double getCentroideLng() { return centroideLng; }
-    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
+    public EstadoLote getEstado() {
+        return estado;
+    }
+
+    public void setEstado(EstadoLote estado) {
+        this.estado = estado;
+    }
+
+    public Long getFincaId() {
+        return fincaId;
+    }
+
+    public void setFincaId(Long fincaId) {
+        this.fincaId = fincaId;
+    }
+
+    public String getCoordenadas() {
+        return coordenadas;
+    }
+
+    public void setCoordenadas(String coordenadas) {
+        this.coordenadas = coordenadas;
+    }
+
+    public Double getCentroideLat() {
+        return centroideLat;
+    }
+
+    public void setCentroideLat(Double centroideLat) {
+        this.centroideLat = centroideLat;
+    }
+
+    public Double getCentroideLng() {
+        return centroideLng;
+    }
+
+    public void setCentroideLng(Double centroideLng) {
+        this.centroideLng = centroideLng;
+    }
 }

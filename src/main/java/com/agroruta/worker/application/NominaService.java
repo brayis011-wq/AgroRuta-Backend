@@ -1,21 +1,21 @@
 package com.agroruta.worker.application;
 
-import com.agroruta.worker.domain.ResumenNominas;
-import com.agroruta.shared.util.Pagina;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.shared.util.Pagina;
+import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Nomina;
+import com.agroruta.worker.domain.ResumenNominas;
 import com.agroruta.worker.domain.Trabajador;
-
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.agroruta.worker.application.ports.in.NominaUseCase;
 
 @Service
 @Transactional
@@ -25,9 +25,10 @@ public class NominaService implements NominaUseCase {
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;
 
-    public NominaService(NominaRepository nominaRepository,
-                         JornalRepository jornalRepository,
-                         TrabajadorRepository trabajadorRepository) {
+    public NominaService(
+            NominaRepository nominaRepository,
+            JornalRepository jornalRepository,
+            TrabajadorRepository trabajadorRepository) {
         this.nominaRepository = nominaRepository;
         this.jornalRepository = jornalRepository;
         this.trabajadorRepository = trabajadorRepository;
@@ -35,22 +36,93 @@ public class NominaService implements NominaUseCase {
 
     @Override
     public Nomina generarNomina(Long trabajadorId, LocalDate periodoInicio, LocalDate periodoFin) {
-        Trabajador trabajador = trabajadorRepository.buscarPorId(trabajadorId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Trabajador no encontrado con id: " + trabajadorId));
+        Trabajador trabajador = trabajadorRepository
+                .buscarPorId(trabajadorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado con id: " + trabajadorId));
 
-        List<Jornal> jornalesDisponibles = jornalRepository
-                .buscarDisponiblesParaNomina(trabajadorId, periodoInicio, periodoFin);
+        List<Jornal> jornalesDisponibles =
+                jornalRepository.buscarDisponiblesParaNomina(trabajadorId, periodoInicio, periodoFin);
 
         if (jornalesDisponibles.isEmpty()) {
-            throw new IllegalStateException(
-                    "No hay jornales disponibles para el trabajador "
-                            + trabajador.getNombreCompleto()
-                            + " en el período indicado.");
+            throw new EstadoInvalidoException("No hay jornales disponibles para el trabajador "
+                    + trabajador.getNombreCompleto()
+                    + " en el período indicado.");
         }
 
         Nomina nomina = new Nomina(null, trabajador, periodoInicio, periodoFin, jornalesDisponibles);
         return nominaRepository.guardar(nomina);
+    }
+
+    @Override
+    public List<Nomina> generarParaTodos(Long agricultorId, LocalDate periodoInicio, LocalDate periodoFin) {
+        if (periodoInicio == null || periodoFin == null || periodoFin.isBefore(periodoInicio)) {
+            throw new com.agroruta.shared.exception.DatoInvalidoException("Revisa las fechas del periodo.");
+        }
+        List<Trabajador> equipo = agricultorId == null
+                ? trabajadorRepository.listarTodos()
+                : trabajadorRepository.listarTodosPorAgricultor(agricultorId);
+        List<Nomina> creadas = new java.util.ArrayList<>();
+        for (Trabajador t : equipo) {
+            List<Jornal> disponibles =
+                    jornalRepository.buscarDisponiblesParaNomina(t.getId(), periodoInicio, periodoFin);
+            if (disponibles.isEmpty()) continue;
+            creadas.add(nominaRepository.guardar(new Nomina(null, t, periodoInicio, periodoFin, disponibles)));
+        }
+        if (creadas.isEmpty()) {
+            throw new EstadoInvalidoException("Nadie del equipo tiene jornales sin nómina en ese periodo.");
+        }
+        return creadas;
+    }
+
+    @Override
+    public List<Nomina> aprobarVarias(Long agricultorId, List<Long> nominaIds) {
+        List<Nomina> resultado = new java.util.ArrayList<>();
+        for (Long id : new java.util.LinkedHashSet<>(nominaIds)) {
+            Nomina n = nominaDe(agricultorId, id);
+            if (n.estaPendiente()) {
+                n.aprobar();
+                n = nominaRepository.guardar(n);
+            }
+            resultado.add(n);
+        }
+        return resultado;
+    }
+
+    @Override
+    public Nomina quitarJornal(Long nominaId, Long jornalId) {
+        Nomina n = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
+        n.quitarJornal(jornalId);
+        return nominaRepository.guardar(n);
+    }
+
+    @Override
+    public Nomina traerJornalesNuevos(Long nominaId) {
+        Nomina n = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
+        List<Jornal> nuevos = jornalRepository.buscarDisponiblesParaNomina(
+                n.getTrabajador().getId(), n.getPeriodoInicio(), n.getPeriodoFin());
+        if (nuevos.isEmpty()) {
+            throw new EstadoInvalidoException("No hay jornales nuevos de "
+                    + n.getTrabajador().getNombreCompleto() + " en ese periodo: la nómina ya está al día.");
+        }
+        n.agregarJornales(nuevos);
+        return nominaRepository.guardar(n);
+    }
+
+    /** La nómina existe y es del agricultor (null: Administrador, cualquiera). */
+    private Nomina nominaDe(Long agricultorId, Long id) {
+        Nomina n = nominaRepository
+                .buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + id));
+        if (agricultorId != null
+                && (n.getTrabajador() == null
+                        || !agricultorId.equals(n.getTrabajador().getAgricultorId()))) {
+            throw new ResourceNotFoundException("Nómina no encontrada con id: " + id);
+        }
+        return n;
     }
 
     /**
@@ -59,31 +131,30 @@ public class NominaService implements NominaUseCase {
      */
     @Override
     public Nomina aprobarNomina(Long nominaId) {
-        Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nómina no encontrada con id: " + nominaId));
+        Nomina nomina = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
         nomina.aprobar();
         return nominaRepository.guardar(nomina);
     }
 
     @Override
     public void anularNomina(Long nominaId) {
-        Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nómina no encontrada con id: " + nominaId));
+        Nomina nomina = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
         nomina.anular();
         nominaRepository.guardar(nomina);
     }
 
     @Override
     public Nomina reactivarNomina(Long nominaId) {
-        Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nómina no encontrada con id: " + nominaId));
+        Nomina nomina = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
 
         if (!EstadoNomina.ANULADA.equals(nomina.getEstado())) {
-            throw new IllegalStateException(
-                    "Solo se pueden reactivar nóminas en estado ANULADA.");
+            throw new EstadoInvalidoException("Solo se pueden reactivar nóminas en estado ANULADA.");
         }
 
         nomina.reactivar();
@@ -92,13 +163,15 @@ public class NominaService implements NominaUseCase {
 
     @Override
     public void eliminarNomina(Long nominaId) {
-        Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nómina no encontrada con id: " + nominaId));
+        Nomina nomina = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
 
-        if (!EstadoNomina.PENDIENTE.equals(nomina.getEstado())) {
-            throw new IllegalStateException(
-                    "Solo se pueden eliminar nóminas en estado PENDIENTE.");
+        // Una nómina pendiente o anulada se puede borrar: sus jornales quedan libres para otra nómina.
+        // Las aprobadas o pagadas no (hay que anularlas antes; las pagadas no se anulan).
+        if (!EstadoNomina.PENDIENTE.equals(nomina.getEstado()) && !EstadoNomina.ANULADA.equals(nomina.getEstado())) {
+            throw new EstadoInvalidoException(
+                    "Solo se pueden eliminar nóminas pendientes o anuladas. Si está aprobada, anúlala primero.");
         }
 
         nominaRepository.eliminar(nominaId);
@@ -106,9 +179,9 @@ public class NominaService implements NominaUseCase {
 
     @Override
     public Nomina buscarPorId(Long id) {
-        return nominaRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nómina no encontrada con id: " + id));
+        return nominaRepository
+                .buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + id));
     }
 
     @Override
@@ -130,6 +203,7 @@ public class NominaService implements NominaUseCase {
     public List<Nomina> listarTodas() {
         return nominaRepository.listarTodas();
     }
+
     @Override
     public List<Nomina> listarTodasDe(Long agricultorId) {
         if (agricultorId == null) return List.of();

@@ -1,12 +1,11 @@
 package com.agroruta.user.infrastructure.security;
 
 import com.agroruta.user.domain.Usuario;
+import java.util.Collection;
+import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Collection;
-import java.util.List;
 
 // Este es el "Traductor": Convierte tu clase Usuario (Dominio)
 // a algo que Spring Security (Infraestructura) entienda.
@@ -57,6 +56,7 @@ public class CustomUserDetails implements UserDetails {
     public String getNombre() {
         return usuario.getNombre();
     }
+
     @Override
     public boolean isEnabled() {
         // Usamos el atributo 'activo' que creamos en tu dominio para el borrado lógico

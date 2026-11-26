@@ -1,14 +1,20 @@
 package com.agroruta.crop.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.application.ports.out.LoteRepository;
-import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,22 +23,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.time.LocalDate;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 /** Edición y borrado de cosechas, fumigaciones y actividades, y bloqueo en siembras finalizadas. */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class RegistrosCultivoEdicionTest {
 
-    @Mock private CosechaRepository cosechaRepository;
-    @Mock private FumigacionRepository fumigacionRepository;
-    @Mock private ActividadCultivoRepository actividadRepository;
-    @Mock private SiembraUseCase siembraUseCase;
+    @Mock
+    private CosechaRepository cosechaRepository;
+
+    @Mock
+    private FumigacionRepository fumigacionRepository;
+
+    @Mock
+    private ActividadCultivoRepository actividadRepository;
+
+    @Mock
+    private SiembraUseCase siembraUseCase;
 
     private CosechaService cosechas;
     private FumigacionService fumigaciones;
@@ -43,10 +49,13 @@ class RegistrosCultivoEdicionTest {
 
     @BeforeEach
     void setUp() {
-        cosechas = new CosechaService(cosechaRepository, siembraUseCase);
-        fumigaciones = new FumigacionService(fumigacionRepository, siembraUseCase,
+        cosechas = new CosechaService(cosechaRepository, siembraUseCase, fumigacionRepository);
+        fumigaciones = new FumigacionService(
+                fumigacionRepository,
+                siembraUseCase,
                 org.mockito.Mockito.mock(com.agroruta.crop.application.ports.out.InventarioPort.class),
-                org.mockito.Mockito.mock(LoteRepository.class), org.mockito.Mockito.mock(FincaRepository.class));
+                org.mockito.Mockito.mock(LoteRepository.class),
+                org.mockito.Mockito.mock(FincaRepository.class));
         actividades = new ActividadCultivoService(actividadRepository, siembraUseCase);
 
         finalizada = new Siembra(5L, fecha.minusMonths(6), 100, Variedades.COLOMBIA, 1L);
@@ -60,12 +69,12 @@ class RegistrosCultivoEdicionTest {
 
     @Test
     void enUnaSiembraFinalizadaNoSeRegistraNadaNuevo() {
-        assertThrows(BusinessException.class, () ->
-                cosechas.registrarCosecha(fecha, 10.0, "PRIMERA", null, 5L));
-        assertThrows(BusinessException.class, () ->
-                fumigaciones.registrarFumigacion(fecha, "Mancozeb", null, 2.0, "LITROS", 1.0, null, 5L));
-        assertThrows(BusinessException.class, () ->
-                actividades.registrarActividad("PODA", "Poda de formación", fecha, 5L));
+        assertThrows(BusinessException.class, () -> cosechas.registrarCosecha(fecha, 10.0, "PRIMERA", null, 5L));
+        assertThrows(
+                BusinessException.class,
+                () -> fumigaciones.registrarFumigacion(fecha, "Mancozeb", null, 2.0, "LITROS", 1.0, null, 5L));
+        assertThrows(
+                BusinessException.class, () -> actividades.registrarActividad("PODA", "Poda de formación", fecha, 5L));
         verifyNoInteractions(cosechaRepository, fumigacionRepository, actividadRepository);
     }
 
@@ -73,7 +82,8 @@ class RegistrosCultivoEdicionTest {
     void editarCosechaCambiaKilosCalidadYFecha() {
         Cosecha c = new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, "ok", 5L);
         when(cosechaRepository.findById(1L)).thenReturn(Optional.of(c));
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha.plusDays(1), 5L)).thenReturn(false);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha.plusDays(1), 5L, CalidadCosecha.SEGUNDA))
+                .thenReturn(false);
 
         Cosecha r = cosechas.actualizarCosecha(1L, fecha.plusDays(1), 25.5, "segunda", null);
 
@@ -84,22 +94,49 @@ class RegistrosCultivoEdicionTest {
     }
 
     @Test
-    void editarCosechaNoPuedeQuedarElMismoDiaQueOtra() {
-        when(cosechaRepository.findById(1L)).thenReturn(Optional.of(
-                new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha.plusDays(2), 5L)).thenReturn(true);
+    void editarCosechaNoPuedeQuedarElMismoDiaQueOtraDeSuCalidad() {
+        when(cosechaRepository.findById(1L))
+                .thenReturn(Optional.of(new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha.plusDays(2), 5L, CalidadCosecha.PRIMERA))
+                .thenReturn(true);
 
-        assertThrows(BusinessException.class, () ->
-                cosechas.actualizarCosecha(1L, fecha.plusDays(2), 20.0, "PRIMERA", null));
+        assertThrows(
+                BusinessException.class,
+                () -> cosechas.actualizarCosecha(1L, fecha.plusDays(2), 20.0, "PRIMERA", null));
+        verify(cosechaRepository, never()).save(any());
+    }
+
+    @Test
+    void editarCosechaNoPuedeCambiarALaCalidadDeOtraDelMismoDia() {
+        when(cosechaRepository.findById(1L))
+                .thenReturn(Optional.of(new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, 5L, CalidadCosecha.SEGUNDA))
+                .thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> cosechas.actualizarCosecha(1L, fecha, 20.0, "SEGUNDA", null));
+        verify(cosechaRepository, never()).save(any());
+    }
+
+    @Test
+    void editarCosechaPuedeCambiarAUnaCalidadLibreDelMismoDia() {
+        when(cosechaRepository.findById(1L))
+                .thenReturn(Optional.of(new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, 5L, CalidadCosecha.TERCERA))
+                .thenReturn(false);
+
+        assertEquals(
+                CalidadCosecha.TERCERA,
+                cosechas.actualizarCosecha(1L, fecha, 20.0, "TERCERA", null).getCalidad());
     }
 
     @Test
     void editarCosechaSinCambiarLaFechaNoChocaConsigoMisma() {
-        when(cosechaRepository.findById(1L)).thenReturn(Optional.of(
-                new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
-        when(cosechaRepository.existsByFechaAndSiembraId(fecha, 5L)).thenReturn(true);
-
-        assertEquals(30.0, cosechas.actualizarCosecha(1L, fecha, 30.0, "PRIMERA", null).getCantidadKg());
+        when(cosechaRepository.findById(1L))
+                .thenReturn(Optional.of(new Cosecha(1L, fecha, 20.0, CalidadCosecha.PRIMERA, null, 5L)));
+        // Ni la fecha ni la calidad cambian: no se pregunta si ya existe (sería ella misma)
+        assertEquals(
+                30.0,
+                cosechas.actualizarCosecha(1L, fecha, 30.0, "PRIMERA", null).getCantidadKg());
     }
 
     @Test
@@ -135,18 +172,18 @@ class RegistrosCultivoEdicionTest {
 
     @Test
     void editarActividadValidaQueNoSeRepitaTipoYFecha() {
-        when(actividadRepository.findById(1L)).thenReturn(Optional.of(
-                new ActividadCultivo(1L, TipoActividad.PODA, "Poda", fecha, 5L)));
-        when(actividadRepository.existsByTipoAndFechaAndSiembraId(TipoActividad.RIEGO, fecha, 5L)).thenReturn(true);
+        when(actividadRepository.findById(1L))
+                .thenReturn(Optional.of(new ActividadCultivo(1L, TipoActividad.PODA, "Poda", fecha, 5L)));
+        when(actividadRepository.existsByTipoAndFechaAndSiembraId(TipoActividad.RIEGO, fecha, 5L))
+                .thenReturn(true);
 
-        assertThrows(BusinessException.class, () ->
-                actividades.actualizarActividad(1L, "RIEGO", "Riego", fecha));
+        assertThrows(BusinessException.class, () -> actividades.actualizarActividad(1L, "RIEGO", "Riego", fecha));
     }
 
     @Test
     void editarActividadCambiaDescripcion() {
-        when(actividadRepository.findById(1L)).thenReturn(Optional.of(
-                new ActividadCultivo(1L, TipoActividad.PODA, "Poda", fecha, 5L)));
+        when(actividadRepository.findById(1L))
+                .thenReturn(Optional.of(new ActividadCultivo(1L, TipoActividad.PODA, "Poda", fecha, 5L)));
 
         ActividadCultivo r = actividades.actualizarActividad(1L, "PODA", "  Poda sanitaria ", fecha);
 

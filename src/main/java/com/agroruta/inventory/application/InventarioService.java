@@ -10,15 +10,13 @@ import com.agroruta.inventory.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.util.EnumParser;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Bodega de insumos: una por agricultor. El stock no se guarda, se calcula sumando los movimientos
@@ -31,12 +29,7 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     private final CatalogoInsumosPort catalogo;
     private final Clock reloj;
 
-    @Autowired
-    public InventarioService(InventarioRepository repositorio, CatalogoInsumosPort catalogo) {
-        this(repositorio, catalogo, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    InventarioService(InventarioRepository repositorio, CatalogoInsumosPort catalogo, Clock reloj) {
+    public InventarioService(InventarioRepository repositorio, CatalogoInsumosPort catalogo, Clock reloj) {
         this.repositorio = repositorio;
         this.catalogo = catalogo;
         this.reloj = reloj;
@@ -55,8 +48,9 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
 
         List<StockInsumo> lista = new ArrayList<>();
         for (Long id : insumos) {
-            catalogo.buscar(id).ifPresent(insumo -> lista.add(CalculadoraStock.calcular(
-                    insumo, porInsumo.getOrDefault(id, List.of()), minimos.get(id))));
+            catalogo.buscar(id)
+                    .ifPresent(insumo -> lista.add(
+                            CalculadoraStock.calcular(insumo, porInsumo.getOrDefault(id, List.of()), minimos.get(id))));
         }
         lista.sort(Comparator.comparing(StockInsumo::nombre, String.CASE_INSENSITIVE_ORDER));
         return lista;
@@ -65,7 +59,9 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     @Override
     @Transactional(readOnly = true)
     public List<StockInsumo> avisos(Long agricultorId) {
-        return stock(agricultorId).stream().filter(s -> s.estado().requiereAtencion()).toList();
+        return stock(agricultorId).stream()
+                .filter(s -> s.estado().requiereAtencion())
+                .toList();
     }
 
     @Override
@@ -82,30 +78,41 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
         double base = UnidadBase.aBaseDe(cantidad, unidad(unidad), insumo.unidadBase(), insumo.nombre());
         List<MovimientoInventario> movimientos = repositorio.movimientosDe(agricultorId, insumoId);
         Double promedio = CalculadoraStock.costoPromedio(movimientos);
-        return new CostoEstimado(promedio == null ? null : pesos(base * promedio), promedio,
-                CalculadoraStock.cantidad(movimientos), insumo.unidadBase());
+        return new CostoEstimado(
+                promedio == null ? null : pesos(base * promedio),
+                promedio,
+                CalculadoraStock.cantidad(movimientos),
+                insumo.unidadBase());
     }
 
     // ── Compras, ajustes y mínimos ────────────────────────────────────
 
     @Override
     @Transactional
-    public MovimientoInventario registrarCompra(Long agricultorId, Long insumoId, double cantidad, String unidad,
-                                                Double costoTotal, LocalDate fecha, String proveedor, String observaciones) {
+    public MovimientoInventario registrarCompra(
+            Long agricultorId,
+            Long insumoId,
+            double cantidad,
+            String unidad,
+            BigDecimal costoTotal,
+            LocalDate fecha,
+            String proveedor,
+            String observaciones) {
         InsumoCatalogo insumo = insumo(insumoId);
         if (cantidad <= 0) throw new BusinessException("La cantidad comprada debe ser mayor a 0.");
-        if (costoTotal != null && costoTotal < 0) throw new BusinessException("El costo no puede ser negativo.");
+        if (costoTotal != null && costoTotal.signum() < 0)
+            throw new BusinessException("El costo no puede ser negativo.");
         LocalDate dia = fecha != null ? fecha : hoy();
         if (dia.isAfter(hoy())) throw new BusinessException("La fecha de compra no puede ser futura.");
         double base = UnidadBase.aBaseDe(cantidad, unidad(unidad), insumo.unidadBase(), insumo.nombre());
-        return repositorio.guardar(MovimientoInventario.compra(
-                agricultorId, insumoId, base, costoTotal, dia, proveedor, observaciones));
+        return repositorio.guardar(
+                MovimientoInventario.compra(agricultorId, insumoId, base, costoTotal, dia, proveedor, observaciones));
     }
 
     @Override
     @Transactional
-    public MovimientoInventario ajustarA(Long agricultorId, Long insumoId, double cantidadReal, String unidad,
-                                         String observaciones) {
+    public MovimientoInventario ajustarA(
+            Long agricultorId, Long insumoId, double cantidadReal, String unidad, String observaciones) {
         InsumoCatalogo insumo = insumo(insumoId);
         if (cantidadReal < 0) throw new BusinessException("La cantidad contada no puede ser negativa.");
         double real = UnidadBase.aBaseDe(cantidadReal, unidad(unidad), insumo.unidadBase(), insumo.nombre());
@@ -113,7 +120,8 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
         if (Math.abs(diferencia) < 0.001) {
             throw new BusinessException("El stock ya es " + cantidadReal + ": no hay nada que ajustar.");
         }
-        return repositorio.guardar(MovimientoInventario.ajuste(agricultorId, insumoId, diferencia, hoy(), observaciones));
+        return repositorio.guardar(
+                MovimientoInventario.ajuste(agricultorId, insumoId, diferencia, hoy(), observaciones));
     }
 
     @Override
@@ -132,11 +140,15 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     @Override
     @Transactional
     public void eliminarMovimiento(Long agricultorId, Long movimientoId) {
-        MovimientoInventario m = repositorio.buscarMovimiento(movimientoId)
+        MovimientoInventario m = repositorio
+                .buscarMovimiento(movimientoId)
                 .filter(x -> Objects.equals(x.getAgricultorId(), agricultorId))
                 .orElseThrow(() -> new ResourceNotFoundException("Movimiento no encontrado con ID: " + movimientoId));
         if (m.getTipo() == TipoMovimiento.USO) {
-            throw new BusinessException("Este gasto viene de una fumigación: corrígelo editando o eliminando la fumigación.");
+            throw new BusinessException(
+                    m.getActividadId() != null
+                            ? "Este gasto viene de una actividad de la siembra: corrígelo editando o eliminando la actividad."
+                            : "Este gasto viene de una fumigación: corrígelo editando o eliminando la fumigación.");
         }
         repositorio.eliminarMovimiento(movimientoId);
     }
@@ -145,12 +157,13 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
 
     @Override
     @Transactional
-    public Optional<Double> registrarUso(Long fumigacionId, Long agricultorId, Long insumoId,
-                                         double cantidad, String unidad, LocalDate fecha) {
+    public Optional<BigDecimal> registrarUso(
+            Long fumigacionId, Long agricultorId, Long insumoId, double cantidad, String unidad, LocalDate fecha) {
         InsumoCatalogo insumo = insumo(insumoId);
         if (cantidad <= 0) throw new BusinessException("La cantidad usada debe ser mayor a 0.");
         double base = UnidadBase.aBaseDe(cantidad, unidad(unidad), insumo.unidadBase(), insumo.nombre());
-        MovimientoInventario uso = repositorio.usoDeFumigacion(fumigacionId)
+        MovimientoInventario uso = repositorio
+                .usoDeFumigacion(fumigacionId)
                 .orElseGet(() -> MovimientoInventario.uso(agricultorId, insumoId, base, fecha, fumigacionId));
         uso.setAgricultorId(agricultorId);
         uso.setInsumoId(insumoId);
@@ -165,6 +178,33 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     @Transactional
     public void quitarUso(Long fumigacionId) {
         repositorio.usoDeFumigacion(fumigacionId).ifPresent(m -> repositorio.eliminarMovimiento(m.getId()));
+    }
+
+    // ── Gasto de las actividades (abonado...) ─────────────────────────
+
+    @Override
+    @Transactional
+    public Optional<BigDecimal> registrarUsoDeActividad(
+            Long actividadId, Long agricultorId, Long insumoId, double cantidad, String unidad, LocalDate fecha) {
+        InsumoCatalogo insumo = insumo(insumoId);
+        if (cantidad <= 0) throw new BusinessException("La cantidad usada debe ser mayor a 0.");
+        double base = UnidadBase.aBaseDe(cantidad, unidad(unidad), insumo.unidadBase(), insumo.nombre());
+        MovimientoInventario uso = repositorio
+                .usoDeActividad(actividadId)
+                .orElseGet(() -> MovimientoInventario.usoDeActividad(agricultorId, insumoId, base, fecha, actividadId));
+        uso.setAgricultorId(agricultorId);
+        uso.setInsumoId(insumoId);
+        uso.setCantidad(base);
+        uso.setFecha(fecha != null ? fecha : hoy());
+        repositorio.guardar(uso);
+        Double promedio = CalculadoraStock.costoPromedio(repositorio.movimientosDe(agricultorId, insumoId));
+        return Optional.ofNullable(promedio).map(p -> pesos(base * p));
+    }
+
+    @Override
+    @Transactional
+    public void quitarUsoDeActividad(Long actividadId) {
+        repositorio.usoDeActividad(actividadId).ifPresent(m -> repositorio.eliminarMovimiento(m.getId()));
     }
 
     // ── apoyo ─────────────────────────────────────────────────────────
@@ -183,7 +223,8 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
         return LocalDate.now(reloj);
     }
 
-    private static double pesos(double v) {
-        return Math.round(v);
+    /** Estimaciones a precio promedio: en pesos enteros */
+    private static BigDecimal pesos(double v) {
+        return BigDecimal.valueOf(Math.round(v));
     }
 }

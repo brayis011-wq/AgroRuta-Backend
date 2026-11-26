@@ -2,11 +2,11 @@ package com.agroruta.inventory.infrastructure.persistence;
 
 import com.agroruta.inventory.domain.TipoMovimiento;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "movimientos_inventario")
@@ -34,14 +34,17 @@ public class MovimientoInventarioEntity {
     @Column(nullable = false)
     private LocalDate fecha;
 
-    @Column(name = "costo_total")
-    private Double costoTotal;
+    @Column(name = "costo_total", precision = 14, scale = 2)
+    private BigDecimal costoTotal;
 
     @Column(length = 150)
     private String proveedor;
 
     @Column(name = "fumigacion_id")
     private Long fumigacionId;
+
+    @Column(name = "actividad_id")
+    private Long actividadId;
 
     @Column(length = 500)
     private String observaciones;

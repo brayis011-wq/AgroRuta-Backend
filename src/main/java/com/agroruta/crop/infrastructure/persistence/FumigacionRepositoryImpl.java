@@ -1,12 +1,11 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import com.agroruta.crop.domain.Fumigacion;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.crop.domain.Fumigacion;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class FumigacionRepositoryImpl implements FumigacionRepository {
@@ -31,8 +30,9 @@ public class FumigacionRepositoryImpl implements FumigacionRepository {
 
     @Override
     public List<Fumigacion> findBySiembraId(Long siembraId) {
-        return jpaRepository.findBySiembraId(siembraId)
-                .stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findBySiembraId(siembraId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

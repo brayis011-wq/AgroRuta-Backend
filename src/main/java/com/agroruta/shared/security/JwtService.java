@@ -1,22 +1,22 @@
 package com.agroruta.shared.security;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
+import com.agroruta.shared.config.JwtProperties;
+import com.agroruta.shared.exception.FalloInternoException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
-
-import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
 
 @Service
 public class JwtService {
@@ -24,11 +24,13 @@ public class JwtService {
     /** Claim con la huella de la contraseña (ver mismaContrasena) */
     static final String CLAIM_HUELLA = "pv";
 
-    @Value("${jwt.secret}")
-    private String secretKey;
+    private final String secretKey;
+    private final long jwtExpiration;
 
-    @Value("${jwt.expiration}")
-    private long jwtExpiration;
+    public JwtService(JwtProperties propiedades) {
+        this.secretKey = propiedades.secret();
+        this.jwtExpiration = propiedades.expiration();
+    }
 
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -52,7 +54,8 @@ public class JwtService {
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername())) && !isTokenExpired(token)
+        return (username.equals(userDetails.getUsername()))
+                && !isTokenExpired(token)
                 && mismaContrasena(token, userDetails);
     }
 
@@ -72,7 +75,7 @@ public class JwtService {
                     .digest((hashContrasena == null ? "" : hashContrasena).getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(d, 0, 8);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 

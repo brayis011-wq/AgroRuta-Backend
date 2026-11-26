@@ -1,40 +1,46 @@
 package com.agroruta.worker.infrastructure.persistence;
 
-
-import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.application.ports.out.CargoRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.worker.domain.Cargo;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 class CargoRepositoryImpl implements CargoRepository {
 
     private final JpaCargoRepository jpa;
 
-    CargoRepositoryImpl(JpaCargoRepository jpa) { this.jpa = jpa; }
+    CargoRepositoryImpl(JpaCargoRepository jpa) {
+        this.jpa = jpa;
+    }
 
-    @Override public Cargo guardar(Cargo cargo) {
+    @Override
+    public Cargo guardar(Cargo cargo) {
         return WorkerMapper.toDomain(jpa.save(WorkerMapper.toEntity(cargo)));
     }
 
-    @Override public Optional<Cargo> buscarPorId(Long id) {
+    @Override
+    public Optional<Cargo> buscarPorId(Long id) {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }
 
-    @Override public List<Cargo> listarTodos() {
+    @Override
+    public List<Cargo> listarTodos() {
         return jpa.findAll().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 
-    @Override public List<Cargo> listarActivos() {
+    @Override
+    public List<Cargo> listarActivos() {
         return jpa.findByActivoTrue().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 
-    @Override public List<Cargo> listarActivosPorAgricultor(Long agricultorId) {
+    @Override
+    public List<Cargo> listarActivosPorAgricultor(Long agricultorId) {
         return jpa.findByActivoTrueAndAgricultorId(agricultorId).stream()
-                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+                .map(WorkerMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -57,5 +63,8 @@ class CargoRepositoryImpl implements CargoRepository {
         return jpa.existsByNombreAndAgricultorIdAndIdNot(nombre, agricultorId, id);
     }
 
-    @Override public void eliminar(Long id) { jpa.deleteById(id); }
+    @Override
+    public void eliminar(Long id) {
+        jpa.deleteById(id);
+    }
 }

@@ -1,5 +1,12 @@
 package com.agroruta.shared.config;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Arrays;
+import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,14 +14,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import java.util.Arrays;
 
 /**
  * Migraciones de base de datos con Flyway, en todos los entornos (local y producción).
@@ -35,6 +34,7 @@ public class FlywayConfig {
 
     /** V1 = esquema inicial, V2 = insumos iniciales. */
     static final String LINEA_BASE_NUEVA = "1";
+
     static final String LINEA_BASE_CON_DATOS = "2";
 
     /** Hibernate (entityManagerFactory) espera a que Flyway termine, para validar el esquema ya migrado. */
@@ -105,17 +105,17 @@ public class FlywayConfig {
 
     private static long contarTablas(Connection c) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
-                "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()");
-             ResultSet rs = ps.executeQuery()) {
+                        "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()");
+                ResultSet rs = ps.executeQuery()) {
             return rs.next() ? rs.getLong(1) : 0;
         }
     }
 
     private static boolean existeHistorial(Connection c) throws SQLException {
         try (PreparedStatement ps = c.prepareStatement(
-                "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() "
-                        + "AND TABLE_NAME = 'flyway_schema_history'");
-             ResultSet rs = ps.executeQuery()) {
+                        "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() "
+                                + "AND TABLE_NAME = 'flyway_schema_history'");
+                ResultSet rs = ps.executeQuery()) {
             return rs.next() && rs.getLong(1) > 0;
         }
     }
@@ -139,8 +139,8 @@ public class FlywayConfig {
     /** Si ya hay insumos cargados, la base tiene datos y V2 no se debe repetir. */
     static String lineaBase(DataSource dataSource) {
         try (Connection c = dataSource.getConnection();
-             Statement st = c.createStatement();
-             ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM agricultural_inputs")) {
+                Statement st = c.createStatement();
+                ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM agricultural_inputs")) {
             return rs.next() && rs.getLong(1) > 0 ? LINEA_BASE_CON_DATOS : LINEA_BASE_NUEVA;
         } catch (Exception e) {
             return LINEA_BASE_NUEVA; // sin la tabla todavía: base nueva

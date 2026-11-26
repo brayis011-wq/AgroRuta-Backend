@@ -1,8 +1,10 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
 
 class SiembraTest {
 
@@ -62,7 +64,7 @@ class SiembraTest {
         siembra.avanzarEtapa(); // COSECHA
         siembra.avanzarEtapa(); // FINALIZADO
 
-        assertThrows(IllegalStateException.class, () -> siembra.avanzarEtapa());
+        assertThrows(EstadoInvalidoException.class, () -> siembra.avanzarEtapa());
     }
 
     @Test
@@ -90,10 +92,10 @@ class SiembraTest {
     @Test
     void noSeRetrocedeDesdeGerminacionNiSeFinalizaDosVeces() {
         Siembra siembra = new Siembra(1L, LocalDate.of(2026, 1, 1), 100, Variedades.COLOMBIA, 1L);
-        assertThrows(IllegalStateException.class, siembra::retrocederEtapa);
+        assertThrows(EstadoInvalidoException.class, siembra::retrocederEtapa);
 
         siembra.finalizar(LocalDate.of(2026, 2, 1));
-        assertThrows(IllegalStateException.class, () -> siembra.finalizar(LocalDate.of(2026, 2, 2)));
+        assertThrows(EstadoInvalidoException.class, () -> siembra.finalizar(LocalDate.of(2026, 2, 2)));
     }
 
     @Test

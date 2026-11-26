@@ -6,9 +6,6 @@ import com.agroruta.inventory.domain.UnidadBase;
 import com.agroruta.notification.domain.Correo;
 import com.agroruta.notification.domain.PlantillaCorreo;
 import com.agroruta.weather.domain.Pronostico;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -18,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /** Los textos de cada correo. Todos en español, como el resto de los mensajes del backend. */
 @Component
@@ -32,8 +31,24 @@ public class MensajesCorreo {
     private static final String PIE_NO_FUISTE = "Si no fuiste tú, cambia tu contraseña lo antes posible.";
 
     static final Map<String, String> LABORES = Map.of(
-            "DESHIERBE", "Deshierbe", "PODA", "Poda", "REVISION", "Revisión", "RIEGO", "Riego",
-            "TUTOREO", "Tutoreo", "OTRO", "Labor");
+            "DESHIERBE",
+            "Deshierbe",
+            "PODA",
+            "Poda",
+            "REVISION",
+            "Revisión",
+            "RIEGO",
+            "Riego",
+            "TUTOREO",
+            "Tutoreo",
+            "OTRO",
+            "Labor",
+            "FERTILIZACION",
+            "Fertilizar",
+            "FUMIGACION",
+            "Fumigar",
+            "ABONADO",
+            "Abonado");
 
     private final String frontend;
 
@@ -50,7 +65,8 @@ public class MensajesCorreo {
     public Correo recuperarContrasena(String nombre, String email, String token, long minutos) {
         return PlantillaCorreo.con("Crea una contraseña nueva")
                 .resumen("Usa este enlace en los próximos " + minutos + " minutos.")
-                .parrafo("Hola " + primerNombre(nombre) + ", recibimos una solicitud para cambiar la contraseña de tu cuenta.")
+                .parrafo("Hola " + primerNombre(nombre)
+                        + ", recibimos una solicitud para cambiar la contraseña de tu cuenta.")
                 .boton("Crear contraseña nueva", url("/auth/reset-password?token=" + token))
                 .parrafo("El enlace sirve una sola vez y vence en " + minutos + " minutos.")
                 .parrafo("Si no pediste el cambio, ignora este correo: tu contraseña sigue igual.")
@@ -88,14 +104,16 @@ public class MensajesCorreo {
                         + "contraseña equivocada, así que pausamos el inicio de sesión " + minutos + " minutos.")
                 .parrafo("Si fuiste tú y no recuerdas la contraseña, crea una nueva:")
                 .boton("Crear contraseña nueva", url("/auth/forgot-password"))
-                .aviso("Si no fuiste tú, tu contraseña sigue protegida. Te recomendamos cambiarla por una que no uses en otros sitios.")
+                .aviso(
+                        "Si no fuiste tú, tu contraseña sigue protegida. Te recomendamos cambiarla por una que no uses en otros sitios.")
                 .pie(PIE_CUENTA)
                 .para(email, "Intentos fallidos en tu cuenta de AgroRuta");
     }
 
     // ── Trabajadores y nómina ────────────────────────────────────────
 
-    public Correo solicitudAcceso(String agricultor, String email, String trabajador, String cuenta, String cuentaEmail) {
+    public Correo solicitudAcceso(
+            String agricultor, String email, String trabajador, String cuenta, String cuentaEmail) {
         return PlantillaCorreo.con(trabajador + " pidió acceso al portal")
                 .resumen("Apruébalo para que vea sus jornales, nóminas y pagos.")
                 .parrafo("Hola " + primerNombre(agricultor) + ", la cuenta " + nombreYCorreo(cuenta, cuentaEmail)
@@ -112,37 +130,46 @@ public class MensajesCorreo {
         if (!aprobado && retirado) {
             return PlantillaCorreo.con("Tu acceso al portal fue retirado")
                     .resumen("Ya no puedes ver los datos de este trabajador.")
-                    .parrafo("Hola " + primerNombre(nombre) + ", " + quien + " retiró tu acceso al portal del trabajador.")
+                    .parrafo("Hola " + primerNombre(nombre) + ", " + quien
+                            + " retiró tu acceso al portal del trabajador.")
                     .parrafo("Si crees que es un error, habla con tu empleador.")
                     .pie(PIE_CUENTA)
                     .para(email, "Tu acceso a AgroRuta fue retirado");
         }
         PlantillaCorreo p = aprobado
                 ? PlantillaCorreo.con("Ya puedes entrar a tu portal")
-                    .resumen(quien + " aprobó tu acceso.")
-                    .parrafo("Hola " + primerNombre(nombre) + ", " + quien + " aprobó tu acceso.")
-                    .parrafo("Desde ahora ves tus jornales, nóminas y pagos en AgroRuta.")
-                    .boton("Entrar al portal", url("/portal/home"))
+                        .resumen(quien + " aprobó tu acceso.")
+                        .parrafo("Hola " + primerNombre(nombre) + ", " + quien + " aprobó tu acceso.")
+                        .parrafo("Desde ahora ves tus jornales, nóminas y pagos en AgroRuta.")
+                        .boton("Entrar al portal", url("/portal/home"))
                 : PlantillaCorreo.con("Tu solicitud de acceso no fue aprobada")
-                    .resumen("Revisa la cédula o habla con tu empleador.")
-                    .parrafo("Hola " + primerNombre(nombre) + ", " + quien + " no aprobó tu solicitud de acceso al portal.")
-                    .parrafo("Si crees que es un error, revisa que la cédula sea la correcta y vuelve a enviarla, "
-                            + "o habla con tu empleador.")
-                    .boton("Ver mi solicitud", url("/portal/home"));
-        return p.pie(PIE_CUENTA).para(email, aprobado ? "Tu acceso a AgroRuta fue aprobado" : "Tu solicitud de acceso en AgroRuta");
+                        .resumen("Revisa la cédula o habla con tu empleador.")
+                        .parrafo("Hola " + primerNombre(nombre) + ", " + quien
+                                + " no aprobó tu solicitud de acceso al portal.")
+                        .parrafo("Si crees que es un error, revisa que la cédula sea la correcta y vuelve a enviarla, "
+                                + "o habla con tu empleador.")
+                        .boton("Ver mi solicitud", url("/portal/home"));
+        return p.pie(PIE_CUENTA)
+                .para(email, aprobado ? "Tu acceso a AgroRuta fue aprobado" : "Tu solicitud de acceso en AgroRuta");
     }
 
-    public Correo pagoRegistrado(String nombre, String email, LocalDate desde, LocalDate hasta,
-                                 BigDecimal monto, String metodo, LocalDate fechaPago) {
+    public Correo pagoRegistrado(
+            String nombre,
+            String email,
+            LocalDate desde,
+            LocalDate hasta,
+            BigDecimal monto,
+            String metodo,
+            LocalDate fechaPago) {
         String valor = pesos(monto);
         return PlantillaCorreo.con("Te pagaron " + valor)
                 .resumen("Nómina del " + desde.format(DIA_CORTO) + " al " + hasta.format(DIA_CORTO) + ".")
                 .parrafo("Hola " + primerNombre(nombre) + ", se registró el pago de tu nómina.")
                 .lista(List.of(
-                        new String[]{"Periodo:", desde.format(DIA_CORTO) + " al " + hasta.format(DIA_CORTO)},
-                        new String[]{"Valor:", valor},
-                        new String[]{"Forma de pago:", metodoPago(metodo)},
-                        new String[]{"Fecha:", fechaPago.format(DIA_CORTO)}))
+                        new String[] {"Periodo:", desde.format(DIA_CORTO) + " al " + hasta.format(DIA_CORTO)},
+                        new String[] {"Valor:", valor},
+                        new String[] {"Forma de pago:", metodoPago(metodo)},
+                        new String[] {"Fecha:", fechaPago.format(DIA_CORTO)}))
                 .boton("Ver mis pagos", url("/portal/payments"))
                 .pie(PIE_CUENTA)
                 .para(email, "Pago de nómina: " + valor);
@@ -153,65 +180,133 @@ public class MensajesCorreo {
     /** Clima de una finca para las próximas 24 horas */
     public record ClimaFinca(String finca, Pronostico pronostico) {}
 
-    public Correo resumenDiario(String nombre, String email, LocalDate hoy,
-                                List<AlertaCultivo> alertas, List<ClimaFinca> clima) {
+    public Correo resumenDiario(
+            String nombre, String email, LocalDate hoy, List<AlertaCultivo> alertas, List<ClimaFinca> clima) {
         return resumenDiario(nombre, email, hoy, alertas, clima, List.of());
     }
 
     /** @param stock insumos bajos, agotados o en negativo en la bodega */
-    public Correo resumenDiario(String nombre, String email, LocalDate hoy,
-                                List<AlertaCultivo> alertas, List<ClimaFinca> clima, List<StockInsumo> stock) {
-        List<String[]> fumigar = new ArrayList<>(), labores = new ArrayList<>(),
-                restricciones = new ArrayList<>(), tiempo = new ArrayList<>(), bodega = new ArrayList<>();
+    public Correo resumenDiario(
+            String nombre,
+            String email,
+            LocalDate hoy,
+            List<AlertaCultivo> alertas,
+            List<ClimaFinca> clima,
+            List<StockInsumo> stock) {
+        return resumenDiario(nombre, email, hoy, alertas, clima, stock, List.of());
+    }
+
+    /** @param consejos lo que el pronóstico por horas cambia en la agenda ("no fumigues hoy: llueve a las 3") */
+    public Correo resumenDiario(
+            String nombre,
+            String email,
+            LocalDate hoy,
+            List<AlertaCultivo> alertas,
+            List<ClimaFinca> clima,
+            List<StockInsumo> stock,
+            List<com.agroruta.weather.domain.ConsejoClima> consejos) {
+        List<String[]> fumigar = new ArrayList<>(),
+                labores = new ArrayList<>(),
+                restricciones = new ArrayList<>(),
+                tiempo = new ArrayList<>(),
+                bodega = new ArrayList<>(),
+                presupuesto = new ArrayList<>();
         for (StockInsumo s : stock) {
             switch (s.estado()) {
-                case NEGATIVO -> bodega.add(new String[]{s.nombre(), "· en negativo: falta registrar una compra o hacer un conteo."});
-                case AGOTADO -> bodega.add(new String[]{s.nombre(), "· se acabó."});
-                case BAJO -> bodega.add(new String[]{s.nombre(), "· quedan " + cantidad(s.cantidad(), s.unidadBase())
-                        + " (mínimo " + cantidad(s.stockMinimo(), s.unidadBase()) + ")."});
-                case OK -> { }
+                case NEGATIVO ->
+                    bodega.add(
+                            new String[] {s.nombre(), "· en negativo: falta registrar una compra o hacer un conteo."});
+                case AGOTADO -> bodega.add(new String[] {s.nombre(), "· se acabó."});
+                case BAJO ->
+                    bodega.add(new String[] {
+                        s.nombre(),
+                        "· quedan " + cantidad(s.cantidad(), s.unidadBase()) + " (mínimo "
+                                + cantidad(s.stockMinimo(), s.unidadBase()) + ")."
+                    });
+                case OK -> {}
             }
         }
 
         for (AlertaCultivo a : alertas) {
             String donde = donde(a);
             switch (a.tipo()) {
-                case FUMIGACION_ATRASADA -> fumigar.add(new String[]{donde, "· fumigación atrasada "
-                        + dias(a.detalle()) + " (tocaba el " + a.fecha().format(DIA_CORTO) + ")."});
-                case FUMIGACION_HOY -> fumigar.add(new String[]{donde, "· hoy toca fumigar."});
-                case FUMIGACION_MANANA -> fumigar.add(new String[]{donde, "· mañana toca fumigar."});
-                case LABOR_HOY -> labores.add(new String[]{donde, "· hoy: " + labor(a)});
-                case LABOR_MANANA -> labores.add(new String[]{donde, "· mañana: " + labor(a)});
-                case REENTRADA_EN_CURSO -> restricciones.add(new String[]{donde, "· no entrar hasta el "
-                        + a.fecha().format(DIA_CORTO) + " (se aplicó " + a.titulo() + ")."});
-                case REENTRADA_LIBRE -> restricciones.add(new String[]{donde, "· desde hoy ya se puede entrar ("
-                        + a.titulo() + ")."});
-                case CARENCIA_LIBRE -> restricciones.add(new String[]{donde, "· desde hoy ya se puede cosechar (terminó la carencia de "
-                        + a.titulo() + ")."});
+                case FUMIGACION_ATRASADA ->
+                    fumigar.add(new String[] {
+                        donde,
+                        "· fumigación atrasada " + dias(a.detalle()) + " (tocaba el "
+                                + a.fecha().format(DIA_CORTO) + ")."
+                    });
+                case FUMIGACION_HOY -> fumigar.add(new String[] {donde, "· hoy toca fumigar."});
+                case FUMIGACION_MANANA -> fumigar.add(new String[] {donde, "· mañana toca fumigar."});
+                case LABOR_HOY -> labores.add(new String[] {donde, "· hoy: " + labor(a)});
+                case LABOR_MANANA -> labores.add(new String[] {donde, "· mañana: " + labor(a)});
+                case LABOR_ATRASADA ->
+                    labores.add(new String[] {
+                        donde,
+                        "· atrasada " + dias(a.detalle()) + ": " + LABORES.getOrDefault(a.titulo(), "Labor")
+                                + " (tocaba el " + a.fecha().format(DIA_CORTO) + ")."
+                    });
+                case REENTRADA_EN_CURSO ->
+                    restricciones.add(new String[] {
+                        donde,
+                        "· no entrar hasta el " + a.fecha().format(DIA_CORTO) + " (se aplicó " + a.titulo() + ")."
+                    });
+                case REENTRADA_LIBRE ->
+                    restricciones.add(new String[] {donde, "· desde hoy ya se puede entrar (" + a.titulo() + ")."});
+                case PRESUPUESTO_CERCA ->
+                    presupuesto.add(new String[] {
+                        donde, "· ya se gastó el " + a.titulo() + " % del presupuesto (" + a.detalle() + ")."
+                    });
+                case PRESUPUESTO_SUPERADO ->
+                    presupuesto.add(new String[] {
+                        donde, "· se pasó del presupuesto: van " + a.detalle() + " (" + a.titulo() + " %)."
+                    });
+                case CARENCIA_LIBRE ->
+                    restricciones.add(new String[] {
+                        donde, "· desde hoy ya se puede cosechar (terminó la carencia de " + a.titulo() + ")."
+                    });
             }
+        }
+        // Con consejos por horas de una finca, sobra el aviso general de esa misma finca
+        java.util.Set<String> conConsejo = new java.util.HashSet<>();
+        for (com.agroruta.weather.domain.ConsejoClima c : consejos) {
+            String texto = consejo(c, hoy);
+            if (texto == null) continue;
+            conConsejo.add(c.finca());
+            String donde = c.lote() == null ? c.finca() : c.finca() + " / " + c.lote();
+            tiempo.add(new String[] {donde, "· " + texto});
         }
         boolean hayFumigacion = alertas.stream().anyMatch(AlertaCultivo::esFumigacionPendiente);
         for (ClimaFinca c : clima) {
+            if (conConsejo.contains(c.finca())) continue;
             Pronostico p = c.pronostico();
             List<String> partes = new ArrayList<>();
             if (p.riesgoHelada()) partes.add("riesgo de helada (mínima de " + grados(p.tempMin()) + ")");
             if (p.lluviaFuerte()) partes.add("lluvia fuerte (" + mm(p.lluviaMm()) + ")");
-            else if (hayFumigacion && p.lluviaLavaProducto()) partes.add("lluvia (" + mm(p.lluviaMm())
-                    + "): si fumigas, hazlo cuando no vaya a llover para que el producto no se lave");
-            if (!partes.isEmpty()) tiempo.add(new String[]{c.finca(), "· " + String.join("; ", partes) + "."});
+            else if (hayFumigacion && p.lluviaLavaProducto())
+                partes.add("lluvia (" + mm(p.lluviaMm())
+                        + "): si fumigas, hazlo cuando no vaya a llover para que el producto no se lave");
+            if (!partes.isEmpty()) tiempo.add(new String[] {c.finca(), "· " + String.join("; ", partes) + "."});
         }
 
-        int total = fumigar.size() + labores.size() + restricciones.size() + tiempo.size() + bodega.size();
+        int total = fumigar.size()
+                + labores.size()
+                + restricciones.size()
+                + tiempo.size()
+                + bodega.size()
+                + presupuesto.size();
         PlantillaCorreo p = PlantillaCorreo.con("Tu cultivo hoy, " + hoy.format(DIA))
                 .resumen(total == 1 ? "Tienes 1 aviso para hoy." : "Tienes " + total + " avisos para hoy.")
                 .parrafo("Hola " + primerNombre(nombre) + ", esto es lo que conviene tener en cuenta hoy:");
-        if (!tiempo.isEmpty()) p.seccion("Clima (próximas 24 horas)").lista(tiempo);
+        if (!tiempo.isEmpty()) p.seccion("Clima y lo que tienes programado").lista(tiempo);
         if (!fumigar.isEmpty()) p.seccion("Fumigaciones").lista(fumigar);
         if (!labores.isEmpty()) p.seccion("Labores programadas").lista(labores);
         if (!restricciones.isEmpty()) p.seccion("Reentrada y cosecha").lista(restricciones);
         if (!bodega.isEmpty()) p.seccion("Bodega de insumos").lista(bodega);
+        if (!presupuesto.isEmpty()) p.seccion("Presupuesto de la temporada").lista(presupuesto);
         boolean soloBodega = total == bodega.size();
-        return p.boton(soloBodega ? "Abrir el inventario" : "Abrir el calendario",
+        return p.boton(
+                        soloBodega ? "Abrir el inventario" : "Abrir el calendario",
                         url(soloBodega ? "/crops/inventory" : "/crops/calendar"))
                 .pie(PIE_CUENTA)
                 .pie("Puedes dejar de recibir este resumen en Configuración: " + url("/settings"))
@@ -271,6 +366,40 @@ public class MensajesCorreo {
             case "CHEQUE" -> "Cheque";
             default -> metodo;
         };
+    }
+
+    /** Texto de un consejo de clima; null si no vale la pena decirlo en el correo */
+    static String consejo(com.agroruta.weather.domain.ConsejoClima c, LocalDate hoy) {
+        String dia = c.dia() != null && c.dia().isAfter(hoy) ? "mañana" : "hoy";
+        String porque = "VIENTO".equals(c.motivo()) ? "viento fuerte" : "lluvia";
+        String desde = c.problemaDesde() == null ? "" : " desde las " + hora(c.problemaDesde());
+        String ventana = c.ventanaInicio() == null
+                ? ""
+                : (c.ventanaInicio().toLocalDate().isAfter(hoy) ? "mañana " : "hoy ") + "entre las "
+                        + hora(c.ventanaInicio()) + " y las " + hora(c.ventanaFin());
+        return switch (c.tipo()) {
+            case NO_FUMIGAR ->
+                "no fumigues " + dia + ": " + porque + desde + "."
+                        + (ventana.isEmpty() ? "" : " Mejor " + ventana + ".");
+            case FUMIGAR_EN_VENTANA ->
+                "si vas a fumigar " + dia + ", hazlo " + ventana.replaceFirst("^(hoy|mañana) ", "") + ": " + porque
+                        + desde + ".";
+            case FUMIGAR_BIEN -> "buen tiempo para fumigar " + dia + ": sin lluvia ni viento fuerte.";
+            case NO_REGAR ->
+                "no hace falta regar hoy: se esperan " + mm(c.valor() == null ? 0 : c.valor()) + " de lluvia" + desde
+                        + ".";
+            case HELADA ->
+                "riesgo de helada (mínima de " + grados(c.valor() == null ? 0 : c.valor()) + ")"
+                        + (c.problemaDesde() == null ? "" : " hacia las " + hora(c.problemaDesde())) + ".";
+            case LLUVIA_FUERTE -> "lluvia fuerte (" + mm(c.valor() == null ? 0 : c.valor()) + ")" + desde + ".";
+        };
+    }
+
+    /** "3 p. m.", "10:30 a. m." (a mano: el formato de Java usa espacios especiales) */
+    static String hora(java.time.LocalDateTime t) {
+        int h = t.getHour() % 12 == 0 ? 12 : t.getHour() % 12;
+        String minutos = t.getMinute() == 0 ? "" : String.format(":%02d", t.getMinute());
+        return h + minutos + (t.getHour() < 12 ? " a. m." : " p. m.");
     }
 
     private static String grados(double t) {

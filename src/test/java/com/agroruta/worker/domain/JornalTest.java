@@ -1,12 +1,12 @@
 package com.agroruta.worker.domain;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class JornalTest {
 
@@ -16,9 +16,8 @@ class JornalTest {
     @BeforeEach
     void setUp() {
         cargo = new Cargo(1L, "Operario", "Trabajador de campo", new BigDecimal("50000"), true);
-        trabajador = new Trabajador(1L, "Juan", "Pérez", "123456789",
-                "3001234567", "Calle 1", LocalDate.now(),
-                TipoContrato.JORNAL, cargo);
+        trabajador = new Trabajador(
+                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1", LocalDate.now(), TipoContrato.JORNAL, cargo);
     }
 
     @Test
@@ -95,7 +94,7 @@ class JornalTest {
         jornal.marcarComoLiquidado();
         Labor actividad = new Labor(1L, "Riego", "Riego de cultivos");
 
-        assertThrows(IllegalStateException.class, () -> jornal.agregarActividad(actividad));
+        assertThrows(EstadoInvalidoException.class, () -> jornal.agregarActividad(actividad));
     }
 
     @Test
@@ -105,6 +104,32 @@ class JornalTest {
         jornal.agregarActividad(actividad);
         jornal.marcarComoLiquidado();
 
-        assertThrows(IllegalStateException.class, () -> jornal.removerActividad(actividad));
+        assertThrows(EstadoInvalidoException.class, () -> jornal.removerActividad(actividad));
+    }
+
+    @Test
+    void enLaCosechaSePuedePagarPorKiloAunqueElCargoSeaPorDia() {
+        Jornal jornal = new Jornal(null, LocalDate.now(), trabajador, 10L, "Café", null);
+        jornal.pagarPorKilo(new BigDecimal("70"), new BigDecimal("900"));
+        assertEquals(0, new BigDecimal("63000").compareTo(jornal.getValorJornal()));
+        assertEquals(0, new BigDecimal("70").compareTo(jornal.getKilos()));
+
+        // Sin valor del kilo y con un cargo que no lo tiene, se pide
+        Jornal otro = new Jornal(null, LocalDate.now(), trabajador, 10L, "Café", null);
+        var e = assertThrows(
+                com.agroruta.shared.exception.DatoInvalidoException.class,
+                () -> otro.pagarPorKilo(new BigDecimal("10"), null));
+        assertTrue(e.getMessage().contains("kilo"));
+    }
+
+    @Test
+    void enLaCosechaPorDiaTomaElValorIndicadoOElDelCargo() {
+        Jornal jornal = new Jornal(null, LocalDate.now(), trabajador, 10L, "Café", null);
+        jornal.pagarPorKilo(new BigDecimal("10"), new BigDecimal("900"));
+        jornal.pagarPorDia(null);
+        assertEquals(0, new BigDecimal("50000").compareTo(jornal.getValorJornal()));
+        assertNull(jornal.getKilos());
+        jornal.pagarPorDia(new BigDecimal("55000"));
+        assertEquals(0, new BigDecimal("55000").compareTo(jornal.getValorJornal()));
     }
 }

@@ -1,21 +1,21 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.in.LoteUseCase;
+import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
 import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
 import com.agroruta.crop.application.ports.out.SiembraRepository;
-import com.agroruta.shared.util.EnumParser;
-import com.agroruta.crop.application.ports.in.SiembraUseCase;
-import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.*;
-import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.shared.util.EnumParser;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Temporadas de cultivo. Un lote guarda todas sus siembras, pero solo una puede estar en curso.
@@ -30,8 +30,11 @@ public class SiembraService implements SiembraUseCase {
     private final CatalogoCultivoRepository catalogo;
     private final EtapaSiembraRepository etapaRepository;
 
-    public SiembraService(SiembraRepository siembraRepository, LoteUseCase loteUseCase,
-                          CatalogoCultivoRepository catalogo, EtapaSiembraRepository etapaRepository) {
+    public SiembraService(
+            SiembraRepository siembraRepository,
+            LoteUseCase loteUseCase,
+            CatalogoCultivoRepository catalogo,
+            EtapaSiembraRepository etapaRepository) {
         this.siembraRepository = siembraRepository;
         this.loteUseCase = loteUseCase;
         this.catalogo = catalogo;
@@ -39,8 +42,7 @@ public class SiembraService implements SiembraUseCase {
     }
 
     @Override
-    public Siembra registrarSiembra(LocalDate fechaSiembra, Integer cantidadPlantas,
-                                    Long variedadId, Long loteId) {
+    public Siembra registrarSiembra(LocalDate fechaSiembra, Integer cantidadPlantas, Long variedadId, Long loteId) {
 
         loteUseCase.buscarLotePorId(loteId);
 
@@ -53,8 +55,7 @@ public class SiembraService implements SiembraUseCase {
 
         VariedadCultivo variedad = variedadDisponible(variedadId);
 
-        Siembra siembra = siembraRepository.save(
-                new Siembra(null, fechaSiembra, cantidadPlantas, variedad, loteId));
+        Siembra siembra = siembraRepository.save(new Siembra(null, fechaSiembra, cantidadPlantas, variedad, loteId));
         registrarEtapa(siembra, EstadoCultivo.GERMINACION, fechaSiembra);
         loteUseCase.ocuparLote(loteId);
         return siembra;
@@ -62,13 +63,15 @@ public class SiembraService implements SiembraUseCase {
 
     @Override
     public Siembra buscarSiembraPorId(Long id) {
-        return siembraRepository.findById(id)
+        return siembraRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Siembra no encontrada con ID: " + id));
     }
 
     @Override
     public Siembra buscarSiembraPorLote(Long loteId) {
-        return siembraRepository.findActivaByLoteId(loteId)
+        return siembraRepository
+                .findActivaByLoteId(loteId)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay siembra activa en el lote: " + loteId));
     }
 
@@ -133,15 +136,15 @@ public class SiembraService implements SiembraUseCase {
         }
         boolean reabre = !siembra.estaActiva();
         if (reabre && siembraRepository.existsActivaByLoteId(siembra.getLoteId())) {
-            throw new BusinessException(
-                    "No se puede reabrir esta siembra: el lote ya tiene otra siembra en curso.");
+            throw new BusinessException("No se puede reabrir esta siembra: el lote ya tiene otra siembra en curso.");
         }
 
         EstadoCultivo etapaQueSeDeshace = siembra.getEstadoCultivo();
         siembra.retrocederEtapa();
         Siembra guardada = siembraRepository.save(siembra);
 
-        etapaRepository.findUltima(siembraId)
+        etapaRepository
+                .findUltima(siembraId)
                 .filter(e -> e.getEtapa() == etapaQueSeDeshace)
                 .ifPresent(e -> etapaRepository.deleteById(e.getId()));
         if (reabre) loteUseCase.ocuparLote(guardada.getLoteId());
@@ -157,8 +160,8 @@ public class SiembraService implements SiembraUseCase {
         siembra.finalizar(dia);
         Siembra guardada = siembraRepository.save(siembra);
         registrarEtapa(guardada, EstadoCultivo.FINALIZADO, dia);
-        loteUseCase.liberarLote(guardada.getLoteId(),
-                dejarLoteEnDescanso ? EstadoLote.EN_DESCANSO : EstadoLote.DISPONIBLE);
+        loteUseCase.liberarLote(
+                guardada.getLoteId(), dejarLoteEnDescanso ? EstadoLote.EN_DESCANSO : EstadoLote.DISPONIBLE);
         return guardada;
     }
 
@@ -200,9 +203,8 @@ public class SiembraService implements SiembraUseCase {
         VariedadCultivo variedad = catalogo.buscarVariedad(variedadId)
                 .orElseThrow(() -> new ResourceNotFoundException("Variedad no encontrada con ID: " + variedadId));
         if (!variedad.isActivo() || !variedad.isTipoCultivoActivo()) {
-            throw new BusinessException(
-                    "La variedad " + variedad.getNombre() + " de " + variedad.getTipoCultivoNombre()
-                            + " ya no está disponible para nuevas siembras.");
+            throw new BusinessException("La variedad " + variedad.getNombre() + " de " + variedad.getTipoCultivoNombre()
+                    + " ya no está disponible para nuevas siembras.");
         }
         return variedad;
     }
@@ -213,7 +215,8 @@ public class SiembraService implements SiembraUseCase {
         if (dia.isAfter(LocalDate.now())) {
             throw new BusinessException("La fecha del cambio de etapa no puede ser futura.");
         }
-        LocalDate anterior = etapaRepository.findUltima(siembra.getId())
+        LocalDate anterior = etapaRepository
+                .findUltima(siembra.getId())
                 .map(EtapaSiembra::getFecha)
                 .filter(Objects::nonNull)
                 .orElse(siembra.getFechaSiembra());

@@ -8,12 +8,11 @@ import com.agroruta.portal.infrastructure.web.dto.MiPagoResponse;
 import com.agroruta.portal.infrastructure.web.dto.SolicitudAccesoRequest;
 import com.agroruta.shared.security.CurrentUser;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /** Portal del trabajador: solo ve sus propios datos y solo cuando su empleador lo aprobó. */
 @RestController
@@ -33,23 +32,29 @@ public class PortalController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<EstadoPortalResponse> solicitar(@Valid @RequestBody SolicitudAccesoRequest req,
-                                                          Authentication auth) {
+    public ResponseEntity<EstadoPortalResponse> solicitar(
+            @Valid @RequestBody SolicitudAccesoRequest req, Authentication auth) {
         return ResponseEntity.ok(EstadoPortalResponse.from(portal.solicitar(CurrentUser.id(auth), req.cedula())));
     }
 
     @GetMapping("/workdays")
     public ResponseEntity<List<MiJornalResponse>> jornales(Authentication auth) {
-        return ResponseEntity.ok(portal.misJornales(CurrentUser.id(auth)).stream().map(MiJornalResponse::from).toList());
+        return ResponseEntity.ok(portal.misJornales(CurrentUser.id(auth)).stream()
+                .map(MiJornalResponse::from)
+                .toList());
     }
 
     @GetMapping("/payrolls")
     public ResponseEntity<List<MiNominaResponse>> nominas(Authentication auth) {
-        return ResponseEntity.ok(portal.misNominas(CurrentUser.id(auth)).stream().map(MiNominaResponse::from).toList());
+        return ResponseEntity.ok(portal.misNominas(CurrentUser.id(auth)).stream()
+                .map(MiNominaResponse::from)
+                .toList());
     }
 
     @GetMapping("/payments")
     public ResponseEntity<List<MiPagoResponse>> pagos(Authentication auth) {
-        return ResponseEntity.ok(portal.misPagos(CurrentUser.id(auth)).stream().map(MiPagoResponse::from).toList());
+        return ResponseEntity.ok(portal.misPagos(CurrentUser.id(auth)).stream()
+                .map(MiPagoResponse::from)
+                .toList());
     }
 }

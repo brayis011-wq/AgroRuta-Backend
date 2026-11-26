@@ -2,15 +2,13 @@ package com.agroruta.user.application;
 
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.springframework.stereotype.Component;
 
 /**
  * Frena la fuerza bruta en el inicio de sesión: después de 10 contraseñas equivocadas seguidas
@@ -27,12 +25,7 @@ public class IntentosLogin {
     private final Map<String, Registro> registros = new ConcurrentHashMap<>();
     private final Clock reloj;
 
-    @Autowired
-    public IntentosLogin() {
-        this(Clock.systemUTC());
-    }
-
-    IntentosLogin(Clock reloj) {
+    public IntentosLogin(Clock reloj) {
         this.reloj = reloj;
     }
 
@@ -43,7 +36,8 @@ public class IntentosLogin {
         Instant ahora = reloj.instant();
         if (ahora.isBefore(r.bloqueadoHasta)) {
             long minutos = Math.max(1, Duration.between(ahora, r.bloqueadoHasta).toMinutes() + 1);
-            throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS,
+            throw new BusinessException(
+                    ErrorCode.TOO_MANY_ATTEMPTS,
                     "Demasiados intentos fallidos. Espera " + minutos + " minutos e inténtalo de nuevo.");
         }
         registros.remove(clave(email));

@@ -36,30 +36,75 @@ public class FincaEntity {
 
     public FincaEntity() {}
 
-    public LocalDateTime getEliminadoEn() { return eliminadoEn; }
-    public void setEliminadoEn(LocalDateTime eliminadoEn) { this.eliminadoEn = eliminadoEn; }
+    public LocalDateTime getEliminadoEn() {
+        return eliminadoEn;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setEliminadoEn(LocalDateTime eliminadoEn) {
+        this.eliminadoEn = eliminadoEn;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getUbicacion() { return ubicacion; }
-    public void setUbicacion(String ubicacion) { this.ubicacion = ubicacion; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public Double getHectareas() { return hectareas; }
-    public void setHectareas(Double hectareas) { this.hectareas = hectareas; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public Long getAgricultorId() { return agricultorId; }
-    public void setAgricultorId(Long agricultorId) { this.agricultorId = agricultorId; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public LocalDateTime getFechaRegistro() { return fechaRegistro; }
-    public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+    public String getUbicacion() {
+        return ubicacion;
+    }
 
-    public Double getCentroideLat() { return centroideLat; }
-    public void setCentroideLat(Double centroideLat) { this.centroideLat = centroideLat; }
+    public void setUbicacion(String ubicacion) {
+        this.ubicacion = ubicacion;
+    }
 
-    public Double getCentroideLng() { return centroideLng; }
-    public void setCentroideLng(Double centroideLng) { this.centroideLng = centroideLng; }
+    public Double getHectareas() {
+        return hectareas;
+    }
+
+    public void setHectareas(Double hectareas) {
+        this.hectareas = hectareas;
+    }
+
+    public Long getAgricultorId() {
+        return agricultorId;
+    }
+
+    public void setAgricultorId(Long agricultorId) {
+        this.agricultorId = agricultorId;
+    }
+
+    public LocalDateTime getFechaRegistro() {
+        return fechaRegistro;
+    }
+
+    public void setFechaRegistro(LocalDateTime fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
+
+    public Double getCentroideLat() {
+        return centroideLat;
+    }
+
+    public void setCentroideLat(Double centroideLat) {
+        this.centroideLat = centroideLat;
+    }
+
+    public Double getCentroideLng() {
+        return centroideLng;
+    }
+
+    public void setCentroideLng(Double centroideLng) {
+        this.centroideLng = centroideLng;
+    }
 }

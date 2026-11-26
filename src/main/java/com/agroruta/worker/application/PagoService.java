@@ -1,8 +1,10 @@
 package com.agroruta.worker.application;
 
-import com.agroruta.worker.domain.ResumenPagos;
-import com.agroruta.shared.util.Pagina;
+import com.agroruta.shared.evento.PagoRegistrado;
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
@@ -11,14 +13,14 @@ import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
-
+import com.agroruta.worker.domain.PagosDelMes;
+import com.agroruta.worker.domain.ResumenPagos;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.agroruta.shared.evento.PagoRegistrado;
-import org.springframework.context.ApplicationEventPublisher;
 
 @Service
 @Transactional
@@ -29,10 +31,11 @@ public class PagoService implements PagoUseCase {
     private final JornalRepository jornalRepository;
     private final ApplicationEventPublisher eventos;
 
-    public PagoService(PagoRepository pagoRepository,
-                       NominaRepository nominaRepository,
-                       JornalRepository jornalRepository,
-                       ApplicationEventPublisher eventos) {
+    public PagoService(
+            PagoRepository pagoRepository,
+            NominaRepository nominaRepository,
+            JornalRepository jornalRepository,
+            ApplicationEventPublisher eventos) {
         this.pagoRepository = pagoRepository;
         this.nominaRepository = nominaRepository;
         this.jornalRepository = jornalRepository;
@@ -47,35 +50,31 @@ public class PagoService implements PagoUseCase {
      * también aceptan el pago, sin volver a cambiar su estado.
      */
     @Override
-    public Pago registrarPago(Long nominaId, BigDecimal monto,
-                              MetodoPago metodoPago, String comprobante,
-                              String observaciones) {
+    public Pago registrarPago(
+            Long nominaId, BigDecimal monto, MetodoPago metodoPago, String comprobante, String observaciones) {
 
-        Nomina nomina = nominaRepository.buscarPorId(nominaId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Nómina no encontrada con id: " + nominaId));
+        Nomina nomina = nominaRepository
+                .buscarPorId(nominaId)
+                .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + nominaId));
 
         boolean aprobada = EstadoNomina.APROBADA.equals(nomina.getEstado());
         boolean pagadaSinPago = EstadoNomina.PAGADA.equals(nomina.getEstado());
         if (!aprobada && !pagadaSinPago) {
-            throw new IllegalStateException(
-                    "Solo se puede registrar el pago de nóminas en estado APROBADA.");
+            throw new EstadoInvalidoException("Solo se puede registrar el pago de nóminas en estado APROBADA.");
         }
 
         // Evitar doble pago
         pagoRepository.buscarPorNomina(nominaId).ifPresent(p -> {
-            throw new IllegalStateException("Esta nómina ya tiene un pago registrado.");
+            throw new EstadoInvalidoException("Esta nómina ya tiene un pago registrado.");
         });
 
-        if (monto == null || nomina.getValorTotal() == null
-                || monto.compareTo(nomina.getValorTotal()) != 0) {
-            throw new IllegalArgumentException(
-                    "El monto debe ser igual al valor total de la nómina ("
-                            + nomina.getValorTotal() + ").");
+        if (monto == null || nomina.getValorTotal() == null || monto.compareTo(nomina.getValorTotal()) != 0) {
+            throw new DatoInvalidoException(
+                    "El monto debe ser igual al valor total de la nómina (" + nomina.getValorTotal() + ").");
         }
 
         if (aprobada) {
-            nomina.marcarComoPagada();  // APROBADA → PAGADA y jornales liquidados en memoria
+            nomina.marcarComoPagada(); // APROBADA → PAGADA y jornales liquidados en memoria
             nomina.getJornales().forEach(jornalRepository::guardar);
             nominaRepository.guardar(nomina);
         }
@@ -91,10 +90,39 @@ public class PagoService implements PagoUseCase {
     }
 
     @Override
+    public List<Pago> pagarVarias(
+            Long agricultorId,
+            List<Long> nominaIds,
+            MetodoPago metodoPago,
+            String observaciones,
+            boolean aprobarPendientes) {
+        if (nominaIds == null || nominaIds.isEmpty()) {
+            throw new DatoInvalidoException("Elige al menos una nómina para pagar.");
+        }
+        List<Pago> pagos = new java.util.ArrayList<>();
+        for (Long id : new java.util.LinkedHashSet<>(nominaIds)) {
+            Nomina nomina = nominaRepository
+                    .buscarPorId(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Nómina no encontrada con id: " + id));
+            if (agricultorId != null
+                    && (nomina.getTrabajador() == null
+                            || !agricultorId.equals(nomina.getTrabajador().getAgricultorId()))) {
+                throw new ResourceNotFoundException("Nómina no encontrada con id: " + id);
+            }
+            if (aprobarPendientes && nomina.estaPendiente()) {
+                nomina.aprobar();
+                nominaRepository.guardar(nomina);
+            }
+            pagos.add(registrarPago(id, nomina.getValorTotal(), metodoPago, null, observaciones));
+        }
+        return pagos;
+    }
+
+    @Override
     public Pago buscarPorId(Long id) {
-        return pagoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Pago no encontrado con id: " + id));
+        return pagoRepository
+                .buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + id));
     }
 
     @Override
@@ -106,6 +134,7 @@ public class PagoService implements PagoUseCase {
     public List<Pago> listarTodos() {
         return pagoRepository.listarTodos();
     }
+
     @Override
     public List<Pago> listarTodosDe(Long agricultorId) {
         if (agricultorId == null) return List.of();
@@ -113,12 +142,17 @@ public class PagoService implements PagoUseCase {
     }
 
     @Override
-    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, int pagina, int tamano) {
-        return pagoRepository.pagina(agricultorId, nominaId, pagina, tamano);
+    public Pagina<Pago> pagina(Long agricultorId, Long nominaId, Long trabajadorId, int pagina, int tamano) {
+        return pagoRepository.pagina(agricultorId, nominaId, trabajadorId, pagina, tamano);
     }
 
     @Override
-    public ResumenPagos resumen(Long agricultorId, Long nominaId) {
-        return pagoRepository.resumen(agricultorId, nominaId);
+    public ResumenPagos resumen(Long agricultorId, Long nominaId, Long trabajadorId) {
+        return pagoRepository.resumen(agricultorId, nominaId, trabajadorId);
+    }
+
+    @Override
+    public List<PagosDelMes> totalesPorMes(Long agricultorId, LocalDate desde) {
+        return pagoRepository.totalesPorMes(agricultorId, desde);
     }
 }

@@ -1,7 +1,6 @@
 package com.agroruta.backup.application.ports.out;
 
 import com.agroruta.backup.domain.Backup;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;

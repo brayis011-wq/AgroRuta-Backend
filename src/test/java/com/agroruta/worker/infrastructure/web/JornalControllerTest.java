@@ -1,21 +1,30 @@
 package com.agroruta.worker.infrastructure.web;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.application.ports.out.CultivoPort;
-import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.domain.Cargo;
-import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.Jornal;
+import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
 import com.agroruta.worker.infrastructure.web.dto.JornalRequest;
 import com.agroruta.worker.infrastructure.web.dto.JornalResponse;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -28,15 +37,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JornalController - Pruebas Unitarias")
@@ -58,10 +58,15 @@ class JornalControllerTest {
         cargoBase = new Cargo(1L, "Operario", "Cargo operario", new BigDecimal("80000"), true);
 
         trabajadorBase = new Trabajador(
-                1L, "Juan", "Pérez", "123456789",
-                "3001234567", "Calle 1", LocalDate.of(2020, 1, 1),
-                TipoContrato.JORNAL, cargoBase
-        );
+                1L,
+                "Juan",
+                "Pérez",
+                "123456789",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2020, 1, 1),
+                TipoContrato.JORNAL,
+                cargoBase);
 
         jornalBase = new Jornal(1L, FECHA, trabajadorBase, 10L, "Maíz", "Sin observaciones");
     }
@@ -73,11 +78,11 @@ class JornalControllerTest {
 
     private JornalRequest request() {
         JornalRequest req = new JornalRequest();
-        req.trabajadorId  = 1L;
-        req.cultivoId     = 10L;
+        req.trabajadorId = 1L;
+        req.cultivoId = 10L;
         req.nombreCultivo = "Maíz";
-        req.fecha         = FECHA;
-        req.actividadIds  = List.of(1L, 2L);
+        req.fecha = FECHA;
+        req.actividadIds = List.of(1L, 2L);
         req.observaciones = "Sin observaciones";
         return req;
     }
@@ -93,54 +98,60 @@ class JornalControllerTest {
         @DisplayName("Debe retornar 201 con el jornal registrado")
         void debeRetornar201AlRegistrar() {
             when(jornalUseCase.registrarJornal(
-                    eq(1L), eq(10L), eq("Maíz"),
-                    eq(FECHA), eq(List.of(1L, 2L)), eq("Sin observaciones")))
+                            eq(1L),
+                            eq(10L),
+                            eq("Maíz"),
+                            eq(FECHA),
+                            eq(List.of(1L, 2L)),
+                            eq("Sin observaciones"),
+                            isNull()))
                     .thenReturn(jornalBase);
 
             ResponseEntity<JornalResponse> response = jornalController.registrar(request());
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,     response.getBody().id);
-            assertEquals(FECHA,  response.getBody().fecha);
-            assertEquals(10L,    response.getBody().cultivoId);
+            assertEquals(1L, response.getBody().id);
+            assertEquals(FECHA, response.getBody().fecha);
+            assertEquals(10L, response.getBody().cultivoId);
             assertEquals("Maíz", response.getBody().nombreCultivo);
             assertEquals(new BigDecimal("80000"), response.getBody().valorJornal);
             assertFalse(response.getBody().liquidado);
-            verify(jornalUseCase, times(1)).registrarJornal(
-                    eq(1L), eq(10L), eq("Maíz"),
-                    eq(FECHA), eq(List.of(1L, 2L)), eq("Sin observaciones"));
+            verify(jornalUseCase, times(1))
+                    .registrarJornal(
+                            eq(1L),
+                            eq(10L),
+                            eq("Maíz"),
+                            eq(FECHA),
+                            eq(List.of(1L, 2L)),
+                            eq("Sin observaciones"),
+                            isNull());
         }
 
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el trabajador no existe")
         void debePropaglarExcepcionSiTrabajadorNoExiste() {
-            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any()))
+            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new ResourceNotFoundException("Trabajador", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> jornalController.registrar(request())
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> jornalController.registrar(request()));
 
             assertTrue(ex.getMessage().contains("99"));
-            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any());
+            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any(), any());
         }
 
         @Test
         @DisplayName("Debe propagar BusinessException si el jornal viola una regla de negocio")
         void debePropaglarExcepcionPorReglaNegocio() {
-            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any()))
+            when(jornalUseCase.registrarJornal(any(), any(), any(), any(), any(), any(), any()))
                     .thenThrow(new BusinessException(
                             ErrorCode.BUSINESS_RULE_VIOLATION, "El trabajador ya tiene un jornal en esa fecha"));
 
-            BusinessException ex = assertThrows(
-                    BusinessException.class,
-                    () -> jornalController.registrar(request())
-            );
+            BusinessException ex = assertThrows(BusinessException.class, () -> jornalController.registrar(request()));
 
             assertEquals(ErrorCode.BUSINESS_RULE_VIOLATION, ex.getErrorCode());
-            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any());
+            verify(jornalUseCase, times(1)).registrarJornal(any(), any(), any(), any(), any(), any(), any());
         }
     }
 
@@ -160,7 +171,7 @@ class JornalControllerTest {
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,    response.getBody().id);
+            assertEquals(1L, response.getBody().id);
             assertEquals(FECHA, response.getBody().fecha);
             assertEquals("Sin observaciones", response.getBody().observaciones);
             verify(jornalUseCase, times(1)).buscarPorId(1L);
@@ -169,13 +180,10 @@ class JornalControllerTest {
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
-            when(jornalUseCase.buscarPorId(99L))
-                    .thenThrow(new ResourceNotFoundException("Jornal", 99L));
+            when(jornalUseCase.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("Jornal", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> jornalController.buscarPorId(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> jornalController.buscarPorId(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(jornalUseCase, times(1)).buscarPorId(99L);
@@ -194,8 +202,7 @@ class JornalControllerTest {
         void debeRetornar200SinFiltroFechas() {
             when(jornalUseCase.listarPorTrabajador(1L)).thenReturn(List.of(jornalBase));
 
-            ResponseEntity<List<JornalResponse>> response =
-                    jornalController.porTrabajador(1L, null, null);
+            ResponseEntity<List<JornalResponse>> response = jornalController.porTrabajador(1L, null, null);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -208,12 +215,10 @@ class JornalControllerTest {
         @DisplayName("Debe retornar 200 filtrando por periodo cuando se pasan inicio y fin")
         void debeRetornar200ConFiltroPeriodo() {
             LocalDate inicio = LocalDate.of(2025, 1, 1);
-            LocalDate fin    = LocalDate.of(2025, 1, 31);
-            when(jornalUseCase.listarPorTrabajadorYPeriodo(1L, inicio, fin))
-                    .thenReturn(List.of(jornalBase));
+            LocalDate fin = LocalDate.of(2025, 1, 31);
+            when(jornalUseCase.listarPorTrabajadorYPeriodo(1L, inicio, fin)).thenReturn(List.of(jornalBase));
 
-            ResponseEntity<List<JornalResponse>> response =
-                    jornalController.porTrabajador(1L, inicio, fin);
+            ResponseEntity<List<JornalResponse>> response = jornalController.porTrabajador(1L, inicio, fin);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -227,8 +232,7 @@ class JornalControllerTest {
         void debeRetornar200ConListaVacia() {
             when(jornalUseCase.listarPorTrabajador(1L)).thenReturn(List.of());
 
-            ResponseEntity<List<JornalResponse>> response =
-                    jornalController.porTrabajador(1L, null, null);
+            ResponseEntity<List<JornalResponse>> response = jornalController.porTrabajador(1L, null, null);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isEmpty());
@@ -261,9 +265,8 @@ class JornalControllerTest {
         @DisplayName("Debe retornar 200 filtrando por periodo cuando se pasan inicio y fin")
         void debeRetornar200ConFiltroPeriodo() {
             LocalDate inicio = LocalDate.of(2025, 1, 1);
-            LocalDate fin    = LocalDate.of(2025, 1, 31);
-            when(jornalUseCase.listarPorCultivoYPeriodo(10L, inicio, fin))
-                    .thenReturn(List.of(jornalBase));
+            LocalDate fin = LocalDate.of(2025, 1, 31);
+            when(jornalUseCase.listarPorCultivoYPeriodo(10L, inicio, fin)).thenReturn(List.of(jornalBase));
 
             ResponseEntity<List<JornalResponse>> response =
                     jornalController.porCultivo(10L, inicio, fin, auth(99L, Rol.Administrador));
@@ -292,10 +295,15 @@ class JornalControllerTest {
         void agricultorSoloVeLosDeSusTrabajadores() {
             trabajadorBase.setAgricultorId(5L);
             Trabajador ajeno = new Trabajador(
-                    2L, "Ana", "Gómez", "987654321",
-                    "3009876543", "Calle 2", LocalDate.of(2020, 1, 1),
-                    TipoContrato.JORNAL, cargoBase
-            );
+                    2L,
+                    "Ana",
+                    "Gómez",
+                    "987654321",
+                    "3009876543",
+                    "Calle 2",
+                    LocalDate.of(2020, 1, 1),
+                    TipoContrato.JORNAL,
+                    cargoBase);
             ajeno.setAgricultorId(6L);
             Jornal jornalAjeno = new Jornal(2L, FECHA, ajeno, 10L, "Maíz", "De otro usuario");
             when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of(jornalBase, jornalAjeno));
@@ -312,10 +320,15 @@ class JornalControllerTest {
         void administradorVeTodos() {
             trabajadorBase.setAgricultorId(5L);
             Trabajador ajeno = new Trabajador(
-                    2L, "Ana", "Gómez", "987654321",
-                    "3009876543", "Calle 2", LocalDate.of(2020, 1, 1),
-                    TipoContrato.JORNAL, cargoBase
-            );
+                    2L,
+                    "Ana",
+                    "Gómez",
+                    "987654321",
+                    "3009876543",
+                    "Calle 2",
+                    LocalDate.of(2020, 1, 1),
+                    TipoContrato.JORNAL,
+                    cargoBase);
             ajeno.setAgricultorId(6L);
             Jornal jornalAjeno = new Jornal(2L, FECHA, ajeno, 10L, "Maíz", "De otro usuario");
             when(jornalUseCase.listarPorCultivo(10L)).thenReturn(List.of(jornalBase, jornalAjeno));
@@ -367,8 +380,7 @@ class JornalControllerTest {
             jornalBase.agregarActividad(actividad);
             when(jornalUseCase.agregarActividad(1L, 2L)).thenReturn(jornalBase);
 
-            ResponseEntity<JornalResponse> response =
-                    jornalController.agregarActividad(1L, 2L);
+            ResponseEntity<JornalResponse> response = jornalController.agregarActividad(1L, 2L);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -380,29 +392,24 @@ class JornalControllerTest {
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el jornal no existe")
         void debePropaglarExcepcionSiJornalNoExiste() {
-            when(jornalUseCase.agregarActividad(99L, 2L))
-                    .thenThrow(new ResourceNotFoundException("Jornal", 99L));
+            when(jornalUseCase.agregarActividad(99L, 2L)).thenThrow(new ResourceNotFoundException("Jornal", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> jornalController.agregarActividad(99L, 2L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> jornalController.agregarActividad(99L, 2L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(jornalUseCase, times(1)).agregarActividad(99L, 2L);
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si el jornal ya está liquidado")
+        @DisplayName("Debe propagar EstadoInvalidoException si el jornal ya está liquidado")
         void debePropaglarExcepcionSiJornalLiquidado() {
             when(jornalUseCase.agregarActividad(1L, 2L))
-                    .thenThrow(new IllegalStateException(
+                    .thenThrow(new EstadoInvalidoException(
                             "No se pueden modificar actividades de un jornal ya liquidado."));
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
-                    () -> jornalController.agregarActividad(1L, 2L)
-            );
+            EstadoInvalidoException ex =
+                    assertThrows(EstadoInvalidoException.class, () -> jornalController.agregarActividad(1L, 2L));
 
             assertTrue(ex.getMessage().contains("liquidado"));
             verify(jornalUseCase, times(1)).agregarActividad(1L, 2L);
@@ -421,8 +428,7 @@ class JornalControllerTest {
         void debeRetornar200AlRemoverActividad() {
             when(jornalUseCase.removerActividad(1L, 2L)).thenReturn(jornalBase);
 
-            ResponseEntity<JornalResponse> response =
-                    jornalController.removerActividad(1L, 2L);
+            ResponseEntity<JornalResponse> response = jornalController.removerActividad(1L, 2L);
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -433,32 +439,58 @@ class JornalControllerTest {
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el jornal no existe")
         void debePropaglarExcepcionSiJornalNoExiste() {
-            when(jornalUseCase.removerActividad(99L, 2L))
-                    .thenThrow(new ResourceNotFoundException("Jornal", 99L));
+            when(jornalUseCase.removerActividad(99L, 2L)).thenThrow(new ResourceNotFoundException("Jornal", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> jornalController.removerActividad(99L, 2L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> jornalController.removerActividad(99L, 2L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(jornalUseCase, times(1)).removerActividad(99L, 2L);
         }
 
         @Test
-        @DisplayName("Debe propagar IllegalStateException si el jornal ya está liquidado")
+        @DisplayName("Debe propagar EstadoInvalidoException si el jornal ya está liquidado")
         void debePropaglarExcepcionSiJornalLiquidado() {
             when(jornalUseCase.removerActividad(1L, 2L))
-                    .thenThrow(new IllegalStateException(
+                    .thenThrow(new EstadoInvalidoException(
                             "No se pueden modificar actividades de un jornal ya liquidado."));
 
-            IllegalStateException ex = assertThrows(
-                    IllegalStateException.class,
-                    () -> jornalController.removerActividad(1L, 2L)
-            );
+            EstadoInvalidoException ex =
+                    assertThrows(EstadoInvalidoException.class, () -> jornalController.removerActividad(1L, 2L));
 
             assertTrue(ex.getMessage().contains("liquidado"));
             verify(jornalUseCase, times(1)).removerActividad(1L, 2L);
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/workdays/home-summary")
+    class ResumenInicio {
+
+        private final com.agroruta.worker.domain.ResumenJornalesInicio resumen =
+                new com.agroruta.worker.domain.ResumenJornalesInicio(12, 9, List.of(1L, 3L));
+
+        @Test
+        @DisplayName("el agricultor solo ve lo suyo")
+        void agricultorVeLoSuyo() {
+            when(jornalUseCase.resumenInicio(5L, FECHA)).thenReturn(resumen);
+
+            ResponseEntity<com.agroruta.worker.domain.ResumenJornalesInicio> r =
+                    jornalController.resumenInicio(FECHA, auth(5L, Rol.Agricultor));
+
+            assertEquals(HttpStatus.OK, r.getStatusCode());
+            assertSame(resumen, r.getBody());
+            verify(jornalUseCase).resumenInicio(5L, FECHA);
+        }
+
+        @Test
+        @DisplayName("el administrador ve todo (sin filtro de dueño)")
+        void adminVeTodo() {
+            when(jornalUseCase.resumenInicio(null, null)).thenReturn(resumen);
+
+            jornalController.resumenInicio(null, auth(99L, Rol.Administrador));
+
+            verify(jornalUseCase).resumenInicio(null, null);
         }
     }
 }

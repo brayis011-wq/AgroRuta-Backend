@@ -1,8 +1,15 @@
 package com.agroruta.crop.infrastructure.web;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.crop.application.ports.in.CosechaUseCase;
 import com.agroruta.crop.domain.CalidadCosecha;
 import com.agroruta.crop.domain.Cosecha;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,14 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class CosechaControllerTest {
@@ -45,10 +44,9 @@ class CosechaControllerTest {
 
     @Test
     void deberiaRegistrarCosechaYRetornar201() throws Exception {
-        Cosecha cosecha = new Cosecha(
-                1L, FECHA, 150.5, CalidadCosecha.PRIMERA, "Cosecha en buen estado", 10L
-        );
-        when(cosechaUseCase.registrarCosecha(any(), anyDouble(), anyString(), anyString(), anyLong(), any()))
+        Cosecha cosecha = new Cosecha(1L, FECHA, 150.5, CalidadCosecha.PRIMERA, "Cosecha en buen estado", 10L);
+        when(cosechaUseCase.registrarCosecha(
+                        any(), anyDouble(), anyString(), anyString(), anyLong(), any(), anyBoolean(), any()))
                 .thenReturn(cosecha);
 
         String body = """
@@ -74,10 +72,9 @@ class CosechaControllerTest {
 
     @Test
     void deberiaRegistrarCosechaDeSegundaCalidad() throws Exception {
-        Cosecha cosecha = new Cosecha(
-                2L, FECHA, 80.0, CalidadCosecha.SEGUNDA, "Leve daño por lluvia", 10L
-        );
-        when(cosechaUseCase.registrarCosecha(any(), anyDouble(), anyString(), anyString(), anyLong(), any()))
+        Cosecha cosecha = new Cosecha(2L, FECHA, 80.0, CalidadCosecha.SEGUNDA, "Leve daño por lluvia", 10L);
+        when(cosechaUseCase.registrarCosecha(
+                        any(), anyDouble(), anyString(), anyString(), anyLong(), any(), anyBoolean(), any()))
                 .thenReturn(cosecha);
 
         String body = """
@@ -106,9 +103,8 @@ class CosechaControllerTest {
     @Test
     void deberiaListarCosechasPorSiembra() throws Exception {
         List<Cosecha> cosechas = List.of(
-                new Cosecha(1L, FECHA,                        150.5, CalidadCosecha.PRIMERA, "Cosecha principal",  10L),
-                new Cosecha(2L, FECHA.plusDays(15), 60.0,  CalidadCosecha.TERCERA, "Cosecha rezagada",  10L)
-        );
+                new Cosecha(1L, FECHA, 150.5, CalidadCosecha.PRIMERA, "Cosecha principal", 10L),
+                new Cosecha(2L, FECHA.plusDays(15), 60.0, CalidadCosecha.TERCERA, "Cosecha rezagada", 10L));
         when(cosechaUseCase.listarCosechasPorSiembra(10L)).thenReturn(cosechas);
 
         mockMvc.perform(get("/api/harvests/planting/10"))

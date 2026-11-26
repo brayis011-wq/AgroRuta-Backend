@@ -1,9 +1,10 @@
 package com.agroruta.worker.domain;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -27,14 +28,23 @@ public class Trabajador {
     // ── Acceso al portal del trabajador ──────────────────────────────────────
     /** Cuenta de usuario (rol Trabajador) que pidió ver los datos de este trabajador. */
     private Long usuarioId;
+
     private EstadoAccesoPortal accesoEstado;
     /** Nombre y correo de la cuenta, para que el agricultor reconozca la solicitud. */
     private String accesoNombre;
+
     private String accesoEmail;
 
-    public Trabajador(Long id, String nombre, String apellido, String cedula,
-                      String telefono, String direccion, LocalDate fechaIngreso,
-                      TipoContrato tipoContrato, Cargo cargo) {
+    public Trabajador(
+            Long id,
+            String nombre,
+            String apellido,
+            String cedula,
+            String telefono,
+            String direccion,
+            LocalDate fechaIngreso,
+            TipoContrato tipoContrato,
+            Cargo cargo) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -51,23 +61,53 @@ public class Trabajador {
         return nombre + " " + apellido;
     }
 
+    /**
+     * Iniciales del avatar: primera letra del nombre y primera del apellido ("Juan Carlos Pérez" → "JP").
+     * Con el nombre completo ya unido no se sabe dónde empieza el apellido, por eso se calcula aquí.
+     */
+    public String getIniciales() {
+        return iniciales(nombre, apellido);
+    }
+
+    public static String iniciales(String nombre, String apellido) {
+        String r = (primera(nombre) + primera(apellido)).toUpperCase(java.util.Locale.ROOT);
+        return r.isEmpty() ? "?" : r;
+    }
+
+    private static String primera(String t) {
+        String s = t == null ? "" : t.strip();
+        return s.isEmpty() ? "" : new String(Character.toChars(s.codePointAt(0)));
+    }
+
     public boolean estaActivo() {
         return EstadoTrabajador.ACTIVO.equals(this.estado);
     }
 
-    public void desactivar()  { this.estado = EstadoTrabajador.INACTIVO; }
-    public void suspender()   { this.estado = EstadoTrabajador.SUSPENDIDO; }
-    public void reactivar()   { this.estado = EstadoTrabajador.ACTIVO; }
-    public void cambiarCargo(Cargo nuevoCargo) { this.cargo = nuevoCargo; }
+    public void desactivar() {
+        this.estado = EstadoTrabajador.INACTIVO;
+    }
+
+    public void suspender() {
+        this.estado = EstadoTrabajador.SUSPENDIDO;
+    }
+
+    public void reactivar() {
+        this.estado = EstadoTrabajador.ACTIVO;
+    }
+
+    public void cambiarCargo(Cargo nuevoCargo) {
+        this.cargo = nuevoCargo;
+    }
 
     // ── Acceso al portal ─────────────────────────────────────────────────────
 
     /** Una cuenta pide acceso a los datos de este trabajador. Queda pendiente de aprobación. */
     public void solicitarAcceso(Long usuarioId, String nombre, String email) {
-        boolean ocupado = this.usuarioId != null && !this.usuarioId.equals(usuarioId)
+        boolean ocupado = this.usuarioId != null
+                && !this.usuarioId.equals(usuarioId)
                 && (accesoEstado == EstadoAccesoPortal.PENDIENTE || accesoEstado == EstadoAccesoPortal.APROBADO);
         if (ocupado) {
-            throw new IllegalStateException("Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
+            throw new EstadoInvalidoException("Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
         }
         if (this.usuarioId != null && this.usuarioId.equals(usuarioId) && accesoEstado == EstadoAccesoPortal.APROBADO) {
             return; // ya estaba aprobado para esta misma cuenta
@@ -80,7 +120,7 @@ public class Trabajador {
 
     public void aprobarAcceso() {
         if (accesoEstado != EstadoAccesoPortal.PENDIENTE) {
-            throw new IllegalStateException("Este trabajador no tiene una solicitud de acceso pendiente.");
+            throw new EstadoInvalidoException("Este trabajador no tiene una solicitud de acceso pendiente.");
         }
         this.accesoEstado = EstadoAccesoPortal.APROBADO;
     }
@@ -88,7 +128,7 @@ public class Trabajador {
     /** Rechaza una solicitud pendiente o retira un acceso ya aprobado. */
     public void rechazarAcceso() {
         if (accesoEstado != EstadoAccesoPortal.PENDIENTE && accesoEstado != EstadoAccesoPortal.APROBADO) {
-            throw new IllegalStateException("Este trabajador no tiene acceso ni solicitudes pendientes.");
+            throw new EstadoInvalidoException("Este trabajador no tiene acceso ni solicitudes pendientes.");
         }
         this.accesoEstado = EstadoAccesoPortal.RECHAZADO;
     }

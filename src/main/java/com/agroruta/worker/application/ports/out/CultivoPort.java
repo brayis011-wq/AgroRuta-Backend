@@ -15,10 +15,16 @@ public interface CultivoPort {
     /** Cultivos que siguen activos (no finalizados) en las fincas del agricultor. */
     List<CultivoInfo> activosDelAgricultor(Long agricultorId);
 
-    record CultivoInfo(Long id, Long agricultorId,
-                       Long fincaId, String fincaNombre,
-                       Long loteId, String loteNombre,
-                       String tipoCultivo, String variedad, String estado) {
+    record CultivoInfo(
+            Long id,
+            Long agricultorId,
+            Long fincaId,
+            String fincaNombre,
+            Long loteId,
+            String loteNombre,
+            String tipoCultivo,
+            String variedad,
+            String estado) {
 
         public boolean finalizado() {
             return "FINALIZADO".equals(estado);

@@ -1,5 +1,9 @@
 package com.agroruta.shared.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,10 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("SecurityConfig - Tests unitarios")
@@ -56,8 +56,7 @@ class SecurityConfigTest {
     @Test
     @DisplayName("authenticationManager() debe retornar el manager de AuthenticationConfiguration")
     void authenticationManager_shouldReturnManagerFromConfiguration() throws Exception {
-        when(authenticationConfiguration.getAuthenticationManager())
-                .thenReturn(authenticationManager);
+        when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
 
         AuthenticationManager result = securityConfig.authenticationManager(authenticationConfiguration);
 
@@ -68,8 +67,7 @@ class SecurityConfigTest {
     @Test
     @DisplayName("authenticationManager() debe delegar exactamente una vez en AuthenticationConfiguration")
     void authenticationManager_shouldDelegateOnceToConfiguration() throws Exception {
-        when(authenticationConfiguration.getAuthenticationManager())
-                .thenReturn(authenticationManager);
+        when(authenticationConfiguration.getAuthenticationManager()).thenReturn(authenticationManager);
 
         securityConfig.authenticationManager(authenticationConfiguration);
 

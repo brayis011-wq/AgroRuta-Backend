@@ -4,7 +4,6 @@ import com.agroruta.admin.domain.AgricultorDetalle;
 import com.agroruta.admin.domain.AgricultorResumen;
 import com.agroruta.admin.domain.ResumenSistema;
 import com.agroruta.user.domain.Usuario;
-
 import java.util.List;
 
 public interface AdministrarSistemaUseCase {

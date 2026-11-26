@@ -1,63 +1,77 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.application.ports.out.TrabajadorRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 class TrabajadorRepositoryImpl implements TrabajadorRepository {
 
     private final JpaTrabajadorRepository jpa;
 
-    TrabajadorRepositoryImpl(JpaTrabajadorRepository jpa) { this.jpa = jpa; }
+    TrabajadorRepositoryImpl(JpaTrabajadorRepository jpa) {
+        this.jpa = jpa;
+    }
 
-    @Override public Trabajador guardar(Trabajador trabajador) {
+    @Override
+    public Trabajador guardar(Trabajador trabajador) {
         return WorkerMapper.toDomain(jpa.save(WorkerMapper.toEntity(trabajador)));
     }
 
-    @Override public Optional<Trabajador> buscarPorId(Long id) {
+    @Override
+    public Optional<Trabajador> buscarPorId(Long id) {
         return jpa.findById(id).map(WorkerMapper::toDomain);
     }
 
-    @Override public Optional<Trabajador> buscarPorCedula(String cedula) {
-        return jpa.findByCedula(cedula).map(WorkerMapper::toDomain);
+    @Override
+    public List<Trabajador> buscarPorCedulaNormalizada(String cedula) {
+        return jpa.findByCedulaNormalizada(cedula).stream()
+                .map(WorkerMapper::toDomain)
+                .toList();
     }
 
-    @Override public Optional<Trabajador> buscarPorCedulaNormalizada(String cedula) {
-        return jpa.findByCedulaNormalizada(cedula).stream().findFirst().map(WorkerMapper::toDomain);
-    }
-
-    @Override public Optional<Trabajador> buscarPorUsuarioId(Long usuarioId) {
+    @Override
+    public Optional<Trabajador> buscarPorUsuarioId(Long usuarioId) {
         return jpa.findFirstByUsuarioId(usuarioId).map(WorkerMapper::toDomain);
     }
 
-    @Override public List<Trabajador> listarTodos() {
+    @Override
+    public List<Trabajador> listarTodos() {
         return jpa.findAll().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
     }
 
-    @Override public List<Trabajador> listarActivos() {
+    @Override
+    public List<Trabajador> listarActivos() {
         return jpa.findByEstado(EstadoTrabajador.ACTIVO).stream()
-                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+                .map(WorkerMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
-    @Override public List<Trabajador> listarTodosPorAgricultor(Long agricultorId) {
+    @Override
+    public List<Trabajador> listarTodosPorAgricultor(Long agricultorId) {
         return jpa.findByAgricultorId(agricultorId).stream()
-                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+                .map(WorkerMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
-    @Override public List<Trabajador> listarActivosPorAgricultor(Long agricultorId) {
+    @Override
+    public List<Trabajador> listarActivosPorAgricultor(Long agricultorId) {
         return jpa.findByAgricultorIdAndEstado(agricultorId, EstadoTrabajador.ACTIVO).stream()
-                .map(WorkerMapper::toDomain).collect(Collectors.toList());
+                .map(WorkerMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
-    @Override public void eliminar(Long id) { jpa.deleteById(id); }
+    @Override
+    public void eliminar(Long id) {
+        jpa.deleteById(id);
+    }
 
-    @Override public boolean existePorCedula(String cedula) {
-        return jpa.existsByCedula(cedula);
+    @Override
+    public boolean existePorCedulaYAgricultor(String cedula, Long agricultorId) {
+        return jpa.existsByCedulaAndAgricultorId(cedula, agricultorId);
     }
 }

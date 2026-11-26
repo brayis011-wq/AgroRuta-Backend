@@ -2,9 +2,6 @@ package com.agroruta.agriculturalinput.infrastructure.persistence;
 
 import com.agroruta.agriculturalinput.application.ports.out.AgriculturalInputRepositoryPort;
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
-import com.agroruta.agriculturalinput.infrastructure.persistence.AgriculturalInputJpaRepository;
-import com.agroruta.agriculturalinput.infrastructure.persistence.AgriculturalInputPersistenceMapper;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -28,30 +25,27 @@ public class AgriculturalInputRepositoryAdapter implements AgriculturalInputRepo
 
     @Override
     public List<AgriculturalInput> findAllActive() {
-        return jpaRepository.findByActivoTrueOrderByNombreAsc()
-                .stream()
+        return jpaRepository.findByActivoTrueOrderByNombreAsc().stream()
                 .map(AgriculturalInputPersistenceMapper::toDomain)
                 .toList();
     }
 
     @Override
     public List<AgriculturalInput> searchByQuery(String query) {
-        return jpaRepository.searchActiveByQuery(query)
-                .stream()
+        return jpaRepository.searchActiveByQuery(query).stream()
                 .map(AgriculturalInputPersistenceMapper::toDomain)
                 .toList();
     }
 
     @Override
     public Optional<AgriculturalInput> findById(Long id) {
-        return jpaRepository.findByIdAndActivoTrue(id)
-                .map(AgriculturalInputPersistenceMapper::toDomain);
+        return jpaRepository.findByIdAndActivoTrue(id).map(AgriculturalInputPersistenceMapper::toDomain);
     }
 
     @Override
     public AgriculturalInput save(AgriculturalInput domain) {
         var entity = AgriculturalInputPersistenceMapper.toEntity(domain);
-        var saved  = jpaRepository.save(entity);
+        var saved = jpaRepository.save(entity);
         return AgriculturalInputPersistenceMapper.toDomain(saved);
     }
 
@@ -62,8 +56,7 @@ public class AgriculturalInputRepositoryAdapter implements AgriculturalInputRepo
 
     @Override
     public List<AgriculturalInput> findAll() {
-        return jpaRepository.findAllByOrderByNombreAsc()
-                .stream()
+        return jpaRepository.findAllByOrderByNombreAsc().stream()
                 .map(AgriculturalInputPersistenceMapper::toDomain)
                 .toList();
     }

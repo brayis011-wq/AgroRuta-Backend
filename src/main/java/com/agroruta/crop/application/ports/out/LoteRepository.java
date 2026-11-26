@@ -1,7 +1,6 @@
 package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.Lote;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -12,9 +11,11 @@ import java.util.Optional;
  */
 public interface LoteRepository {
     Lote save(Lote lote);
+
     Optional<Lote> findById(Long id);
     /** Lotes vigentes de la finca */
     List<Lote> findByFincaId(Long fincaId);
+
     boolean existsSiembraActivaEnLote(Long loteId);
     /** ¿Hay un lote vigente en la finca con ese nombre? */
     boolean existsByNombreAndFincaId(String nombre, Long fincaId);

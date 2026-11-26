@@ -13,5 +13,4 @@ public record ActualizarCentroideFincaRequest(
         @NotNull(message = "La longitud es obligatoria")
         @DecimalMin(value = "-180", message = "Longitud fuera de rango")
         @DecimalMax(value = "180", message = "Longitud fuera de rango")
-        Double centroideLng
-) {}
+        Double centroideLng) {}

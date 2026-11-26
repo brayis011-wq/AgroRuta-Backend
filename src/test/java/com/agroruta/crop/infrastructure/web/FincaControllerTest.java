@@ -1,7 +1,15 @@
 package com.agroruta.crop.infrastructure.web;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.domain.Finca;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,15 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class FincaControllerTest {
@@ -91,9 +90,8 @@ class FincaControllerTest {
     @Test
     void deberiaListarFincasPorAgricultor() throws Exception {
         List<Finca> fincas = List.of(
-                new Finca(1L, "La Esperanza",  "Vereda El Monte",  12.5, 5L),
-                new Finca(2L, "El Paraíso",    "Vereda La Palma",   8.0, 5L)
-        );
+                new Finca(1L, "La Esperanza", "Vereda El Monte", 12.5, 5L),
+                new Finca(2L, "El Paraíso", "Vereda La Palma", 8.0, 5L));
         when(fincaUseCase.listarFincasPorAgricultor(5L)).thenReturn(fincas);
 
         mockMvc.perform(get("/api/farms/farmer/5"))
@@ -122,8 +120,7 @@ class FincaControllerTest {
     void deberiaEliminarFincaYRetornar204() throws Exception {
         doNothing().when(fincaUseCase).eliminarFinca(1L);
 
-        mockMvc.perform(delete("/api/farms/1"))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/farms/1")).andExpect(status().isNoContent());
 
         verify(fincaUseCase).eliminarFinca(1L);
     }

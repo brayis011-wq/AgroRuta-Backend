@@ -33,10 +33,9 @@ public class JornalEntity {
      */
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "jornal_actividades",
-        joinColumns = @JoinColumn(name = "jornal_id"),
-        inverseJoinColumns = @JoinColumn(name = "actividad_id")
-    )
+            name = "jornal_actividades",
+            joinColumns = @JoinColumn(name = "jornal_id"),
+            inverseJoinColumns = @JoinColumn(name = "actividad_id"))
     private List<LaborEntity> actividades = new ArrayList<>();
 
     @Column(length = 500)
@@ -48,33 +47,123 @@ public class JornalEntity {
     @Column(nullable = false)
     private boolean liquidado;
 
+    @Column(precision = 10, scale = 2)
+    private BigDecimal kilos;
+
+    @Column(name = "valor_kilo", precision = 10, scale = 2)
+    private BigDecimal valorKilo;
+
+    /** La cosecha de la que salió este jornal (recolector); null si se anotó aparte */
+    @Column(name = "cosecha_id")
+    private Long cosechaId;
+
     public JornalEntity() {}
 
+    @Column(name = "kilos_recogidos", precision = 10, scale = 2)
+    private BigDecimal kilosRecogidos;
+
+    public BigDecimal getKilosRecogidos() {
+        return kilosRecogidos;
+    }
+
+    public void setKilosRecogidos(BigDecimal kilosRecogidos) {
+        this.kilosRecogidos = kilosRecogidos;
+    }
+
+    public Long getCosechaId() {
+        return cosechaId;
+    }
+
+    public void setCosechaId(Long cosechaId) {
+        this.cosechaId = cosechaId;
+    }
+
+    public BigDecimal getKilos() {
+        return kilos;
+    }
+
+    public void setKilos(BigDecimal kilos) {
+        this.kilos = kilos;
+    }
+
+    public BigDecimal getValorKilo() {
+        return valorKilo;
+    }
+
+    public void setValorKilo(BigDecimal valorKilo) {
+        this.valorKilo = valorKilo;
+    }
+
     // Getters & Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public TrabajadorEntity getTrabajador() { return trabajador; }
-    public void setTrabajador(TrabajadorEntity trabajador) { this.trabajador = trabajador; }
+    public LocalDate getFecha() {
+        return fecha;
+    }
 
-    public Long getCultivoId() { return cultivoId; }
-    public void setCultivoId(Long cultivoId) { this.cultivoId = cultivoId; }
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
 
-    public String getNombreCultivo() { return nombreCultivo; }
-    public void setNombreCultivo(String nombreCultivo) { this.nombreCultivo = nombreCultivo; }
+    public TrabajadorEntity getTrabajador() {
+        return trabajador;
+    }
 
-    public List<LaborEntity> getActividades() { return actividades; }
-    public void setActividades(List<LaborEntity> actividades) { this.actividades = actividades; }
+    public void setTrabajador(TrabajadorEntity trabajador) {
+        this.trabajador = trabajador;
+    }
 
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public Long getCultivoId() {
+        return cultivoId;
+    }
 
-    public BigDecimal getValorJornal() { return valorJornal; }
-    public void setValorJornal(BigDecimal valorJornal) { this.valorJornal = valorJornal; }
+    public void setCultivoId(Long cultivoId) {
+        this.cultivoId = cultivoId;
+    }
 
-    public boolean isLiquidado() { return liquidado; }
-    public void setLiquidado(boolean liquidado) { this.liquidado = liquidado; }
+    public String getNombreCultivo() {
+        return nombreCultivo;
+    }
+
+    public void setNombreCultivo(String nombreCultivo) {
+        this.nombreCultivo = nombreCultivo;
+    }
+
+    public List<LaborEntity> getActividades() {
+        return actividades;
+    }
+
+    public void setActividades(List<LaborEntity> actividades) {
+        this.actividades = actividades;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public BigDecimal getValorJornal() {
+        return valorJornal;
+    }
+
+    public void setValorJornal(BigDecimal valorJornal) {
+        this.valorJornal = valorJornal;
+    }
+
+    public boolean isLiquidado() {
+        return liquidado;
+    }
+
+    public void setLiquidado(boolean liquidado) {
+        this.liquidado = liquidado;
+    }
 }

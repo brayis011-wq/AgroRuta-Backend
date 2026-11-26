@@ -9,10 +9,9 @@ import jakarta.validation.constraints.Size;
 public record ActualizarGeometriaLoteRequest(
         @NotBlank(message = "Las coordenadas son obligatorias")
         @Size(max = 100_000, message = "La geometría es demasiado grande")
-        String coordenadas,   // GeoJSON del polígono
+        String coordenadas, // GeoJSON del polígono
 
-        @Positive(message = "El área debe ser mayor a 0")
-        Double area,          // calculada en el frontend (ha)
+        @Positive(message = "El área debe ser mayor a 0") Double area, // calculada en el frontend (ha)
 
         @DecimalMin(value = "-90", message = "Latitud fuera de rango")
         @DecimalMax(value = "90", message = "Latitud fuera de rango")
@@ -20,5 +19,4 @@ public record ActualizarGeometriaLoteRequest(
 
         @DecimalMin(value = "-180", message = "Longitud fuera de rango")
         @DecimalMax(value = "180", message = "Longitud fuera de rango")
-        Double centroideLng
-) {}
+        Double centroideLng) {}

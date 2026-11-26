@@ -1,5 +1,6 @@
 package com.agroruta.inventory.domain;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
@@ -14,7 +15,8 @@ public final class CalculadoraStock {
     private CalculadoraStock() {}
 
     public static double cantidad(List<MovimientoInventario> movimientos) {
-        return redondear(movimientos.stream().mapToDouble(MovimientoInventario::efecto).sum());
+        return redondear(
+                movimientos.stream().mapToDouble(MovimientoInventario::efecto).sum());
     }
 
     /**
@@ -22,13 +24,14 @@ public final class CalculadoraStock {
      * Null si ninguna compra tiene precio.
      */
     public static Double costoPromedio(List<MovimientoInventario> movimientos) {
-        double costo = 0, cantidad = 0;
+        BigDecimal costo = BigDecimal.ZERO; // el dinero se suma exacto; solo la división final es aproximada
+        double cantidad = 0;
         for (MovimientoInventario m : movimientos) {
             if (m.getTipo() != TipoMovimiento.COMPRA || m.getCostoTotal() == null || m.getCantidad() <= 0) continue;
-            costo += m.getCostoTotal();
+            costo = costo.add(m.getCostoTotal());
             cantidad += m.getCantidad();
         }
-        return cantidad > 0 ? costo / cantidad : null;
+        return cantidad > 0 ? costo.doubleValue() / cantidad : null;
     }
 
     public static EstadoStock estado(double cantidad, Double minimo) {
@@ -42,10 +45,22 @@ public final class CalculadoraStock {
         double cantidad = cantidad(movimientos);
         Double promedio = costoPromedio(movimientos);
         Double valor = promedio == null ? null : Math.round(Math.max(cantidad, 0) * promedio * 100) / 100.0;
-        LocalDate ultimo = movimientos.stream().map(MovimientoInventario::getFecha)
-                .filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
-        return new StockInsumo(insumo.id(), insumo.nombre(), insumo.tipo(), insumo.unidadBase(),
-                cantidad, minimo, promedio, valor, estado(cantidad, minimo), ultimo);
+        LocalDate ultimo = movimientos.stream()
+                .map(MovimientoInventario::getFecha)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+        return new StockInsumo(
+                insumo.id(),
+                insumo.nombre(),
+                insumo.tipo(),
+                insumo.unidadBase(),
+                cantidad,
+                minimo,
+                promedio,
+                valor,
+                estado(cantidad, minimo),
+                ultimo);
     }
 
     private static double redondear(double v) {

@@ -1,7 +1,6 @@
 package com.agroruta.agriculturalinput.domain;
 
 public enum AgriculturalInputType {
-
     FUNGICIDA("Fungicida"),
     INSECTICIDA("Insecticida"),
     ACARICIDA("Acaricida"),

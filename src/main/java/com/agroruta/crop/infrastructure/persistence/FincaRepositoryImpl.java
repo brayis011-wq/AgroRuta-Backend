@@ -1,12 +1,11 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.application.ports.out.FincaRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.crop.domain.Finca;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class FincaRepositoryImpl implements FincaRepository {
@@ -31,8 +30,9 @@ public class FincaRepositoryImpl implements FincaRepository {
 
     @Override
     public List<Finca> findByAgricultorId(Long agricultorId) {
-        return jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(agricultorId)
-                .stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(agricultorId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

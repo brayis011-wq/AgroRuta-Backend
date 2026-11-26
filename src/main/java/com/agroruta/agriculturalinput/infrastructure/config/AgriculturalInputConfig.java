@@ -1,7 +1,7 @@
 package com.agroruta.agriculturalinput.infrastructure.config;
 
-import com.agroruta.agriculturalinput.application.ports.out.AgriculturalInputRepositoryPort;
 import com.agroruta.agriculturalinput.application.AgriculturalInputService;
+import com.agroruta.agriculturalinput.application.ports.out.AgriculturalInputRepositoryPort;
 import com.agroruta.agriculturalinput.infrastructure.persistence.AgriculturalInputJpaRepository;
 import com.agroruta.agriculturalinput.infrastructure.persistence.AgriculturalInputRepositoryAdapter;
 import org.springframework.context.annotation.Bean;
@@ -33,8 +33,7 @@ public class AgriculturalInputConfig {
      * Spring lo inyecta por la interfaz que pide cada constructor.
      */
     @Bean
-    public AgriculturalInputService agriculturalInputService(
-            AgriculturalInputRepositoryPort repositoryPort) {
+    public AgriculturalInputService agriculturalInputService(AgriculturalInputRepositoryPort repositoryPort) {
         return new AgriculturalInputService(repositoryPort);
     }
 }

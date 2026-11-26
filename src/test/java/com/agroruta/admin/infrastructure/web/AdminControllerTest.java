@@ -1,5 +1,8 @@
 package com.agroruta.admin.infrastructure.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.admin.application.ports.in.AdministrarSistemaUseCase;
 import com.agroruta.admin.domain.AgricultorResumen;
 import com.agroruta.admin.domain.ConteoAgricultor;
@@ -10,6 +13,8 @@ import com.agroruta.admin.infrastructure.web.dto.UsuarioAdminResponse;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,18 +26,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AdminController")
 class AdminControllerTest {
 
-    @Mock private AdministrarSistemaUseCase useCase;
-    @InjectMocks private AdminController controller;
+    @Mock
+    private AdministrarSistemaUseCase useCase;
+
+    @InjectMocks
+    private AdminController controller;
 
     private Authentication auth;
     private Usuario ana;

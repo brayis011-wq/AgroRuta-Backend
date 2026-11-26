@@ -1,14 +1,14 @@
 package com.agroruta.worker.domain;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("Trabajador - acceso al portal")
 class TrabajadorAccesoTest {
@@ -18,8 +18,8 @@ class TrabajadorAccesoTest {
     @BeforeEach
     void setUp() {
         Cargo cargo = new Cargo(1L, "Recolector", "", new BigDecimal("60000"), true);
-        trabajador = new Trabajador(1L, "Luis", "Herrera", "1052334120", null, null,
-                LocalDate.of(2025, 1, 10), TipoContrato.JORNAL, cargo);
+        trabajador = new Trabajador(
+                1L, "Luis", "Herrera", "1052334120", null, null, LocalDate.of(2025, 1, 10), TipoContrato.JORNAL, cargo);
     }
 
     @Test
@@ -39,7 +39,7 @@ class TrabajadorAccesoTest {
         trabajador.solicitarAcceso(9L, "Luis", "luis@gmail.com");
 
         assertThatThrownBy(() -> trabajador.solicitarAcceso(10L, "Intruso", "x@x.com"))
-                .isInstanceOf(IllegalStateException.class);
+                .isInstanceOf(EstadoInvalidoException.class);
     }
 
     @Test
@@ -57,7 +57,7 @@ class TrabajadorAccesoTest {
     @Test
     @DisplayName("aprobar solo funciona con una solicitud pendiente")
     void aprobar() {
-        assertThatThrownBy(() -> trabajador.aprobarAcceso()).isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> trabajador.aprobarAcceso()).isInstanceOf(EstadoInvalidoException.class);
 
         trabajador.solicitarAcceso(9L, "Luis", "luis@gmail.com");
         trabajador.aprobarAcceso();

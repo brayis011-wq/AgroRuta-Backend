@@ -1,6 +1,14 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,15 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JornalRepositoryImpl - Pruebas Unitarias")
@@ -32,18 +31,24 @@ class JornalRepositoryImplTest {
     private Jornal jornalBase;
     private JornalEntity entityBase;
 
-    private final LocalDate FECHA  = LocalDate.of(2025, 1, 15);
+    private final LocalDate FECHA = LocalDate.of(2025, 1, 15);
     private final LocalDate INICIO = LocalDate.of(2025, 1, 1);
-    private final LocalDate FIN    = LocalDate.of(2025, 1, 31);
+    private final LocalDate FIN = LocalDate.of(2025, 1, 31);
 
     @BeforeEach
     void setUp() {
         // ── dominio ────────────────────────────────────────────────────────
         Cargo cargo = new Cargo(1L, "Operario", "Cargo operario", new BigDecimal("80000"), true);
         Trabajador trabajador = new Trabajador(
-                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1",
-                LocalDate.of(2020, 1, 1), TipoContrato.JORNAL, cargo
-        );
+                1L,
+                "Juan",
+                "Pérez",
+                "123456789",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2020, 1, 1),
+                TipoContrato.JORNAL,
+                cargo);
         jornalBase = new Jornal(1L, FECHA, trabajador, 10L, "Maíz", "Sin observaciones");
         jornalBase.setValorJornal(new BigDecimal("80000"));
         jornalBase.setLiquidado(false);
@@ -96,13 +101,13 @@ class JornalRepositoryImplTest {
             Jornal resultado = repository.guardar(jornalBase);
 
             assertNotNull(resultado);
-            assertEquals(1L,                      resultado.getId());
-            assertEquals(FECHA,                   resultado.getFecha());
-            assertEquals(10L,                     resultado.getCultivoId());
-            assertEquals("Maíz",                  resultado.getNombreCultivo());
+            assertEquals(1L, resultado.getId());
+            assertEquals(FECHA, resultado.getFecha());
+            assertEquals(10L, resultado.getCultivoId());
+            assertEquals("Maíz", resultado.getNombreCultivo());
             assertEquals(new BigDecimal("80000"), resultado.getValorJornal());
             assertFalse(resultado.isLiquidado());
-            assertEquals(1L,                      resultado.getTrabajador().getId());
+            assertEquals(1L, resultado.getTrabajador().getId());
             verify(jpa, times(1)).save(any(JornalEntity.class));
         }
 
@@ -120,8 +125,7 @@ class JornalRepositoryImplTest {
             entityLiquidado.setLiquidado(true);
             entityLiquidado.setActividades(List.of());
 
-            Jornal jornalLiquidado = new Jornal(2L, FECHA, jornalBase.getTrabajador(),
-                    10L, "Maíz", "Liquidado");
+            Jornal jornalLiquidado = new Jornal(2L, FECHA, jornalBase.getTrabajador(), 10L, "Maíz", "Liquidado");
             jornalLiquidado.setValorJornal(new BigDecimal("80000"));
             jornalLiquidado.setLiquidado(true);
             jornalLiquidado.setActividades(List.of());
@@ -152,8 +156,8 @@ class JornalRepositoryImplTest {
             Optional<Jornal> resultado = repository.buscarPorId(1L);
 
             assertTrue(resultado.isPresent());
-            assertEquals(1L,     resultado.get().getId());
-            assertEquals(FECHA,  resultado.get().getFecha());
+            assertEquals(1L, resultado.get().getId());
+            assertEquals(FECHA, resultado.get().getFecha());
             assertEquals("Maíz", resultado.get().getNombreCultivo());
             verify(jpa, times(1)).findById(1L);
         }
@@ -185,9 +189,9 @@ class JornalRepositoryImplTest {
             List<Jornal> resultado = repository.buscarPorTrabajador(1L);
 
             assertEquals(1, resultado.size());
-            assertEquals(1L,    resultado.get(0).getId());
+            assertEquals(1L, resultado.get(0).getId());
             assertEquals(FECHA, resultado.get(0).getFecha());
-            assertEquals(1L,    resultado.get(0).getTrabajador().getId());
+            assertEquals(1L, resultado.get(0).getTrabajador().getId());
             verify(jpa, times(1)).findByTrabajadorId(1L);
         }
 
@@ -213,12 +217,11 @@ class JornalRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar jornales del trabajador dentro del periodo indicado")
         void debeRetornarJornalesDentroDelPeriodo() {
-            when(jpa.findByTrabajadorIdAndFechaBetween(1L, INICIO, FIN))
-                    .thenReturn(List.of(entityBase));
+            when(jpa.findByTrabajadorIdAndFechaBetween(1L, INICIO, FIN)).thenReturn(List.of(entityBase));
 
             List<Jornal> resultado = repository.buscarPorTrabajadorYPeriodo(1L, INICIO, FIN);
 
-            assertEquals(1,     resultado.size());
+            assertEquals(1, resultado.size());
             assertEquals(FECHA, resultado.get(0).getFecha());
             assertTrue(!resultado.get(0).getFecha().isBefore(INICIO)
                     && !resultado.get(0).getFecha().isAfter(FIN));
@@ -228,8 +231,7 @@ class JornalRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar lista vacía si no hay jornales en el periodo")
         void debeRetornarListaVaciaSiNoHayJornalesEnElPeriodo() {
-            when(jpa.findByTrabajadorIdAndFechaBetween(1L, INICIO, FIN))
-                    .thenReturn(List.of());
+            when(jpa.findByTrabajadorIdAndFechaBetween(1L, INICIO, FIN)).thenReturn(List.of());
 
             List<Jornal> resultado = repository.buscarPorTrabajadorYPeriodo(1L, INICIO, FIN);
 
@@ -252,8 +254,8 @@ class JornalRepositoryImplTest {
 
             List<Jornal> resultado = repository.buscarPorCultivo(10L);
 
-            assertEquals(1,    resultado.size());
-            assertEquals(10L,  resultado.get(0).getCultivoId());
+            assertEquals(1, resultado.size());
+            assertEquals(10L, resultado.get(0).getCultivoId());
             assertEquals("Maíz", resultado.get(0).getNombreCultivo());
             verify(jpa, times(1)).findByCultivoId(10L);
         }
@@ -280,13 +282,12 @@ class JornalRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar jornales del cultivo dentro del periodo indicado")
         void debeRetornarJornalesDentroDelPeriodo() {
-            when(jpa.findByCultivoIdAndFechaBetween(10L, INICIO, FIN))
-                    .thenReturn(List.of(entityBase));
+            when(jpa.findByCultivoIdAndFechaBetween(10L, INICIO, FIN)).thenReturn(List.of(entityBase));
 
             List<Jornal> resultado = repository.buscarPorCultivoYPeriodo(10L, INICIO, FIN);
 
-            assertEquals(1,    resultado.size());
-            assertEquals(10L,  resultado.get(0).getCultivoId());
+            assertEquals(1, resultado.size());
+            assertEquals(10L, resultado.get(0).getCultivoId());
             assertEquals(FECHA, resultado.get(0).getFecha());
             verify(jpa, times(1)).findByCultivoIdAndFechaBetween(10L, INICIO, FIN);
         }
@@ -294,8 +295,7 @@ class JornalRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar lista vacía si no hay jornales del cultivo en el periodo")
         void debeRetornarListaVaciaSiNoHayJornalesEnElPeriodo() {
-            when(jpa.findByCultivoIdAndFechaBetween(10L, INICIO, FIN))
-                    .thenReturn(List.of());
+            when(jpa.findByCultivoIdAndFechaBetween(10L, INICIO, FIN)).thenReturn(List.of());
 
             List<Jornal> resultado = repository.buscarPorCultivoYPeriodo(10L, INICIO, FIN);
 
@@ -349,14 +349,12 @@ class JornalRepositoryImplTest {
             when(jpa.findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(1L, INICIO, FIN))
                     .thenReturn(List.of(entityBase));
 
-            List<Jornal> resultado =
-                    repository.buscarNoLiquidadosPorTrabajadorYPeriodo(1L, INICIO, FIN);
+            List<Jornal> resultado = repository.buscarNoLiquidadosPorTrabajadorYPeriodo(1L, INICIO, FIN);
 
-            assertEquals(1,     resultado.size());
+            assertEquals(1, resultado.size());
             assertFalse(resultado.get(0).isLiquidado());
             assertEquals(FECHA, resultado.get(0).getFecha());
-            verify(jpa, times(1))
-                    .findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(1L, INICIO, FIN);
+            verify(jpa, times(1)).findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(1L, INICIO, FIN);
         }
 
         @Test
@@ -365,12 +363,10 @@ class JornalRepositoryImplTest {
             when(jpa.findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(1L, INICIO, FIN))
                     .thenReturn(List.of());
 
-            List<Jornal> resultado =
-                    repository.buscarNoLiquidadosPorTrabajadorYPeriodo(1L, INICIO, FIN);
+            List<Jornal> resultado = repository.buscarNoLiquidadosPorTrabajadorYPeriodo(1L, INICIO, FIN);
 
             assertTrue(resultado.isEmpty());
-            verify(jpa, times(1))
-                    .findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(1L, INICIO, FIN);
+            verify(jpa, times(1)).findByTrabajadorIdAndLiquidadoFalseAndFechaBetween(1L, INICIO, FIN);
         }
     }
 
@@ -384,27 +380,23 @@ class JornalRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar jornales disponibles para liquidar en la nómina del periodo")
         void debeRetornarJornalesDisponiblesParaNomina() {
-            when(jpa.findDisponiblesParaNomina(1L, INICIO, FIN))
-                    .thenReturn(List.of(entityBase));
+            when(jpa.findDisponiblesParaNomina(1L, INICIO, FIN)).thenReturn(List.of(entityBase));
 
-            List<Jornal> resultado =
-                    repository.buscarDisponiblesParaNomina(1L, INICIO, FIN);
+            List<Jornal> resultado = repository.buscarDisponiblesParaNomina(1L, INICIO, FIN);
 
-            assertEquals(1,     resultado.size());
+            assertEquals(1, resultado.size());
             assertFalse(resultado.get(0).isLiquidado());
             assertEquals(FECHA, resultado.get(0).getFecha());
-            assertEquals(1L,    resultado.get(0).getTrabajador().getId());
+            assertEquals(1L, resultado.get(0).getTrabajador().getId());
             verify(jpa, times(1)).findDisponiblesParaNomina(1L, INICIO, FIN);
         }
 
         @Test
         @DisplayName("Debe retornar lista vacía si no hay jornales disponibles para la nómina")
         void debeRetornarListaVaciaSiNoHayDisponibles() {
-            when(jpa.findDisponiblesParaNomina(1L, INICIO, FIN))
-                    .thenReturn(List.of());
+            when(jpa.findDisponiblesParaNomina(1L, INICIO, FIN)).thenReturn(List.of());
 
-            List<Jornal> resultado =
-                    repository.buscarDisponiblesParaNomina(1L, INICIO, FIN);
+            List<Jornal> resultado = repository.buscarDisponiblesParaNomina(1L, INICIO, FIN);
 
             assertTrue(resultado.isEmpty());
             verify(jpa, times(1)).findDisponiblesParaNomina(1L, INICIO, FIN);
@@ -426,6 +418,59 @@ class JornalRepositoryImplTest {
             repository.eliminar(1L);
 
             verify(jpa, times(1)).deleteById(1L);
+        }
+    }
+
+    @Nested
+    @DisplayName("resumenInicio")
+    class ResumenInicio {
+
+        private final LocalDate hoy = LocalDate.of(2026, 11, 16);
+
+        @Test
+        @DisplayName("cuenta el mes en curso y el anterior completo, solo de trabajadores activos")
+        void cuentaLosDosMeses() {
+            List<Object[]> filas = new java.util.ArrayList<>();
+            filas.add(new Object[] {12L, 9L});
+            when(jpa.conteoPorMes(
+                            7L, EstadoTrabajador.ACTIVO, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 11, 1), hoy))
+                    .thenReturn(filas);
+            when(jpa.trabajadoresConJornal(7L, EstadoTrabajador.ACTIVO, hoy)).thenReturn(List.of(1L, 3L));
+
+            ResumenJornalesInicio r = repository.resumenInicio(7L, hoy);
+
+            assertEquals(12, r.mesActual());
+            assertEquals(9, r.mesAnterior());
+            assertEquals(List.of(1L, 3L), r.trabajadoresHoy());
+        }
+
+        @Test
+        @DisplayName("sin jornales en el rango, SUM llega en null y se toma como cero")
+        void sinJornales() {
+            List<Object[]> filas = new java.util.ArrayList<>();
+            filas.add(new Object[] {null, null});
+            when(jpa.conteoPorMes(any(), any(), any(), any(), any())).thenReturn(filas);
+            when(jpa.trabajadoresConJornal(any(), any(), any())).thenReturn(List.of());
+
+            ResumenJornalesInicio r = repository.resumenInicio(null, hoy);
+
+            assertEquals(0, r.mesActual());
+            assertEquals(0, r.mesAnterior());
+            assertTrue(r.trabajadoresHoy().isEmpty());
+        }
+
+        @Test
+        @DisplayName("el primer día de enero compara con todo diciembre del año anterior")
+        void cambioDeAnio() {
+            LocalDate enero = LocalDate.of(2027, 1, 1);
+            when(jpa.conteoPorMes(7L, EstadoTrabajador.ACTIVO, LocalDate.of(2026, 12, 1), enero, enero))
+                    .thenReturn(List.<Object[]>of(new Object[] {1L, 20L}));
+            when(jpa.trabajadoresConJornal(7L, EstadoTrabajador.ACTIVO, enero)).thenReturn(List.of(4L));
+
+            ResumenJornalesInicio r = repository.resumenInicio(7L, enero);
+
+            assertEquals(1, r.mesActual());
+            assertEquals(20, r.mesAnterior());
         }
     }
 }

@@ -6,5 +6,7 @@ public enum TipoActividad {
     DESHIERBE,
     RIEGO,
     REVISION,
-    OTRO
+    OTRO,
+    /** Abonado o fertilización al suelo: suele gastar un insumo de la bodega */
+    ABONADO
 }

@@ -1,27 +1,26 @@
 package com.agroruta.crop.application;
 
-import com.agroruta.crop.domain.EstadoLote;
-import org.mockito.quality.Strictness;
-import org.mockito.junit.jupiter.MockitoSettings;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.application.ports.in.FincaUseCase;
+import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -61,8 +60,7 @@ class LoteServiceTest {
     void deberiaLanzarExcepcionSiLoteYaExiste() {
         when(loteRepository.existsByNombreAndFincaId("Lote A", fincaId)).thenReturn(true);
 
-        assertThrows(BusinessException.class, () ->
-                service.registrarLote("Lote A", 10.0, fincaId));
+        assertThrows(BusinessException.class, () -> service.registrarLote("Lote A", 10.0, fincaId));
     }
 
     @Test
@@ -80,16 +78,12 @@ class LoteServiceTest {
     void deberiaLanzarExcepcionSiLoteNoExiste() {
         when(loteRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.buscarLotePorId(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarLotePorId(99L));
     }
 
     @Test
     void deberiaListarLotesPorFinca() {
-        List<Lote> lotes = List.of(
-                new Lote(1L, "Lote A", 10.0, fincaId),
-                new Lote(2L, "Lote B", 20.0, fincaId)
-        );
+        List<Lote> lotes = List.of(new Lote(1L, "Lote A", 10.0, fincaId), new Lote(2L, "Lote B", 20.0, fincaId));
         when(loteRepository.findByFincaId(fincaId)).thenReturn(lotes);
 
         List<Lote> resultado = service.listarLotesPorFinca(fincaId);
@@ -114,8 +108,7 @@ class LoteServiceTest {
     void deberiaLanzarExcepcionAlEliminarLoteInexistente() {
         when(loteRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.eliminarLote(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.eliminarLote(99L));
     }
 
     @Test
@@ -124,8 +117,7 @@ class LoteServiceTest {
         when(loteRepository.findById(1L)).thenReturn(Optional.of(lote));
         when(loteRepository.save(any())).thenReturn(lote);
 
-        Lote resultado = service.actualizarGeometriaLote(
-                1L, "[[4.71,-74.07]]", 15.0, 4.71, -74.07);
+        Lote resultado = service.actualizarGeometriaLote(1L, "[[4.71,-74.07]]", 15.0, 4.71, -74.07);
 
         assertEquals("[[4.71,-74.07]]", resultado.getCoordenadas());
         verify(loteRepository).save(any());
@@ -169,7 +161,8 @@ class LoteServiceTest {
         when(loteRepository.existsSiembraActivaEnLote(1L)).thenReturn(false);
         when(loteRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        assertEquals(EstadoLote.EN_DESCANSO, service.cambiarEstado(1L, "en_descanso").getEstado());
+        assertEquals(
+                EstadoLote.EN_DESCANSO, service.cambiarEstado(1L, "en_descanso").getEstado());
     }
 
     @Test

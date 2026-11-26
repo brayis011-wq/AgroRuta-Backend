@@ -1,7 +1,6 @@
 package com.agroruta.worker.infrastructure.persistence;
 
 import com.agroruta.worker.domain.*;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +16,8 @@ public class WorkerMapper {
         if (e == null) return null;
         Cargo c = new Cargo(e.getId(), e.getNombre(), e.getDescripcion(), e.getValorJornal(), e.isActivo());
         c.setAgricultorId(e.getAgricultorId());
+        if (e.getModalidadPago() != null) c.setModalidadPago(e.getModalidadPago());
+        c.setValorKilo(e.getValorKilo());
         return c;
     }
 
@@ -29,6 +30,8 @@ public class WorkerMapper {
         e.setValorJornal(d.getValorJornal());
         e.setActivo(d.isActivo());
         e.setAgricultorId(d.getAgricultorId());
+        e.setModalidadPago(d.getModalidadPago() == null ? ModalidadPago.JORNAL : d.getModalidadPago());
+        e.setValorKilo(d.getValorKilo());
         return e;
     }
 
@@ -58,10 +61,15 @@ public class WorkerMapper {
     public static Trabajador toDomain(TrabajadorEntity e) {
         if (e == null) return null;
         Trabajador t = new Trabajador(
-                e.getId(), e.getNombre(), e.getApellido(), e.getCedula(),
-                e.getTelefono(), e.getDireccion(), e.getFechaIngreso(),
-                e.getTipoContrato(), toDomain(e.getCargo())
-        );
+                e.getId(),
+                e.getNombre(),
+                e.getApellido(),
+                e.getCedula(),
+                e.getTelefono(),
+                e.getDireccion(),
+                e.getFechaIngreso(),
+                e.getTipoContrato(),
+                toDomain(e.getCargo()));
         t.setEstado(e.getEstado());
         t.setAgricultorId(e.getAgricultorId());
         t.setUsuarioId(e.getUsuarioId());
@@ -97,14 +105,20 @@ public class WorkerMapper {
     public static Jornal toDomain(JornalEntity e) {
         if (e == null) return null;
         Jornal j = new Jornal(
-                e.getId(), e.getFecha(), toDomain(e.getTrabajador()),
-                e.getCultivoId(), e.getNombreCultivo(), e.getObservaciones()
-        );
+                e.getId(),
+                e.getFecha(),
+                toDomain(e.getTrabajador()),
+                e.getCultivoId(),
+                e.getNombreCultivo(),
+                e.getObservaciones());
         j.setValorJornal(e.getValorJornal());
         j.setLiquidado(e.isLiquidado());
-        List<Labor> actividades = e.getActividades().stream()
-                .map(WorkerMapper::toDomain)
-                .collect(Collectors.toList());
+        j.setKilos(e.getKilos());
+        j.setValorKilo(e.getValorKilo());
+        j.setCosechaId(e.getCosechaId());
+        j.setKilosRecogidos(e.getKilosRecogidos());
+        List<Labor> actividades =
+                e.getActividades().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
         j.setActividades(actividades);
         return j;
     }
@@ -120,9 +134,12 @@ public class WorkerMapper {
         e.setObservaciones(d.getObservaciones());
         e.setValorJornal(d.getValorJornal());
         e.setLiquidado(d.isLiquidado());
-        List<LaborEntity> actividades = d.getActividades().stream()
-                .map(WorkerMapper::toEntity)
-                .collect(Collectors.toList());
+        e.setKilos(d.getKilos());
+        e.setValorKilo(d.getValorKilo());
+        e.setCosechaId(d.getCosechaId());
+        e.setKilosRecogidos(d.getKilosRecogidos());
+        List<LaborEntity> actividades =
+                d.getActividades().stream().map(WorkerMapper::toEntity).collect(Collectors.toList());
         e.setActividades(actividades);
         return e;
     }
@@ -131,13 +148,10 @@ public class WorkerMapper {
 
     public static Nomina toDomain(NominaEntity e) {
         if (e == null) return null;
-        List<Jornal> jornales = e.getJornales().stream()
-                .map(WorkerMapper::toDomain)
-                .collect(Collectors.toList());
-        Nomina n = new Nomina(
-                e.getId(), toDomain(e.getTrabajador()),
-                e.getPeriodoInicio(), e.getPeriodoFin(), jornales
-        );
+        List<Jornal> jornales =
+                e.getJornales().stream().map(WorkerMapper::toDomain).collect(Collectors.toList());
+        Nomina n =
+                new Nomina(e.getId(), toDomain(e.getTrabajador()), e.getPeriodoInicio(), e.getPeriodoFin(), jornales);
         n.setEstado(e.getEstado());
         n.setFechaGeneracion(e.getFechaGeneracion());
         n.setObservaciones(e.getObservaciones());
@@ -156,9 +170,8 @@ public class WorkerMapper {
         e.setEstado(d.getEstado());
         e.setFechaGeneracion(d.getFechaGeneracion());
         e.setObservaciones(d.getObservaciones());
-        List<JornalEntity> jornales = d.getJornales().stream()
-                .map(WorkerMapper::toEntity)
-                .collect(Collectors.toList());
+        List<JornalEntity> jornales =
+                d.getJornales().stream().map(WorkerMapper::toEntity).collect(Collectors.toList());
         e.setJornales(jornales);
         return e;
     }
@@ -170,8 +183,7 @@ public class WorkerMapper {
         Pago p = new Pago(
                 e.getId(), toDomain(e.getNomina()),
                 e.getFechaPago(), e.getMonto(),
-                e.getMetodoPago(), e.getComprobante()
-        );
+                e.getMetodoPago(), e.getComprobante());
         p.setObservaciones(e.getObservaciones());
         return p;
     }

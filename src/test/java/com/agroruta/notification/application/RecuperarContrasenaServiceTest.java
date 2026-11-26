@@ -1,26 +1,5 @@
 package com.agroruta.notification.application;
 
-import com.agroruta.notification.domain.Correo;
-import com.agroruta.notification.domain.RestablecimientoContrasena;
-import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
-import com.agroruta.shared.evento.ContrasenaCambiada;
-import com.agroruta.shared.exception.BusinessException;
-import com.agroruta.user.application.IntentosLogin;
-import com.agroruta.user.domain.Rol;
-import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -30,6 +9,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
+import com.agroruta.notification.domain.Correo;
+import com.agroruta.notification.domain.RestablecimientoContrasena;
+import com.agroruta.shared.evento.ContrasenaCambiada;
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.user.application.IntentosLogin;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @DisplayName("RecuperarContrasenaService")
 class RecuperarContrasenaServiceTest {
@@ -47,8 +46,15 @@ class RecuperarContrasenaServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new RecuperarContrasenaService(usuarios, restablecimientos, encoder,
-                new MensajesCorreo("https://agroruta.app"), envio, intentos, eventos, reloj);
+        service = new RecuperarContrasenaService(
+                usuarios,
+                restablecimientos,
+                encoder,
+                new MensajesCorreo("https://agroruta.app"),
+                envio,
+                intentos,
+                eventos,
+                reloj);
         ana = new Usuario(7L, "Ana Pérez", "ana@x.com", "hash-viejo", Rol.Agricultor);
         when(restablecimientos.guardar(any())).thenAnswer(i -> i.getArgument(0));
     }
@@ -85,7 +91,9 @@ class RecuperarContrasenaServiceTest {
 
         String token = c.getValue().texto().replaceAll("(?s).*token=([A-Za-z0-9_-]+).*", "$1");
         assertThat(token).hasSizeGreaterThan(40);
-        assertThat(r.getValue().getTokenHash()).isEqualTo(RecuperarContrasenaService.hash(token)).isNotEqualTo(token);
+        assertThat(r.getValue().getTokenHash())
+                .isEqualTo(RecuperarContrasenaService.hash(token))
+                .isNotEqualTo(token);
         assertThat(r.getValue().getExpiraEn()).isEqualTo(ahora.plusMinutes(30));
         assertThat(c.getValue().para()).isEqualTo("ana@x.com");
         assertThat(c.getValue().html()).contains("https://agroruta.app/auth/reset-password?token=" + token);
@@ -103,9 +111,10 @@ class RecuperarContrasenaServiceTest {
     @Test
     @DisplayName("token válido: cambia la contraseña, gasta el enlace, desbloquea el login y avisa")
     void restablecer() {
-        RestablecimientoContrasena r = new RestablecimientoContrasena(1L, 7L, RecuperarContrasenaService.hash("tok"),
-                ahora.minusMinutes(5), ahora.plusMinutes(25), null);
-        when(restablecimientos.buscarPorTokenHash(RecuperarContrasenaService.hash("tok"))).thenReturn(Optional.of(r));
+        RestablecimientoContrasena r = new RestablecimientoContrasena(
+                1L, 7L, RecuperarContrasenaService.hash("tok"), ahora.minusMinutes(5), ahora.plusMinutes(25), null);
+        when(restablecimientos.buscarPorTokenHash(RecuperarContrasenaService.hash("tok")))
+                .thenReturn(Optional.of(r));
         when(usuarios.findById(7L)).thenReturn(Optional.of(ana));
         when(encoder.encode("nueva-clave-1")).thenReturn("hash-nuevo");
 
@@ -121,17 +130,21 @@ class RecuperarContrasenaServiceTest {
     @Test
     @DisplayName("token vencido, usado o inventado: error y no cambia nada")
     void tokenInvalido() {
-        RestablecimientoContrasena vencido = new RestablecimientoContrasena(1L, 7L, "h", ahora.minusHours(1),
-                ahora.minusMinutes(1), null);
-        RestablecimientoContrasena usado = new RestablecimientoContrasena(2L, 7L, "h2", ahora.minusMinutes(5),
-                ahora.plusMinutes(25), ahora.minusMinutes(1));
-        when(restablecimientos.buscarPorTokenHash(RecuperarContrasenaService.hash("vencido"))).thenReturn(Optional.of(vencido));
-        when(restablecimientos.buscarPorTokenHash(RecuperarContrasenaService.hash("usado"))).thenReturn(Optional.of(usado));
-        when(restablecimientos.buscarPorTokenHash(eq(RecuperarContrasenaService.hash("otro")))).thenReturn(Optional.empty());
+        RestablecimientoContrasena vencido =
+                new RestablecimientoContrasena(1L, 7L, "h", ahora.minusHours(1), ahora.minusMinutes(1), null);
+        RestablecimientoContrasena usado = new RestablecimientoContrasena(
+                2L, 7L, "h2", ahora.minusMinutes(5), ahora.plusMinutes(25), ahora.minusMinutes(1));
+        when(restablecimientos.buscarPorTokenHash(RecuperarContrasenaService.hash("vencido")))
+                .thenReturn(Optional.of(vencido));
+        when(restablecimientos.buscarPorTokenHash(RecuperarContrasenaService.hash("usado")))
+                .thenReturn(Optional.of(usado));
+        when(restablecimientos.buscarPorTokenHash(eq(RecuperarContrasenaService.hash("otro"))))
+                .thenReturn(Optional.empty());
 
-        for (String t : new String[]{"vencido", "usado", "otro", ""}) {
+        for (String t : new String[] {"vencido", "usado", "otro", ""}) {
             assertThatThrownBy(() -> service.restablecer(t, "nueva-clave-1"))
-                    .isInstanceOf(BusinessException.class).hasMessageContaining("no es válido");
+                    .isInstanceOf(BusinessException.class)
+                    .hasMessageContaining("no es válido");
         }
         verify(encoder, never()).encode(anyString());
         verify(usuarios, never()).save(any());

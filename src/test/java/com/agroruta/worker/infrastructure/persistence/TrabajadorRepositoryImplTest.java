@@ -1,6 +1,14 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,15 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("TrabajadorRepositoryImpl - Pruebas Unitarias")
@@ -37,9 +36,15 @@ class TrabajadorRepositoryImplTest {
         // ── dominio ────────────────────────────────────────────────────────
         Cargo cargo = new Cargo(1L, "Operario", "Cargo operario", new BigDecimal("80000"), true);
         trabajadorBase = new Trabajador(
-                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1",
-                LocalDate.of(2020, 1, 1), TipoContrato.JORNAL, cargo
-        );
+                1L,
+                "Juan",
+                "Pérez",
+                "123456789",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2020, 1, 1),
+                TipoContrato.JORNAL,
+                cargo);
         trabajadorBase.setEstado(EstadoTrabajador.ACTIVO);
 
         // ── entidad JPA ───────────────────────────────────────────────────
@@ -78,13 +83,13 @@ class TrabajadorRepositoryImplTest {
             Trabajador resultado = repository.guardar(trabajadorBase);
 
             assertNotNull(resultado);
-            assertEquals(1L,                      resultado.getId());
-            assertEquals("Juan",                  resultado.getNombre());
-            assertEquals("Pérez",                 resultado.getApellido());
-            assertEquals("123456789",             resultado.getCedula());
-            assertEquals(TipoContrato.JORNAL,     resultado.getTipoContrato());
+            assertEquals(1L, resultado.getId());
+            assertEquals("Juan", resultado.getNombre());
+            assertEquals("Pérez", resultado.getApellido());
+            assertEquals("123456789", resultado.getCedula());
+            assertEquals(TipoContrato.JORNAL, resultado.getTipoContrato());
             assertEquals(EstadoTrabajador.ACTIVO, resultado.getEstado());
-            assertEquals(1L,                      resultado.getCargo().getId());
+            assertEquals(1L, resultado.getCargo().getId());
             verify(jpa, times(1)).save(any(TrabajadorEntity.class));
         }
 
@@ -104,9 +109,15 @@ class TrabajadorRepositoryImplTest {
             entityInactivo.setCargo(entityBase.getCargo());
 
             Trabajador trabajadorInactivo = new Trabajador(
-                    2L, "María", "López", "987654321", "3109876543", "Carrera 2",
-                    LocalDate.of(2021, 6, 1), TipoContrato.JORNAL, trabajadorBase.getCargo()
-            );
+                    2L,
+                    "María",
+                    "López",
+                    "987654321",
+                    "3109876543",
+                    "Carrera 2",
+                    LocalDate.of(2021, 6, 1),
+                    TipoContrato.JORNAL,
+                    trabajadorBase.getCargo());
             trabajadorInactivo.setEstado(EstadoTrabajador.INACTIVO);
 
             when(jpa.save(any(TrabajadorEntity.class))).thenReturn(entityInactivo);
@@ -114,9 +125,9 @@ class TrabajadorRepositoryImplTest {
             Trabajador resultado = repository.guardar(trabajadorInactivo);
 
             assertNotNull(resultado);
-            assertEquals(2L,                        resultado.getId());
+            assertEquals(2L, resultado.getId());
             assertEquals(EstadoTrabajador.INACTIVO, resultado.getEstado());
-            assertEquals("987654321",               resultado.getCedula());
+            assertEquals("987654321", resultado.getCedula());
             verify(jpa, times(1)).save(any(TrabajadorEntity.class));
         }
     }
@@ -136,9 +147,9 @@ class TrabajadorRepositoryImplTest {
             Optional<Trabajador> resultado = repository.buscarPorId(1L);
 
             assertTrue(resultado.isPresent());
-            assertEquals(1L,                      resultado.get().getId());
-            assertEquals("Juan",                  resultado.get().getNombre());
-            assertEquals("123456789",             resultado.get().getCedula());
+            assertEquals(1L, resultado.get().getId());
+            assertEquals("Juan", resultado.get().getNombre());
+            assertEquals("123456789", resultado.get().getCedula());
             assertEquals(EstadoTrabajador.ACTIVO, resultado.get().getEstado());
             verify(jpa, times(1)).findById(1L);
         }
@@ -156,35 +167,30 @@ class TrabajadorRepositoryImplTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  buscarPorCedula
+    //  buscarPorCedulaNormalizada
     // ══════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("buscarPorCedula()")
-    class BuscarPorCedula {
+    @DisplayName("buscarPorCedulaNormalizada()")
+    class BuscarPorCedulaNormalizada {
 
         @Test
-        @DisplayName("Debe retornar Optional con el trabajador mapeado cuando la cédula existe")
-        void debeRetornarTrabajadorSiCedulaExiste() {
-            when(jpa.findByCedula("123456789")).thenReturn(Optional.of(entityBase));
+        @DisplayName("Debe retornar todos los registros con esa cédula (uno por agricultor)")
+        void debeRetornarTodosLosRegistrosConEsaCedula() {
+            when(jpa.findByCedulaNormalizada("123456789")).thenReturn(List.of(entityBase, entityBase));
 
-            Optional<Trabajador> resultado = repository.buscarPorCedula("123456789");
+            List<Trabajador> resultado = repository.buscarPorCedulaNormalizada("123456789");
 
-            assertTrue(resultado.isPresent());
-            assertEquals(1L,          resultado.get().getId());
-            assertEquals("123456789", resultado.get().getCedula());
-            assertEquals("Juan",      resultado.get().getNombre());
-            verify(jpa, times(1)).findByCedula("123456789");
+            assertEquals(2, resultado.size());
+            assertEquals("123456789", resultado.get(0).getCedula());
+            assertEquals("Juan", resultado.get(0).getNombre());
         }
 
         @Test
-        @DisplayName("Debe retornar Optional vacío cuando la cédula no existe")
-        void debeRetornarOptionalVacioSiCedulaNoExiste() {
-            when(jpa.findByCedula("000000000")).thenReturn(Optional.empty());
+        @DisplayName("Debe retornar lista vacía cuando ningún agricultor registró la cédula")
+        void debeRetornarListaVaciaSiCedulaNoExiste() {
+            when(jpa.findByCedulaNormalizada("000000000")).thenReturn(List.of());
 
-            Optional<Trabajador> resultado = repository.buscarPorCedula("000000000");
-
-            assertTrue(resultado.isEmpty());
-            verify(jpa, times(1)).findByCedula("000000000");
+            assertTrue(repository.buscarPorCedulaNormalizada("000000000").isEmpty());
         }
     }
 
@@ -214,10 +220,10 @@ class TrabajadorRepositoryImplTest {
 
             List<Trabajador> resultado = repository.listarTodos();
 
-            assertEquals(2,                         resultado.size());
-            assertEquals(1L,                        resultado.get(0).getId());
-            assertEquals(2L,                        resultado.get(1).getId());
-            assertEquals(EstadoTrabajador.ACTIVO,   resultado.get(0).getEstado());
+            assertEquals(2, resultado.size());
+            assertEquals(1L, resultado.get(0).getId());
+            assertEquals(2L, resultado.get(1).getId());
+            assertEquals(EstadoTrabajador.ACTIVO, resultado.get(0).getEstado());
             assertEquals(EstadoTrabajador.INACTIVO, resultado.get(1).getEstado());
             verify(jpa, times(1)).findAll();
         }
@@ -250,7 +256,7 @@ class TrabajadorRepositoryImplTest {
 
             assertEquals(1, resultado.size());
             assertEquals(EstadoTrabajador.ACTIVO, resultado.get(0).getEstado());
-            assertEquals(1L,                      resultado.get(0).getId());
+            assertEquals(1L, resultado.get(0).getId());
             verify(jpa, times(1)).findByEstado(EstadoTrabajador.ACTIVO);
         }
 
@@ -309,32 +315,28 @@ class TrabajadorRepositoryImplTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════
-    //  existePorCedula
+    //  existePorCedulaYAgricultor
     // ══════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("existePorCedula()")
-    class ExistePorCedula {
+    @DisplayName("existePorCedulaYAgricultor()")
+    class ExistePorCedulaYAgricultor {
 
         @Test
-        @DisplayName("Debe retornar true cuando la cédula ya está registrada")
-        void debeRetornarTrueSiCedulaExiste() {
-            when(jpa.existsByCedula("123456789")).thenReturn(true);
+        @DisplayName("Debe retornar true cuando ese agricultor ya registró la cédula")
+        void debeRetornarTrueSiElAgricultorYaLaTiene() {
+            when(jpa.existsByCedulaAndAgricultorId("123456789", 7L)).thenReturn(true);
 
-            boolean resultado = repository.existePorCedula("123456789");
-
-            assertTrue(resultado);
-            verify(jpa, times(1)).existsByCedula("123456789");
+            assertTrue(repository.existePorCedulaYAgricultor("123456789", 7L));
+            verify(jpa, times(1)).existsByCedulaAndAgricultorId("123456789", 7L);
         }
 
         @Test
-        @DisplayName("Debe retornar false cuando la cédula no está registrada")
-        void debeRetornarFalseSiCedulaNoExiste() {
-            when(jpa.existsByCedula("000000000")).thenReturn(false);
+        @DisplayName("Debe retornar false cuando la cédula solo la tiene otro agricultor")
+        void debeRetornarFalseSiLaTieneOtroAgricultor() {
+            when(jpa.existsByCedulaAndAgricultorId("123456789", 8L)).thenReturn(false);
 
-            boolean resultado = repository.existePorCedula("000000000");
-
-            assertFalse(resultado);
-            verify(jpa, times(1)).existsByCedula("000000000");
+            assertFalse(repository.existePorCedulaYAgricultor("123456789", 8L));
+            verify(jpa, times(1)).existsByCedulaAndAgricultorId("123456789", 8L);
         }
     }
 }

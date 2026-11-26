@@ -1,28 +1,20 @@
 package com.agroruta.user.infrastructure.web.dto;
 
-import lombok.Data;
+import com.agroruta.user.application.ports.in.SesionIniciada;
 
-@Data
-public class AuthResponse {
-    private Long id;
-    private String token;
-    private String email;
-    private String nombre;
-    private String rol;
-    /** true = la cuenta se creó pero falta confirmar el correo (no hay token todavía) */
-    private boolean verificacionPendiente;
+/**
+ * Respuesta de registro, inicio de sesión y renovación.
+ *
+ * @param verificacionPendiente true = la cuenta se creó pero falta confirmar el correo (no hay token todavía)
+ */
+public record AuthResponse(
+        Long id, String token, String email, String nombre, String rol, boolean verificacionPendiente) {
 
     public AuthResponse(Long id, String token, String email, String nombre, String rol) {
         this(id, token, email, nombre, rol, false);
     }
 
-    public AuthResponse(Long id, String token, String email, String nombre, String rol,
-                        boolean verificacionPendiente) {
-        this.id = id;
-        this.token = token;
-        this.email = email;
-        this.nombre = nombre;
-        this.rol = rol;
-        this.verificacionPendiente = verificacionPendiente;
+    public static AuthResponse de(SesionIniciada s) {
+        return new AuthResponse(s.id(), s.token(), s.email(), s.nombre(), s.rol(), s.verificacionPendiente());
     }
 }

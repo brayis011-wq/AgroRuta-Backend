@@ -1,11 +1,12 @@
 package com.agroruta.inventory.domain;
 
+import com.agroruta.shared.util.Dinero;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 /**
  * Una entrada o salida de un insumo en la bodega de un agricultor.
@@ -24,32 +25,49 @@ public class MovimientoInventario {
     private double cantidad;
     private LocalDate fecha;
     /** Lo que costó la compra completa (COP); null en usos y ajustes */
-    private Double costoTotal;
+    private BigDecimal costoTotal;
+
     private String proveedor;
     /** Fumigación que gastó el producto (solo en USO) */
     private Long fumigacionId;
+    /** Actividad (abonado...) que gastó el producto (solo en USO) */
+    private Long actividadId;
+
     private String observaciones;
     private LocalDateTime creadoEn;
 
-    public static MovimientoInventario compra(Long agricultorId, Long insumoId, double cantidadBase,
-                                              Double costoTotal, LocalDate fecha, String proveedor, String observaciones) {
+    public static MovimientoInventario compra(
+            Long agricultorId,
+            Long insumoId,
+            double cantidadBase,
+            BigDecimal costoTotal,
+            LocalDate fecha,
+            String proveedor,
+            String observaciones) {
         MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.COMPRA, cantidadBase, fecha);
-        m.costoTotal = costoTotal;
+        m.costoTotal = Dinero.redondear(costoTotal);
         m.proveedor = vacioANull(proveedor);
         m.observaciones = vacioANull(observaciones);
         return m;
     }
 
-    public static MovimientoInventario uso(Long agricultorId, Long insumoId, double cantidadBase,
-                                           LocalDate fecha, Long fumigacionId) {
+    public static MovimientoInventario uso(
+            Long agricultorId, Long insumoId, double cantidadBase, LocalDate fecha, Long fumigacionId) {
         MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.USO, cantidadBase, fecha);
         m.fumigacionId = fumigacionId;
         return m;
     }
 
+    public static MovimientoInventario usoDeActividad(
+            Long agricultorId, Long insumoId, double cantidadBase, LocalDate fecha, Long actividadId) {
+        MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.USO, cantidadBase, fecha);
+        m.actividadId = actividadId;
+        return m;
+    }
+
     /** @param diferencia positiva si sobraba producto, negativa si faltaba */
-    public static MovimientoInventario ajuste(Long agricultorId, Long insumoId, double diferencia,
-                                              LocalDate fecha, String observaciones) {
+    public static MovimientoInventario ajuste(
+            Long agricultorId, Long insumoId, double diferencia, LocalDate fecha, String observaciones) {
         MovimientoInventario m = base(agricultorId, insumoId, TipoMovimiento.AJUSTE, diferencia, fecha);
         m.observaciones = vacioANull(observaciones);
         return m;
@@ -63,8 +81,8 @@ public class MovimientoInventario {
         };
     }
 
-    private static MovimientoInventario base(Long agricultorId, Long insumoId, TipoMovimiento tipo,
-                                             double cantidad, LocalDate fecha) {
+    private static MovimientoInventario base(
+            Long agricultorId, Long insumoId, TipoMovimiento tipo, double cantidad, LocalDate fecha) {
         MovimientoInventario m = new MovimientoInventario();
         m.agricultorId = agricultorId;
         m.insumoId = insumoId;

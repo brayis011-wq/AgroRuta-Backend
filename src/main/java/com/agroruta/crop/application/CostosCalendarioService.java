@@ -1,33 +1,33 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.in.FincaUseCase;
+import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
 import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.application.ports.out.LoteRepository;
-import com.agroruta.crop.application.ports.out.SiembraRepository;
-import com.agroruta.crop.application.ports.in.FincaUseCase;
-import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.ManoObraPort;
+import com.agroruta.crop.application.ports.out.SiembraRepository;
 import com.agroruta.crop.domain.*;
 import com.agroruta.crop.domain.CalendarioCultivo.DatosSiembra;
 import com.agroruta.crop.domain.CalendarioCultivo.Historial;
 import com.agroruta.shared.exception.BusinessException;
-import org.springframework.stereotype.Service;
-
+import com.agroruta.shared.util.ZonaHoraria;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Service;
 
 /** Costos de una temporada y calendario de cultivo (por siembra o por finca). */
 @Service
 public class CostosCalendarioService {
 
-    static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
     /** Rango máximo que se puede pedir al calendario */
     static final long MAX_DIAS = 400;
 
@@ -42,12 +42,17 @@ public class CostosCalendarioService {
     private final CosechaRepository cosechaRepository;
     private final ManoObraPort manoObraPort;
 
-    public CostosCalendarioService(SiembraUseCase siembraUseCase, FincaUseCase fincaUseCase,
-                                   FincaRepository fincaRepository, LoteRepository loteRepository,
-                                   SiembraRepository siembraRepository, EtapaSiembraRepository etapaRepository,
-                                   ActividadCultivoRepository actividadRepository,
-                                   FumigacionRepository fumigacionRepository, CosechaRepository cosechaRepository,
-                                   ManoObraPort manoObraPort) {
+    public CostosCalendarioService(
+            SiembraUseCase siembraUseCase,
+            FincaUseCase fincaUseCase,
+            FincaRepository fincaRepository,
+            LoteRepository loteRepository,
+            SiembraRepository siembraRepository,
+            EtapaSiembraRepository etapaRepository,
+            ActividadCultivoRepository actividadRepository,
+            FumigacionRepository fumigacionRepository,
+            CosechaRepository cosechaRepository,
+            ManoObraPort manoObraPort) {
         this.siembraUseCase = siembraUseCase;
         this.fincaUseCase = fincaUseCase;
         this.fincaRepository = fincaRepository;
@@ -60,15 +65,33 @@ public class CostosCalendarioService {
         this.manoObraPort = manoObraPort;
     }
 
+    /** Labores que se repiten (null en pruebas antiguas) */
+    private ActividadProgramadaService programadas;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setProgramadas(ActividadProgramadaService programadas) {
+        this.programadas = programadas;
+    }
+
     // ── Costos ────────────────────────────────────────────────────────
 
     public CostosSiembra costos(Long siembraId) {
         siembraUseCase.buscarSiembraPorId(siembraId);
-        return CalculadoraCostosSiembra.calcular(siembraId,
+        return CalculadoraCostosSiembra.calcular(
+                siembraId,
                 manoObraPort.jornalesDeSiembra(siembraId),
                 fumigacionRepository.findBySiembraId(siembraId),
                 actividadRepository.findBySiembraId(siembraId),
-                cosechaRepository.findBySiembraId(siembraId));
+                cosechaRepository.findBySiembraId(siembraId),
+                ventasPort == null ? List.of() : ventasPort.ventasDeSiembra(siembraId));
+    }
+
+    /** Ventas de la siembra (null en pruebas antiguas: los ingresos salen de las cosechas) */
+    private com.agroruta.crop.application.ports.out.VentasSiembraPort ventasPort;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setVentasPort(com.agroruta.crop.application.ports.out.VentasSiembraPort ventasPort) {
+        this.ventasPort = ventasPort;
     }
 
     // ── Calendario ────────────────────────────────────────────────────
@@ -76,13 +99,21 @@ public class CostosCalendarioService {
     public List<EventoCalendario> calendarioSiembra(Long siembraId, LocalDate desde, LocalDate hasta) {
         Siembra s = siembraUseCase.buscarSiembraPorId(siembraId);
         Lote lote = loteRepository.findById(s.getLoteId()).orElse(null);
-        Long agricultorId = lote == null ? null
-                : fincaRepository.findById(lote.getFincaId()).map(Finca::getAgricultorId).orElse(null);
+        Long agricultorId = lote == null
+                ? null
+                : fincaRepository
+                        .findById(lote.getFincaId())
+                        .map(Finca::getAgricultorId)
+                        .orElse(null);
         LocalDate[] rango = rango(desde, hasta);
         DatosSiembra datos = datos(s, lote);
         Map<String, Historial> historial = CalendarioCultivo.historialPorCultivo(historialDe(agricultorId));
-        return CalendarioCultivo.entre(
-                CalendarioCultivo.eventos(datos, historial.get(s.getTipoCultivo()), hoy()), rango[0], rango[1]);
+        List<EventoCalendario> eventos =
+                new ArrayList<>(CalendarioCultivo.eventos(datos, historial.get(s.getTipoCultivo()), hoy()));
+        if (programadas != null) {
+            eventos.addAll(programadas.eventos(s, datos.loteId(), datos.loteNombre(), rango[0], rango[1], hoy()));
+        }
+        return CalendarioCultivo.entre(eventos, rango[0], rango[1]);
     }
 
     public List<EventoCalendario> calendarioFinca(Long fincaId, LocalDate desde, LocalDate hasta) {
@@ -93,10 +124,16 @@ public class CostosCalendarioService {
         List<EventoCalendario> eventos = new ArrayList<>();
         for (Lote lote : loteRepository.findByFincaId(fincaId)) {
             for (Siembra s : siembraRepository.findHistorialByLoteId(lote.getId())) {
-                boolean empezoAntesDelFin = s.getFechaSiembra() == null || !s.getFechaSiembra().isAfter(rango[1]);
-                boolean seguiaAlInicio = s.estaActiva() || s.getFechaFin() == null || !s.getFechaFin().isBefore(rango[0]);
+                boolean empezoAntesDelFin =
+                        s.getFechaSiembra() == null || !s.getFechaSiembra().isAfter(rango[1]);
+                boolean seguiaAlInicio = s.estaActiva()
+                        || s.getFechaFin() == null
+                        || !s.getFechaFin().isBefore(rango[0]);
                 if (!empezoAntesDelFin || !seguiaAlInicio) continue;
                 eventos.addAll(CalendarioCultivo.eventos(datos(s, lote), historial.get(s.getTipoCultivo()), hoy));
+                if (programadas != null) {
+                    eventos.addAll(programadas.eventos(s, lote.getId(), lote.getNombre(), rango[0], rango[1], hoy));
+                }
             }
         }
         return CalendarioCultivo.entre(eventos, rango[0], rango[1]);
@@ -104,9 +141,14 @@ public class CostosCalendarioService {
 
     private DatosSiembra datos(Siembra s, Lote lote) {
         Long id = s.getId();
-        return new DatosSiembra(s, lote == null ? s.getLoteId() : lote.getId(), lote == null ? null : lote.getNombre(),
-                etapaRepository.findBySiembraId(id), actividadRepository.findBySiembraId(id),
-                fumigacionRepository.findBySiembraId(id), cosechaRepository.findBySiembraId(id));
+        return new DatosSiembra(
+                s,
+                lote == null ? s.getLoteId() : lote.getId(),
+                lote == null ? null : lote.getNombre(),
+                etapaRepository.findBySiembraId(id),
+                actividadRepository.findBySiembraId(id),
+                fumigacionRepository.findBySiembraId(id),
+                cosechaRepository.findBySiembraId(id));
     }
 
     /** Temporadas terminadas del agricultor (todas sus fincas), con etapas y cosechas */
@@ -117,8 +159,14 @@ public class CostosCalendarioService {
             for (Lote l : loteRepository.findByFincaId(f.getId())) {
                 for (Siembra s : siembraRepository.findHistorialByLoteId(l.getId())) {
                     if (s.estaActiva()) continue;
-                    lista.add(new DatosSiembra(s, l.getId(), l.getNombre(), etapaRepository.findBySiembraId(s.getId()),
-                            List.of(), List.of(), cosechaRepository.findBySiembraId(s.getId())));
+                    lista.add(new DatosSiembra(
+                            s,
+                            l.getId(),
+                            l.getNombre(),
+                            etapaRepository.findBySiembraId(s.getId()),
+                            List.of(),
+                            List.of(),
+                            cosechaRepository.findBySiembraId(s.getId())));
                 }
             }
         }
@@ -131,8 +179,9 @@ public class CostosCalendarioService {
         LocalDate d = desde != null ? desde : hoy.minusDays(30);
         LocalDate h = hasta != null ? hasta : hoy.plusDays(60);
         if (h.isBefore(d)) throw new BusinessException("La fecha final no puede ser anterior a la inicial.");
-        if (ChronoUnit.DAYS.between(d, h) > MAX_DIAS) throw new BusinessException("El rango del calendario no puede superar 400 días.");
-        return new LocalDate[]{d, h};
+        if (ChronoUnit.DAYS.between(d, h) > MAX_DIAS)
+            throw new BusinessException("El rango del calendario no puede superar 400 días.");
+        return new LocalDate[] {d, h};
     }
 
     LocalDate hoy() {

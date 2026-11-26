@@ -2,6 +2,13 @@ package com.agroruta.notification.infrastructure.correo;
 
 import com.agroruta.notification.application.ports.out.CorreoPort;
 import com.agroruta.notification.domain.Correo;
+import com.agroruta.shared.exception.FalloInternoException;
+import java.nio.charset.StandardCharsets;
+import java.time.Clock;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.Map;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -11,13 +18,6 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
-import java.nio.charset.StandardCharsets;
-import java.time.Clock;
-import java.time.Instant;
-import java.util.Base64;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Envía con la API de Gmail por HTTPS (Render gratis bloquea los puertos SMTP).
@@ -45,8 +45,13 @@ public class GmailApiCorreoAdapter implements CorreoPort {
         this(clientId, clientSecret, refreshToken, remitente, conTiempos(), Clock.systemUTC());
     }
 
-    GmailApiCorreoAdapter(String clientId, String clientSecret, String refreshToken, String remitente,
-                          RestTemplate http, Clock reloj) {
+    GmailApiCorreoAdapter(
+            String clientId,
+            String clientSecret,
+            String refreshToken,
+            String remitente,
+            RestTemplate http,
+            Clock reloj) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.refreshToken = refreshToken;
@@ -69,13 +74,16 @@ public class GmailApiCorreoAdapter implements CorreoPort {
             HttpHeaders h = new HttpHeaders();
             h.setBearerAuth(token());
             h.setContentType(MediaType.APPLICATION_JSON);
-            String raw = Base64.getUrlEncoder().withoutPadding()
+            String raw = Base64.getUrlEncoder()
+                    .withoutPadding()
                     .encodeToString(mime(correo).getBytes(StandardCharsets.UTF_8));
             http.postForEntity(URL_ENVIO, new HttpEntity<>(Map.of("raw", raw), h), Map.class);
             log.info("Correo enviado: \"{}\"", correo.asunto());
             return true;
         } catch (RuntimeException e) {
-            synchronized (this) { venceEn = Instant.EPOCH; } // por si el token dejó de servir
+            synchronized (this) {
+                venceEn = Instant.EPOCH;
+            } // por si el token dejó de servir
             log.warn("No se pudo enviar el correo \"{}\": {}", correo.asunto(), e.getMessage());
             return false;
         }
@@ -97,7 +105,7 @@ public class GmailApiCorreoAdapter implements CorreoPort {
         Map<String, Object> r = http.postForObject(URL_TOKEN, new HttpEntity<>(form, h), Map.class);
         Object t = r == null ? null : r.get("access_token");
         if (!(t instanceof String s) || s.isBlank()) {
-            throw new IllegalStateException("Google no devolvió access_token");
+            throw new FalloInternoException("Google no devolvió access_token");
         }
         long segundos = r.get("expires_in") instanceof Number n ? n.longValue() : 3600;
         accessToken = s;
@@ -109,7 +117,9 @@ public class GmailApiCorreoAdapter implements CorreoPort {
     String mime(Correo c) {
         String limite = "agroruta-" + UUID.randomUUID();
         Base64.Encoder b64 = Base64.getMimeEncoder(76, "\r\n".getBytes(StandardCharsets.US_ASCII));
-        String de = remitente == null || remitente.isBlank() ? "" : "From: " + encabezado("AgroRuta") + " <" + limpio(remitente) + ">\r\n";
+        String de = remitente == null || remitente.isBlank()
+                ? ""
+                : "From: " + encabezado("AgroRuta") + " <" + limpio(remitente) + ">\r\n";
         return de
                 + "To: " + limpio(c.para()) + "\r\n"
                 + "Subject: " + encabezado(c.asunto()) + "\r\n"

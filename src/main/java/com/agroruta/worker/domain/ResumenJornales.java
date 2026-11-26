@@ -10,8 +10,13 @@ import java.time.LocalDate;
  * @param primeraPendiente fecha del jornal sin liquidar más antiguo (para proponer el periodo de la nómina)
  * @param ultimaPendiente  fecha del jornal sin liquidar más reciente
  */
-public record ResumenJornales(long cantidad, BigDecimal valorTotal, long pendientes, BigDecimal valorPendiente,
-                              LocalDate primeraPendiente, LocalDate ultimaPendiente) {
+public record ResumenJornales(
+        long cantidad,
+        BigDecimal valorTotal,
+        long pendientes,
+        BigDecimal valorPendiente,
+        LocalDate primeraPendiente,
+        LocalDate ultimaPendiente) {
 
     public ResumenJornales {
         if (valorTotal == null) valorTotal = BigDecimal.ZERO;

@@ -2,18 +2,20 @@ package com.agroruta.crop.application;
 
 import com.agroruta.crop.application.ports.in.FincaUseCase;
 import com.agroruta.crop.application.ports.in.LoteUseCase;
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.application.ports.out.LoteRepository;
-import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.shared.util.EnumParser;
-import org.springframework.stereotype.Service;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.shared.util.EnumParser;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional
 public class LoteService implements LoteUseCase {
 
     private final LoteRepository loteRepository;
@@ -38,9 +40,8 @@ public class LoteService implements LoteUseCase {
     }
 
     @Override
-    public Lote actualizarGeometriaLote(Long loteId, String coordenadas,
-                                        Double area, Double centroideLat,
-                                        Double centroideLng) {
+    public Lote actualizarGeometriaLote(
+            Long loteId, String coordenadas, Double area, Double centroideLat, Double centroideLng) {
         Lote lote = buscarLotePorId(loteId);
         lote.actualizarGeometria(coordenadas, area, centroideLat, centroideLng);
         return loteRepository.save(lote);
@@ -87,12 +88,15 @@ public class LoteService implements LoteUseCase {
         loteRepository.save(lote);
     }
 
+    @Transactional(readOnly = true)
     @Override
     public Lote buscarLotePorId(Long id) {
-        return loteRepository.findById(id)
+        return loteRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lote no encontrado con ID: " + id));
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<Lote> listarLotesPorFinca(Long fincaId) {
         fincaUseCase.buscarFincaPorId(fincaId);
@@ -108,7 +112,8 @@ public class LoteService implements LoteUseCase {
         Lote lote = buscarLotePorId(id);
         if (lote.estaEliminado()) return;
         if (loteRepository.existsSiembraActivaEnLote(id)) {
-            throw new BusinessException("El lote tiene una siembra en curso. Finalízala o elimínala antes de borrar el lote.");
+            throw new BusinessException(
+                    "El lote tiene una siembra en curso. Finalízala o elimínala antes de borrar el lote.");
         }
         lote.eliminar(LocalDateTime.now());
         loteRepository.save(lote);

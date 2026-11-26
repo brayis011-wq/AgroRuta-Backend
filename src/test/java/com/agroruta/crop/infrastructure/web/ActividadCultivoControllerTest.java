@@ -1,9 +1,15 @@
 package com.agroruta.crop.infrastructure.web;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.crop.application.ports.in.ActividadCultivoUseCase;
 import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.domain.TipoActividad;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,14 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class ActividadCultivoControllerTest {
@@ -40,10 +38,9 @@ class ActividadCultivoControllerTest {
 
     @Test
     void deberiaRegistrarActividadYRetornar201() throws Exception {
-        ActividadCultivo actividad = new ActividadCultivo(
-                1L, TipoActividad.RIEGO, "Riego matutino", LocalDate.now(), 10L
-        );
-        when(actividadUseCase.registrarActividad(any(), any(), any(), anyLong(), any()))
+        ActividadCultivo actividad =
+                new ActividadCultivo(1L, TipoActividad.RIEGO, "Riego matutino", LocalDate.now(), 10L);
+        when(actividadUseCase.registrarActividad(any(), any(), any(), anyLong(), any(), any()))
                 .thenReturn(actividad);
 
         String body = """
@@ -67,8 +64,7 @@ class ActividadCultivoControllerTest {
     void deberiaListarActividadesPorSiembra() throws Exception {
         List<ActividadCultivo> actividades = List.of(
                 new ActividadCultivo(1L, TipoActividad.RIEGO, "Riego matutino", LocalDate.now(), 10L),
-                new ActividadCultivo(2L, TipoActividad.OTRO, "Fumigación preventiva", LocalDate.now(), 10L)
-        );
+                new ActividadCultivo(2L, TipoActividad.OTRO, "Fumigación preventiva", LocalDate.now(), 10L));
         when(actividadUseCase.listarActividadesPorSiembra(10L)).thenReturn(actividades);
 
         mockMvc.perform(get("/api/activities/planting/10"))

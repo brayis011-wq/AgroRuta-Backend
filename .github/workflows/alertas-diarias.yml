@@ -26,8 +26,9 @@ jobs:
           FORZAR: ${{ inputs.forzar || false }}
         run: |
           if [ -z "$API_URL" ] || [ -z "$TAREAS_TOKEN" ]; then
-            echo "::warning::Faltan los secretos API_URL o TAREAS_TOKEN; no se manda nada."
-            exit 0
+            # Antes salía en verde sin mandar nada y nadie se enteraba: ahora falla y GitHub avisa por correo
+            echo "::error::Faltan los secretos API_URL o TAREAS_TOKEN del repositorio (Settings > Secrets and variables > Actions). API_URL es la dirección del backend en Render y TAREAS_TOKEN el mismo valor que tiene esa variable en Render."
+            exit 1
           fi
           API_URL="${API_URL%/}"
           # Render puede tardar varios minutos en despertar
@@ -42,4 +43,35 @@ jobs:
           curl -fsS --max-time 300 -X POST \
             -H "X-Tarea-Token: $TAREAS_TOKEN" \
             "$API_URL/api/jobs/daily-alerts?forzar=$FORZAR"
+          echo
+
+      # Sesiones y enlaces de correo vencidos: sin esto esas tablas solo crecen.
+      # Corre aunque el resumen haya fallado; el backend ya quedó despierto con el paso anterior.
+      - name: Borrar sesiones y enlaces vencidos
+        if: ${{ !cancelled() }}
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          if [ -z "$API_URL" ] || [ -z "$TAREAS_TOKEN" ]; then
+            echo "::error::Faltan los secretos API_URL o TAREAS_TOKEN; no se limpia nada."
+            exit 1
+          fi
+          curl -fsS --max-time 120 --retry 3 --retry-delay 20 --retry-all-errors -X POST \
+            -H "X-Tarea-Token: $TAREAS_TOKEN" \
+            "${API_URL%/}/api/jobs/cleanup"
+          echo
+
+      # Precios mayoristas de SIPSA (DANE) para estimar lo que vale una cosecha sin precio.
+      # El backend solo los vuelve a pedir si tienen más de 3 días; si SIPSA no responde, no pasa nada.
+      - name: Traer los precios de referencia
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          TAREAS_TOKEN: ${{ secrets.TAREAS_TOKEN }}
+        run: |
+          curl -fsS --max-time 240 -X POST \
+            -H "X-Tarea-Token: $TAREAS_TOKEN" \
+            "${API_URL%/}/api/jobs/reference-prices"
           echo

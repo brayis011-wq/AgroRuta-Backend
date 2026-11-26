@@ -1,19 +1,18 @@
 package com.agroruta.shared.security;
 
+import static org.assertj.core.api.Assertions.*;
+
+import com.agroruta.shared.config.JwtProperties;
 import io.jsonwebtoken.ExpiredJwtException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.*;
 
 @DisplayName("JwtService")
 class JwtServiceTest {
@@ -36,9 +35,7 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
-        ReflectionTestUtils.setField(jwtService, "secretKey", SECRET);
-        ReflectionTestUtils.setField(jwtService, "jwtExpiration", EXPIRATION);
+        jwtService = new JwtService(new JwtProperties(SECRET, EXPIRATION));
 
         usuario = User.builder()
                 .username("carlos@agroruta.com")
@@ -72,8 +69,7 @@ class JwtServiceTest {
         @DisplayName("genera token con claims extra sin lanzar excepción")
         void generaTokenConClaimsExtra() {
             Map<String, Object> extra = Map.of("rol", "ADMIN", "finca", "El Rosal");
-            assertThatCode(() -> jwtService.generateToken(extra, usuario))
-                    .doesNotThrowAnyException();
+            assertThatCode(() -> jwtService.generateToken(extra, usuario)).doesNotThrowAnyException();
         }
 
         @Test
@@ -159,9 +155,7 @@ class JwtServiceTest {
             // Límite superior: el token no puede expirar más tarde que "despues + 1h"
             long esperadoMax = despues + EXPIRATION;
 
-            assertThat(expiracion.getTime())
-                    .isGreaterThanOrEqualTo(esperadoMin)
-                    .isLessThanOrEqualTo(esperadoMax);
+            assertThat(expiracion.getTime()).isGreaterThanOrEqualTo(esperadoMin).isLessThanOrEqualTo(esperadoMax);
         }
 
         @Test
@@ -210,11 +204,10 @@ class JwtServiceTest {
         @DisplayName("token expirado lanza ExpiredJwtException al intentar validarlo")
         void tokenExpiradoLanzaExcepcion() {
             // Expiración en el pasado → JJWT lanza ExpiredJwtException al parsear
-            ReflectionTestUtils.setField(jwtService, "jwtExpiration", -1000L);
+            jwtService = new JwtService(new JwtProperties(SECRET, -1000L));
             String token = jwtService.generateToken(usuario);
 
-            assertThatThrownBy(() -> jwtService.isTokenValid(token, usuario))
-                    .isInstanceOf(ExpiredJwtException.class);
+            assertThatThrownBy(() -> jwtService.isTokenValid(token, usuario)).isInstanceOf(ExpiredJwtException.class);
         }
     }
 

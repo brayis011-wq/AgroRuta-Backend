@@ -1,21 +1,20 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.domain.Fumigacion;
 import com.agroruta.crop.domain.UnidadMedida;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FumigacionRepositoryImplTest {
@@ -28,17 +27,17 @@ class FumigacionRepositoryImplTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long        ID            = 1L;
-    private static final Long        SIEMBRA_ID    = 33L;
-    private static final LocalDate   FECHA         = LocalDate.of(2024, 7, 10);
-    private static final String      PRODUCTO      = "Glifosato";
-    private static final Double      DOSIS         = 2.5;
-    private static final UnidadMedida UNIDAD       = UnidadMedida.LITROS;
-    private static final Double      AREA_APLICADA = 8.0;
-    private static final String      OBSERVACIONES = "Aplicación zona norte";
+    private static final Long ID = 1L;
+    private static final Long SIEMBRA_ID = 33L;
+    private static final LocalDate FECHA = LocalDate.of(2024, 7, 10);
+    private static final String PRODUCTO = "Glifosato";
+    private static final Double DOSIS = 2.5;
+    private static final UnidadMedida UNIDAD = UnidadMedida.LITROS;
+    private static final Double AREA_APLICADA = 8.0;
+    private static final String OBSERVACIONES = "Aplicación zona norte";
 
     private FumigacionEntity entityGuardada;
-    private Fumigacion       dominioEntrada;
+    private Fumigacion dominioEntrada;
 
     @BeforeEach
     void setUp() {
@@ -70,14 +69,14 @@ class FumigacionRepositoryImplTest {
 
         Fumigacion resultado = repository.save(dominioEntrada);
 
-        assertEquals(ID,            resultado.getId());
-        assertEquals(FECHA,         resultado.getFecha());
-        assertEquals(PRODUCTO,      resultado.getProducto());
-        assertEquals(DOSIS,         resultado.getDosis());
-        assertEquals(UNIDAD,        resultado.getUnidadMedida());
+        assertEquals(ID, resultado.getId());
+        assertEquals(FECHA, resultado.getFecha());
+        assertEquals(PRODUCTO, resultado.getProducto());
+        assertEquals(DOSIS, resultado.getDosis());
+        assertEquals(UNIDAD, resultado.getUnidadMedida());
         assertEquals(AREA_APLICADA, resultado.getAreaAplicada());
         assertEquals(OBSERVACIONES, resultado.getObservaciones());
-        assertEquals(SIEMBRA_ID,    resultado.getSiembraId());
+        assertEquals(SIEMBRA_ID, resultado.getSiembraId());
         verify(jpaRepository, times(1)).save(any(FumigacionEntity.class));
     }
 
@@ -87,15 +86,14 @@ class FumigacionRepositoryImplTest {
 
         repository.save(dominioEntrada);
 
-        verify(jpaRepository).save(argThat(entity ->
-                entity.getFecha()        .equals(FECHA)         &&
-                        entity.getProducto()     .equals(PRODUCTO)      &&
-                        entity.getDosis()        .equals(DOSIS)         &&
-                        entity.getUnidadMedida() == UNIDAD              &&
-                        entity.getAreaAplicada() .equals(AREA_APLICADA) &&
-                        entity.getObservaciones().equals(OBSERVACIONES) &&
-                        entity.getSiembraId()    .equals(SIEMBRA_ID)
-        ));
+        verify(jpaRepository)
+                .save(argThat(entity -> entity.getFecha().equals(FECHA)
+                        && entity.getProducto().equals(PRODUCTO)
+                        && entity.getDosis().equals(DOSIS)
+                        && entity.getUnidadMedida() == UNIDAD
+                        && entity.getAreaAplicada().equals(AREA_APLICADA)
+                        && entity.getObservaciones().equals(OBSERVACIONES)
+                        && entity.getSiembraId().equals(SIEMBRA_ID)));
     }
 
     @Test
@@ -129,14 +127,14 @@ class FumigacionRepositoryImplTest {
         Optional<Fumigacion> resultado = repository.findById(ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,            resultado.get().getId());
-        assertEquals(FECHA,         resultado.get().getFecha());
-        assertEquals(PRODUCTO,      resultado.get().getProducto());
-        assertEquals(DOSIS,         resultado.get().getDosis());
-        assertEquals(UNIDAD,        resultado.get().getUnidadMedida());
+        assertEquals(ID, resultado.get().getId());
+        assertEquals(FECHA, resultado.get().getFecha());
+        assertEquals(PRODUCTO, resultado.get().getProducto());
+        assertEquals(DOSIS, resultado.get().getDosis());
+        assertEquals(UNIDAD, resultado.get().getUnidadMedida());
         assertEquals(AREA_APLICADA, resultado.get().getAreaAplicada());
         assertEquals(OBSERVACIONES, resultado.get().getObservaciones());
-        assertEquals(SIEMBRA_ID,    resultado.get().getSiembraId());
+        assertEquals(SIEMBRA_ID, resultado.get().getSiembraId());
     }
 
     @Test
@@ -162,13 +160,12 @@ class FumigacionRepositoryImplTest {
         entity2.setObservaciones("Segunda aplicación");
         entity2.setSiembraId(SIEMBRA_ID);
 
-        when(jpaRepository.findBySiembraId(SIEMBRA_ID))
-                .thenReturn(List.of(entityGuardada, entity2));
+        when(jpaRepository.findBySiembraId(SIEMBRA_ID)).thenReturn(List.of(entityGuardada, entity2));
 
         List<Fumigacion> resultado = repository.findBySiembraId(SIEMBRA_ID);
 
-        assertEquals(2,              resultado.size());
-        assertEquals(ID,             resultado.get(0).getId());
+        assertEquals(2, resultado.size());
+        assertEquals(ID, resultado.get(0).getId());
         assertEquals(UnidadMedida.KG, resultado.get(1).getUnidadMedida());
     }
 
@@ -194,13 +191,12 @@ class FumigacionRepositoryImplTest {
         entity2.setObservaciones(null);
         entity2.setSiembraId(SIEMBRA_ID);
 
-        when(jpaRepository.findBySiembraId(SIEMBRA_ID))
-                .thenReturn(List.of(entityGuardada, entity2));
+        when(jpaRepository.findBySiembraId(SIEMBRA_ID)).thenReturn(List.of(entityGuardada, entity2));
 
         List<Fumigacion> resultado = repository.findBySiembraId(SIEMBRA_ID);
 
-        assertEquals(SIEMBRA_ID,          resultado.get(0).getSiembraId());
-        assertEquals(SIEMBRA_ID,          resultado.get(1).getSiembraId());
+        assertEquals(SIEMBRA_ID, resultado.get(0).getSiembraId());
+        assertEquals(SIEMBRA_ID, resultado.get(1).getSiembraId());
         assertEquals(UnidadMedida.GRAMOS, resultado.get(1).getUnidadMedida());
         assertNull(resultado.get(1).getObservaciones());
     }

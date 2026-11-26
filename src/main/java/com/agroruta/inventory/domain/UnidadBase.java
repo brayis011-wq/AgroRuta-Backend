@@ -8,7 +8,8 @@ import com.agroruta.shared.exception.BusinessException;
  * gramos para sólidos. Así se puede comprar en litros o kilos y gastar en mililitros o gramos.
  */
 public enum UnidadBase {
-    ML, GRAMOS;
+    ML,
+    GRAMOS;
 
     public static UnidadBase de(MeasurementUnit unidad) {
         if (unidad == null) throw new BusinessException("La unidad es obligatoria.");
@@ -33,9 +34,10 @@ public enum UnidadBase {
      */
     public static double aBaseDe(double cantidad, MeasurementUnit unidad, UnidadBase delInsumo, String insumo) {
         if (de(unidad) != delInsumo) {
-            throw new BusinessException(delInsumo == ML
-                    ? insumo + " se mide en litros o mililitros."
-                    : insumo + " se mide en kilos o gramos.");
+            throw new BusinessException(
+                    delInsumo == ML
+                            ? insumo + " se mide en litros o mililitros."
+                            : insumo + " se mide en kilos o gramos.");
         }
         return aBase(cantidad, unidad);
     }

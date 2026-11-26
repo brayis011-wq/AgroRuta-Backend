@@ -5,5 +5,6 @@ import java.util.List;
 
 public interface CropQueryPort {
     List<CropDetail> getAllCropDetails();
+
     List<CropDetail> getCropDetailsByAgricultor(Long agricultorId);
 }

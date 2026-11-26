@@ -1,12 +1,21 @@
 package com.agroruta.worker.infrastructure.web;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import com.agroruta.worker.application.ports.in.LaborUseCase;
 import com.agroruta.worker.domain.Labor;
 import com.agroruta.worker.infrastructure.web.dto.LaborRequest;
 import com.agroruta.worker.infrastructure.web.dto.LaborResponse;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,18 +26,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import com.agroruta.user.domain.Rol;
-import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.infrastructure.security.CustomUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LaborController - Pruebas Unitarias")
@@ -71,10 +70,8 @@ class LaborControllerTest {
         @Test
         @DisplayName("Debe retornar 200 con la lista de actividades activas")
         void debeRetornar200ConLista() {
-            List<Labor> activas = List.of(
-                    new Labor(1L, "Siembra", "Labor de siembra"),
-                    new Labor(2L, "Cosecha", "Labor de cosecha")
-            );
+            List<Labor> activas =
+                    List.of(new Labor(1L, "Siembra", "Labor de siembra"), new Labor(2L, "Cosecha", "Labor de cosecha"));
             when(laborUseCase.listarActivas()).thenReturn(activas);
 
             ResponseEntity<List<LaborResponse>> response = actividadController.listar(ADMIN);
@@ -133,9 +130,7 @@ class LaborControllerTest {
                     .thenThrow(new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Siembra ya existe"));
 
             BusinessException ex = assertThrows(
-                    BusinessException.class,
-                    () -> actividadController.crear(request("Siembra", "Desc"), ADMIN)
-            );
+                    BusinessException.class, () -> actividadController.crear(request("Siembra", "Desc"), ADMIN));
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             assertTrue(ex.getMessage().contains("Siembra"));
@@ -176,8 +171,7 @@ class LaborControllerTest {
 
             ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
-                    () -> actividadController.actualizar(99L, request("Cosecha", "Desc"))
-            );
+                    () -> actividadController.actualizar(99L, request("Cosecha", "Desc")));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(laborUseCase, times(1)).actualizarActividad(eq(99L), any(), any());
@@ -190,9 +184,7 @@ class LaborControllerTest {
                     .thenThrow(new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Cosecha ya existe"));
 
             BusinessException ex = assertThrows(
-                    BusinessException.class,
-                    () -> actividadController.actualizar(1L, request("Cosecha", "Desc"))
-            );
+                    BusinessException.class, () -> actividadController.actualizar(1L, request("Cosecha", "Desc")));
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             verify(laborUseCase, times(1)).actualizarActividad(eq(1L), any(), any());
@@ -222,12 +214,11 @@ class LaborControllerTest {
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
             doThrow(new ResourceNotFoundException("Labor", 99L))
-                    .when(laborUseCase).desactivarActividad(99L);
+                    .when(laborUseCase)
+                    .desactivarActividad(99L);
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> actividadController.desactivar(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> actividadController.desactivar(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(laborUseCase, times(1)).desactivarActividad(99L);
@@ -260,7 +251,8 @@ class LaborControllerTest {
             propia.setAgricultorId(7L);
             when(laborUseCase.crearActividad("Deshoje", "", 7L)).thenReturn(propia);
 
-            ResponseEntity<LaborResponse> r = actividadController.crear(request("Deshoje", ""), auth(7L, Rol.Agricultor));
+            ResponseEntity<LaborResponse> r =
+                    actividadController.crear(request("Deshoje", ""), auth(7L, Rol.Agricultor));
 
             assertFalse(r.getBody().comun);
         }

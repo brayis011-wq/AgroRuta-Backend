@@ -14,6 +14,7 @@ public class BackupProperties {
 
     /** Binarios del cliente MySQL/MariaDB (deben estar en el PATH de la imagen). */
     private String mysqldumpPath = "mysqldump";
+
     private String mysqlPath = "mysql";
 
     /** Tiempo máximo de una operación de dump/restore. */

@@ -21,45 +21,66 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
-                          AuthenticationProvider authenticationProvider) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter, AuthenticationProvider authenticationProvider) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.authenticationProvider = authenticationProvider;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf(AbstractHttpConfigurer::disable)
+        http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> {})
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/auth/**")
+                        .permitAll()
                         // Tareas programadas (GitHub Actions): las protege la clave TAREAS_TOKEN, no una sesión
-                        .requestMatchers("/api/jobs/**").permitAll()
-                        // El clima usa nuestra clave de OpenWeather: solo con sesión iniciada, para que nadie gaste la cuota desde afuera
-                        .requestMatchers("/api/weather/**").authenticated()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                        .requestMatchers("/error").permitAll()
+                        .requestMatchers("/api/jobs/**")
+                        .permitAll()
+                        // Verificación del QR de un comprobante de pago: la abre cualquiera, la protege el código
+                        // firmado
+                        .requestMatchers("/api/public/**")
+                        .permitAll()
+                        // El clima usa nuestra clave de OpenWeather: solo con sesión iniciada, para que nadie gaste la
+                        // cuota desde afuera
+                        .requestMatchers("/api/weather/**")
+                        .authenticated()
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html")
+                        .permitAll()
+                        .requestMatchers("/error")
+                        .permitAll()
                         // Solo el health es público (healthchecks de Docker/Render)
-                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers("/actuator/**").hasRole("Administrador")
-                        .requestMatchers("/api/backups/**").hasRole("Administrador")
-                        .requestMatchers("/api/admin/**").hasRole("Administrador")
+                        .requestMatchers("/actuator/health", "/actuator/health/**")
+                        .permitAll()
+                        .requestMatchers("/actuator/**")
+                        .hasRole("Administrador")
+                        .requestMatchers("/api/backups/**")
+                        .hasRole("Administrador")
+                        .requestMatchers("/api/admin/**")
+                        .hasRole("Administrador")
                         // Portal del trabajador: solo el rol Trabajador
-                        .requestMatchers("/api/portal/**").hasRole("Trabajador")
+                        .requestMatchers("/api/portal/**")
+                        .hasRole("Trabajador")
                         // Pantallas de gestión: agricultores y administrador (el trabajador no gestiona nada)
                         .requestMatchers(
-                                "/api/farms/**", "/api/plots/**", "/api/plantings/**", "/api/harvests/**",
-                                "/api/sprayings/**", "/api/activities/**", "/api/agricultural-inputs/**",
-                                "/api/workers/**", "/api/positions/**", "/api/workdays/**", "/api/payrolls/**",
-                                "/api/payments/**", "/api/reports/**", "/api/crop-catalog/**",
-                                "/api/inventory/**", "/api/labors/**"
-                        ).hasAnyRole("Agricultor", "Administrador")
-                        .anyRequest().authenticated()
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                                "/api/farms/**",
+                                "/api/plots/**",
+                                "/api/plantings/**",
+                                "/api/harvests/**",
+                                "/api/sprayings/**",
+                                "/api/activities/**",
+                                "/api/agricultural-inputs/**",
+                                "/api/workers/**",
+                                "/api/positions/**",
+                                "/api/workdays/**",
+                                "/api/payrolls/**",
+                                "/api/payments/**",
+                                "/api/reports/**",
+                                "/api/crop-catalog/**",
+                                "/api/inventory/**",
+                                "/api/labors/**")
+                        .hasAnyRole("Agricultor", "Administrador")
+                        .anyRequest()
+                        .authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -6,11 +6,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "sesiones")
@@ -40,4 +39,14 @@ public class SesionEntity {
 
     @Column(name = "revocado_en")
     private LocalDateTime revocadoEn;
+
+    /** Inicio de sesión al que pertenece (se conserva al renovar) */
+    @Column(name = "familia", length = 36)
+    private String familia;
+
+    @Column(name = "dispositivo", length = 120)
+    private String dispositivo;
+
+    @Column(name = "iniciada_en")
+    private LocalDateTime iniciadaEn;
 }
