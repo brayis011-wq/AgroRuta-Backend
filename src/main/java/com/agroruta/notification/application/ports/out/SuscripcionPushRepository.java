@@ -1,7 +1,6 @@
 package com.agroruta.notification.application.ports.out;
 
 import com.agroruta.notification.domain.SuscripcionPush;
-
 import java.util.List;
 
 public interface SuscripcionPushRepository {

@@ -1,30 +1,5 @@
 package com.agroruta.notification.application;
 
-import com.agroruta.inventory.application.ports.in.StockBajoUseCase;
-import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
-import com.agroruta.crop.domain.AlertaCultivo;
-import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.application.ports.out.FincaRepository;
-import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
-import com.agroruta.notification.application.ports.out.CorreoPort;
-import com.agroruta.notification.domain.Correo;
-import com.agroruta.notification.domain.PreferenciasCorreo;
-import com.agroruta.user.domain.Rol;
-import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
-import com.agroruta.weather.application.ports.in.WeatherUseCase;
-import com.agroruta.weather.domain.Pronostico;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -34,6 +9,30 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
+import com.agroruta.crop.application.ports.out.FincaRepository;
+import com.agroruta.crop.domain.AlertaCultivo;
+import com.agroruta.crop.domain.Finca;
+import com.agroruta.inventory.application.ports.in.StockBajoUseCase;
+import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
+import com.agroruta.notification.application.ports.out.CorreoPort;
+import com.agroruta.notification.domain.Correo;
+import com.agroruta.notification.domain.PreferenciasCorreo;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.weather.application.ports.in.WeatherUseCase;
+import com.agroruta.weather.domain.Pronostico;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("AlertasDiariasService")
 class AlertasDiariasServiceTest {
@@ -55,16 +54,24 @@ class AlertasDiariasServiceTest {
     @BeforeEach
     void setUp() {
         Clock reloj = Clock.fixed(Instant.parse("2026-11-05T11:00:00Z"), ZoneId.of("America/Bogota"));
-        service = new AlertasDiariasService(usuarios, preferencias, alertas, fincas, clima,
-                new MensajesCorreo("https://agroruta.app"), correo, stockBajo, reloj);
+        service = new AlertasDiariasService(
+                usuarios,
+                preferencias,
+                alertas,
+                fincas,
+                clima,
+                new MensajesCorreo("https://agroruta.app"),
+                correo,
+                stockBajo,
+                reloj);
         when(usuarios.findAllActivos()).thenReturn(List.of(ana, luis, admin));
         when(preferencias.obtener(anyLong())).thenAnswer(i -> PreferenciasCorreo.porDefecto(i.getArgument(0)));
         when(correo.enviar(any())).thenReturn(true);
     }
 
     private AlertaCultivo fumigarHoy() {
-        return new AlertaCultivo(AlertaCultivo.Tipo.FUMIGACION_HOY, "La Esperanza", "Lote 1", "Uchuva · Colombia",
-                null, null, hoy);
+        return new AlertaCultivo(
+                AlertaCultivo.Tipo.FUMIGACION_HOY, "La Esperanza", "Lote 1", "Uchuva · Colombia", null, null, hoy);
     }
 
     @Test

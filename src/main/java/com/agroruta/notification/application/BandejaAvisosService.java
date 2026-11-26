@@ -4,14 +4,12 @@ import com.agroruta.notification.application.ports.in.BandejaAvisosUseCase;
 import com.agroruta.notification.application.ports.out.BandejaAvisosRepository;
 import com.agroruta.notification.domain.AvisoBandeja;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 @Service
 public class BandejaAvisosService implements BandejaAvisosUseCase {
@@ -23,12 +21,7 @@ public class BandejaAvisosService implements BandejaAvisosUseCase {
     private final BandejaAvisosRepository avisos;
     private final Clock reloj;
 
-    @Autowired
-    public BandejaAvisosService(BandejaAvisosRepository avisos) {
-        this(avisos, Clock.systemUTC());
-    }
-
-    BandejaAvisosService(BandejaAvisosRepository avisos, Clock reloj) {
+    public BandejaAvisosService(BandejaAvisosRepository avisos, Clock reloj) {
         this.avisos = avisos;
         this.reloj = reloj;
     }
@@ -39,7 +32,11 @@ public class BandejaAvisosService implements BandejaAvisosUseCase {
         try {
             avisos.guardar(aviso, Instant.now(reloj));
         } catch (RuntimeException e) {
-            log.warn("No se pudo guardar el aviso {} del usuario {} en la bandeja", aviso.etiqueta(), aviso.usuarioId(), e);
+            log.warn(
+                    "No se pudo guardar el aviso {} del usuario {} en la bandeja",
+                    aviso.etiqueta(),
+                    aviso.usuarioId(),
+                    e);
         }
     }
 

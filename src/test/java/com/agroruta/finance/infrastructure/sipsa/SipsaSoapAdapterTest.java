@@ -1,19 +1,18 @@
 package com.agroruta.finance.infrastructure.sipsa;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.agroruta.shared.exception.ExternalApiException;
 import com.sun.net.httpserver.HttpServer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /** Los reintentos al consultar SIPSA, contra un servidor falso en la misma máquina. */
 class SipsaSoapAdapterTest {
@@ -40,7 +39,9 @@ class SipsaSoapAdapterTest {
             int codigo = codigos[Math.min(i, codigos.length - 1)];
             byte[] cuerpo = (codigo == 200 ? RESPUESTA : "error").getBytes(StandardCharsets.UTF_8);
             ex.sendResponseHeaders(codigo, cuerpo.length);
-            try (OutputStream os = ex.getResponseBody()) { os.write(cuerpo); }
+            try (OutputStream os = ex.getResponseBody()) {
+                os.write(cuerpo);
+            }
         });
         servidor.start();
         return "http://127.0.0.1:" + servidor.getAddress().getPort() + "/sipsa";
@@ -52,7 +53,9 @@ class SipsaSoapAdapterTest {
         var sipsa = new SipsaSoapAdapter(levantar(llamadas, 503, 502, 200), Duration.ZERO);
         var precios = sipsa.preciosRecientes(4);
         assertThat(llamadas.get()).isEqualTo(3);
-        assertThat(precios).singleElement().satisfies(p -> assertThat(p.producto()).isEqualTo("Papa criolla"));
+        assertThat(precios)
+                .singleElement()
+                .satisfies(p -> assertThat(p.producto()).isEqualTo("Papa criolla"));
     }
 
     @Test
@@ -60,7 +63,8 @@ class SipsaSoapAdapterTest {
         AtomicInteger llamadas = new AtomicInteger();
         var sipsa = new SipsaSoapAdapter(levantar(llamadas, 503), Duration.ZERO);
         assertThatThrownBy(() -> sipsa.preciosRecientes(4))
-                .isInstanceOf(ExternalApiException.class).hasMessageContaining("503");
+                .isInstanceOf(ExternalApiException.class)
+                .hasMessageContaining("503");
         assertThat(llamadas.get()).isEqualTo(SipsaSoapAdapter.INTENTOS);
     }
 
@@ -77,6 +81,7 @@ class SipsaSoapAdapterTest {
         // Un puerto donde no escucha nadie: la conexión falla igual que un corte de la conexión segura
         var sipsa = new SipsaSoapAdapter("http://127.0.0.1:9/sipsa", Duration.ZERO);
         assertThatThrownBy(() -> sipsa.preciosRecientes(4))
-                .isInstanceOf(ExternalApiException.class).hasMessageContaining("No se pudo consultar SIPSA");
+                .isInstanceOf(ExternalApiException.class)
+                .hasMessageContaining("No se pudo consultar SIPSA");
     }
 }

@@ -14,11 +14,32 @@ import java.time.LocalDateTime;
  * @param ventanaInicio mejor rato para fumigar (null si el pronóstico no muestra ninguno)
  * @param valor         milímetros de lluvia (NO_REGAR, LLUVIA_FUERTE) o temperatura mínima (HELADA)
  */
-public record ConsejoClima(Tipo tipo, Nivel nivel, Long fincaId, String finca, String lote, String cultivo,
-                           LocalDate dia, String motivo, LocalDateTime problemaDesde,
-                           LocalDateTime ventanaInicio, LocalDateTime ventanaFin, Double valor) {
+public record ConsejoClima(
+        Tipo tipo,
+        Nivel nivel,
+        Long fincaId,
+        String finca,
+        String lote,
+        String cultivo,
+        LocalDate dia,
+        String motivo,
+        LocalDateTime problemaDesde,
+        LocalDateTime ventanaInicio,
+        LocalDateTime ventanaFin,
+        Double valor) {
 
-    public enum Tipo { NO_FUMIGAR, FUMIGAR_EN_VENTANA, FUMIGAR_BIEN, NO_REGAR, HELADA, LLUVIA_FUERTE }
+    public enum Tipo {
+        NO_FUMIGAR,
+        FUMIGAR_EN_VENTANA,
+        FUMIGAR_BIEN,
+        NO_REGAR,
+        HELADA,
+        LLUVIA_FUERTE
+    }
 
-    public enum Nivel { ALERTA, PRECAUCION, BIEN }
+    public enum Nivel {
+        ALERTA,
+        PRECAUCION,
+        BIEN
+    }
 }

@@ -1,8 +1,8 @@
 package com.agroruta.report.infrastructure.web;
 
+import com.agroruta.report.application.ports.in.GenerarReporteFinancieroUseCase;
 import com.agroruta.report.application.ports.in.GenerateCropReportUseCase;
 import com.agroruta.report.application.ports.in.GeneratePayrollReportUseCase;
-import com.agroruta.report.application.ports.in.GenerarReporteFinancieroUseCase;
 import com.agroruta.report.domain.CropReport;
 import com.agroruta.report.domain.PayrollReport;
 import com.agroruta.report.domain.Periodo;
@@ -10,6 +10,11 @@ import com.agroruta.report.domain.ReporteFinanciero;
 import com.agroruta.report.infrastructure.pdf.PdfReportService;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.security.CurrentUser;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
@@ -20,12 +25,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
 
 /**
  * Reportes en PDF y su vista previa. Todos aceptan {@code ?desde=2026-01-01&hasta=2026-12-31} (opcionales):
@@ -43,38 +42,46 @@ public class ReportController {
     private final com.agroruta.report.application.ports.out.CampoQueryPort campo;
 
     @GetMapping(value = "/payroll", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> payrollReport(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                                @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                                Authentication authentication) {
-        byte[] pdf = pdfReportService.generatePayrollPdf(payroll(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
+    public ResponseEntity<byte[]> payrollReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
+        byte[] pdf = pdfReportService.generatePayrollPdf(
+                payroll(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reporte-nomina.pdf\"")
                 .body(pdf);
     }
 
     @GetMapping(value = "/crops", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> cropReport(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                             Authentication authentication) {
-        byte[] pdf = pdfReportService.generateCropPdf(crops(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
+    public ResponseEntity<byte[]> cropReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
+        byte[] pdf = pdfReportService.generateCropPdf(
+                crops(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"reporte-cultivos.pdf\"")
                 .body(pdf);
     }
 
     @GetMapping(value = "/costs", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> costsReport(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                              @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                              Authentication authentication) {
-        byte[] pdf = pdfReportService.generateCostsPdf(finanzas(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
+    public ResponseEntity<byte[]> costsReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
+        byte[] pdf = pdfReportService.generateCostsPdf(
+                finanzas(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
         return adjunto(pdf, "reporte-costos.pdf");
     }
 
     @GetMapping(value = "/profitability", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> profitabilityReport(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                                      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                                      Authentication authentication) {
-        byte[] pdf = pdfReportService.generateProfitabilityPdf(finanzas(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
+    public ResponseEntity<byte[]> profitabilityReport(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
+        byte[] pdf = pdfReportService.generateProfitabilityPdf(
+                finanzas(authentication, Periodo.de(desde, hasta)), CurrentUser.nombre(authentication));
         return adjunto(pdf, "reporte-rentabilidad.pdf");
     }
 
@@ -83,10 +90,11 @@ public class ReportController {
      * Solo se consultan los datos de las partes pedidas.
      */
     @GetMapping(value = "/full", produces = MediaType.APPLICATION_PDF_VALUE)
-    public ResponseEntity<byte[]> fullReport(@RequestParam(required = false) List<String> sections,
-                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                             Authentication authentication) {
+    public ResponseEntity<byte[]> fullReport(
+            @RequestParam(required = false) List<String> sections,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
         Set<String> partes = new HashSet<>();
         if (sections == null || sections.isEmpty()) {
             partes.addAll(PARTES);
@@ -104,7 +112,9 @@ public class ReportController {
                 partes.contains("payroll") ? payroll(authentication, periodo) : null,
                 partes.contains("crops") ? crops(authentication, periodo) : null,
                 conCostos || conRentabilidad ? finanzas(authentication, periodo) : null,
-                conCostos, conRentabilidad, CurrentUser.nombre(authentication));
+                conCostos,
+                conRentabilidad,
+                CurrentUser.nombre(authentication));
         return adjunto(pdf, "reporte-agroruta.pdf");
     }
 
@@ -113,15 +123,20 @@ public class ReportController {
      * carencia y fecha). ?farmId=3 para una sola finca.
      */
     @GetMapping(value = "/field-book", produces = MediaType.APPLICATION_PDF_VALUE)
-    @org.springframework.security.access.prepost.PreAuthorize("#fincaId == null or @ownership.fincaPropia(#fincaId, authentication)")
-    public ResponseEntity<byte[]> fieldBook(@RequestParam(value = "farmId", required = false) Long fincaId,
-                                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                            Authentication authentication) {
+    @org.springframework.security.access.prepost.PreAuthorize(
+            "#fincaId == null or @ownership.fincaPropia(#fincaId, authentication)")
+    public ResponseEntity<byte[]> fieldBook(
+            @RequestParam(value = "farmId", required = false) Long fincaId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
         Periodo periodo = Periodo.de(desde, hasta);
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        byte[] pdf = pdfReportService.generateFieldBookPdf(campo.aplicaciones(dueno, fincaId, periodo), periodo,
-                campo.nombreFinca(fincaId), CurrentUser.nombre(authentication));
+        byte[] pdf = pdfReportService.generateFieldBookPdf(
+                campo.aplicaciones(dueno, fincaId, periodo),
+                periodo,
+                campo.nombreFinca(fincaId),
+                CurrentUser.nombre(authentication));
         return adjunto(pdf, "cuaderno-de-campo.pdf");
     }
 
@@ -135,16 +150,18 @@ public class ReportController {
     }
 
     @GetMapping(value = "/payroll/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<PayrollReport> payrollPreview(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                                        Authentication authentication) {
+    public ResponseEntity<PayrollReport> payrollPreview(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
         return ResponseEntity.ok(payroll(authentication, Periodo.de(desde, hasta)));
     }
 
     @GetMapping(value = "/crops/preview", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CropReport> cropPreview(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
-                                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
-                                                  Authentication authentication) {
+    public ResponseEntity<CropReport> cropPreview(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            Authentication authentication) {
         return ResponseEntity.ok(crops(authentication, Periodo.de(desde, hasta)));
     }
 
@@ -152,7 +169,9 @@ public class ReportController {
     private PayrollReport payroll(Authentication authentication, Periodo periodo) {
         boolean admin = CurrentUser.esAdmin(authentication);
         if (periodo.esTodo()) {
-            return admin ? generatePayrollReport.generate() : generatePayrollReport.generateFor(CurrentUser.id(authentication));
+            return admin
+                    ? generatePayrollReport.generate()
+                    : generatePayrollReport.generateFor(CurrentUser.id(authentication));
         }
         return generatePayrollReport.generateEn(CurrentUser.id(authentication), admin, periodo);
     }

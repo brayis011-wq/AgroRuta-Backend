@@ -1,21 +1,20 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.domain.CalidadCosecha;
 import com.agroruta.crop.domain.Cosecha;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CosechaRepositoryImplTest {
@@ -28,15 +27,15 @@ class CosechaRepositoryImplTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long          ID          = 1L;
-    private static final Long          SIEMBRA_ID  = 55L;
-    private static final LocalDate     FECHA       = LocalDate.of(2024, 9, 20);
-    private static final Double        CANTIDAD_KG = 120.5;
-    private static final CalidadCosecha CALIDAD    = CalidadCosecha.PRIMERA;
-    private static final String        OBSERVACIONES = "Sin novedad";
+    private static final Long ID = 1L;
+    private static final Long SIEMBRA_ID = 55L;
+    private static final LocalDate FECHA = LocalDate.of(2024, 9, 20);
+    private static final Double CANTIDAD_KG = 120.5;
+    private static final CalidadCosecha CALIDAD = CalidadCosecha.PRIMERA;
+    private static final String OBSERVACIONES = "Sin novedad";
 
     private CosechaEntity entityGuardada;
-    private Cosecha       dominioEntrada;
+    private Cosecha dominioEntrada;
 
     @BeforeEach
     void setUp() {
@@ -64,12 +63,12 @@ class CosechaRepositoryImplTest {
 
         Cosecha resultado = repository.save(dominioEntrada);
 
-        assertEquals(ID,           resultado.getId());
-        assertEquals(FECHA,        resultado.getFecha());
-        assertEquals(CANTIDAD_KG,  resultado.getCantidadKg());
-        assertEquals(CALIDAD,      resultado.getCalidad());
+        assertEquals(ID, resultado.getId());
+        assertEquals(FECHA, resultado.getFecha());
+        assertEquals(CANTIDAD_KG, resultado.getCantidadKg());
+        assertEquals(CALIDAD, resultado.getCalidad());
         assertEquals(OBSERVACIONES, resultado.getObservaciones());
-        assertEquals(SIEMBRA_ID,   resultado.getSiembraId());
+        assertEquals(SIEMBRA_ID, resultado.getSiembraId());
         verify(jpaRepository, times(1)).save(any(CosechaEntity.class));
     }
 
@@ -79,13 +78,12 @@ class CosechaRepositoryImplTest {
 
         repository.save(dominioEntrada);
 
-        verify(jpaRepository).save(argThat(entity ->
-                entity.getFecha()        .equals(FECHA)         &&
-                        entity.getCantidadKg()   .equals(CANTIDAD_KG)   &&
-                        entity.getCalidad()      == CALIDAD              &&
-                        entity.getObservaciones().equals(OBSERVACIONES)  &&
-                        entity.getSiembraId()    .equals(SIEMBRA_ID)
-        ));
+        verify(jpaRepository)
+                .save(argThat(entity -> entity.getFecha().equals(FECHA)
+                        && entity.getCantidadKg().equals(CANTIDAD_KG)
+                        && entity.getCalidad() == CALIDAD
+                        && entity.getObservaciones().equals(OBSERVACIONES)
+                        && entity.getSiembraId().equals(SIEMBRA_ID)));
     }
 
     @Test
@@ -108,12 +106,12 @@ class CosechaRepositoryImplTest {
         Optional<Cosecha> resultado = repository.findById(ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,            resultado.get().getId());
-        assertEquals(FECHA,         resultado.get().getFecha());
-        assertEquals(CANTIDAD_KG,   resultado.get().getCantidadKg());
-        assertEquals(CALIDAD,       resultado.get().getCalidad());
+        assertEquals(ID, resultado.get().getId());
+        assertEquals(FECHA, resultado.get().getFecha());
+        assertEquals(CANTIDAD_KG, resultado.get().getCantidadKg());
+        assertEquals(CALIDAD, resultado.get().getCalidad());
         assertEquals(OBSERVACIONES, resultado.get().getObservaciones());
-        assertEquals(SIEMBRA_ID,    resultado.get().getSiembraId());
+        assertEquals(SIEMBRA_ID, resultado.get().getSiembraId());
     }
 
     @Test
@@ -137,13 +135,12 @@ class CosechaRepositoryImplTest {
         entity2.setObservaciones("Lote sur");
         entity2.setSiembraId(SIEMBRA_ID);
 
-        when(jpaRepository.findBySiembraId(SIEMBRA_ID))
-                .thenReturn(List.of(entityGuardada, entity2));
+        when(jpaRepository.findBySiembraId(SIEMBRA_ID)).thenReturn(List.of(entityGuardada, entity2));
 
         List<Cosecha> resultado = repository.findBySiembraId(SIEMBRA_ID);
 
         assertEquals(2, resultado.size());
-        assertEquals(ID,                  resultado.get(0).getId());
+        assertEquals(ID, resultado.get(0).getId());
         assertEquals(CalidadCosecha.SEGUNDA, resultado.get(1).getCalidad());
     }
 
@@ -161,21 +158,24 @@ class CosechaRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiExisteCosechaConMismaFechaSiembraYCalidad() {
-        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA)).thenReturn(true);
+        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA))
+                .thenReturn(true);
 
         assertTrue(repository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA));
     }
 
     @Test
     void deberiaRetornarFalseSiNoExisteCosechaConEsaCombinacion() {
-        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA)).thenReturn(false);
+        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA))
+                .thenReturn(false);
 
         assertFalse(repository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA));
     }
 
     @Test
     void existsDeberiaDelegarAlJpaConLosParametrosCorrectos() {
-        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(any(), any(), any())).thenReturn(false);
+        when(jpaRepository.existsByFechaAndSiembraIdAndCalidad(any(), any(), any()))
+                .thenReturn(false);
 
         repository.existsByFechaAndSiembraIdAndCalidad(FECHA, SIEMBRA_ID, CalidadCosecha.PRIMERA);
 

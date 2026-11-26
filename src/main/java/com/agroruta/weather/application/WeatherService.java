@@ -6,12 +6,10 @@ import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.FranjaClima;
 import com.agroruta.weather.domain.Pronostico;
 import com.agroruta.weather.domain.Weather;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 /**
  * El clima con copias de corta duración: el actual cambia poco en diez minutos y los pronósticos en media hora.
@@ -30,12 +28,7 @@ public class WeatherService implements WeatherUseCase {
     private final CopiaBreve<Pronostico> pronosticos;
     private final CopiaBreve<List<FranjaClima>> franjas;
 
-    @Autowired
-    public WeatherService(WeatherApiPort weatherApiPort) {
-        this(weatherApiPort, Clock.systemUTC());
-    }
-
-    WeatherService(WeatherApiPort weatherApiPort, Clock reloj) {
+    public WeatherService(WeatherApiPort weatherApiPort, Clock reloj) {
         this.weatherApiPort = weatherApiPort;
         if (reloj == null) reloj = Clock.systemUTC(); // las pruebas con @InjectMocks no traen reloj
         this.actualPorCiudad = new CopiaBreve<>(VIGENCIA_ACTUAL, MAX_GUARDADOS, reloj);
@@ -51,7 +44,8 @@ public class WeatherService implements WeatherUseCase {
 
     @Override
     public Weather getWeatherByCoordinates(double lat, double lon) {
-        return actualPorLugar.obtener(CopiaBreve.lugar(lat, lon), () -> weatherApiPort.fetchWeatherByCoordinates(lat, lon));
+        return actualPorLugar.obtener(
+                CopiaBreve.lugar(lat, lon), () -> weatherApiPort.fetchWeatherByCoordinates(lat, lon));
     }
 
     @Override

@@ -2,7 +2,6 @@ package com.agroruta.worker.infrastructure.web.dto;
 
 import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Pago;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -13,6 +12,7 @@ public class PagoResponse {
     public String trabajadorNombre;
     /** Primera letra del nombre y del apellido, para el avatar */
     public String trabajadorIniciales;
+
     public LocalDate fechaPago;
     public BigDecimal monto;
     public MetodoPago metodoPago;

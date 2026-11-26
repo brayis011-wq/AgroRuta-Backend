@@ -1,13 +1,12 @@
 package com.agroruta.worker.domain;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class PagoTest {
 
@@ -19,18 +18,15 @@ class PagoTest {
     @BeforeEach
     void setUp() {
         cargo = new Cargo(1L, "Operario", "Trabajador de campo", new BigDecimal("50000"), true);
-        trabajador = new Trabajador(1L, "Juan", "Pérez", "123456789",
-                "3001234567", "Calle 1", LocalDate.now(),
-                TipoContrato.JORNAL, cargo);
+        trabajador = new Trabajador(
+                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1", LocalDate.now(), TipoContrato.JORNAL, cargo);
         jornal = new Jornal(1L, LocalDate.now(), trabajador, 10L, "Maíz", "Sin observaciones");
-        nomina = new Nomina(1L, trabajador, LocalDate.now().minusDays(7),
-                LocalDate.now(), List.of(jornal));
+        nomina = new Nomina(1L, trabajador, LocalDate.now().minusDays(7), LocalDate.now(), List.of(jornal));
     }
 
     @Test
     void deberiaCrearPagoConValoresCorrectos() {
-        Pago pago = new Pago(1L, nomina, LocalDate.now(),
-                new BigDecimal("50000"), MetodoPago.EFECTIVO, "COMP-001");
+        Pago pago = new Pago(1L, nomina, LocalDate.now(), new BigDecimal("50000"), MetodoPago.EFECTIVO, "COMP-001");
 
         assertEquals(1L, pago.getId());
         assertEquals(nomina, pago.getNomina());
@@ -42,16 +38,15 @@ class PagoTest {
 
     @Test
     void deberiaRetornarTrueSiMontoEsCorrecto() {
-        Pago pago = new Pago(1L, nomina, LocalDate.now(),
-                new BigDecimal("50000"), MetodoPago.TRANSFERENCIA, "COMP-001");
+        Pago pago =
+                new Pago(1L, nomina, LocalDate.now(), new BigDecimal("50000"), MetodoPago.TRANSFERENCIA, "COMP-001");
 
         assertTrue(pago.montoEsCorrecto());
     }
 
     @Test
     void deberiaRetornarFalseSiMontoEsIncorrecto() {
-        Pago pago = new Pago(1L, nomina, LocalDate.now(),
-                new BigDecimal("30000"), MetodoPago.CHEQUE, "COMP-001");
+        Pago pago = new Pago(1L, nomina, LocalDate.now(), new BigDecimal("30000"), MetodoPago.CHEQUE, "COMP-001");
 
         assertFalse(pago.montoEsCorrecto());
     }
@@ -67,8 +62,7 @@ class PagoTest {
 
     @Test
     void deberiaPermitirCambiarMetodoPago() {
-        Pago pago = new Pago(1L, nomina, LocalDate.now(),
-                new BigDecimal("50000"), MetodoPago.EFECTIVO, "COMP-001");
+        Pago pago = new Pago(1L, nomina, LocalDate.now(), new BigDecimal("50000"), MetodoPago.EFECTIVO, "COMP-001");
 
         pago.setMetodoPago(MetodoPago.TRANSFERENCIA);
 
@@ -77,8 +71,7 @@ class PagoTest {
 
     @Test
     void deberiaPermitirAgregarObservaciones() {
-        Pago pago = new Pago(1L, nomina, LocalDate.now(),
-                new BigDecimal("50000"), MetodoPago.EFECTIVO, "COMP-001");
+        Pago pago = new Pago(1L, nomina, LocalDate.now(), new BigDecimal("50000"), MetodoPago.EFECTIVO, "COMP-001");
 
         pago.setObservaciones("Pago realizado a tiempo");
 

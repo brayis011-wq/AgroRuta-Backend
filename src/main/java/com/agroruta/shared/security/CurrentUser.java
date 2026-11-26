@@ -14,9 +14,9 @@ public final class CurrentUser {
     private CurrentUser() {}
 
     public static boolean esAdmin(Authentication auth) {
-        return auth != null && auth.isAuthenticated()
-                && auth.getAuthorities().stream()
-                .anyMatch(a -> ROL_ADMIN.equals(a.getAuthority()));
+        return auth != null
+                && auth.isAuthenticated()
+                && auth.getAuthorities().stream().anyMatch(a -> ROL_ADMIN.equals(a.getAuthority()));
     }
 
     public static Long id(Authentication auth) {

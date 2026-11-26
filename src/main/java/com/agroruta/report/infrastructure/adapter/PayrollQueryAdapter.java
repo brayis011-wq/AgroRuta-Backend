@@ -1,15 +1,13 @@
 package com.agroruta.report.infrastructure.adapter;
 
 import com.agroruta.report.application.ports.out.PayrollQueryPort;
-import com.agroruta.report.domain.WorkerPayrollDetail;
 import com.agroruta.report.domain.MonthlyPayment;
 import com.agroruta.report.domain.Periodo;
+import com.agroruta.report.domain.WorkerPayrollDetail;
+import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.ResumenNominas;
-import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.infrastructure.persistence.JpaPagoRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -17,6 +15,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -56,7 +56,7 @@ public class PayrollQueryAdapter implements PayrollQueryPort {
         // La base suma por mes: [año, mes, total, pagos]. Antes se traían todos los pagos para sumarlos aquí
         for (Object[] fila : jpaPagoRepository.totalesPorMes(agricultorId, desde)) {
             YearMonth mes = YearMonth.of(((Number) fila[0]).intValue(), ((Number) fila[1]).intValue());
-            if (!porMes.containsKey(mes)) continue;   // un pago con fecha futura queda fuera de la gráfica
+            if (!porMes.containsKey(mes)) continue; // un pago con fecha futura queda fuera de la gráfica
             porMes.put(mes, new MonthlyPayment(mes.toString(), decimal(fila[2]), ((Number) fila[3]).intValue()));
         }
         return new ArrayList<>(porMes.values());
@@ -79,6 +79,7 @@ public class PayrollQueryAdapter implements PayrollQueryPort {
 
     /** Sin fecha se usa un extremo que no deja nada por fuera (la consulta siempre recibe las dos) */
     static final LocalDate SIN_INICIO = LocalDate.of(1900, 1, 1);
+
     static final LocalDate SIN_FIN = LocalDate.of(9999, 12, 31);
 
     @Override

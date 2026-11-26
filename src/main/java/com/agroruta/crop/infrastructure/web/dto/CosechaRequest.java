@@ -1,72 +1,73 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
-import lombok.Data;
-
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
-@Data
-public class CosechaRequest {
+public record CosechaRequest(
+        @NotNull(message = "La fecha es obligatoria")
+        @PastOrPresent(message = "La fecha de cosecha no puede ser futura")
+        LocalDate fecha,
 
-    @NotNull(message = "La fecha es obligatoria")
-    @PastOrPresent(message = "La fecha de cosecha no puede ser futura")
-    private LocalDate fecha;
+        @NotNull(message = "La cantidad es obligatoria") @Positive(message = "La cantidad debe ser mayor a 0")
+        Double cantidadKg,
 
-    @NotNull(message = "La cantidad es obligatoria")
-    @Positive(message = "La cantidad debe ser mayor a 0")
-    private Double cantidadKg;
+        // El valor exacto (PRIMERA, SEGUNDA, TERCERA) lo valida CosechaService.
+        @NotBlank(message = "La calidad es obligatoria") String calidad,
 
-    // El valor exacto (PRIMERA, SEGUNDA, TERCERA) lo valida CosechaService.
-    @NotBlank(message = "La calidad es obligatoria")
-    private String calidad;
+        @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
+        String observaciones,
 
-    @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
-    private String observaciones;
+        // Opcional: precio de venta por kilo (COP)
+        @PositiveOrZero(message = "El precio no puede ser negativo")
+        @DecimalMax(value = "999999999999.99", message = "El valor es demasiado grande")
+        BigDecimal precioKg,
 
-    // Opcional: precio de venta por kilo (COP)
-    @PositiveOrZero(message = "El precio no puede ser negativo")
-    @DecimalMax(value = "999999999999.99", message = "El valor es demasiado grande")
-    private BigDecimal precioKg;
+        // true = la persona confirmó que cosecha aunque no haya terminado la carencia de una fumigación
+        Boolean confirmarCarencia,
 
-    // true = la persona confirmó que cosecha aunque no haya terminado la carencia de una fumigación
-    private boolean confirmarCarencia;
+        /** Quién la recogió y cómo se le paga; null = no se tocan (al editar) */
+        @jakarta.validation.Valid @Size(max = 60, message = "Son demasiados recolectores para una cosecha")
+        java.util.List<RecolectorRequest> recolectores,
 
-    /** Quién la recogió y cómo se le paga; null = no se tocan (al editar) */
-    @jakarta.validation.Valid
-    @Size(max = 60, message = "Son demasiados recolectores para una cosecha")
-    private java.util.List<RecolectorRequest> recolectores;
+        @NotNull(message = "La siembra es obligatoria") @Positive(message = "La siembra no es válida")
+        Long siembraId) {
 
-    @Data
-    public static class RecolectorRequest {
-        @NotNull(message = "Elige quién recogió")
-        @Positive(message = "El trabajador no es válido")
-        private Long trabajadorId;
+    // Si no viene en el JSON es false (un record con boolean primitivo rechazaría el pedido)
+    public CosechaRequest {
+        confirmarCarencia = Boolean.TRUE.equals(confirmarCarencia);
+    }
 
-        /** KILO o DIA */
-        @NotBlank(message = "Indica si se paga por kilo o por día")
-        @jakarta.validation.constraints.Pattern(regexp = "KILO|DIA", message = "La forma de pago debe ser KILO o DIA")
-        private String modalidad;
+    public record RecolectorRequest(
+            @NotNull(message = "Elige quién recogió") @Positive(message = "El trabajador no es válido")
+            Long trabajadorId,
 
-        @Positive(message = "Los kilos deben ser mayores a 0")
-        @DecimalMax(value = "99999999.99", message = "Son demasiados kilos")
-        private BigDecimal kilos;
+            /** KILO o DIA */
+            @NotBlank(message = "Indica si se paga por kilo o por día")
+            @jakarta.validation.constraints.Pattern(
+                    regexp = "KILO|DIA",
+                    message = "La forma de pago debe ser KILO o DIA")
+            String modalidad,
 
-        /** null = el del cargo */
-        @Positive(message = "El valor del kilo debe ser mayor a 0")
-        @DecimalMax(value = "99999999.99", message = "El valor es demasiado grande")
-        private BigDecimal valorKilo;
+            @Positive(message = "Los kilos deben ser mayores a 0")
+            @DecimalMax(value = "99999999.99", message = "Son demasiados kilos")
+            BigDecimal kilos,
 
-        /** null = el del cargo */
-        @Positive(message = "El valor del día debe ser mayor a 0")
-        @DecimalMax(value = "99999999.99", message = "El valor es demasiado grande")
-        private BigDecimal valorDia;
+            /** null = el del cargo */
+            @Positive(message = "El valor del kilo debe ser mayor a 0")
+            @DecimalMax(value = "99999999.99", message = "El valor es demasiado grande")
+            BigDecimal valorKilo,
+
+            /** null = el del cargo */
+            @Positive(message = "El valor del día debe ser mayor a 0")
+            @DecimalMax(value = "99999999.99", message = "El valor es demasiado grande")
+            BigDecimal valorDia) {
 
         public com.agroruta.crop.domain.Recolector aDominio() {
             return new com.agroruta.crop.domain.Recolector(trabajadorId, modalidad, kilos, valorKilo, valorDia);
@@ -74,10 +75,8 @@ public class CosechaRequest {
     }
 
     public java.util.List<com.agroruta.crop.domain.Recolector> recolectoresDominio() {
-        return recolectores == null ? null : recolectores.stream().map(RecolectorRequest::aDominio).toList();
+        return recolectores == null
+                ? null
+                : recolectores.stream().map(RecolectorRequest::aDominio).toList();
     }
-
-    @NotNull(message = "La siembra es obligatoria")
-    @Positive(message = "La siembra no es válida")
-    private Long siembraId;
 }

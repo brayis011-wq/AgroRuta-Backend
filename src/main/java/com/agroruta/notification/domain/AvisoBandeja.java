@@ -10,8 +10,15 @@ import java.util.Map;
  * @param titulo texto en español por si el frontend no conoce el tipo
  * @param ruta   pantalla que se abre al tocarlo
  */
-public record AvisoBandeja(Long id, Tipo tipo, String titulo, String cuerpo, Map<String, Object> datos,
-                           String ruta, Instant creadoEn, Instant leidoEn) {
+public record AvisoBandeja(
+        Long id,
+        Tipo tipo,
+        String titulo,
+        String cuerpo,
+        Map<String, Object> datos,
+        String ruta,
+        Instant creadoEn,
+        Instant leidoEn) {
 
     public enum Tipo {
         /** Al trabajador: le registraron un pago */
@@ -29,6 +36,12 @@ public record AvisoBandeja(Long id, Tipo tipo, String titulo, String cuerpo, Map
     }
 
     /** Lo que se guarda: un aviso nuevo, todavía sin id ni fecha */
-    public record Nuevo(Long usuarioId, Tipo tipo, String titulo, String cuerpo, Map<String, Object> datos,
-                        String ruta, String etiqueta) {}
+    public record Nuevo(
+            Long usuarioId,
+            Tipo tipo,
+            String titulo,
+            String cuerpo,
+            Map<String, Object> datos,
+            String ruta,
+            String etiqueta) {}
 }

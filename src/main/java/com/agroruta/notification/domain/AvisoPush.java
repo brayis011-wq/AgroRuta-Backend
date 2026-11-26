@@ -16,9 +16,9 @@ public record AvisoPush(String titulo, String cuerpo, String url, String etiquet
     /** El JSON que recibe el service worker (public/sw.js del frontend) */
     public byte[] json() {
         return ("{\"title\":" + cadena(recortar(titulo, MAX_TITULO))
-                + ",\"body\":" + cadena(recortar(cuerpo, MAX_CUERPO))
-                + ",\"url\":" + cadena(url == null ? "/" : url)
-                + ",\"tag\":" + cadena(etiqueta == null ? "agroruta" : etiqueta) + "}")
+                        + ",\"body\":" + cadena(recortar(cuerpo, MAX_CUERPO))
+                        + ",\"url\":" + cadena(url == null ? "/" : url)
+                        + ",\"tag\":" + cadena(etiqueta == null ? "agroruta" : etiqueta) + "}")
                 .getBytes(StandardCharsets.UTF_8);
     }
 

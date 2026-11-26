@@ -1,25 +1,5 @@
 package com.agroruta.report.infrastructure.adapter;
 
-import com.agroruta.crop.domain.EstadoCultivo;
-import com.agroruta.crop.infrastructure.persistence.FincaEntity;
-import com.agroruta.crop.infrastructure.persistence.JpaCosechaRepository;
-import com.agroruta.crop.infrastructure.persistence.JpaFincaRepository;
-import com.agroruta.crop.infrastructure.persistence.JpaLoteRepository;
-import com.agroruta.crop.infrastructure.persistence.JpaSiembraRepository;
-import com.agroruta.crop.infrastructure.persistence.LoteEntity;
-import com.agroruta.crop.infrastructure.persistence.SiembraEntity;
-import com.agroruta.report.domain.CropDetail;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -29,15 +9,43 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.agroruta.crop.domain.EstadoCultivo;
+import com.agroruta.crop.infrastructure.persistence.FincaEntity;
+import com.agroruta.crop.infrastructure.persistence.JpaCosechaRepository;
+import com.agroruta.crop.infrastructure.persistence.JpaFincaRepository;
+import com.agroruta.crop.infrastructure.persistence.JpaLoteRepository;
+import com.agroruta.crop.infrastructure.persistence.JpaSiembraRepository;
+import com.agroruta.crop.infrastructure.persistence.LoteEntity;
+import com.agroruta.crop.infrastructure.persistence.SiembraEntity;
+import com.agroruta.report.domain.CropDetail;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CropQueryAdapter - siembras para los reportes")
 class CropQueryAdapterTest {
 
-    @Mock private JpaSiembraRepository jpaSiembraRepository;
-    @Mock private JpaCosechaRepository jpaCosechaRepository;
-    @Mock private JpaLoteRepository jpaLoteRepository;
-    @Mock private JpaFincaRepository jpaFincaRepository;
-    @InjectMocks private CropQueryAdapter adapter;
+    @Mock
+    private JpaSiembraRepository jpaSiembraRepository;
+
+    @Mock
+    private JpaCosechaRepository jpaCosechaRepository;
+
+    @Mock
+    private JpaLoteRepository jpaLoteRepository;
+
+    @Mock
+    private JpaFincaRepository jpaFincaRepository;
+
+    @InjectMocks
+    private CropQueryAdapter adapter;
 
     private static SiembraEntity siembra(long id, Long loteId, String tipo, String variedad) {
         SiembraEntity s = new SiembraEntity();
@@ -69,16 +77,16 @@ class CropQueryAdapterTest {
     @Test
     @DisplayName("arma el detalle con lote, finca y cosechas sin consultar siembra por siembra")
     void armaElDetalleEnBloque() {
-        when(jpaSiembraRepository.findByAgricultorId(7L)).thenReturn(List.of(
-                siembra(1L, 10L, "Café", "Castillo"),
-                siembra(2L, 10L, null, "Hass"),
-                siembra(3L, 11L, "Plátano", "Hartón")));
-        when(jpaLoteRepository.findAllById(any())).thenReturn(List.of(
-                lote(10L, 100L, "Lote alto", 1.5), lote(11L, 100L, "Lote bajo", 2.0)));
+        when(jpaSiembraRepository.findByAgricultorId(7L))
+                .thenReturn(List.of(
+                        siembra(1L, 10L, "Café", "Castillo"),
+                        siembra(2L, 10L, null, "Hass"),
+                        siembra(3L, 11L, "Plátano", "Hartón")));
+        when(jpaLoteRepository.findAllById(any()))
+                .thenReturn(List.of(lote(10L, 100L, "Lote alto", 1.5), lote(11L, 100L, "Lote bajo", 2.0)));
         when(jpaFincaRepository.findAllById(any())).thenReturn(List.of(finca(100L, "La Esperanza")));
-        when(jpaCosechaRepository.totalesPorSiembra(7L)).thenReturn(List.of(
-                new Object[]{1L, 120.5, 3L},
-                new Object[]{3L, 40.0, 1L}));
+        when(jpaCosechaRepository.totalesPorSiembra(7L))
+                .thenReturn(List.of(new Object[] {1L, 120.5, 3L}, new Object[] {3L, 40.0, 1L}));
 
         List<CropDetail> detalle = adapter.getCropDetailsByAgricultor(7L);
 
@@ -116,13 +124,15 @@ class CropQueryAdapterTest {
         FincaEntity fincaBorrada = finca(101L, "Finca vieja");
         fincaBorrada.setEliminadoEn(LocalDateTime.now());
 
-        when(jpaSiembraRepository.findAll()).thenReturn(List.of(
-                borrada,
-                siembra(2L, 11L, "Café", "Castillo"),
-                siembra(3L, 12L, "Café", "Castillo"),
-                siembra(4L, 10L, "Café", "Castillo")));
-        when(jpaLoteRepository.findAllById(any())).thenReturn(List.of(
-                lote(10L, 100L, "Lote alto", 1.5), loteBorrado, lote(12L, 101L, "Lote de finca vieja", 1.0)));
+        when(jpaSiembraRepository.findAll())
+                .thenReturn(List.of(
+                        borrada,
+                        siembra(2L, 11L, "Café", "Castillo"),
+                        siembra(3L, 12L, "Café", "Castillo"),
+                        siembra(4L, 10L, "Café", "Castillo")));
+        when(jpaLoteRepository.findAllById(any()))
+                .thenReturn(List.of(
+                        lote(10L, 100L, "Lote alto", 1.5), loteBorrado, lote(12L, 101L, "Lote de finca vieja", 1.0)));
         when(jpaFincaRepository.findAllById(any())).thenReturn(List.of(finca(100L, "La Esperanza"), fincaBorrada));
         when(jpaCosechaRepository.totalesPorSiembra(null)).thenReturn(List.of());
 

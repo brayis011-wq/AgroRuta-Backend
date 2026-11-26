@@ -1,6 +1,5 @@
 package com.agroruta.agriculturalinput.infrastructure.persistence;
 
-
 import com.agroruta.agriculturalinput.domain.AgriculturalInputType;
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
 import jakarta.persistence.*;
@@ -46,30 +45,75 @@ public class AgriculturalInputEntity {
 
     // ── Getters & Setters ─────────────────────────────────────────────────────
 
-    public Long getId()                        { return id; }
-    public void setId(Long id)                 { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getNombre()                  { return nombre; }
-    public void setNombre(String nombre)       { this.nombre = nombre; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public AgriculturalInputType getTipo()     { return tipo; }
-    public void setTipo(AgriculturalInputType tipo) { this.tipo = tipo; }
+    public String getNombre() {
+        return nombre;
+    }
 
-    public MeasurementUnit getUnidadSugerida() { return unidadSugerida; }
-    public void setUnidadSugerida(MeasurementUnit u) { this.unidadSugerida = u; }
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
 
-    public Double getDosisSugerida()           { return dosisSugerida; }
-    public void setDosisSugerida(Double d)     { this.dosisSugerida = d; }
+    public AgriculturalInputType getTipo() {
+        return tipo;
+    }
 
-    public Integer getReentradaHoras()         { return reentradaHoras; }
-    public void setReentradaHoras(Integer r)   { this.reentradaHoras = r; }
+    public void setTipo(AgriculturalInputType tipo) {
+        this.tipo = tipo;
+    }
 
-    public Integer getDiasCarencia()           { return diasCarencia; }
-    public void setDiasCarencia(Integer d)     { this.diasCarencia = d; }
+    public MeasurementUnit getUnidadSugerida() {
+        return unidadSugerida;
+    }
 
-    public Boolean isActivo()                  { return activo; }
-    public void setActivo(Boolean activo)      { this.activo = activo; }
+    public void setUnidadSugerida(MeasurementUnit u) {
+        this.unidadSugerida = u;
+    }
 
-    public LocalDateTime getCreadoEn()         { return creadoEn; }
-    public void setCreadoEn(LocalDateTime t)   { this.creadoEn = t; }
+    public Double getDosisSugerida() {
+        return dosisSugerida;
+    }
+
+    public void setDosisSugerida(Double d) {
+        this.dosisSugerida = d;
+    }
+
+    public Integer getReentradaHoras() {
+        return reentradaHoras;
+    }
+
+    public void setReentradaHoras(Integer r) {
+        this.reentradaHoras = r;
+    }
+
+    public Integer getDiasCarencia() {
+        return diasCarencia;
+    }
+
+    public void setDiasCarencia(Integer d) {
+        this.diasCarencia = d;
+    }
+
+    public Boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public LocalDateTime getCreadoEn() {
+        return creadoEn;
+    }
+
+    public void setCreadoEn(LocalDateTime t) {
+        this.creadoEn = t;
+    }
 }

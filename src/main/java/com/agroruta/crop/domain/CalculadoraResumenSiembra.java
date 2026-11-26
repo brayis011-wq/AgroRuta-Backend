@@ -20,10 +20,14 @@ public final class CalculadoraResumenSiembra {
 
     private CalculadoraResumenSiembra() {}
 
-    public static ResumenSiembra calcular(Siembra siembra, Double areaLote,
-                                          List<Cosecha> cosechas, List<Fumigacion> fumigaciones,
-                                          List<Siembra> temporadasDelLote, Function<Long, Double> kgDeSiembra,
-                                          LocalDate hoy) {
+    public static ResumenSiembra calcular(
+            Siembra siembra,
+            Double areaLote,
+            List<Cosecha> cosechas,
+            List<Fumigacion> fumigaciones,
+            List<Siembra> temporadasDelLote,
+            Function<Long, Double> kgDeSiembra,
+            LocalDate hoy) {
         double primera = suma(cosechas, CalidadCosecha.PRIMERA);
         double segunda = suma(cosechas, CalidadCosecha.SEGUNDA);
         double tercera = suma(cosechas, CalidadCosecha.TERCERA);
@@ -39,15 +43,26 @@ public final class CalculadoraResumenSiembra {
             double kg = Optional.ofNullable(kgDeSiembra.apply(s.getId())).orElse(0.0);
             Integer p = s.getCantidadPlantas();
             otras.add(new ResumenSiembra.TemporadaComparada(
-                    s.getId(), s.nombreCompleto(), s.getFechaSiembra(), s.getFechaFin(), s.estaActiva(),
-                    redondear(kg, 1), p != null && p > 0 ? redondear(kg / p, 3) : null,
+                    s.getId(),
+                    s.nombreCompleto(),
+                    s.getFechaSiembra(),
+                    s.getFechaFin(),
+                    s.estaActiva(),
+                    redondear(kg, 1),
+                    p != null && p > 0 ? redondear(kg / p, 3) : null,
                     Objects.equals(s.getTipoCultivo(), siembra.getTipoCultivo())));
         }
 
         return new ResumenSiembra(
-                siembra.getId(), redondear(total, 1), cosechas.size(),
-                redondear(primera, 1), redondear(segunda, 1), redondear(tercera, 1),
-                porPlanta, porHa, areaLote,
+                siembra.getId(),
+                redondear(total, 1),
+                cosechas.size(),
+                redondear(primera, 1),
+                redondear(segunda, 1),
+                redondear(tercera, 1),
+                porPlanta,
+                porHa,
+                areaLote,
                 semanas(cosechas),
                 restriccionVigente(fumigaciones, hoy, true),
                 restriccionVigente(fumigaciones, hoy, false),
@@ -73,7 +88,8 @@ public final class CalculadoraResumenSiembra {
         List<ResumenSiembra.SemanaCosecha> lista = new ArrayList<>();
         for (LocalDate s = desde; !s.isAfter(ultima); s = s.plusWeeks(1)) {
             double[] kg = porSemana.getOrDefault(s, new double[3]);
-            lista.add(new ResumenSiembra.SemanaCosecha(s, redondear(kg[0], 1), redondear(kg[1], 1), redondear(kg[2], 1)));
+            lista.add(
+                    new ResumenSiembra.SemanaCosecha(s, redondear(kg[0], 1), redondear(kg[1], 1), redondear(kg[2], 1)));
         }
         return lista;
     }
@@ -83,7 +99,8 @@ public final class CalculadoraResumenSiembra {
      * Carencia: se puede cosechar desde fecha + días. Reentrada: se cuenta en días completos
      * desde el día de la aplicación (24 h = al día siguiente).
      */
-    static ResumenSiembra.Restriccion restriccionVigente(List<Fumigacion> fumigaciones, LocalDate hoy, boolean carencia) {
+    static ResumenSiembra.Restriccion restriccionVigente(
+            List<Fumigacion> fumigaciones, LocalDate hoy, boolean carencia) {
         return fumigaciones.stream()
                 .filter(f -> f.getFecha() != null)
                 .map(f -> {
@@ -91,8 +108,8 @@ public final class CalculadoraResumenSiembra {
                     if (valor == null || valor <= 0) return null;
                     long dias = carencia ? valor : (long) Math.ceil(valor / 24.0);
                     LocalDate libre = f.getFecha().plusDays(dias);
-                    return new ResumenSiembra.Restriccion(f.getProducto(), f.getFecha(), libre,
-                            ChronoUnit.DAYS.between(hoy, libre), valor);
+                    return new ResumenSiembra.Restriccion(
+                            f.getProducto(), f.getFecha(), libre, ChronoUnit.DAYS.between(hoy, libre), valor);
                 })
                 .filter(Objects::nonNull)
                 .filter(r -> r.libreDesde().isAfter(hoy))
@@ -107,7 +124,8 @@ public final class CalculadoraResumenSiembra {
     private static double suma(List<Cosecha> cosechas, CalidadCosecha calidad) {
         return cosechas.stream()
                 .filter(c -> c.getCalidad() == calidad && c.getCantidadKg() != null)
-                .mapToDouble(Cosecha::getCantidadKg).sum();
+                .mapToDouble(Cosecha::getCantidadKg)
+                .sum();
     }
 
     private static double redondear(double v, int decimales) {

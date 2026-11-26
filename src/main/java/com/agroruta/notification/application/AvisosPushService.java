@@ -11,16 +11,14 @@ import com.agroruta.notification.domain.SuscripcionPush;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.util.CifradoLocal;
+import java.net.URI;
+import java.time.Instant;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
 import org.springframework.transaction.annotation.Transactional;
-
-import java.net.URI;
-import java.time.Instant;
-import java.util.List;
 
 /**
  * Avisos push con el estándar Web Push: sin servicios de pago ni cuentas externas.
@@ -35,8 +33,9 @@ public class AvisosPushService implements AvisosPushUseCase {
      * Servicios de avisos de los navegadores. El endpoint lo manda el navegador, así que solo se
      * aceptan estos: de lo contrario alguien podría hacer que el servidor llame a cualquier dirección.
      */
-    private static final List<String> SERVICIOS = List.of(
-            "fcm.googleapis.com", "push.services.mozilla.com", "notify.windows.com", "push.apple.com");
+    private static final List<String> SERVICIOS =
+            List.of("fcm.googleapis.com", "push.services.mozilla.com", "notify.windows.com", "push.apple.com");
+
     private static final int MAX_ENDPOINT = 700;
     private static final int MAX_DISPOSITIVOS = 10;
     private static final long VALIDEZ_FIRMA_SEGUNDOS = 12 * 3600;
@@ -48,9 +47,12 @@ public class AvisosPushService implements AvisosPushUseCase {
     private final String contacto;
     private ClavesVapid claves;
 
-    public AvisosPushService(SuscripcionPushRepository suscripciones, ClavesPushRepository clavesGuardadas, PushPort push,
-                             @Value("${jwt.secret}") String secreto,
-                             @Value("${app.push.contacto:mailto:soporte@agroruta.app}") String contacto) {
+    public AvisosPushService(
+            SuscripcionPushRepository suscripciones,
+            ClavesPushRepository clavesGuardadas,
+            PushPort push,
+            @Value("${jwt.secret}") String secreto,
+            @Value("${app.push.contacto:mailto:soporte@agroruta.app}") String contacto) {
         this.suscripciones = suscripciones;
         this.clavesGuardadas = clavesGuardadas;
         this.push = push;
@@ -67,7 +69,8 @@ public class AvisosPushService implements AvisosPushUseCase {
     @Transactional // guardar la suscripción y quitar las que sobran van juntas
     public void suscribir(Long usuarioId, String endpoint, String p256dh, String auth, String dispositivo) {
         if (!endpointPermitido(endpoint)) {
-            throw new BusinessException(ErrorCode.INVALID_OPERATION, "Este navegador usa un servicio de avisos que no reconocemos.");
+            throw new BusinessException(
+                    ErrorCode.INVALID_OPERATION, "Este navegador usa un servicio de avisos que no reconocemos.");
         }
         if (!CifradoWebPush.clavesValidas(p256dh, auth)) {
             throw new BusinessException(ErrorCode.INVALID_OPERATION, "Las claves de la suscripción no son válidas.");
@@ -104,7 +107,9 @@ public class AvisosPushService implements AvisosPushUseCase {
                         continue;
                     }
                     String servicio = "https://" + URI.create(s.endpoint()).getHost();
-                    PushPort.Resultado r = push.enviar(s.endpoint(), c.autorizacion(servicio, contacto, expira),
+                    PushPort.Resultado r = push.enviar(
+                            s.endpoint(),
+                            c.autorizacion(servicio, contacto, expira),
                             CifradoWebPush.cifrar(json, s.p256dh(), s.auth()));
                     if (r == PushPort.Resultado.ENTREGADO) entregados++;
                     else if (r == PushPort.Resultado.CADUCADA) suscripciones.eliminar(s.id());
@@ -138,7 +143,9 @@ public class AvisosPushService implements AvisosPushUseCase {
         var guardadas = clavesGuardadas.buscar();
         if (guardadas.isPresent()) {
             try {
-                claves = new ClavesVapid(guardadas.get().publica(), cifrado.descifrar(guardadas.get().privadaCifrada()));
+                claves = new ClavesVapid(
+                        guardadas.get().publica(),
+                        cifrado.descifrar(guardadas.get().privadaCifrada()));
                 return claves;
             } catch (IllegalStateException e) {
                 // Cambió JWT_SECRET: la clave privada ya no se puede leer. Las suscripciones hechas

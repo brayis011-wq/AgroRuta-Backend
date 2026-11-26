@@ -21,7 +21,10 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Pruebas
+      - name: Formato (Spotless)
+        run: ./mvnw -B -ntp spotless:check
+
+      - name: Pruebas y cobertura mínima
         run: ./mvnw -B -ntp test
 
       - name: Reporte de pruebas (si algo falla)

@@ -1,14 +1,13 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
+import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.domain.TipoActividad;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepository {
@@ -25,10 +24,12 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
         ActividadCultivoEntity saved = jpaRepository.save(entity);
         return toDomain(saved);
     }
+
     @Override
     public boolean existsByTipoAndFechaAndSiembraId(TipoActividad tipo, LocalDate fecha, Long siembraId) {
         return jpaRepository.existsByTipoAndFechaAndSiembraId(tipo, fecha, siembraId);
     }
+
     @Override
     public Optional<ActividadCultivo> findById(Long id) {
         return jpaRepository.findById(id).map(this::toDomain);
@@ -36,8 +37,9 @@ public class ActividadCultivoRepositoryImpl implements ActividadCultivoRepositor
 
     @Override
     public List<ActividadCultivo> findBySiembraId(Long siembraId) {
-        return jpaRepository.findBySiembraId(siembraId)
-                .stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findBySiembraId(siembraId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

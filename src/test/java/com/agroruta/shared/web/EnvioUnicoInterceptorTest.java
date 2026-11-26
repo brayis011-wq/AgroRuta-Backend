@@ -1,8 +1,16 @@
 package com.agroruta.shared.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,15 +18,6 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 class EnvioUnicoInterceptorTest {
 
@@ -55,8 +54,8 @@ class EnvioUnicoInterceptorTest {
     private static void entrarComo(Long id) {
         CustomUserDetails usuario = mock(CustomUserDetails.class);
         when(usuario.getId()).thenReturn(id);
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(usuario, null, List.of()));
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(usuario, null, List.of()));
     }
 
     private static MockHttpServletRequest post(String clave) {
@@ -67,7 +66,8 @@ class EnvioUnicoInterceptorTest {
 
     @Test
     void sinCabecera_pasaComoSiempre() {
-        assertThat(interceptor.preHandle(post(null), new MockHttpServletResponse(), new Object())).isTrue();
+        assertThat(interceptor.preHandle(post(null), new MockHttpServletResponse(), new Object()))
+                .isTrue();
         assertThat(envios.claves).isEmpty();
     }
 
@@ -92,7 +92,8 @@ class EnvioUnicoInterceptorTest {
 
         assertThatThrownBy(() -> interceptor.preHandle(post(CLAVE), new MockHttpServletResponse(), new Object()))
                 .isInstanceOf(BusinessException.class)
-                .satisfies(e -> assertThat(((BusinessException) e).getErrorCode()).isEqualTo(ErrorCode.DUPLICATE_SUBMISSION));
+                .satisfies(e ->
+                        assertThat(((BusinessException) e).getErrorCode()).isEqualTo(ErrorCode.DUPLICATE_SUBMISSION));
     }
 
     @Test
@@ -104,7 +105,8 @@ class EnvioUnicoInterceptorTest {
         interceptor.afterCompletion(req, rechazo, new Object(), null);
 
         assertThat(envios.claves).isEmpty();
-        assertThat(interceptor.preHandle(post(CLAVE), new MockHttpServletResponse(), new Object())).isTrue();
+        assertThat(interceptor.preHandle(post(CLAVE), new MockHttpServletResponse(), new Object()))
+                .isTrue();
     }
 
     @Test
@@ -122,13 +124,15 @@ class EnvioUnicoInterceptorTest {
         interceptor.preHandle(post(CLAVE), new MockHttpServletResponse(), new Object());
         entrarComo(8L);
 
-        assertThat(interceptor.preHandle(post(CLAVE), new MockHttpServletResponse(), new Object())).isTrue();
+        assertThat(interceptor.preHandle(post(CLAVE), new MockHttpServletResponse(), new Object()))
+                .isTrue();
         assertThat(envios.claves).containsExactlyInAnyOrder("7|" + CLAVE, "8|" + CLAVE);
     }
 
     @Test
     void claveConFormatoRaro_seIgnora() {
-        assertThat(interceptor.preHandle(post("x y; drop"), new MockHttpServletResponse(), new Object())).isTrue();
+        assertThat(interceptor.preHandle(post("x y; drop"), new MockHttpServletResponse(), new Object()))
+                .isTrue();
         assertThat(envios.claves).isEmpty();
     }
 
@@ -137,7 +141,8 @@ class EnvioUnicoInterceptorTest {
         MockHttpServletRequest get = new MockHttpServletRequest("GET", "/api/harvests");
         get.addHeader(EnvioUnicoInterceptor.CABECERA, CLAVE);
 
-        assertThat(interceptor.preHandle(get, new MockHttpServletResponse(), new Object())).isTrue();
+        assertThat(interceptor.preHandle(get, new MockHttpServletResponse(), new Object()))
+                .isTrue();
         assertThat(envios.claves).isEmpty();
     }
 }

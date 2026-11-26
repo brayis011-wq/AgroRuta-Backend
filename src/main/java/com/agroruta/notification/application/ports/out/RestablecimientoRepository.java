@@ -1,12 +1,12 @@
 package com.agroruta.notification.application.ports.out;
 
 import com.agroruta.notification.domain.RestablecimientoContrasena;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 public interface RestablecimientoRepository {
     RestablecimientoContrasena guardar(RestablecimientoContrasena r);
+
     Optional<RestablecimientoContrasena> buscarPorTokenHash(String tokenHash);
     /** Cuántos enlaces se pidieron para el usuario desde una fecha (para no mandar correos sin fin) */
     long contarDesde(Long usuarioId, LocalDateTime desde);

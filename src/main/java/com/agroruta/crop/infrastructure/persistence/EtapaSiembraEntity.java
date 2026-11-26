@@ -24,15 +24,35 @@ public class EtapaSiembraEntity {
 
     public EtapaSiembraEntity() {}
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getSiembraId() { return siembraId; }
-    public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public EstadoCultivo getEtapa() { return etapa; }
-    public void setEtapa(EstadoCultivo etapa) { this.etapa = etapa; }
+    public Long getSiembraId() {
+        return siembraId;
+    }
 
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+    public void setSiembraId(Long siembraId) {
+        this.siembraId = siembraId;
+    }
+
+    public EstadoCultivo getEtapa() {
+        return etapa;
+    }
+
+    public void setEtapa(EstadoCultivo etapa) {
+        this.etapa = etapa;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
 }

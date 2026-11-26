@@ -2,11 +2,10 @@ package com.agroruta.user.infrastructure.persistence;
 
 import com.agroruta.user.application.ports.out.SegundoFactorRepository;
 import com.agroruta.user.domain.SegundoFactor;
-import org.springframework.stereotype.Repository;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class SegundoFactorRepositoryImpl implements SegundoFactorRepository {
@@ -19,7 +18,9 @@ public class SegundoFactorRepositoryImpl implements SegundoFactorRepository {
 
     @Override
     public Optional<SegundoFactor> buscar(Long usuarioId) {
-        return usuarioId == null ? Optional.empty() : jpa.findById(usuarioId).map(SegundoFactorRepositoryImpl::aDominio);
+        return usuarioId == null
+                ? Optional.empty()
+                : jpa.findById(usuarioId).map(SegundoFactorRepositoryImpl::aDominio);
     }
 
     @Override
@@ -42,8 +43,15 @@ public class SegundoFactorRepositoryImpl implements SegundoFactorRepository {
 
     private static SegundoFactor aDominio(SegundoFactorEntity e) {
         List<String> respaldo = e.getRespaldo() == null || e.getRespaldo().isBlank()
-                ? List.of() : Arrays.asList(e.getRespaldo().split(","));
-        return new SegundoFactor(e.getUsuarioId(), e.getSecreto(), e.isActivo(), respaldo,
-                e.getUltimoPaso(), e.getCreadoEn(), e.getActivadoEn());
+                ? List.of()
+                : Arrays.asList(e.getRespaldo().split(","));
+        return new SegundoFactor(
+                e.getUsuarioId(),
+                e.getSecreto(),
+                e.isActivo(),
+                respaldo,
+                e.getUltimoPaso(),
+                e.getCreadoEn(),
+                e.getActivadoEn());
     }
 }

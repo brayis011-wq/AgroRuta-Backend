@@ -2,10 +2,10 @@ package com.agroruta.user.infrastructure.persistence;
 
 import com.agroruta.user.domain.Rol;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -40,20 +40,25 @@ public class UsuarioEntity {
     @Column(length = 20)
     private String telefono;
 
-
     @Column(name = "email_verificado", nullable = false)
     private boolean emailVerificado = true;
 
-    public UsuarioEntity(Long id, String nombre, String email, String password,
-                         Rol rol, boolean activo, LocalDateTime fechaCreacion,
-                         String telefono) {
-        this.id            = id;
-        this.nombre        = nombre;
-        this.email         = email;
-        this.password      = password;
-        this.rol           = rol;
-        this.activo        = activo;
+    public UsuarioEntity(
+            Long id,
+            String nombre,
+            String email,
+            String password,
+            Rol rol,
+            boolean activo,
+            LocalDateTime fechaCreacion,
+            String telefono) {
+        this.id = id;
+        this.nombre = nombre;
+        this.email = email;
+        this.password = password;
+        this.rol = rol;
+        this.activo = activo;
         this.fechaCreacion = fechaCreacion;
-        this.telefono      = telefono;
+        this.telefono = telefono;
     }
 }

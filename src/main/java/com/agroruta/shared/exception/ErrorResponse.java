@@ -12,7 +12,7 @@ public class ErrorResponse {
     private final int status;
     private final String message;
     private final LocalDateTime timestamp;
-    private final String traceId;           // para correlacionar con los logs
+    private final String traceId; // para correlacionar con los logs
     private Map<String, String> fieldErrors; // para errores de validación
 
     public ErrorResponse(int status, String errorCode, String message, String traceId) {
@@ -33,10 +33,27 @@ public class ErrorResponse {
     }
 
     // Getters
-    public String getErrorCode() { return errorCode; }
-    public int getStatus() { return status; }
-    public String getMessage() { return message; }
-    public LocalDateTime getTimestamp() { return timestamp; }
-    public String getTraceId() { return traceId; }
-    public Map<String, String> getFieldErrors() { return fieldErrors; }
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public int getStatus() {
+        return status;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public String getTraceId() {
+        return traceId;
+    }
+
+    public Map<String, String> getFieldErrors() {
+        return fieldErrors;
+    }
 }

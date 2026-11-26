@@ -2,8 +2,8 @@ package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.UnidadMedida;
 import jakarta.persistence.*;
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "fumigaciones")
@@ -57,45 +57,115 @@ public class FumigacionEntity {
 
     public FumigacionEntity() {}
 
-    public Double getCantidadUsada() { return cantidadUsada; }
-    public void setCantidadUsada(Double v) { this.cantidadUsada = v; }
+    public Double getCantidadUsada() {
+        return cantidadUsada;
+    }
 
-    public UnidadMedida getUnidadCantidad() { return unidadCantidad; }
-    public void setUnidadCantidad(UnidadMedida v) { this.unidadCantidad = v; }
+    public void setCantidadUsada(Double v) {
+        this.cantidadUsada = v;
+    }
 
-    public Long getAgriculturalInputId() { return agriculturalInputId; }
-    public void setAgriculturalInputId(Long v) { this.agriculturalInputId = v; }
+    public UnidadMedida getUnidadCantidad() {
+        return unidadCantidad;
+    }
 
-    public Integer getDiasCarencia() { return diasCarencia; }
-    public void setDiasCarencia(Integer v) { this.diasCarencia = v; }
+    public void setUnidadCantidad(UnidadMedida v) {
+        this.unidadCantidad = v;
+    }
 
-    public BigDecimal getCosto() { return costo; }
-    public void setCosto(BigDecimal v) { this.costo = v; }
+    public Long getAgriculturalInputId() {
+        return agriculturalInputId;
+    }
 
-    public Integer getReentradaHoras() { return reentradaHoras; }
-    public void setReentradaHoras(Integer v) { this.reentradaHoras = v; }
+    public void setAgriculturalInputId(Long v) {
+        this.agriculturalInputId = v;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public Integer getDiasCarencia() {
+        return diasCarencia;
+    }
 
-    public LocalDate getFecha() { return fecha; }
-    public void setFecha(LocalDate fecha) { this.fecha = fecha; }
+    public void setDiasCarencia(Integer v) {
+        this.diasCarencia = v;
+    }
 
-    public String getProducto() { return producto; }
-    public void setProducto(String producto) { this.producto = producto; }
+    public BigDecimal getCosto() {
+        return costo;
+    }
 
-    public Double getDosis() { return dosis; }
-    public void setDosis(Double dosis) { this.dosis = dosis; }
+    public void setCosto(BigDecimal v) {
+        this.costo = v;
+    }
 
-    public UnidadMedida getUnidadMedida() { return unidadMedida; }
-    public void setUnidadMedida(UnidadMedida unidadMedida) { this.unidadMedida = unidadMedida; }
+    public Integer getReentradaHoras() {
+        return reentradaHoras;
+    }
 
-    public Double getAreaAplicada() { return areaAplicada; }
-    public void setAreaAplicada(Double areaAplicada) { this.areaAplicada = areaAplicada; }
+    public void setReentradaHoras(Integer v) {
+        this.reentradaHoras = v;
+    }
 
-    public String getObservaciones() { return observaciones; }
-    public void setObservaciones(String observaciones) { this.observaciones = observaciones; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getSiembraId() { return siembraId; }
-    public void setSiembraId(Long siembraId) { this.siembraId = siembraId; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public LocalDate getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDate fecha) {
+        this.fecha = fecha;
+    }
+
+    public String getProducto() {
+        return producto;
+    }
+
+    public void setProducto(String producto) {
+        this.producto = producto;
+    }
+
+    public Double getDosis() {
+        return dosis;
+    }
+
+    public void setDosis(Double dosis) {
+        this.dosis = dosis;
+    }
+
+    public UnidadMedida getUnidadMedida() {
+        return unidadMedida;
+    }
+
+    public void setUnidadMedida(UnidadMedida unidadMedida) {
+        this.unidadMedida = unidadMedida;
+    }
+
+    public Double getAreaAplicada() {
+        return areaAplicada;
+    }
+
+    public void setAreaAplicada(Double areaAplicada) {
+        this.areaAplicada = areaAplicada;
+    }
+
+    public String getObservaciones() {
+        return observaciones;
+    }
+
+    public void setObservaciones(String observaciones) {
+        this.observaciones = observaciones;
+    }
+
+    public Long getSiembraId() {
+        return siembraId;
+    }
+
+    public void setSiembraId(Long siembraId) {
+        this.siembraId = siembraId;
+    }
 }

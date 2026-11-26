@@ -1,24 +1,22 @@
 package com.agroruta.notification.application;
 
-import com.agroruta.notification.domain.VerificacionCorreo;
 import com.agroruta.notification.application.ports.out.VerificacionCorreoRepository;
+import com.agroruta.notification.domain.VerificacionCorreo;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.application.ports.out.VerificacionCorreoPort;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Confirmación del correo al registrarse: manda un enlace de un solo uso que vence en 24 horas.
@@ -41,15 +39,13 @@ public class VerificacionCorreoService implements VerificacionCorreoPort {
     private final Clock reloj;
     private final SecureRandom azar = new SecureRandom();
 
-    @Autowired
-    public VerificacionCorreoService(@Value("${correo.verificar-registro:true}") boolean activa,
-                                     UsuarioRepository usuarios, VerificacionCorreoRepository verificaciones,
-                                     MensajesCorreo mensajes, EnvioCorreo envio) {
-        this(activa, usuarios, verificaciones, mensajes, envio, Clock.system(RecuperarContrasenaService.ZONA));
-    }
-
-    VerificacionCorreoService(boolean activa, UsuarioRepository usuarios, VerificacionCorreoRepository verificaciones,
-                              MensajesCorreo mensajes, EnvioCorreo envio, Clock reloj) {
+    public VerificacionCorreoService(
+            @Value("${correo.verificar-registro:true}") boolean activa,
+            UsuarioRepository usuarios,
+            VerificacionCorreoRepository verificaciones,
+            MensajesCorreo mensajes,
+            EnvioCorreo envio,
+            Clock reloj) {
         this.activa = activa;
         this.usuarios = usuarios;
         this.verificaciones = verificaciones;
@@ -71,19 +67,24 @@ public class VerificacionCorreoService implements VerificacionCorreoPort {
         byte[] b = new byte[32];
         azar.nextBytes(b);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(b);
-        verificaciones.guardar(new VerificacionCorreo(null, usuario.getId(), RecuperarContrasenaService.hash(token),
-                ahora, ahora.plus(VIGENCIA), null));
-        envio.enSegundoPlano(mensajes.verificarCorreo(usuario.getNombre(), usuario.getEmail(), token, VIGENCIA.toHours()));
+        verificaciones.guardar(new VerificacionCorreo(
+                null, usuario.getId(), RecuperarContrasenaService.hash(token), ahora, ahora.plus(VIGENCIA), null));
+        envio.enSegundoPlano(
+                mensajes.verificarCorreo(usuario.getNombre(), usuario.getEmail(), token, VIGENCIA.toHours()));
     }
 
     @Override
     @Transactional
     public Usuario confirmar(String token) {
         LocalDateTime ahora = LocalDateTime.now(reloj);
-        VerificacionCorreo v = token == null || token.isBlank() ? null
-                : verificaciones.buscarPorTokenHash(RecuperarContrasenaService.hash(token.trim())).orElse(null);
+        VerificacionCorreo v = token == null || token.isBlank()
+                ? null
+                : verificaciones
+                        .buscarPorTokenHash(RecuperarContrasenaService.hash(token.trim()))
+                        .orElse(null);
         if (v == null || !v.sirve(ahora)) throw new BusinessException(ErrorCode.INVALID_OPERATION, NO_SIRVE);
-        Usuario usuario = usuarios.findById(v.getUsuarioId()).filter(Usuario::isActivo)
+        Usuario usuario = usuarios.findById(v.getUsuarioId())
+                .filter(Usuario::isActivo)
                 .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_OPERATION, NO_SIRVE));
         v.usar(ahora);
         verificaciones.guardar(v);

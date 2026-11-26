@@ -1,12 +1,12 @@
 package com.agroruta.shared.util;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("EnumParser")
 class EnumParserTest {

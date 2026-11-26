@@ -1,5 +1,12 @@
 package com.agroruta.shared.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,20 +17,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ConsultaPropiedadJdbc")
 class ConsultaPropiedadJdbcTest {
 
-    @Mock private JdbcTemplate jdbc;
+    @Mock
+    private JdbcTemplate jdbc;
 
-    @InjectMocks private ConsultaPropiedadJdbc consulta;
+    @InjectMocks
+    private ConsultaPropiedadJdbc consulta;
 
     @ParameterizedTest
     @EnumSource(Recurso.class)
@@ -39,8 +41,10 @@ class ConsultaPropiedadJdbcTest {
     @Test
     @DisplayName("Es dueño cuando la consulta encuentra la fila")
     void esDuenoSiHayFila() {
-        when(jdbc.queryForObject(anyString(), eq(Integer.class), eq(80L), eq(1L))).thenReturn(1);
-        when(jdbc.queryForObject(anyString(), eq(Integer.class), eq(80L), eq(2L))).thenReturn(0);
+        when(jdbc.queryForObject(anyString(), eq(Integer.class), eq(80L), eq(1L)))
+                .thenReturn(1);
+        when(jdbc.queryForObject(anyString(), eq(Integer.class), eq(80L), eq(2L)))
+                .thenReturn(0);
 
         assertThat(consulta.esDueno(Recurso.COSECHA, 80L, 1L)).isTrue();
         assertThat(consulta.esDueno(Recurso.COSECHA, 80L, 2L)).isFalse();

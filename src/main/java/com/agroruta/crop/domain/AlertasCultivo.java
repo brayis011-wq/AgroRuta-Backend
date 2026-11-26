@@ -2,7 +2,6 @@ package com.agroruta.crop.domain;
 
 import com.agroruta.crop.domain.AlertaCultivo.Tipo;
 import com.agroruta.crop.domain.CalendarioCultivo.DatosSiembra;
-
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -29,12 +28,13 @@ public final class AlertasCultivo {
         String lote = d.loteNombre();
         String cultivo = s.nombreCompleto();
 
-        fumigacionPendiente(d.fumigaciones(), hoy).ifPresent(a ->
-                alertas.add(new AlertaCultivo(a.tipo, finca, lote, cultivo, null, a.detalle, a.fecha)));
+        fumigacionPendiente(d.fumigaciones(), hoy)
+                .ifPresent(a -> alertas.add(new AlertaCultivo(a.tipo, finca, lote, cultivo, null, a.detalle, a.fecha)));
 
         for (ActividadCultivo act : d.actividades()) {
             if (act.getFecha() == null) continue;
-            Tipo tipo = act.getFecha().equals(hoy) ? Tipo.LABOR_HOY
+            Tipo tipo = act.getFecha().equals(hoy)
+                    ? Tipo.LABOR_HOY
                     : act.getFecha().equals(hoy.plusDays(1)) ? Tipo.LABOR_MANANA : null;
             if (tipo == null) continue;
             String titulo = act.getTipo() == null ? "OTRO" : act.getTipo().name();
@@ -46,13 +46,21 @@ public final class AlertasCultivo {
             if (f.getReentradaHoras() != null && f.getReentradaHoras() > 0) {
                 LocalDate libre = f.getFecha().plusDays((long) Math.ceil(f.getReentradaHoras() / 24.0));
                 if (libre.equals(hoy)) {
-                    alertas.add(new AlertaCultivo(Tipo.REENTRADA_LIBRE, finca, lote, cultivo, f.getProducto(), null, libre));
+                    alertas.add(new AlertaCultivo(
+                            Tipo.REENTRADA_LIBRE, finca, lote, cultivo, f.getProducto(), null, libre));
                 } else if (libre.isAfter(hoy) && !f.getFecha().isBefore(hoy.minusDays(1))) {
-                    alertas.add(new AlertaCultivo(Tipo.REENTRADA_EN_CURSO, finca, lote, cultivo, f.getProducto(),
-                            String.valueOf(f.getReentradaHoras()), libre));
+                    alertas.add(new AlertaCultivo(
+                            Tipo.REENTRADA_EN_CURSO,
+                            finca,
+                            lote,
+                            cultivo,
+                            f.getProducto(),
+                            String.valueOf(f.getReentradaHoras()),
+                            libre));
                 }
             }
-            if (f.getDiasCarencia() != null && f.getDiasCarencia() > 0
+            if (f.getDiasCarencia() != null
+                    && f.getDiasCarencia() > 0
                     && f.getFecha().plusDays(f.getDiasCarencia()).equals(hoy)) {
                 alertas.add(new AlertaCultivo(Tipo.CARENCIA_LIBRE, finca, lote, cultivo, f.getProducto(), null, hoy));
             }
@@ -64,8 +72,11 @@ public final class AlertasCultivo {
 
     /** Usa el mismo intervalo que el calendario (mediana entre fumigaciones, o 7 días) */
     private static java.util.Optional<Pendiente> fumigacionPendiente(List<Fumigacion> fumigaciones, LocalDate hoy) {
-        LocalDate ultima = fumigaciones.stream().map(Fumigacion::getFecha).filter(Objects::nonNull)
-                .max(LocalDate::compareTo).orElse(null);
+        LocalDate ultima = fumigaciones.stream()
+                .map(Fumigacion::getFecha)
+                .filter(Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(null);
         if (ultima == null || !ultima.isBefore(hoy)) return java.util.Optional.empty();
         return CalendarioCultivo.proximaFumigacion(fumigaciones, hoy).flatMap(sug -> {
             LocalDate tocaba = ultima.plusDays(sug.intervalo());

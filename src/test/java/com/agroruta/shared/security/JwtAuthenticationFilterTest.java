@@ -1,10 +1,16 @@
 package com.agroruta.shared.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,30 +27,31 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.Collections;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("JwtAuthenticationFilter")
 class JwtAuthenticationFilterTest {
 
-    @Mock private JwtService jwtService;
-    @Mock private UserDetailsService userDetailsService;
-    @InjectMocks private JwtAuthenticationFilter filter;
+    @Mock
+    private JwtService jwtService;
 
-    @Mock private HttpServletRequest request;
-    @Mock private HttpServletResponse response;
-    @Mock private FilterChain filterChain;
+    @Mock
+    private UserDetailsService userDetailsService;
 
-    private static final String TOKEN  = "header.payload.signature";
+    @InjectMocks
+    private JwtAuthenticationFilter filter;
+
+    @Mock
+    private HttpServletRequest request;
+
+    @Mock
+    private HttpServletResponse response;
+
+    @Mock
+    private FilterChain filterChain;
+
+    private static final String TOKEN = "header.payload.signature";
     private static final String BEARER = "Bearer " + TOKEN;
-    private static final String EMAIL  = "carlos@agroruta.com";
+    private static final String EMAIL = "carlos@agroruta.com";
 
     private UserDetails userDetails;
 
@@ -231,8 +238,8 @@ class JwtAuthenticationFilterTest {
         @DisplayName("si ya hay autenticación en el contexto, no llama a UserDetailsService")
         void noLlamaAUserDetailsServiceSiYaAutenticado() throws Exception {
             // Pre-cargar autenticación en el contexto
-            var authExistente = new org.springframework.security.authentication
-                    .UsernamePasswordAuthenticationToken(userDetails, null, Collections.emptyList());
+            var authExistente = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                    userDetails, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authExistente);
 
             when(request.getHeader("Authorization")).thenReturn(BEARER);
@@ -260,8 +267,7 @@ class JwtAuthenticationFilterTest {
             responseBody = new StringWriter();
             when(response.getWriter()).thenReturn(new PrintWriter(responseBody));
             when(request.getHeader("Authorization")).thenReturn(BEARER);
-            when(jwtService.extractUsername(TOKEN))
-                    .thenThrow(new ExpiredJwtException(null, null, "Token expirado"));
+            when(jwtService.extractUsername(TOKEN)).thenThrow(new ExpiredJwtException(null, null, "Token expirado"));
         }
 
         @Test
@@ -320,8 +326,7 @@ class JwtAuthenticationFilterTest {
             responseBody = new StringWriter();
             when(response.getWriter()).thenReturn(new PrintWriter(responseBody));
             when(request.getHeader("Authorization")).thenReturn(BEARER);
-            when(jwtService.extractUsername(TOKEN))
-                    .thenThrow(new JwtException("Firma inválida"));
+            when(jwtService.extractUsername(TOKEN)).thenThrow(new JwtException("Firma inválida"));
         }
 
         @Test
@@ -409,8 +414,7 @@ class JwtAuthenticationFilterTest {
             when(response.getWriter()).thenReturn(new PrintWriter(body));
             when(request.getHeader("Authorization")).thenReturn(BEARER);
             when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
-            when(userDetailsService.loadUserByUsername(EMAIL))
-                    .thenThrow(new UsernameNotFoundException("no existe"));
+            when(userDetailsService.loadUserByUsername(EMAIL)).thenThrow(new UsernameNotFoundException("no existe"));
 
             filter.doFilterInternal(request, response, filterChain);
 
@@ -432,7 +436,8 @@ class JwtAuthenticationFilterTest {
             when(request.getHeader("Authorization")).thenReturn(BEARER);
             when(jwtService.extractUsername(TOKEN)).thenReturn(EMAIL);
             UserDetails desactivado = User.builder()
-                    .username(EMAIL).password("hashed-pwd")
+                    .username(EMAIL)
+                    .password("hashed-pwd")
                     .authorities(Collections.emptyList())
                     .disabled(true)
                     .build();

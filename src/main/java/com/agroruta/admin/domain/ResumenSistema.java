@@ -7,5 +7,4 @@ public record ResumenSistema(
         long administradores,
         long agricultores,
         long trabajadoresUsuarios,
-        EstadisticasSistema estadisticas
-) {}
+        EstadisticasSistema estadisticas) {}

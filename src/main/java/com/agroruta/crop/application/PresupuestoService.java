@@ -5,11 +5,6 @@ import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.crop.domain.PresupuestoSiembra;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.util.Dinero;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -17,6 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /** Presupuesto por temporada: lo que se esperaba gastar frente a lo que se lleva. */
 @Service
@@ -39,13 +38,16 @@ public class PresupuestoService {
         return repositorio.deSiembra(siembraId).map(p -> p.comparar(costos.costos(siembraId)));
     }
 
-    public PresupuestoSiembra.Comparacion guardar(Long siembraId, BigDecimal manoObra, BigDecimal insumos, BigDecimal otros) {
-        for (BigDecimal v : new BigDecimal[]{manoObra, insumos, otros}) {
-            if (v != null && v.signum() < 0) throw new DatoInvalidoException("Los valores del presupuesto no pueden ser negativos.");
+    public PresupuestoSiembra.Comparacion guardar(
+            Long siembraId, BigDecimal manoObra, BigDecimal insumos, BigDecimal otros) {
+        for (BigDecimal v : new BigDecimal[] {manoObra, insumos, otros}) {
+            if (v != null && v.signum() < 0)
+                throw new DatoInvalidoException("Los valores del presupuesto no pueden ser negativos.");
         }
-        PresupuestoSiembra p = new PresupuestoSiembra(siembraId, Dinero.redondear(manoObra), Dinero.redondear(insumos),
-                Dinero.redondear(otros), 0);
-        if (p.total().signum() <= 0) throw new DatoInvalidoException("Escribe cuánto esperas gastar en al menos una parte.");
+        PresupuestoSiembra p = new PresupuestoSiembra(
+                siembraId, Dinero.redondear(manoObra), Dinero.redondear(insumos), Dinero.redondear(otros), 0);
+        if (p.total().signum() <= 0)
+            throw new DatoInvalidoException("Escribe cuánto esperas gastar en al menos una parte.");
         costos.costos(siembraId); // la siembra existe
         repositorio.guardar(p);
         return p.comparar(costos.costos(siembraId));
@@ -69,13 +71,23 @@ public class PresupuestoService {
                 int nivel = p.nivelPorAvisar(comp);
                 if (nivel == 0) continue;
                 AlertaCultivo.Tipo tipo = nivel == PresupuestoSiembra.SUPERADO
-                        ? AlertaCultivo.Tipo.PRESUPUESTO_SUPERADO : AlertaCultivo.Tipo.PRESUPUESTO_CERCA;
+                        ? AlertaCultivo.Tipo.PRESUPUESTO_SUPERADO
+                        : AlertaCultivo.Tipo.PRESUPUESTO_CERCA;
                 String detalle = pesos(comp.gastadoTotal()) + " de " + pesos(comp.total());
-                res.add(new AlertaCultivo(tipo, c.finca(), c.lote(), c.cultivo(),
-                        String.valueOf(Math.round(comp.porcentaje())), detalle, hoy));
+                res.add(new AlertaCultivo(
+                        tipo,
+                        c.finca(),
+                        c.lote(),
+                        c.cultivo(),
+                        String.valueOf(Math.round(comp.porcentaje())),
+                        detalle,
+                        hoy));
                 repositorio.marcarAvisado(p.siembraId(), nivel);
             } catch (RuntimeException e) {
-                log.warn("No se pudo revisar el presupuesto de la siembra {}: {}", c.presupuesto().siembraId(), e.getMessage());
+                log.warn(
+                        "No se pudo revisar el presupuesto de la siembra {}: {}",
+                        c.presupuesto().siembraId(),
+                        e.getMessage());
             }
         }
         return res;

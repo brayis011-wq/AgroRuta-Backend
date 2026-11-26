@@ -4,13 +4,12 @@ import com.agroruta.report.application.ports.out.CampoQueryPort;
 import com.agroruta.report.domain.AplicacionCampo;
 import com.agroruta.report.domain.GastosGenerales;
 import com.agroruta.report.domain.Periodo;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Repository;
-
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
 
 /** Consultas de solo lectura para el cuaderno de campo y los gastos generales. */
 @Repository
@@ -36,25 +35,49 @@ public class CampoQueryJdbc implements CampoQueryPort {
                   LEFT JOIN agricultural_inputs ai ON ai.id = fu.agricultural_input_id
                  WHERE 1 = 1""");
         List<Object> args = new ArrayList<>();
-        if (agricultorId != null) { sql.append(" AND f.agricultor_id = ?"); args.add(agricultorId); }
-        if (fincaId != null) { sql.append(" AND f.id = ?"); args.add(fincaId); }
-        if (periodo != null && periodo.desde() != null) { sql.append(" AND fu.fecha >= ?"); args.add(Date.valueOf(periodo.desde())); }
-        if (periodo != null && periodo.hasta() != null) { sql.append(" AND fu.fecha <= ?"); args.add(Date.valueOf(periodo.hasta())); }
+        if (agricultorId != null) {
+            sql.append(" AND f.agricultor_id = ?");
+            args.add(agricultorId);
+        }
+        if (fincaId != null) {
+            sql.append(" AND f.id = ?");
+            args.add(fincaId);
+        }
+        if (periodo != null && periodo.desde() != null) {
+            sql.append(" AND fu.fecha >= ?");
+            args.add(Date.valueOf(periodo.desde()));
+        }
+        if (periodo != null && periodo.hasta() != null) {
+            sql.append(" AND fu.fecha <= ?");
+            args.add(Date.valueOf(periodo.hasta()));
+        }
         sql.append(" ORDER BY fu.fecha, f.nombre, l.nombre, fu.id LIMIT 5000");
-        return jdbc.query(sql.toString(), (rs, i) -> new AplicacionCampo(
-                rs.getDate("fecha").toLocalDate(), rs.getString("finca"), rs.getString("lote"),
-                rs.getString("cultivo").trim(), rs.getString("producto"), rs.getString("tipo_producto"),
-                numero(rs.getObject("dosis")), rs.getString("unidad_medida"), numero(rs.getObject("area_aplicada")),
-                numero(rs.getObject("cantidad_usada")), rs.getString("unidad_cantidad"),
-                entero(rs.getObject("dias_carencia")), entero(rs.getObject("reentrada_horas")),
-                rs.getString("observaciones")), args.toArray());
+        return jdbc.query(
+                sql.toString(),
+                (rs, i) -> new AplicacionCampo(
+                        rs.getDate("fecha").toLocalDate(),
+                        rs.getString("finca"),
+                        rs.getString("lote"),
+                        rs.getString("cultivo").trim(),
+                        rs.getString("producto"),
+                        rs.getString("tipo_producto"),
+                        numero(rs.getObject("dosis")),
+                        rs.getString("unidad_medida"),
+                        numero(rs.getObject("area_aplicada")),
+                        numero(rs.getObject("cantidad_usada")),
+                        rs.getString("unidad_cantidad"),
+                        entero(rs.getObject("dias_carencia")),
+                        entero(rs.getObject("reentrada_horas")),
+                        rs.getString("observaciones")),
+                args.toArray());
     }
 
     @Override
     public String nombreFinca(Long fincaId) {
         if (fincaId == null) return null;
-        return jdbc.query("SELECT nombre FROM fincas WHERE id = ?", (rs, i) -> rs.getString(1), fincaId)
-                .stream().findFirst().orElse(null);
+        return jdbc.query("SELECT nombre FROM fincas WHERE id = ?", (rs, i) -> rs.getString(1), fincaId).stream()
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -62,12 +85,23 @@ public class CampoQueryJdbc implements CampoQueryPort {
         StringBuilder sql = new StringBuilder("SELECT g.categoria, SUM(g.monto) FROM gastos_finca g "
                 + "JOIN fincas f ON f.id = g.finca_id WHERE 1 = 1");
         List<Object> args = new ArrayList<>();
-        if (agricultorId != null) { sql.append(" AND f.agricultor_id = ?"); args.add(agricultorId); }
-        if (periodo != null && periodo.desde() != null) { sql.append(" AND g.fecha >= ?"); args.add(Date.valueOf(periodo.desde())); }
-        if (periodo != null && periodo.hasta() != null) { sql.append(" AND g.fecha <= ?"); args.add(Date.valueOf(periodo.hasta())); }
+        if (agricultorId != null) {
+            sql.append(" AND f.agricultor_id = ?");
+            args.add(agricultorId);
+        }
+        if (periodo != null && periodo.desde() != null) {
+            sql.append(" AND g.fecha >= ?");
+            args.add(Date.valueOf(periodo.desde()));
+        }
+        if (periodo != null && periodo.hasta() != null) {
+            sql.append(" AND g.fecha <= ?");
+            args.add(Date.valueOf(periodo.hasta()));
+        }
         sql.append(" GROUP BY g.categoria ORDER BY SUM(g.monto) DESC");
-        List<GastosGenerales.Parte> partes = jdbc.query(sql.toString(), (rs, i) -> new GastosGenerales.Parte(
-                rs.getString(1), pesos(rs.getBigDecimal(2))), args.toArray());
+        List<GastosGenerales.Parte> partes = jdbc.query(
+                sql.toString(),
+                (rs, i) -> new GastosGenerales.Parte(rs.getString(1), pesos(rs.getBigDecimal(2))),
+                args.toArray());
         double total = partes.stream().mapToDouble(GastosGenerales.Parte::total).sum();
         return new GastosGenerales(total, partes);
     }

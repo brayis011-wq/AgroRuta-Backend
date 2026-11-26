@@ -1,16 +1,13 @@
 package com.agroruta.shared.maintenance;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
-
 import java.sql.Date;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 
 /**
  * Borra lo que ya no sirve de las tablas que solo crecen: sesiones, enlaces de correo, el
@@ -41,12 +38,7 @@ public class LimpiezaDatosVencidos {
     private final JdbcTemplate jdbc;
     private final Clock reloj;
 
-    @Autowired
-    public LimpiezaDatosVencidos(JdbcTemplate jdbc) {
-        this(jdbc, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    LimpiezaDatosVencidos(JdbcTemplate jdbc, Clock reloj) {
+    public LimpiezaDatosVencidos(JdbcTemplate jdbc, Clock reloj) {
         this.jdbc = jdbc;
         this.reloj = reloj;
     }
@@ -58,18 +50,26 @@ public class LimpiezaDatosVencidos {
         LocalDateTime enlaces = ahora.minus(MARGEN_ENLACES);
 
         Map<String, Integer> borrados = new LinkedHashMap<>();
-        borrados.put("sesiones", jdbc.update(
-                "DELETE FROM sesiones WHERE expira_en < ? OR rotado_en < ? OR revocado_en < ?",
-                ahora.minus(MARGEN_VENCIDAS), reemplazadas, reemplazadas));
-        borrados.put("verificacionesCorreo", jdbc.update(
-                "DELETE FROM verificaciones_correo WHERE expira_en < ?", enlaces));
-        borrados.put("restablecimientosContrasena", jdbc.update(
-                "DELETE FROM restablecimientos_contrasena WHERE expira_en < ?", enlaces));
-        borrados.put("usoDiagnosticos", jdbc.update(
-                "DELETE FROM diagnosticos_uso WHERE dia < ?",
-                Date.valueOf(ahora.toLocalDate().minusDays(DIAS_USO_DIAGNOSTICO))));
-        borrados.put("avisosBandeja", jdbc.update(
-                "DELETE FROM avisos_bandeja WHERE creado_en < ?", ahora.minus(VIDA_AVISOS)));
+        borrados.put(
+                "sesiones",
+                jdbc.update(
+                        "DELETE FROM sesiones WHERE expira_en < ? OR rotado_en < ? OR revocado_en < ?",
+                        ahora.minus(MARGEN_VENCIDAS),
+                        reemplazadas,
+                        reemplazadas));
+        borrados.put(
+                "verificacionesCorreo", jdbc.update("DELETE FROM verificaciones_correo WHERE expira_en < ?", enlaces));
+        borrados.put(
+                "restablecimientosContrasena",
+                jdbc.update("DELETE FROM restablecimientos_contrasena WHERE expira_en < ?", enlaces));
+        borrados.put(
+                "usoDiagnosticos",
+                jdbc.update(
+                        "DELETE FROM diagnosticos_uso WHERE dia < ?",
+                        Date.valueOf(ahora.toLocalDate().minusDays(DIAS_USO_DIAGNOSTICO))));
+        borrados.put(
+                "avisosBandeja",
+                jdbc.update("DELETE FROM avisos_bandeja WHERE creado_en < ?", ahora.minus(VIDA_AVISOS)));
         return borrados;
     }
 }

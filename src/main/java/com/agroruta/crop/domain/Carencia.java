@@ -30,7 +30,10 @@ public final class Carencia {
         return fumigaciones.stream()
                 .filter(f -> f.getFecha() != null && f.getDiasCarencia() != null && f.getDiasCarencia() > 0)
                 .filter(f -> !f.getFecha().isAfter(fechaCosecha))
-                .map(f -> new Bloqueo(f.getProducto(), f.getFecha(), f.getDiasCarencia(),
+                .map(f -> new Bloqueo(
+                        f.getProducto(),
+                        f.getFecha(),
+                        f.getDiasCarencia(),
                         f.getFecha().plusDays(f.getDiasCarencia())))
                 .filter(Objects::nonNull)
                 .filter(b -> fechaCosecha.isBefore(b.libreDesde()))

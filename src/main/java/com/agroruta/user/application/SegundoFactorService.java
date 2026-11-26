@@ -2,6 +2,7 @@ package com.agroruta.user.application;
 
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.util.QrSvg;
 import com.agroruta.user.application.ports.in.SegundoFactorUseCase;
@@ -10,16 +11,6 @@ import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.SegundoFactor;
 import com.agroruta.user.domain.Totp;
 import com.agroruta.user.domain.Usuario;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.crypto.Cipher;
-import javax.crypto.Mac;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
@@ -33,6 +24,14 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import javax.crypto.Cipher;
+import javax.crypto.Mac;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SegundoFactorService implements SegundoFactorUseCase {
@@ -48,17 +47,16 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     private final SecretKeySpec claveCifrado;
     /** Para firmar las marcas de dispositivo recordado; distinta de la de cifrado */
     private final byte[] claveDispositivo;
+
     private final Clock reloj;
     private final SecureRandom azar = new SecureRandom();
 
-    @Autowired
-    public SegundoFactorService(SegundoFactorRepository repo, UsuarioRepository usuarios, PasswordEncoder passwordEncoder,
-                                @Value("${app.segundo-factor.clave:${jwt.secret}}") String clave) {
-        this(repo, usuarios, passwordEncoder, clave, Clock.systemDefaultZone());
-    }
-
-    SegundoFactorService(SegundoFactorRepository repo, UsuarioRepository usuarios, PasswordEncoder passwordEncoder,
-                         String clave, Clock reloj) {
+    public SegundoFactorService(
+            SegundoFactorRepository repo,
+            UsuarioRepository usuarios,
+            PasswordEncoder passwordEncoder,
+            @Value("${app.segundo-factor.clave:${jwt.secret}}") String clave,
+            Clock reloj) {
         this.repo = repo;
         this.usuarios = usuarios;
         this.passwordEncoder = passwordEncoder;
@@ -72,13 +70,15 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     @Override
     @Transactional(readOnly = true)
     public boolean activo(Long usuarioId) {
-        return usuarioId != null && repo.buscar(usuarioId).map(SegundoFactor::isActivo).orElse(false);
+        return usuarioId != null
+                && repo.buscar(usuarioId).map(SegundoFactor::isActivo).orElse(false);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Estado estado(Long usuarioId) {
-        return repo.buscar(usuarioId).filter(SegundoFactor::isActivo)
+        return repo.buscar(usuarioId)
+                .filter(SegundoFactor::isActivo)
                 .map(s -> new Estado(true, s.getRespaldo().size()))
                 .orElse(new Estado(false, 0));
     }
@@ -99,9 +99,10 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     @Override
     @Transactional
     public List<String> activar(Long usuarioId, String codigo) {
-        SegundoFactor sf = repo.buscar(usuarioId).filter(s -> !s.isActivo())
-                .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_OPERATION,
-                        "Primero empieza la configuración para ver el código QR."));
+        SegundoFactor sf = repo.buscar(usuarioId)
+                .filter(s -> !s.isActivo())
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.INVALID_OPERATION, "Primero empieza la configuración para ver el código QR."));
         OptionalLong paso = Totp.verificar(descifrar(sf.getSecretoCifrado()), limpio(codigo), ahoraSegundos(), null);
         if (paso.isEmpty()) throw codigoIncorrecto();
 
@@ -129,13 +130,15 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     @Override
     @Transactional
     public boolean verificar(Long usuarioId, String codigo) {
-        SegundoFactor sf = repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
+        SegundoFactor sf =
+                repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
         if (sf == null) return true;
         String c = limpio(codigo);
         if (c.isEmpty()) return false;
 
         if (c.matches("\\d{" + Totp.DIGITOS + "}")) {
-            OptionalLong paso = Totp.verificar(descifrar(sf.getSecretoCifrado()), c, ahoraSegundos(), sf.getUltimoPaso());
+            OptionalLong paso =
+                    Totp.verificar(descifrar(sf.getSecretoCifrado()), c, ahoraSegundos(), sf.getUltimoPaso());
             if (paso.isEmpty()) return false;
             sf.usarPaso(paso.getAsLong());
             repo.guardar(sf);
@@ -154,7 +157,8 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     @Transactional(readOnly = true)
     public Optional<String> recordarDispositivo(Long usuarioId) {
         if (usuarioId == null) return Optional.empty();
-        SegundoFactor sf = repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
+        SegundoFactor sf =
+                repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
         Usuario usuario = usuarios.findById(usuarioId).orElse(null);
         if (sf == null || usuario == null) return Optional.empty();
         long vence = reloj.instant().plus(RECORDAR_DISPOSITIVO).getEpochSecond();
@@ -176,7 +180,8 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             return false;
         }
         if (id != usuarioId || vence <= ahoraSegundos()) return false;
-        SegundoFactor sf = repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
+        SegundoFactor sf =
+                repo.buscar(usuarioId).filter(SegundoFactor::isActivo).orElse(null);
         Usuario usuario = usuarios.findById(usuarioId).orElse(null);
         if (sf == null || usuario == null) return false;
         byte[] esperada = firma(usuarioId, vence, sf, usuario).getBytes(StandardCharsets.US_ASCII);
@@ -205,7 +210,8 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     }
 
     private static BusinessException codigoIncorrecto() {
-        return new BusinessException(ErrorCode.TWO_FACTOR_INVALID,
+        return new BusinessException(
+                ErrorCode.TWO_FACTOR_INVALID,
                 "El código no es correcto. Revisa que la hora del celular esté bien y usa el código más reciente.");
     }
 
@@ -226,9 +232,10 @@ public class SegundoFactorService implements SegundoFactorUseCase {
 
     static String hash(String codigo) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(codigo.getBytes(StandardCharsets.UTF_8)));
+            return HexFormat.of()
+                    .formatHex(MessageDigest.getInstance("SHA-256").digest(codigo.getBytes(StandardCharsets.UTF_8)));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 
@@ -244,7 +251,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             System.arraycopy(cifrado, 0, todo, iv.length, cifrado.length);
             return Base64.getEncoder().encodeToString(todo);
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("No se pudo cifrar el secreto", e);
+            throw new FalloInternoException("No se pudo cifrar el secreto", e);
         }
     }
 
@@ -256,7 +263,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             return new String(c.doFinal(todo, 12, todo.length - 12), StandardCharsets.UTF_8);
         } catch (GeneralSecurityException | IllegalArgumentException e) {
             // Pasa si cambió la clave del servidor: hay que borrar la fila de segundo_factor de esa cuenta
-            throw new IllegalStateException("No se pudo leer el secreto del segundo factor", e);
+            throw new FalloInternoException("No se pudo leer el secreto del segundo factor", e);
         }
     }
 
@@ -266,7 +273,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             mac.init(new SecretKeySpec(clave, "HmacSHA256"));
             return mac.doFinal(datos.getBytes(StandardCharsets.UTF_8));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 }

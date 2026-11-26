@@ -1,15 +1,13 @@
 package com.agroruta.shared.exception;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.within;
-import java.time.temporal.ChronoUnit;
 
 @DisplayName("ErrorResponse")
 class ErrorResponseTest {
@@ -90,7 +88,8 @@ class ErrorResponseTest {
         @Test
         @DisplayName("debe asignar el status recibido")
         void shouldSetStatus() {
-            ErrorResponse response = ErrorResponse.of(422, ErrorCode.VALIDATION_FAILED, "Error de validación", TRACE_ID);
+            ErrorResponse response =
+                    ErrorResponse.of(422, ErrorCode.VALIDATION_FAILED, "Error de validación", TRACE_ID);
             assertThat(response.getStatus()).isEqualTo(422);
         }
 
@@ -135,8 +134,7 @@ class ErrorResponseTest {
             response.setFieldErrors(Map.of("campo1", "error1"));
             response.setFieldErrors(Map.of("campo2", "error2"));
 
-            assertThat(response.getFieldErrors())
-                    .containsOnlyKeys("campo2");
+            assertThat(response.getFieldErrors()).containsOnlyKeys("campo2");
         }
 
         @Test

@@ -45,33 +45,83 @@ public class SiembraEntity {
 
     public SiembraEntity() {}
 
-    public LocalDateTime getEliminadoEn() { return eliminadoEn; }
-    public void setEliminadoEn(LocalDateTime eliminadoEn) { this.eliminadoEn = eliminadoEn; }
+    public LocalDateTime getEliminadoEn() {
+        return eliminadoEn;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setEliminadoEn(LocalDateTime eliminadoEn) {
+        this.eliminadoEn = eliminadoEn;
+    }
 
-    public LocalDate getFechaSiembra() { return fechaSiembra; }
-    public void setFechaSiembra(LocalDate fechaSiembra) { this.fechaSiembra = fechaSiembra; }
+    public Long getId() {
+        return id;
+    }
 
-    public Integer getCantidadPlantas() { return cantidadPlantas; }
-    public void setCantidadPlantas(Integer cantidadPlantas) { this.cantidadPlantas = cantidadPlantas; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getVariedad() { return variedad; }
-    public void setVariedad(String variedad) { this.variedad = variedad; }
+    public LocalDate getFechaSiembra() {
+        return fechaSiembra;
+    }
 
-    public String getTipoCultivo() { return tipoCultivo; }
-    public void setTipoCultivo(String tipoCultivo) { this.tipoCultivo = tipoCultivo; }
+    public void setFechaSiembra(LocalDate fechaSiembra) {
+        this.fechaSiembra = fechaSiembra;
+    }
 
-    public Long getVariedadId() { return variedadId; }
-    public void setVariedadId(Long variedadId) { this.variedadId = variedadId; }
+    public Integer getCantidadPlantas() {
+        return cantidadPlantas;
+    }
 
-    public EstadoCultivo getEstadoCultivo() { return estadoCultivo; }
-    public void setEstadoCultivo(EstadoCultivo estadoCultivo) { this.estadoCultivo = estadoCultivo; }
+    public void setCantidadPlantas(Integer cantidadPlantas) {
+        this.cantidadPlantas = cantidadPlantas;
+    }
 
-    public Long getLoteId() { return loteId; }
-    public void setLoteId(Long loteId) { this.loteId = loteId; }
+    public String getVariedad() {
+        return variedad;
+    }
 
-    public LocalDate getFechaFin() { return fechaFin; }
-    public void setFechaFin(LocalDate fechaFin) { this.fechaFin = fechaFin; }
+    public void setVariedad(String variedad) {
+        this.variedad = variedad;
+    }
+
+    public String getTipoCultivo() {
+        return tipoCultivo;
+    }
+
+    public void setTipoCultivo(String tipoCultivo) {
+        this.tipoCultivo = tipoCultivo;
+    }
+
+    public Long getVariedadId() {
+        return variedadId;
+    }
+
+    public void setVariedadId(Long variedadId) {
+        this.variedadId = variedadId;
+    }
+
+    public EstadoCultivo getEstadoCultivo() {
+        return estadoCultivo;
+    }
+
+    public void setEstadoCultivo(EstadoCultivo estadoCultivo) {
+        this.estadoCultivo = estadoCultivo;
+    }
+
+    public Long getLoteId() {
+        return loteId;
+    }
+
+    public void setLoteId(Long loteId) {
+        this.loteId = loteId;
+    }
+
+    public LocalDate getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDate fechaFin) {
+        this.fechaFin = fechaFin;
+    }
 }

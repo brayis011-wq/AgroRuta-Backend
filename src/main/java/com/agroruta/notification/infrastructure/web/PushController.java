@@ -7,6 +7,7 @@ import com.agroruta.user.domain.Dispositivo;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,16 +17,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 /** Avisos push de quien inició sesión (cualquier rol): activar, desactivar y probar en este dispositivo. */
 @RestController
 @RequestMapping("/api/notifications/push")
 public class PushController {
 
-    public record SuscripcionRequest(@NotBlank @Size(max = 700) String endpoint,
-                                     @NotBlank @Size(max = 120) String p256dh,
-                                     @NotBlank @Size(max = 40) String auth) {}
+    public record SuscripcionRequest(
+            @NotBlank @Size(max = 700) String endpoint,
+            @NotBlank @Size(max = 120) String p256dh,
+            @NotBlank @Size(max = 40) String auth) {}
 
     public record EndpointRequest(@NotBlank @Size(max = 700) String endpoint) {}
 
@@ -42,9 +42,12 @@ public class PushController {
     }
 
     @PostMapping("/subscriptions")
-    public ResponseEntity<Void> suscribir(@Valid @RequestBody SuscripcionRequest req, Authentication auth,
-                                          @RequestHeader(value = "User-Agent", required = false) String navegador) {
-        push.suscribir(CurrentUser.id(auth), req.endpoint(), req.p256dh(), req.auth(), Dispositivo.describir(navegador));
+    public ResponseEntity<Void> suscribir(
+            @Valid @RequestBody SuscripcionRequest req,
+            Authentication auth,
+            @RequestHeader(value = "User-Agent", required = false) String navegador) {
+        push.suscribir(
+                CurrentUser.id(auth), req.endpoint(), req.p256dh(), req.auth(), Dispositivo.describir(navegador));
         return ResponseEntity.noContent().build();
     }
 
@@ -57,8 +60,9 @@ public class PushController {
     /** Manda un aviso de prueba a los dispositivos de la persona, para confirmar que llegan */
     @PostMapping("/test")
     public ResponseEntity<Map<String, Integer>> probar(Authentication auth) {
-        int enviados = push.enviar(CurrentUser.id(auth), new AvisoPush("AgroRuta",
-                "Los avisos están activos en este dispositivo.", "/", "prueba"));
+        int enviados = push.enviar(
+                CurrentUser.id(auth),
+                new AvisoPush("AgroRuta", "Los avisos están activos en este dispositivo.", "/", "prueba"));
         return ResponseEntity.ok(Map.of("enviados", enviados));
     }
 }

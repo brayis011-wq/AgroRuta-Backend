@@ -2,7 +2,6 @@ package com.agroruta.finance.application.ports.out;
 
 import com.agroruta.finance.domain.PrecioReferencia;
 import com.agroruta.finance.domain.PreferenciaPrecio;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;

@@ -1,13 +1,12 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Lote;
-import com.agroruta.crop.application.ports.out.LoteRepository;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class LoteRepositoryImpl implements LoteRepository {
@@ -15,8 +14,7 @@ public class LoteRepositoryImpl implements LoteRepository {
     private final JpaLoteRepository jpaRepository;
     private final JpaSiembraRepository jpaSiembraRepository;
 
-    public LoteRepositoryImpl(JpaLoteRepository jpaRepository,
-                              JpaSiembraRepository jpaSiembraRepository) {
+    public LoteRepositoryImpl(JpaLoteRepository jpaRepository, JpaSiembraRepository jpaSiembraRepository) {
         this.jpaRepository = jpaRepository;
         this.jpaSiembraRepository = jpaSiembraRepository;
     }
@@ -35,8 +33,9 @@ public class LoteRepositoryImpl implements LoteRepository {
 
     @Override
     public List<Lote> findByFincaId(Long fincaId) {
-        return jpaRepository.findByFincaIdAndEliminadoEnIsNull(fincaId)
-                .stream().map(this::toDomain).collect(Collectors.toList());
+        return jpaRepository.findByFincaIdAndEliminadoEnIsNull(fincaId).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -13,10 +13,9 @@ public final class Dispositivo {
         String ua = userAgent;
         String navegador = navegador(ua);
         String sistema = sistema(ua);
-        String texto = navegador == null && sistema == null ? "Otro dispositivo"
-                : navegador == null ? sistema
-                : sistema == null ? navegador
-                : navegador + " · " + sistema;
+        String texto = navegador == null && sistema == null
+                ? "Otro dispositivo"
+                : navegador == null ? sistema : sistema == null ? navegador : navegador + " · " + sistema;
         return texto.length() > MAX ? texto.substring(0, MAX) : texto;
     }
 

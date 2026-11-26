@@ -1,26 +1,40 @@
 package com.agroruta.user.application;
 
-import com.agroruta.shared.exception.BusinessException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.agroruta.shared.exception.BusinessException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
-
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 class IntentosLoginTest {
 
     /** Reloj que se puede adelantar a mano */
     static final class RelojMovible extends Clock {
         Instant ahora = Instant.parse("2026-11-05T12:00:00Z");
-        @Override public ZoneId getZone() { return ZoneId.of("UTC"); }
-        @Override public Clock withZone(ZoneId zone) { return this; }
-        @Override public Instant instant() { return ahora; }
-        void adelantar(Duration d) { ahora = ahora.plus(d); }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneId.of("UTC");
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return ahora;
+        }
+
+        void adelantar(Duration d) {
+            ahora = ahora.plus(d);
+        }
     }
 
     private final RelojMovible reloj = new RelojMovible();

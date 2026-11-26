@@ -10,7 +10,8 @@ import java.math.BigDecimal;
  * @param kilos     por kilo: los que se pagan; por día: los que recogió (opcional, no cambia el pago)
  * @param valorDia  null = el del cargo del trabajador
  */
-public record Recolector(Long trabajadorId, String modalidad, BigDecimal kilos, BigDecimal valorKilo, BigDecimal valorDia) {
+public record Recolector(
+        Long trabajadorId, String modalidad, BigDecimal kilos, BigDecimal valorKilo, BigDecimal valorDia) {
 
     public boolean porKilo() {
         return "KILO".equalsIgnoreCase(modalidad);

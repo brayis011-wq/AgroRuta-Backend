@@ -20,9 +20,14 @@ public record ReporteFinanciero(LocalDateTime generatedAt, List<TemporadaFinanza
     /** Solo las temporadas que estuvieron en el campo durante el periodo (con todos sus costos e ingresos) */
     public ReporteFinanciero en(Periodo periodo) {
         if (periodo == null || periodo.esTodo()) return this;
-        return new ReporteFinanciero(generatedAt, temporadas.stream()
-                .filter(t -> t.siembra() != null && periodo.seCruzaCon(t.siembra().fechaSiembra(), t.siembra().fechaFin()))
-                .toList(), gastos);
+        return new ReporteFinanciero(
+                generatedAt,
+                temporadas.stream()
+                        .filter(t -> t.siembra() != null
+                                && periodo.seCruzaCon(
+                                        t.siembra().fechaSiembra(), t.siembra().fechaFin()))
+                        .toList(),
+                gastos);
     }
 
     public ReporteFinanciero conGastos(GastosGenerales g) {

@@ -1,47 +1,44 @@
 package com.agroruta.configuration.application;
 
-import com.agroruta.shared.evento.ContrasenaCambiada;
-import com.agroruta.shared.exception.DatoInvalidoException;
-import org.springframework.context.ApplicationEventPublisher;
-
-import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
 import com.agroruta.configuration.application.ports.in.UpdateProfileUseCase;
-import com.agroruta.configuration.domain.Perfil;
 import com.agroruta.configuration.application.ports.out.ProfileRepository;
+import com.agroruta.configuration.domain.Perfil;
+import com.agroruta.shared.evento.ContrasenaCambiada;
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.ResourceNotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ProfileService implements GetProfileUseCase,
-        UpdateProfileUseCase,
-        ChangePasswordUseCase {
+public class ProfileService implements GetProfileUseCase, UpdateProfileUseCase, ChangePasswordUseCase {
 
     private final ProfileRepository perfilRepository;
-    private final PasswordEncoder   passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventos;
 
-    public ProfileService(ProfileRepository perfilRepository,
-                          PasswordEncoder passwordEncoder,
-                          ApplicationEventPublisher eventos) {
+    public ProfileService(
+            ProfileRepository perfilRepository, PasswordEncoder passwordEncoder, ApplicationEventPublisher eventos) {
         this.perfilRepository = perfilRepository;
-        this.passwordEncoder  = passwordEncoder;
-        this.eventos          = eventos;
+        this.passwordEncoder = passwordEncoder;
+        this.eventos = eventos;
     }
 
     @Override
     public Perfil obtenerPorEmail(String email) {
-        return perfilRepository.buscarPorEmail(email)
+        return perfilRepository
+                .buscarPorEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado"));
     }
 
     @Override
     @Transactional
-    public Perfil actualizar(Long id, String nombre,
-                             String telefono, String fotoPerfil) {
-        Perfil perfil = perfilRepository.buscarPorId(id)
+    public Perfil actualizar(Long id, String nombre, String telefono, String fotoPerfil) {
+        Perfil perfil = perfilRepository
+                .buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Perfil no encontrado"));
 
         perfil.actualizarDatos(nombre, telefono, fotoPerfil);
@@ -50,8 +47,7 @@ public class ProfileService implements GetProfileUseCase,
 
     @Override
     @Transactional
-    public void cambiarPassword(Long id, String passwordActual,
-                                String nuevaPassword) {
+    public void cambiarPassword(Long id, String passwordActual, String nuevaPassword) {
         String hashActual = perfilRepository.obtenerPasswordHash(id);
 
         if (!passwordEncoder.matches(passwordActual, hashActual)) {

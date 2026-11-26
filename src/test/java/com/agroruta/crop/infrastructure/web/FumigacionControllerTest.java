@@ -1,8 +1,15 @@
 package com.agroruta.crop.infrastructure.web;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
 import com.agroruta.crop.domain.Fumigacion;
 import com.agroruta.crop.domain.UnidadMedida;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,14 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class FumigacionControllerTest {
@@ -46,13 +45,20 @@ class FumigacionControllerTest {
     @Test
     void deberiaRegistrarFumigacionDesdeCatalogoYRetornar201() throws Exception {
         Fumigacion fumigacion = Fumigacion.fromCatalog(
-                FECHA, "Roundup", 7L, 2.5, UnidadMedida.LITROS, 5.0, "Aplicación preventiva", 10L
-        );
+                FECHA, "Roundup", 7L, 2.5, UnidadMedida.LITROS, 5.0, "Aplicación preventiva", 10L);
         fumigacion.setId(1L);
 
         when(fumigacionUseCase.registrarFumigacion(
-                any(), anyString(), eq(7L), anyDouble(), anyString(), anyDouble(), anyString(), anyLong(), any()
-        )).thenReturn(fumigacion);
+                        any(),
+                        anyString(),
+                        eq(7L),
+                        anyDouble(),
+                        anyString(),
+                        anyDouble(),
+                        anyString(),
+                        anyLong(),
+                        any()))
+                .thenReturn(fumigacion);
 
         String body = """
                 {
@@ -83,14 +89,21 @@ class FumigacionControllerTest {
     @Test
     void deberiaRegistrarFumigacionManualSinInsumoDelCatalogoYRetornar201() throws Exception {
         Fumigacion fumigacion = Fumigacion.fromManualEntry(
-                FECHA, "Producto casero", 1.0, UnidadMedida.KG, 3.0, "Mezcla artesanal", 10L
-        );
+                FECHA, "Producto casero", 1.0, UnidadMedida.KG, 3.0, "Mezcla artesanal", 10L);
         fumigacion.setId(2L);
 
         // agriculturalInputId es null → se usa isNull() en lugar de anyLong()
         when(fumigacionUseCase.registrarFumigacion(
-                any(), anyString(), isNull(), anyDouble(), anyString(), anyDouble(), anyString(), anyLong(), any()
-        )).thenReturn(fumigacion);
+                        any(),
+                        anyString(),
+                        isNull(),
+                        anyDouble(),
+                        anyString(),
+                        anyDouble(),
+                        anyString(),
+                        anyLong(),
+                        any()))
+                .thenReturn(fumigacion);
 
         String body = """
                 {
@@ -119,14 +132,13 @@ class FumigacionControllerTest {
 
     @Test
     void deberiaRegistrarFumigacionConUnidadML() throws Exception {
-        Fumigacion fumigacion = Fumigacion.fromCatalog(
-                FECHA, "Clorpirifos", 3L, 500.0, UnidadMedida.ML, 2.0, null, 10L
-        );
+        Fumigacion fumigacion =
+                Fumigacion.fromCatalog(FECHA, "Clorpirifos", 3L, 500.0, UnidadMedida.ML, 2.0, null, 10L);
         fumigacion.setId(3L);
 
         when(fumigacionUseCase.registrarFumigacion(
-                any(), anyString(), eq(3L), anyDouble(), anyString(), anyDouble(), isNull(), anyLong(), any()
-        )).thenReturn(fumigacion);
+                        any(), anyString(), eq(3L), anyDouble(), anyString(), anyDouble(), isNull(), anyLong(), any()))
+                .thenReturn(fumigacion);
 
         String body = """
                 {
@@ -157,14 +169,11 @@ class FumigacionControllerTest {
 
     @Test
     void deberiaListarFumigacionesPorSiembra() throws Exception {
-        Fumigacion f1 = Fumigacion.fromCatalog(
-                FECHA, "Roundup", 7L, 2.5, UnidadMedida.LITROS, 5.0, "Preventiva", 10L
-        );
+        Fumigacion f1 = Fumigacion.fromCatalog(FECHA, "Roundup", 7L, 2.5, UnidadMedida.LITROS, 5.0, "Preventiva", 10L);
         f1.setId(1L);
 
         Fumigacion f2 = Fumigacion.fromManualEntry(
-                FECHA.plusDays(7), "Producto casero", 1.0, UnidadMedida.KG, 3.0, "Correctiva", 10L
-        );
+                FECHA.plusDays(7), "Producto casero", 1.0, UnidadMedida.KG, 3.0, "Correctiva", 10L);
         f2.setId(2L);
 
         when(fumigacionUseCase.listarFumigacionesPorSiembra(10L)).thenReturn(List.of(f1, f2));

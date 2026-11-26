@@ -29,8 +29,7 @@ public class NominaEntity {
     @JoinTable(
             name = "nomina_jornales",
             joinColumns = @JoinColumn(name = "nomina_id"),
-            inverseJoinColumns = @JoinColumn(name = "jornal_id")
-    )
+            inverseJoinColumns = @JoinColumn(name = "jornal_id"))
     private List<JornalEntity> jornales = new ArrayList<>();
 
     @Column(name = "total_jornales", nullable = false)

@@ -1,7 +1,6 @@
 package com.agroruta.agriculturalinput.infrastructure.web.dto;
 
 import jakarta.validation.constraints.*;
-import lombok.Data;
 import java.time.LocalDate;
 
 /**
@@ -14,36 +13,31 @@ import java.time.LocalDate;
  * el nombre que se mostrará en reportes históricos, incluso si el insumo
  * del catálogo es eliminado en el futuro.
  */
-@Data
-public class RegistrarFumigacionRequest {
+public record RegistrarFumigacionRequest(
+        @NotNull(message = "La fecha es obligatoria") LocalDate fecha,
 
-    @NotNull(message = "La fecha es obligatoria")
-    private LocalDate fecha;
+        @NotBlank(message = "El producto es obligatorio")
+        @Size(max = 150, message = "El nombre del producto no puede superar 150 caracteres")
+        String producto,
 
-    @NotBlank(message = "El producto es obligatorio")
-    @Size(max = 150, message = "El nombre del producto no puede superar 150 caracteres")
-    private String producto;
+        // Nullable: solo presente si el usuario seleccionó del catálogo
+        Long agriculturalInputId,
 
-    // Nullable: solo presente si el usuario seleccionó del catálogo
-    private Long agriculturalInputId;
+        @NotNull(message = "La dosis es obligatoria")
+        @DecimalMin(value = "0.01", message = "La dosis debe ser mayor a 0")
+        Double dosis,
 
-    @NotNull(message = "La dosis es obligatoria")
-    @DecimalMin(value = "0.01", message = "La dosis debe ser mayor a 0")
-    private Double dosis;
+        @NotBlank(message = "La unidad de medida es obligatoria")
+        @Pattern(
+                regexp = "LITROS|ML|GRAMOS|KG",
+                message = "Unidad inválida. Valores permitidos: LITROS, ML, GRAMOS, KG")
+        String unidadMedida,
 
-    @NotBlank(message = "La unidad de medida es obligatoria")
-    @Pattern(
-            regexp  = "LITROS|ML|GRAMOS|KG",
-            message = "Unidad inválida. Valores permitidos: LITROS, ML, GRAMOS, KG"
-    )
-    private String unidadMedida;
+        @NotNull(message = "El área aplicada es obligatoria")
+        @DecimalMin(value = "0.01", message = "El área debe ser mayor a 0")
+        Double areaAplicada,
 
-    @NotNull(message = "El área aplicada es obligatoria")
-    @DecimalMin(value = "0.01", message = "El área debe ser mayor a 0")
-    private Double areaAplicada;
+        String observaciones,
 
-    private String observaciones;
-
-    @NotNull(message = "El ID de siembra es obligatorio")
-    private Long siembraId;
-}
+        @NotNull(message = "El ID de siembra es obligatorio")
+        Long siembraId) {}

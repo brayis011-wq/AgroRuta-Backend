@@ -1,37 +1,38 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.crop.application.ports.in.CosechaUseCase;
+import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.application.ports.out.RecolectoresPort;
-import com.agroruta.shared.util.EnumParser;
-import com.agroruta.crop.application.ports.in.CosechaUseCase;
-import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.springframework.stereotype.Service;
-
+import com.agroruta.shared.util.EnumParser;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
-import java.math.BigDecimal;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 public class CosechaService implements CosechaUseCase {
 
-    private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.forLanguageTag("es-CO"));
+    private static final DateTimeFormatter FECHA =
+            DateTimeFormatter.ofPattern("d 'de' MMMM", Locale.forLanguageTag("es-CO"));
 
     private final CosechaRepository cosechaRepository;
     private final SiembraUseCase siembraUseCase;
     private final FumigacionRepository fumigacionRepository;
 
-    public CosechaService(CosechaRepository cosechaRepository,
-                          SiembraUseCase siembraUseCase,
-                          FumigacionRepository fumigacionRepository) {
+    public CosechaService(
+            CosechaRepository cosechaRepository,
+            SiembraUseCase siembraUseCase,
+            FumigacionRepository fumigacionRepository) {
         this.cosechaRepository = cosechaRepository;
         this.siembraUseCase = siembraUseCase;
         this.fumigacionRepository = fumigacionRepository;
@@ -53,18 +54,25 @@ public class CosechaService implements CosechaUseCase {
         if (ventasPort == null || cambio >= 0) return;
         double vendido = ventasPort.ventasDeSiembra(siembraId).stream()
                 .map(com.agroruta.crop.application.ports.out.VentasSiembraPort.VentaDeSiembra::kg)
-                .filter(java.util.Objects::nonNull).mapToDouble(BigDecimal::doubleValue).sum();
+                .filter(java.util.Objects::nonNull)
+                .mapToDouble(BigDecimal::doubleValue)
+                .sum();
         Double total = cosechaRepository.totalKgBySiembraId(siembraId);
         double quedaria = (total == null ? 0 : total) + cambio;
         if (quedaria + 0.005 < vendido) {
-            throw new BusinessException(String.format(Locale.ROOT,
+            throw new BusinessException(String.format(
+                    Locale.ROOT,
                     "Ya vendiste %s kg de esta siembra y con este cambio quedarían %s kg cosechados. Corrige primero las ventas en Finanzas.",
-                    kilos(vendido), kilos(Math.max(0, quedaria))));
+                    kilos(vendido),
+                    kilos(Math.max(0, quedaria))));
         }
     }
 
     private static String kilos(double kg) {
-        return BigDecimal.valueOf(kg).setScale(2, java.math.RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+        return BigDecimal.valueOf(kg)
+                .setScale(2, java.math.RoundingMode.HALF_UP)
+                .stripTrailingZeros()
+                .toPlainString();
     }
 
     // ── Recolectores (jornales del equipo); null en pruebas que no los usan ──
@@ -76,9 +84,15 @@ public class CosechaService implements CosechaUseCase {
     }
 
     @Override
-    public Cosecha registrarCosecha(LocalDate fecha, Double cantidadKg, String calidad, String observaciones,
-                                    Long siembraId, BigDecimal precioKg, boolean confirmarCarencia,
-                                    List<Recolector> recolectores) {
+    public Cosecha registrarCosecha(
+            LocalDate fecha,
+            Double cantidadKg,
+            String calidad,
+            String observaciones,
+            Long siembraId,
+            BigDecimal precioKg,
+            boolean confirmarCarencia,
+            List<Recolector> recolectores) {
 
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
@@ -107,11 +121,14 @@ public class CosechaService implements CosechaUseCase {
         if (recolectores == null || cantidadKg == null) return;
         BigDecimal suma = recolectores.stream()
                 .filter(r -> r != null && r.kilos() != null)
-                .map(Recolector::kilos).reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(Recolector::kilos)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         if (suma.compareTo(BigDecimal.valueOf(cantidadKg).add(new BigDecimal("0.01"))) > 0) {
-            throw new BusinessException(String.format(Locale.ROOT,
+            throw new BusinessException(String.format(
+                    Locale.ROOT,
                     "Los recolectores suman %s kg, más de lo cosechado (%s kg).",
-                    suma.stripTrailingZeros().toPlainString(), BigDecimal.valueOf(cantidadKg).stripTrailingZeros().toPlainString()));
+                    suma.stripTrailingZeros().toPlainString(),
+                    BigDecimal.valueOf(cantidadKg).stripTrailingZeros().toPlainString()));
         }
     }
 
@@ -124,7 +141,8 @@ public class CosechaService implements CosechaUseCase {
 
     private List<Cosecha> conRecolectores(List<Cosecha> lista) {
         if (recolectoresPort == null || lista.isEmpty()) return lista;
-        var mapa = recolectoresPort.deCosechas(lista.stream().map(Cosecha::getId).toList());
+        var mapa =
+                recolectoresPort.deCosechas(lista.stream().map(Cosecha::getId).toList());
         lista.forEach(c -> c.setRecolectores(mapa.getOrDefault(c.getId(), List.of())));
         return lista;
     }
@@ -139,22 +157,38 @@ public class CosechaService implements CosechaUseCase {
     @Transactional(readOnly = true)
     @Override
     public Cosecha buscarCosechaPorId(Long id) {
-        return conRecolectores(cosechaRepository.findById(id)
+        return conRecolectores(cosechaRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cosecha no encontrada con ID: " + id)));
     }
 
     @Override
-    public Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                                     String calidad, String observaciones, BigDecimal precioKg, boolean confirmarCarencia,
-                                     List<Recolector> recolectores) {
+    public Cosecha actualizarCosecha(
+            Long id,
+            LocalDate fecha,
+            Double cantidadKg,
+            String calidad,
+            String observaciones,
+            BigDecimal precioKg,
+            boolean confirmarCarencia,
+            List<Recolector> recolectores) {
         Cosecha cosecha = buscarCosechaPorId(id);
         cosecha.setPrecioKg(precioKg);
         LocalDate antes = cosecha.getFecha();
         List<Recolector> lista = recolectores;
-        if (lista == null && fecha != null && !fecha.equals(antes) && !cosecha.getRecolectores().isEmpty()) {
+        if (lista == null
+                && fecha != null
+                && !fecha.equals(antes)
+                && !cosecha.getRecolectores().isEmpty()) {
             // Sin lista nueva pero con otra fecha: los mismos recolectores pasan a la fecha nueva
-            lista = cosecha.getRecolectores().stream().map(r -> new Recolector(r.trabajadorId(), r.modalidad(), r.kilos(),
-                    r.valorKilo(), "DIA".equals(r.modalidad()) ? r.valor() : null)).toList();
+            lista = cosecha.getRecolectores().stream()
+                    .map(r -> new Recolector(
+                            r.trabajadorId(),
+                            r.modalidad(),
+                            r.kilos(),
+                            r.valorKilo(),
+                            "DIA".equals(r.modalidad()) ? r.valor() : null))
+                    .toList();
         }
         revisarKilos(cantidadKg != null ? cantidadKg : cosecha.getCantidadKg(), lista);
         Cosecha guardada = aplicarCambios(cosecha, fecha, cantidadKg, calidad, observaciones, confirmarCarencia);
@@ -165,16 +199,21 @@ public class CosechaService implements CosechaUseCase {
     }
 
     @Override
-    public Cosecha actualizarCosecha(Long id, LocalDate fecha, Double cantidadKg,
-                                     String calidad, String observaciones) {
+    public Cosecha actualizarCosecha(
+            Long id, LocalDate fecha, Double cantidadKg, String calidad, String observaciones) {
         return aplicarCambios(buscarCosechaPorId(id), fecha, cantidadKg, calidad, observaciones, false);
     }
 
-    private Cosecha aplicarCambios(Cosecha cosecha, LocalDate fecha, Double cantidadKg,
-                                   String calidad, String observaciones, boolean confirmarCarencia) {
+    private Cosecha aplicarCambios(
+            Cosecha cosecha,
+            LocalDate fecha,
+            Double cantidadKg,
+            String calidad,
+            String observaciones,
+            boolean confirmarCarencia) {
         boolean cambiaFecha = fecha != null && !fecha.equals(cosecha.getFecha());
-        CalidadCosecha calidadFinal = calidad != null
-                ? EnumParser.parse(CalidadCosecha.class, calidad, "calidad") : cosecha.getCalidad();
+        CalidadCosecha calidadFinal =
+                calidad != null ? EnumParser.parse(CalidadCosecha.class, calidad, "calidad") : cosecha.getCalidad();
         if (cambiaFecha || calidadFinal != cosecha.getCalidad()) {
             LocalDate dia = cambiaFecha ? fecha : cosecha.getFecha();
             if (cosechaRepository.existsByFechaAndSiembraIdAndCalidad(dia, cosecha.getSiembraId(), calidadFinal)) {
@@ -186,7 +225,8 @@ public class CosechaService implements CosechaUseCase {
             LocalDate fechaFinal = fecha != null ? fecha : cosecha.getFecha();
             cosecha.setEnCarencia(revisarCarencia(cosecha.getSiembraId(), fechaFinal, confirmarCarencia));
         }
-        if (cantidadKg != null && cosecha.getCantidadKg() != null) revisarVendido(cosecha.getSiembraId(), cantidadKg - cosecha.getCantidadKg());
+        if (cantidadKg != null && cosecha.getCantidadKg() != null)
+            revisarVendido(cosecha.getSiembraId(), cantidadKg - cosecha.getCantidadKg());
         if (fecha != null) cosecha.setFecha(fecha);
         if (cantidadKg != null) cosecha.setCantidadKg(cantidadKg);
         cosecha.setCalidad(calidadFinal);
@@ -203,10 +243,14 @@ public class CosechaService implements CosechaUseCase {
         if (bloqueo.isEmpty()) return false;
         if (confirmada) return true;
         Carencia.Bloqueo b = bloqueo.get();
-        throw new BusinessException(ErrorCode.HARVEST_IN_WITHDRAWAL, String.format(
-                "Todavía no se puede cosechar: %s se aplicó el %s y tiene %d días de carencia. Se puede cosechar desde el %s.",
-                b.producto() == null || b.producto().isBlank() ? "un producto" : b.producto(),
-                b.aplicado().format(FECHA), b.dias(), b.libreDesde().format(FECHA)));
+        throw new BusinessException(
+                ErrorCode.HARVEST_IN_WITHDRAWAL,
+                String.format(
+                        "Todavía no se puede cosechar: %s se aplicó el %s y tiene %d días de carencia. Se puede cosechar desde el %s.",
+                        b.producto() == null || b.producto().isBlank() ? "un producto" : b.producto(),
+                        b.aplicado().format(FECHA),
+                        b.dias(),
+                        b.libreDesde().format(FECHA)));
     }
 
     @Override
@@ -220,7 +264,8 @@ public class CosechaService implements CosechaUseCase {
     private static BusinessException repetida(LocalDate fecha, CalidadCosecha calidad) {
         return new BusinessException(
                 ErrorCode.RESOURCE_ALREADY_EXISTS,
-                String.format("Ya existe una cosecha de %s calidad registrada el '%s' para esta siembra.",
+                String.format(
+                        "Ya existe una cosecha de %s calidad registrada el '%s' para esta siembra.",
                         calidad.name().toLowerCase(Locale.ROOT), fecha));
     }
 

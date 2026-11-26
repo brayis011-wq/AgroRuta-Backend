@@ -1,10 +1,16 @@
 package com.agroruta.user.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,13 +19,6 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -32,11 +31,11 @@ class UserServiceTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long   ID       = 1L;
-    private static final String NOMBRE   = "Juan Pérez";
-    private static final String EMAIL    = "juan@agroruta.com";
+    private static final Long ID = 1L;
+    private static final String NOMBRE = "Juan Pérez";
+    private static final String EMAIL = "juan@agroruta.com";
     private static final String PASSWORD = "$2a$10$hashedpassword";
-    private static final Rol    ROL      = Rol.Agricultor;
+    private static final Rol ROL = Rol.Agricultor;
 
     private Usuario usuario;
 
@@ -54,10 +53,10 @@ class UserServiceTest {
 
         Usuario resultado = userService.registrar(usuario);
 
-        assertEquals(ID,     resultado.getId());
-        assertEquals(EMAIL,  resultado.getEmail());
+        assertEquals(ID, resultado.getId());
+        assertEquals(EMAIL, resultado.getEmail());
         assertEquals(NOMBRE, resultado.getNombre());
-        assertEquals(ROL,    resultado.getRol());
+        assertEquals(ROL, resultado.getRol());
         verify(usuarioRepository, times(1)).save(usuario);
     }
 
@@ -65,10 +64,7 @@ class UserServiceTest {
     void deberiaLanzarBusinessExceptionSiElEmailYaExiste() {
         when(usuarioRepository.findByEmail(EMAIL)).thenReturn(Optional.of(usuario));
 
-        BusinessException ex = assertThrows(
-                BusinessException.class,
-                () -> userService.registrar(usuario)
-        );
+        BusinessException ex = assertThrows(BusinessException.class, () -> userService.registrar(usuario));
 
         assertTrue(ex.getMessage().contains("correo electrónico ya está registrado"));
         verify(usuarioRepository, never()).save(any());
@@ -106,8 +102,8 @@ class UserServiceTest {
 
         Usuario resultado = userService.buscarPorId(ID);
 
-        assertEquals(ID,     resultado.getId());
-        assertEquals(EMAIL,  resultado.getEmail());
+        assertEquals(ID, resultado.getId());
+        assertEquals(EMAIL, resultado.getEmail());
         assertEquals(NOMBRE, resultado.getNombre());
     }
 
@@ -115,10 +111,8 @@ class UserServiceTest {
     void deberiaLanzarResourceNotFoundExceptionSiElIdNoExiste() {
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> userService.buscarPorId(99L));
 
         assertTrue(ex.getMessage().contains("99"));
     }
@@ -131,7 +125,7 @@ class UserServiceTest {
 
         Usuario resultado = userService.buscarPorEmail(EMAIL);
 
-        assertEquals(ID,    resultado.getId());
+        assertEquals(ID, resultado.getId());
         assertEquals(EMAIL, resultado.getEmail());
     }
 
@@ -140,10 +134,8 @@ class UserServiceTest {
         String emailInexistente = "noexiste@agroruta.com";
         when(usuarioRepository.findByEmail(emailInexistente)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.buscarPorEmail(emailInexistente)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> userService.buscarPorEmail(emailInexistente));
 
         assertTrue(ex.getMessage().contains(emailInexistente));
     }
@@ -157,8 +149,8 @@ class UserServiceTest {
 
         List<Usuario> resultado = userService.listarActivos();
 
-        assertEquals(2,      resultado.size());
-        assertEquals(ID,     resultado.get(0).getId());
+        assertEquals(2, resultado.size());
+        assertEquals(ID, resultado.get(0).getId());
         assertEquals("Ana López", resultado.get(1).getNombre());
         verify(usuarioRepository, times(1)).findAllActivos();
     }
@@ -191,10 +183,7 @@ class UserServiceTest {
     void desactivarDeberiaLanzarExcepcionSiElUsuarioNoExiste() {
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.desactivarUsuario(99L)
-        );
+        assertThrows(ResourceNotFoundException.class, () -> userService.desactivarUsuario(99L));
 
         verify(usuarioRepository, never()).save(any());
     }
@@ -230,10 +219,7 @@ class UserServiceTest {
     void activarDeberiaLanzarExcepcionSiElUsuarioNoExiste() {
         when(usuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(
-                ResourceNotFoundException.class,
-                () -> userService.activarUsuario(99L)
-        );
+        assertThrows(ResourceNotFoundException.class, () -> userService.activarUsuario(99L));
 
         verify(usuarioRepository, never()).save(any());
     }

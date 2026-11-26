@@ -1,15 +1,5 @@
 package com.agroruta.weather.application;
 
-import com.agroruta.weather.application.ports.out.WeatherApiPort;
-import com.agroruta.weather.domain.Weather;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.ZoneOffset;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyDouble;
@@ -18,16 +8,40 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.agroruta.weather.application.ports.out.WeatherApiPort;
+import com.agroruta.weather.domain.Weather;
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 @DisplayName("WeatherService - copias breves")
 class WeatherServiceCopiaTest {
 
     /** Un reloj que se puede adelantar */
     private static final class Reloj extends Clock {
         private Instant ahora = Instant.parse("2026-11-18T12:00:00Z");
-        void adelantar(Duration d) { ahora = ahora.plus(d); }
-        @Override public ZoneOffset getZone() { return ZoneOffset.UTC; }
-        @Override public Clock withZone(java.time.ZoneId zone) { return this; }
-        @Override public Instant instant() { return ahora; }
+
+        void adelantar(Duration d) {
+            ahora = ahora.plus(d);
+        }
+
+        @Override
+        public ZoneOffset getZone() {
+            return ZoneOffset.UTC;
+        }
+
+        @Override
+        public Clock withZone(java.time.ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return ahora;
+        }
     }
 
     private final WeatherApiPort api = mock(WeatherApiPort.class);
@@ -62,7 +76,9 @@ class WeatherServiceCopiaTest {
     @Test
     @DisplayName("un error no se guarda: la siguiente consulta vuelve a intentar")
     void errorNoSeGuarda() {
-        when(api.fetchWeatherByCity("Tunja")).thenThrow(new RuntimeException("sin servicio")).thenReturn(bogota);
+        when(api.fetchWeatherByCity("Tunja"))
+                .thenThrow(new RuntimeException("sin servicio"))
+                .thenReturn(bogota);
         assertThatThrownBy(() -> servicio.getWeatherByCity("Tunja")).isInstanceOf(RuntimeException.class);
         assertThat(servicio.getWeatherByCity("Tunja")).isSameAs(bogota);
     }

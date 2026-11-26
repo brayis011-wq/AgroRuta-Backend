@@ -3,31 +3,29 @@ package com.agroruta.finance.application;
 import com.agroruta.finance.application.ports.in.PreciosReferenciaUseCase;
 import com.agroruta.finance.application.ports.out.PreciosReferenciaRepository;
 import com.agroruta.finance.application.ports.out.SipsaPort;
-import com.agroruta.finance.domain.EstadoPrecios;
 import com.agroruta.finance.domain.BuscadorPrecio;
+import com.agroruta.finance.domain.EstadoPrecios;
 import com.agroruta.finance.domain.PrecioCultivo;
 import com.agroruta.finance.domain.PrecioReferencia;
 import com.agroruta.finance.domain.PreferenciaPrecio;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ExternalApiException;
 import com.agroruta.shared.util.Dinero;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class PreciosReferenciaService implements PreciosReferenciaUseCase {
@@ -40,6 +38,7 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
     static final Duration VIGENCIA = Duration.ofDays(3);
     /** Si falla, no se vuelve a intentar antes de esto (un fallo pasajero no deja la pantalla vacía medio día) */
     static final Duration ESPERA_TRAS_FALLO = Duration.ofMinutes(30);
+
     static final int MAX_ALTERNATIVAS = 8;
 
     private final PreciosReferenciaRepository repositorio;
@@ -52,16 +51,16 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
     private final AtomicReference<String> ultimoError = new AtomicReference<>();
 
     @Autowired
-    public PreciosReferenciaService(PreciosReferenciaRepository repositorio, SipsaPort sipsa) {
-        this(repositorio, sipsa, Clock.system(ZoneId.of("America/Bogota")),
-                Executors.newSingleThreadExecutor(r -> {
-                    Thread t = new Thread(r, "precios-sipsa");
-                    t.setDaemon(true);
-                    return t;
-                }));
+    public PreciosReferenciaService(PreciosReferenciaRepository repositorio, SipsaPort sipsa, Clock reloj) {
+        this(repositorio, sipsa, reloj, Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "precios-sipsa");
+            t.setDaemon(true);
+            return t;
+        }));
     }
 
-    PreciosReferenciaService(PreciosReferenciaRepository repositorio, SipsaPort sipsa, Clock reloj, Executor segundoPlano) {
+    PreciosReferenciaService(
+            PreciosReferenciaRepository repositorio, SipsaPort sipsa, Clock reloj, Executor segundoPlano) {
         this.repositorio = repositorio;
         this.sipsa = sipsa;
         this.reloj = reloj;
@@ -74,19 +73,24 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
         String nombre = cultivo == null ? "" : cultivo.trim();
         List<PrecioReferencia> semana = repositorio.ultimaSemana();
         List<PrecioReferencia> candidatos = BuscadorPrecio.candidatos(semana, nombre, variedad);
-        List<PrecioReferencia> alternativas = candidatos.stream().limit(MAX_ALTERNATIVAS).toList();
+        List<PrecioReferencia> alternativas =
+                candidatos.stream().limit(MAX_ALTERNATIVAS).toList();
 
         Optional<PreferenciaPrecio> pref = agricultorId == null || nombre.isEmpty()
-                ? Optional.empty() : repositorio.preferencia(agricultorId, nombre);
+                ? Optional.empty()
+                : repositorio.preferencia(agricultorId, nombre);
         if (pref.isPresent() && pref.get().precioKg() != null) {
             return PrecioCultivo.propio(nombre, pref.get().precioKg(), alternativas);
         }
         if (pref.isPresent() && pref.get().producto() != null) {
             String elegido = pref.get().producto();
-            Optional<PrecioReferencia> p = semana.stream().filter(x -> x.producto().equalsIgnoreCase(elegido)).findFirst();
+            Optional<PrecioReferencia> p = semana.stream()
+                    .filter(x -> x.producto().equalsIgnoreCase(elegido))
+                    .findFirst();
             if (p.isPresent()) return PrecioCultivo.deSipsa(nombre, p.get(), true, alternativas);
         }
-        return candidatos.isEmpty() ? PrecioCultivo.sinPrecio(nombre, alternativas)
+        return candidatos.isEmpty()
+                ? PrecioCultivo.sinPrecio(nombre, alternativas)
                 : PrecioCultivo.deSipsa(nombre, candidatos.get(0), false, alternativas);
     }
 
@@ -112,7 +116,9 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
         if (precioKg != null && precioKg.signum() <= 0) {
             throw new DatoInvalidoException("El precio por kilo debe ser mayor a 0.");
         }
-        if (prod != null && repositorio.ultimaSemana().stream().noneMatch(p -> p.producto().equalsIgnoreCase(prod))) {
+        if (prod != null
+                && repositorio.ultimaSemana().stream()
+                        .noneMatch(p -> p.producto().equalsIgnoreCase(prod))) {
             throw new DatoInvalidoException("Ese producto no está en los precios de esta semana.");
         }
         PreferenciaPrecio p = new PreferenciaPrecio(nombre, prod, Dinero.redondear(precioKg));
@@ -164,16 +170,26 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
         ultimoError.set(null);
         log.info("Precios de SIPSA cargados desde un archivo: {} filas", precios.size());
         List<PrecioReferencia> semana = repositorio.ultimaSemana();
-        return new EstadoPrecios(!semana.isEmpty(), semana.isEmpty() ? null : semana.get(0).semana(),
-                ahora, trayendo.get(), ultimoIntento.get(), null);
+        return new EstadoPrecios(
+                !semana.isEmpty(),
+                semana.isEmpty() ? null : semana.get(0).semana(),
+                ahora,
+                trayendo.get(),
+                ultimoIntento.get(),
+                null);
     }
 
     @Override
     public EstadoPrecios estado() {
         actualizarSiHaceFalta();
         List<PrecioReferencia> semana = repositorio.ultimaSemana();
-        return new EstadoPrecios(!semana.isEmpty(), semana.isEmpty() ? null : semana.get(0).semana(),
-                repositorio.ultimaActualizacion().orElse(null), trayendo.get(), ultimoIntento.get(), ultimoError.get());
+        return new EstadoPrecios(
+                !semana.isEmpty(),
+                semana.isEmpty() ? null : semana.get(0).semana(),
+                repositorio.ultimaActualizacion().orElse(null),
+                trayendo.get(),
+                ultimoIntento.get(),
+                ultimoError.get());
     }
 
     @Override

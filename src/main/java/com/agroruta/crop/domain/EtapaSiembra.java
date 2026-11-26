@@ -1,10 +1,10 @@
 package com.agroruta.crop.domain;
 
+import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
 
 /** Registro de cuándo una siembra entró en una etapa (germinación, crecimiento...). */
 @Getter

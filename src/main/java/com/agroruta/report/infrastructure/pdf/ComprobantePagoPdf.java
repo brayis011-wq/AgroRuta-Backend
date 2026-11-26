@@ -1,5 +1,11 @@
 package com.agroruta.report.infrastructure.pdf;
 
+import static com.agroruta.report.infrastructure.pdf.FormatoReporte.fecha;
+import static com.agroruta.report.infrastructure.pdf.FormatoReporte.fechaHora;
+import static com.agroruta.report.infrastructure.pdf.FormatoReporte.pesos;
+import static com.agroruta.report.infrastructure.pdf.PdfLienzo.*;
+
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.worker.application.ports.out.ComprobantePdfPort;
 import com.agroruta.worker.domain.ComprobantePago;
 import com.agroruta.worker.domain.MetodoPago;
@@ -9,29 +15,24 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
-
-import static com.agroruta.report.infrastructure.pdf.FormatoReporte.fecha;
-import static com.agroruta.report.infrastructure.pdf.FormatoReporte.fechaHora;
-import static com.agroruta.report.infrastructure.pdf.FormatoReporte.pesos;
-import static com.agroruta.report.infrastructure.pdf.PdfLienzo.*;
+import org.springframework.stereotype.Component;
 
 /** Comprobante de pago de una página, con un QR que lleva a la verificación pública. */
 @Component
 public class ComprobantePagoPdf implements ComprobantePdfPort {
 
-    private static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    private static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
     private static final float LADO_QR = 118;
 
     @Override
     public byte[] generar(ComprobantePago c) {
-        try (PdfLienzo pdf = new PdfLienzo("Comprobante de pago", "N.º " + c.numero() + " · Pagado el " + fecha(c.fechaPago()))) {
+        try (PdfLienzo pdf =
+                new PdfLienzo("Comprobante de pago", "N.º " + c.numero() + " · Pagado el " + fecha(c.fechaPago()))) {
             pdf.encabezadoDerecha("Generado", fechaHora(LocalDateTime.now(ZONA)));
 
             // Valor pagado, grande
@@ -75,9 +76,21 @@ public class ComprobantePagoPdf implements ComprobantePdfPort {
             float x = MARGEN + LADO_QR + 30;
             float anchoTexto = CONTENIDO - LADO_QR - 46;
             pdf.texto("Verifica este comprobante", NEGRITA, 12.5f, x, pdf.y - 30, TINTA);
-            pdf.texto("Escanea el código con la cámara del celular. La página de AgroRuta", NORMAL, 9.2f, x, pdf.y - 48, TINTA_2);
+            pdf.texto(
+                    "Escanea el código con la cámara del celular. La página de AgroRuta",
+                    NORMAL,
+                    9.2f,
+                    x,
+                    pdf.y - 48,
+                    TINTA_2);
             pdf.texto("mostrará el valor y la fecha reales de este pago.", NORMAL, 9.2f, x, pdf.y - 60, TINTA_2);
-            pdf.texto("Si lo que ves allí es distinto a este papel, el comprobante fue alterado.", NORMAL, 9.2f, x, pdf.y - 72, TINTA_2);
+            pdf.texto(
+                    "Si lo que ves allí es distinto a este papel, el comprobante fue alterado.",
+                    NORMAL,
+                    9.2f,
+                    x,
+                    pdf.y - 72,
+                    TINTA_2);
             pdf.texto("CÓDIGO", NEGRITA, 7.5f, x, pdf.y - 94, TINTA_3);
             pdf.texto(c.codigo(), NEGRITA, 11, x, pdf.y - 108, VERDE_OSCURO);
             pdf.texto(ajustar(c.urlVerificacion(), NORMAL, 7.5f, anchoTexto), NORMAL, 7.5f, x, pdf.y - 124, TINTA_3);
@@ -116,8 +129,13 @@ public class ComprobantePagoPdf implements ComprobantePdfPort {
     private static void qr(PdfLienzo pdf, String texto, float x, float yy, float lado) throws IOException {
         BitMatrix m;
         try {
-            m = new QRCodeWriter().encode(texto, BarcodeFormat.QR_CODE, 0, 0,
-                    Map.of(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M, EncodeHintType.MARGIN, 2));
+            m = new QRCodeWriter()
+                    .encode(
+                            texto,
+                            BarcodeFormat.QR_CODE,
+                            0,
+                            0,
+                            Map.of(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M, EncodeHintType.MARGIN, 2));
         } catch (WriterException e) {
             throw new IOException("No se pudo crear el código QR", e);
         }
@@ -127,11 +145,19 @@ public class ComprobantePagoPdf implements ComprobantePdfPort {
         for (int fila = 0; fila < n; fila++) {
             int col = 0;
             while (col < n) {
-                if (!m.get(col, fila)) { col++; continue; }
+                if (!m.get(col, fila)) {
+                    col++;
+                    continue;
+                }
                 int inicio = col;
                 while (col < n && m.get(col, fila)) col++;
                 // Un rectángulo por cada tramo seguido; +0.2 para que no queden rayitas blancas entre celdas
-                pdf.rect(x + inicio * celda, yy + lado - (fila + 1) * celda, (col - inicio) * celda + 0.2f, celda + 0.2f, TINTA);
+                pdf.rect(
+                        x + inicio * celda,
+                        yy + lado - (fila + 1) * celda,
+                        (col - inicio) * celda + 0.2f,
+                        celda + 0.2f,
+                        TINTA);
             }
         }
     }

@@ -1,7 +1,6 @@
 package com.agroruta.crop.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
-
 import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Set;
@@ -16,8 +15,8 @@ import java.util.Set;
  * @param desde primera vez que toca
  * @param hasta última fecha en que puede tocar (null: mientras dure la siembra)
  */
-public record ActividadProgramada(Long id, Long siembraId, String tipo, String descripcion, int cadaDias,
-                                  LocalDate desde, LocalDate hasta) {
+public record ActividadProgramada(
+        Long id, Long siembraId, String tipo, String descripcion, int cadaDias, LocalDate desde, LocalDate hasta) {
 
     public static final String FERTILIZACION = "FERTILIZACION";
     public static final String FUMIGACION = "FUMIGACION";
@@ -25,8 +24,14 @@ public record ActividadProgramada(Long id, Long siembraId, String tipo, String d
     public static final int MAX_DIAS = 365;
 
     /** Revisa los datos y deja el tipo en mayúsculas */
-    public static ActividadProgramada nueva(Long id, Long siembraId, String tipo, String descripcion, Integer cadaDias,
-                                            LocalDate desde, LocalDate hasta) {
+    public static ActividadProgramada nueva(
+            Long id,
+            Long siembraId,
+            String tipo,
+            String descripcion,
+            Integer cadaDias,
+            LocalDate desde,
+            LocalDate hasta) {
         String t = tipo == null ? "" : tipo.trim().toUpperCase(Locale.ROOT);
         if (!esTipoValido(t)) throw new DatoInvalidoException("Ese tipo de labor no existe.");
         if (cadaDias == null || cadaDias < 1 || cadaDias > MAX_DIAS) {

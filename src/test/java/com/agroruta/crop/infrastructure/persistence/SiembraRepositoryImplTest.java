@@ -1,22 +1,21 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import java.time.LocalDateTime;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Siembra;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SiembraRepositoryImplTest {
@@ -29,15 +28,15 @@ class SiembraRepositoryImplTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long          ID               = 1L;
-    private static final Long          LOTE_ID          = 15L;
-    private static final LocalDate     FECHA_SIEMBRA    = LocalDate.of(2024, 3, 1);
-    private static final Integer       CANTIDAD_PLANTAS = 200;
-    private static final String        VARIEDAD         = "Colombia";
-    private static final EstadoCultivo  ESTADO          = EstadoCultivo.CRECIMIENTO;
+    private static final Long ID = 1L;
+    private static final Long LOTE_ID = 15L;
+    private static final LocalDate FECHA_SIEMBRA = LocalDate.of(2024, 3, 1);
+    private static final Integer CANTIDAD_PLANTAS = 200;
+    private static final String VARIEDAD = "Colombia";
+    private static final EstadoCultivo ESTADO = EstadoCultivo.CRECIMIENTO;
 
     private SiembraEntity entityGuardada;
-    private Siembra       dominioEntrada;
+    private Siembra dominioEntrada;
 
     @BeforeEach
     void setUp() {
@@ -65,12 +64,12 @@ class SiembraRepositoryImplTest {
 
         Siembra resultado = repository.save(dominioEntrada);
 
-        assertEquals(ID,               resultado.getId());
-        assertEquals(FECHA_SIEMBRA,    resultado.getFechaSiembra());
+        assertEquals(ID, resultado.getId());
+        assertEquals(FECHA_SIEMBRA, resultado.getFechaSiembra());
         assertEquals(CANTIDAD_PLANTAS, resultado.getCantidadPlantas());
-        assertEquals(VARIEDAD,         resultado.getVariedad());
-        assertEquals(ESTADO,           resultado.getEstadoCultivo());
-        assertEquals(LOTE_ID,          resultado.getLoteId());
+        assertEquals(VARIEDAD, resultado.getVariedad());
+        assertEquals(ESTADO, resultado.getEstadoCultivo());
+        assertEquals(LOTE_ID, resultado.getLoteId());
         verify(jpaRepository, times(1)).save(any(SiembraEntity.class));
     }
 
@@ -80,13 +79,12 @@ class SiembraRepositoryImplTest {
 
         repository.save(dominioEntrada);
 
-        verify(jpaRepository).save(argThat(entity ->
-                entity.getFechaSiembra()   .equals(FECHA_SIEMBRA)   &&
-                        entity.getCantidadPlantas().equals(CANTIDAD_PLANTAS) &&
-                        VARIEDAD.equals(entity.getVariedad())              &&
-                        entity.getEstadoCultivo()  == ESTADO                 &&
-                        entity.getLoteId()         .equals(LOTE_ID)
-        ));
+        verify(jpaRepository)
+                .save(argThat(entity -> entity.getFechaSiembra().equals(FECHA_SIEMBRA)
+                        && entity.getCantidadPlantas().equals(CANTIDAD_PLANTAS)
+                        && VARIEDAD.equals(entity.getVariedad())
+                        && entity.getEstadoCultivo() == ESTADO
+                        && entity.getLoteId().equals(LOTE_ID)));
     }
 
     @Test
@@ -109,12 +107,12 @@ class SiembraRepositoryImplTest {
         Optional<Siembra> resultado = repository.findById(ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,               resultado.get().getId());
-        assertEquals(FECHA_SIEMBRA,    resultado.get().getFechaSiembra());
+        assertEquals(ID, resultado.get().getId());
+        assertEquals(FECHA_SIEMBRA, resultado.get().getFechaSiembra());
         assertEquals(CANTIDAD_PLANTAS, resultado.get().getCantidadPlantas());
-        assertEquals(VARIEDAD,         resultado.get().getVariedad());
-        assertEquals(ESTADO,           resultado.get().getEstadoCultivo());
-        assertEquals(LOTE_ID,          resultado.get().getLoteId());
+        assertEquals(VARIEDAD, resultado.get().getVariedad());
+        assertEquals(ESTADO, resultado.get().getEstadoCultivo());
+        assertEquals(LOTE_ID, resultado.get().getLoteId());
     }
 
     @Test
@@ -131,20 +129,22 @@ class SiembraRepositoryImplTest {
     @Test
     void deberiaRetornarLaSiembraEnCursoDelLote() {
         when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
-                LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(Optional.of(entityGuardada));
+                        LOTE_ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(Optional.of(entityGuardada));
 
         Optional<Siembra> resultado = repository.findActivaByLoteId(LOTE_ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,      resultado.get().getId());
+        assertEquals(ID, resultado.get().getId());
         assertEquals(LOTE_ID, resultado.get().getLoteId());
-        assertEquals(ESTADO,  resultado.get().getEstadoCultivo());
+        assertEquals(ESTADO, resultado.get().getEstadoCultivo());
     }
 
     @Test
     void deberiaRetornarVacioSiNoHaySiembraEnCursoEnElLote() {
         when(jpaRepository.findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
-                LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(Optional.empty());
+                        LOTE_ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(Optional.empty());
 
         assertFalse(repository.findActivaByLoteId(LOTE_ID).isPresent());
     }
@@ -186,10 +186,10 @@ class SiembraRepositoryImplTest {
 
         List<Siembra> resultado = repository.findByEstadoCultivo(ESTADO);
 
-        assertEquals(2,                    resultado.size());
-        assertEquals(ID,                   resultado.get(0).getId());
+        assertEquals(2, resultado.size());
+        assertEquals(ID, resultado.get(0).getId());
         assertEquals("Gigante", resultado.get(1).getVariedad());
-        assertEquals(ESTADO,               resultado.get(1).getEstadoCultivo());
+        assertEquals(ESTADO, resultado.get(1).getEstadoCultivo());
     }
 
     @Test
@@ -216,14 +216,16 @@ class SiembraRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiHaySiembraEnCursoEnElLote() {
-        when(jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(true);
+        when(jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(LOTE_ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(true);
 
         assertTrue(repository.existsActivaByLoteId(LOTE_ID));
     }
 
     @Test
     void deberiaRetornarFalseSiSoloHaySiembrasFinalizadas() {
-        when(jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(LOTE_ID, EstadoCultivo.FINALIZADO)).thenReturn(false);
+        when(jpaRepository.existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(LOTE_ID, EstadoCultivo.FINALIZADO))
+                .thenReturn(false);
 
         assertFalse(repository.existsActivaByLoteId(LOTE_ID));
     }
@@ -283,8 +285,7 @@ class SiembraRepositoryImplTest {
             entity.setEstadoCultivo(estado);
             entity.setLoteId(LOTE_ID);
 
-            when(jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(estado))
-                    .thenReturn(List.of(entity));
+            when(jpaRepository.findByEstadoCultivoAndEliminadoEnIsNull(estado)).thenReturn(List.of(entity));
 
             List<Siembra> resultado = repository.findByEstadoCultivo(estado);
 

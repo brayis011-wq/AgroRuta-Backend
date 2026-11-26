@@ -2,10 +2,9 @@ package com.agroruta.user.infrastructure.persistence;
 
 import com.agroruta.user.application.ports.out.SesionRepository;
 import com.agroruta.user.domain.Sesion;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class SesionRepositoryImpl implements SesionRepository {
@@ -44,7 +43,9 @@ public class SesionRepositoryImpl implements SesionRepository {
 
     @Override
     public java.util.List<Sesion> buscarAbiertas(Long usuarioId, LocalDateTime ahora) {
-        return jpa.buscarAbiertas(usuarioId, ahora).stream().map(SesionRepositoryImpl::aDominio).toList();
+        return jpa.buscarAbiertas(usuarioId, ahora).stream()
+                .map(SesionRepositoryImpl::aDominio)
+                .toList();
     }
 
     @Override
@@ -63,7 +64,16 @@ public class SesionRepositoryImpl implements SesionRepository {
     }
 
     private static Sesion aDominio(SesionEntity e) {
-        return new Sesion(e.getId(), e.getUsuarioId(), e.getTokenHash(), e.getCreadoEn(), e.getExpiraEn(),
-                e.getRotadoEn(), e.getRevocadoEn(), e.getFamilia(), e.getDispositivo(), e.getIniciadaEn());
+        return new Sesion(
+                e.getId(),
+                e.getUsuarioId(),
+                e.getTokenHash(),
+                e.getCreadoEn(),
+                e.getExpiraEn(),
+                e.getRotadoEn(),
+                e.getRevocadoEn(),
+                e.getFamilia(),
+                e.getDispositivo(),
+                e.getIniciadaEn());
     }
 }

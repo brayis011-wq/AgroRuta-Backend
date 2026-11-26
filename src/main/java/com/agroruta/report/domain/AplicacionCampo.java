@@ -21,8 +21,7 @@ public record AplicacionCampo(
         String unidadCantidad,
         Integer diasCarencia,
         Integer reentradaHoras,
-        String observaciones
-) {
+        String observaciones) {
     /** Primer día en que se puede volver a cosechar; null sin carencia */
     public LocalDate finCarencia() {
         return fecha == null || diasCarencia == null || diasCarencia <= 0 ? null : fecha.plusDays(diasCarencia);

@@ -2,7 +2,6 @@ package com.agroruta.worker.infrastructure.web.dto;
 
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.domain.ModalidadPago;
-
 import java.math.BigDecimal;
 
 public class CargoResponse {

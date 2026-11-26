@@ -1,24 +1,25 @@
 package com.agroruta.inventory.domain;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
 import com.agroruta.shared.exception.BusinessException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("CalculadoraStock y UnidadBase")
 class CalculadoraStockTest {
 
     private final LocalDate dia = LocalDate.of(2026, 11, 1);
-    private final InsumoCatalogo mancozeb = new InsumoCatalogo(1L, "Mancozeb", "FUNGICIDA", MeasurementUnit.GRAMOS, true);
+    private final InsumoCatalogo mancozeb =
+            new InsumoCatalogo(1L, "Mancozeb", "FUNGICIDA", MeasurementUnit.GRAMOS, true);
 
     private MovimientoInventario compra(double g, Double costo) {
-        return MovimientoInventario.compra(9L, 1L, g, costo == null ? null : BigDecimal.valueOf(costo), dia, null, null);
+        return MovimientoInventario.compra(
+                9L, 1L, g, costo == null ? null : BigDecimal.valueOf(costo), dia, null, null);
     }
 
     @Test
@@ -34,11 +35,11 @@ class CalculadoraStockTest {
     @Test
     void elCostoPromedioPonderaPorCantidadEIgnoraComprasSinPrecio() {
         List<MovimientoInventario> m = List.of(
-                compra(1000, 20000.0),   // 20 $/g
-                compra(3000, 120000.0),  // 40 $/g
-                compra(5000, null));     // sin precio: no cuenta
+                compra(1000, 20000.0), // 20 $/g
+                compra(3000, 120000.0), // 40 $/g
+                compra(5000, null)); // sin precio: no cuenta
 
-        assertEquals(35.0, CalculadoraStock.costoPromedio(m), 0.0001);  // 140000 / 4000
+        assertEquals(35.0, CalculadoraStock.costoPromedio(m), 0.0001); // 140000 / 4000
     }
 
     @Test
@@ -58,9 +59,10 @@ class CalculadoraStockTest {
 
     @Test
     void calcularArmaElResumenConValorYUltimoMovimiento() {
-        StockInsumo s = CalculadoraStock.calcular(mancozeb, List.of(
-                compra(2000, 40000.0),
-                MovimientoInventario.uso(9L, 1L, 500, dia.plusDays(3), 7L)), 1000.0);
+        StockInsumo s = CalculadoraStock.calcular(
+                mancozeb,
+                List.of(compra(2000, 40000.0), MovimientoInventario.uso(9L, 1L, 500, dia.plusDays(3), 7L)),
+                1000.0);
 
         assertEquals(1500, s.cantidad());
         assertEquals(20.0, s.costoPromedio(), 0.0001);
@@ -81,7 +83,8 @@ class CalculadoraStockTest {
 
     @Test
     void noSeMezclanLitrosConGramos() {
-        BusinessException e = assertThrows(BusinessException.class,
+        BusinessException e = assertThrows(
+                BusinessException.class,
                 () -> UnidadBase.aBaseDe(1, MeasurementUnit.LITROS, UnidadBase.GRAMOS, "Mancozeb"));
         assertTrue(e.getMessage().contains("kilos o gramos"));
     }

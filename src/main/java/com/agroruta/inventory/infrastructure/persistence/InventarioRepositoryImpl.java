@@ -2,12 +2,11 @@ package com.agroruta.inventory.infrastructure.persistence;
 
 import com.agroruta.inventory.application.ports.out.InventarioRepository;
 import com.agroruta.inventory.domain.MovimientoInventario;
-import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class InventarioRepositoryImpl implements InventarioRepository {
@@ -38,13 +37,15 @@ public class InventarioRepositoryImpl implements InventarioRepository {
     @Override
     public List<MovimientoInventario> movimientosDe(Long agricultorId) {
         return movimientos.findByAgricultorIdOrderByFechaDescIdDesc(agricultorId).stream()
-                .map(InventarioRepositoryImpl::toDomain).toList();
+                .map(InventarioRepositoryImpl::toDomain)
+                .toList();
     }
 
     @Override
     public List<MovimientoInventario> movimientosDe(Long agricultorId, Long insumoId) {
         return movimientos.findByAgricultorIdAndInsumoIdOrderByFechaDescIdDesc(agricultorId, insumoId).stream()
-                .map(InventarioRepositoryImpl::toDomain).toList();
+                .map(InventarioRepositoryImpl::toDomain)
+                .toList();
     }
 
     @Override

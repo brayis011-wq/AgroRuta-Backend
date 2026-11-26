@@ -1,7 +1,8 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Test;
 
 class FincaTest {
 

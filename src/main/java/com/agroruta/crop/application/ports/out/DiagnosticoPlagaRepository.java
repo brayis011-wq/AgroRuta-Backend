@@ -2,7 +2,6 @@ package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.AnalisisFoto;
 import com.agroruta.crop.domain.DiagnosticoPlaga;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,7 +9,8 @@ import java.util.Optional;
 
 public interface DiagnosticoPlagaRepository {
 
-    DiagnosticoPlaga guardar(Long siembraId, Long usuarioId, LocalDateTime fecha, byte[] foto, String nota, AnalisisFoto analisis);
+    DiagnosticoPlaga guardar(
+            Long siembraId, Long usuarioId, LocalDateTime fecha, byte[] foto, String nota, AnalisisFoto analisis);
 
     /** Los más recientes primero */
     List<DiagnosticoPlaga> deSiembra(Long siembraId, int limite);

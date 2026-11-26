@@ -1,12 +1,12 @@
 package com.agroruta.configuration.domain;
 
-import com.agroruta.shared.exception.DatoInvalidoException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import com.agroruta.shared.exception.DatoInvalidoException;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Pruebas unitarias - FotoPerfil")
 class FotoPerfilTest {

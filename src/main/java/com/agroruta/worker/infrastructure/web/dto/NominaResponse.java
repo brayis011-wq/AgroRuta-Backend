@@ -2,7 +2,6 @@ package com.agroruta.worker.infrastructure.web.dto;
 
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.Nomina;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

@@ -1,8 +1,15 @@
 package com.agroruta.crop.infrastructure.web;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.crop.application.ports.in.LoteUseCase;
-import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Lote;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,15 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class LoteControllerTest {
@@ -45,8 +43,7 @@ class LoteControllerTest {
     @Test
     void deberiaRegistrarLoteYRetornar201() throws Exception {
         Lote lote = new Lote(1L, "Lote A", 3.5, 2L);
-        when(loteUseCase.registrarLote(anyString(), anyDouble(), anyLong()))
-                .thenReturn(lote);
+        when(loteUseCase.registrarLote(anyString(), anyDouble(), anyLong())).thenReturn(lote);
 
         String body = """
                 {
@@ -137,8 +134,7 @@ class LoteControllerTest {
     void deberiaEliminarLoteYRetornar204() throws Exception {
         doNothing().when(loteUseCase).eliminarLote(1L);
 
-        mockMvc.perform(delete("/api/plots/1"))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/plots/1")).andExpect(status().isNoContent());
 
         verify(loteUseCase).eliminarLote(1L);
     }
@@ -151,9 +147,7 @@ class LoteControllerTest {
     void deberiaActualizarGeometriaYRetornar200() throws Exception {
         Lote lote = new Lote(1L, "Lote A", 4.1, 2L);
         lote.actualizarGeometria(
-                "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[1,0],[1,1],[0,0]]]}",
-                4.1, 4.5709, -74.2973
-        );
+                "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[1,0],[1,1],[0,0]]]}", 4.1, 4.5709, -74.2973);
         when(loteUseCase.actualizarGeometriaLote(eq(1L), anyString(), anyDouble(), anyDouble(), anyDouble()))
                 .thenReturn(lote);
 
@@ -180,9 +174,7 @@ class LoteControllerTest {
     void deberiaActualizarGeometriaDeOtroLote() throws Exception {
         Lote lote = new Lote(3L, "Lote C", 6.8, 2L);
         lote.actualizarGeometria(
-                "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[2,0],[2,2],[0,0]]]}",
-                6.8, 4.6012, -74.0839
-        );
+                "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[2,0],[2,2],[0,0]]]}", 6.8, 4.6012, -74.0839);
         when(loteUseCase.actualizarGeometriaLote(eq(3L), anyString(), anyDouble(), anyDouble(), anyDouble()))
                 .thenReturn(lote);
 

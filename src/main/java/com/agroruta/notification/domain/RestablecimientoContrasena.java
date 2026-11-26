@@ -1,8 +1,7 @@
 package com.agroruta.notification.domain;
 
-import lombok.Getter;
-
 import java.time.LocalDateTime;
+import lombok.Getter;
 
 /**
  * Un enlace para crear una contraseña nueva. Se guarda solo el hash del token (si alguien lee la
@@ -18,8 +17,13 @@ public class RestablecimientoContrasena {
     private final LocalDateTime expiraEn;
     private LocalDateTime usadoEn;
 
-    public RestablecimientoContrasena(Long id, Long usuarioId, String tokenHash,
-                                      LocalDateTime creadoEn, LocalDateTime expiraEn, LocalDateTime usadoEn) {
+    public RestablecimientoContrasena(
+            Long id,
+            Long usuarioId,
+            String tokenHash,
+            LocalDateTime creadoEn,
+            LocalDateTime expiraEn,
+            LocalDateTime usadoEn) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.tokenHash = tokenHash;

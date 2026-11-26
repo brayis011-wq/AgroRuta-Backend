@@ -1,5 +1,9 @@
 package com.agroruta.notification.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
 import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.domain.AlertaCultivo;
@@ -10,23 +14,18 @@ import com.agroruta.weather.domain.ConsejoClima;
 import com.agroruta.weather.domain.ConsejoClima.Nivel;
 import com.agroruta.weather.domain.ConsejoClima.Tipo;
 import com.agroruta.weather.domain.FranjaClima;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyDouble;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ConsejosClimaService")
@@ -35,9 +34,14 @@ class ConsejosClimaServiceTest {
     private static final ZoneId ZONA = ZoneId.of("America/Bogota");
     private static final LocalDate HOY = LocalDate.of(2026, 11, 10);
 
-    @Mock private FincaRepository fincas;
-    @Mock private AlertasCultivoUseCase alertas;
-    @Mock private WeatherUseCase clima;
+    @Mock
+    private FincaRepository fincas;
+
+    @Mock
+    private AlertasCultivoUseCase alertas;
+
+    @Mock
+    private WeatherUseCase clima;
 
     private ConsejosClimaService service;
     private Finca finca;
@@ -61,7 +65,12 @@ class ConsejosClimaServiceTest {
             for (int h = 1; h < 24; h += 3) {
                 LocalDateTime t = HOY.plusDays(d).atTime(h, 0);
                 boolean tarde = d == 0 && h == 16;
-                f.add(new FranjaClima(t, h == 4 ? tempMadrugada : 18, tarde ? lluviaTarde : 0, tarde && lluviaTarde > 0 ? 0.9 : 0.1, 2));
+                f.add(new FranjaClima(
+                        t,
+                        h == 4 ? tempMadrugada : 18,
+                        tarde ? lluviaTarde : 0,
+                        tarde && lluviaTarde > 0 ? 0.9 : 0.1,
+                        2));
             }
         }
         return f;
@@ -145,8 +154,9 @@ class ConsejosClimaServiceTest {
     @Test
     @DisplayName("las tareas de otra finca no se cruzan con el clima de esta")
     void otraFinca() {
-        when(alertas.alertasDelDia(9L, HOY)).thenReturn(List.of(
-                new AlertaCultivo(AlertaCultivo.Tipo.FUMIGACION_HOY, "Otra finca", "Lote 1", "Café", null, null, HOY)));
+        when(alertas.alertasDelDia(9L, HOY))
+                .thenReturn(List.of(new AlertaCultivo(
+                        AlertaCultivo.Tipo.FUMIGACION_HOY, "Otra finca", "Lote 1", "Café", null, null, HOY)));
         when(clima.getFranjas48h(4.6, -74.1)).thenReturn(franjas(6, 12));
         assertTrue(service.consejos(9L).isEmpty());
     }

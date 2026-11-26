@@ -1,7 +1,6 @@
 package com.agroruta.user.application.ports.in;
 
 import com.agroruta.user.domain.SesionAbierta;
-
 import java.util.List;
 
 /**

@@ -1,10 +1,10 @@
 package com.agroruta.worker.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -16,6 +16,7 @@ public class Cargo {
     private String descripcion;
     /** Valor del día; en los cargos que se pagan por kilo es 0 */
     private BigDecimal valorJornal;
+
     private boolean activo;
     private ModalidadPago modalidadPago = ModalidadPago.JORNAL;
     /** Pesos por kilo recogido; solo en los cargos que se pagan por kilo */
@@ -64,6 +65,11 @@ public class Cargo {
         return modalidadPago == ModalidadPago.KILO;
     }
 
-    public void desactivar() { this.activo = false; }
-    public void activar()    { this.activo = true; }
+    public void desactivar() {
+        this.activo = false;
+    }
+
+    public void activar() {
+        this.activo = true;
+    }
 }

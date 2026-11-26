@@ -1,15 +1,22 @@
 package com.agroruta.crop.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.application.ports.out.SiembraRepository;
-import com.agroruta.crop.application.ports.in.LoteUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,27 +24,33 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.quality.Strictness;
 import org.mockito.junit.jupiter.MockitoSettings;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class SiembraServiceTest {
 
-    @Mock private SiembraRepository siembraRepository;
-    @Mock private LoteUseCase loteUseCase;
-    @Mock private CatalogoCultivoRepository catalogo;
-    @Mock private EtapaSiembraRepository etapaRepository;
-    @Mock private CosechaRepository cosechaRepository;
-    @Mock private FumigacionRepository fumigacionRepository;
-    @Mock private ActividadCultivoRepository actividadRepository;
+    @Mock
+    private SiembraRepository siembraRepository;
+
+    @Mock
+    private LoteUseCase loteUseCase;
+
+    @Mock
+    private CatalogoCultivoRepository catalogo;
+
+    @Mock
+    private EtapaSiembraRepository etapaRepository;
+
+    @Mock
+    private CosechaRepository cosechaRepository;
+
+    @Mock
+    private FumigacionRepository fumigacionRepository;
+
+    @Mock
+    private ActividadCultivoRepository actividadRepository;
 
     @InjectMocks
     private SiembraService service;
@@ -96,36 +109,33 @@ class SiembraServiceTest {
     void deberiaRechazarVariedadInexistente() {
         when(catalogo.buscarVariedad(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.registrarSiembra(fecha, 500, 99L, loteId));
+        assertThrows(ResourceNotFoundException.class, () -> service.registrarSiembra(fecha, 500, 99L, loteId));
         verify(siembraRepository, never()).save(any());
     }
 
     @Test
     void deberiaRechazarVariedadDesactivada() {
-        when(catalogo.buscarVariedad(5L)).thenReturn(Optional.of(
-                new VariedadCultivo(5L, "Caturra", false, 2L, "Café", true)));
+        when(catalogo.buscarVariedad(5L))
+                .thenReturn(Optional.of(new VariedadCultivo(5L, "Caturra", false, 2L, "Café", true)));
 
-        assertThrows(BusinessException.class, () ->
-                service.registrarSiembra(fecha, 500, 5L, loteId));
+        assertThrows(BusinessException.class, () -> service.registrarSiembra(fecha, 500, 5L, loteId));
     }
 
     @Test
     void deberiaRechazarCultivoDesactivado() {
-        when(catalogo.buscarVariedad(6L)).thenReturn(Optional.of(
-                new VariedadCultivo(6L, "Hass", true, 3L, "Aguacate", false)));
+        when(catalogo.buscarVariedad(6L))
+                .thenReturn(Optional.of(new VariedadCultivo(6L, "Hass", true, 3L, "Aguacate", false)));
 
-        assertThrows(BusinessException.class, () ->
-                service.registrarSiembra(fecha, 500, 6L, loteId));
+        assertThrows(BusinessException.class, () -> service.registrarSiembra(fecha, 500, 6L, loteId));
     }
 
     @Test
     void deberiaRechazarSiElLoteTieneUnaSiembraEnCurso() {
-        when(siembraRepository.findActivaByLoteId(loteId)).thenReturn(Optional.of(
-                new Siembra(3L, fecha, 100, Variedades.KENYA, loteId)));
+        when(siembraRepository.findActivaByLoteId(loteId))
+                .thenReturn(Optional.of(new Siembra(3L, fecha, 100, Variedades.KENYA, loteId)));
 
-        BusinessException ex = assertThrows(BusinessException.class, () ->
-                service.registrarSiembra(fecha, 500, 1L, loteId));
+        BusinessException ex =
+                assertThrows(BusinessException.class, () -> service.registrarSiembra(fecha, 500, 1L, loteId));
         assertTrue(ex.getMessage().contains("en curso"));
         verify(siembraRepository, never()).save(any());
     }
@@ -170,9 +180,10 @@ class SiembraServiceTest {
 
     @Test
     void deberiaListarElHistorialDelLote() {
-        when(siembraRepository.findHistorialByLoteId(loteId)).thenReturn(List.of(
-                new Siembra(2L, fecha, 100, Variedades.GIGANTE, loteId),
-                new Siembra(1L, fecha.minusYears(1), 100, Variedades.KENYA, loteId)));
+        when(siembraRepository.findHistorialByLoteId(loteId))
+                .thenReturn(List.of(
+                        new Siembra(2L, fecha, 100, Variedades.GIGANTE, loteId),
+                        new Siembra(1L, fecha.minusYears(1), 100, Variedades.KENYA, loteId)));
 
         assertEquals(2, service.listarHistorialPorLote(loteId).size());
     }
@@ -208,8 +219,8 @@ class SiembraServiceTest {
     @Test
     void noSeAceptaUnaFechaAnteriorALaEtapaAnterior() {
         siembraEn(EstadoCultivo.CRECIMIENTO);
-        when(etapaRepository.findUltima(1L)).thenReturn(Optional.of(
-                new EtapaSiembra(4L, 1L, EstadoCultivo.CRECIMIENTO, LocalDate.of(2026, 3, 1))));
+        when(etapaRepository.findUltima(1L))
+                .thenReturn(Optional.of(new EtapaSiembra(4L, 1L, EstadoCultivo.CRECIMIENTO, LocalDate.of(2026, 3, 1))));
 
         assertThrows(BusinessException.class, () -> service.avanzarEtapa(1L, LocalDate.of(2026, 2, 1)));
     }
@@ -218,7 +229,9 @@ class SiembraServiceTest {
     void noSeAceptaUnaFechaFutura() {
         siembraEn(EstadoCultivo.GERMINACION);
 
-        assertThrows(BusinessException.class, () -> service.avanzarEtapa(1L, LocalDate.now().plusDays(1)));
+        assertThrows(
+                BusinessException.class,
+                () -> service.avanzarEtapa(1L, LocalDate.now().plusDays(1)));
     }
 
     @Test
@@ -242,8 +255,8 @@ class SiembraServiceTest {
     @Test
     void retrocederBorraElUltimoCambioDeEtapa() {
         siembraEn(EstadoCultivo.PRODUCCION);
-        when(etapaRepository.findUltima(1L)).thenReturn(Optional.of(
-                new EtapaSiembra(9L, 1L, EstadoCultivo.PRODUCCION, fecha.plusDays(60))));
+        when(etapaRepository.findUltima(1L))
+                .thenReturn(Optional.of(new EtapaSiembra(9L, 1L, EstadoCultivo.PRODUCCION, fecha.plusDays(60))));
 
         Siembra resultado = service.retrocederEtapa(1L);
 
@@ -313,21 +326,22 @@ class SiembraServiceTest {
     @Test
     void editarNoAceptaUnaFechaDeSiembraPosteriorAUnCambioDeEtapa() {
         siembraEn(EstadoCultivo.CRECIMIENTO);
-        when(etapaRepository.findBySiembraId(1L)).thenReturn(List.of(
-                new EtapaSiembra(3L, 1L, EstadoCultivo.GERMINACION, fecha),
-                new EtapaSiembra(4L, 1L, EstadoCultivo.CRECIMIENTO, fecha.plusDays(20))));
+        when(etapaRepository.findBySiembraId(1L))
+                .thenReturn(List.of(
+                        new EtapaSiembra(3L, 1L, EstadoCultivo.GERMINACION, fecha),
+                        new EtapaSiembra(4L, 1L, EstadoCultivo.CRECIMIENTO, fecha.plusDays(20))));
 
-        assertThrows(BusinessException.class, () ->
-                service.actualizarSiembra(1L, fecha.plusDays(30), null, null));
+        assertThrows(BusinessException.class, () -> service.actualizarSiembra(1L, fecha.plusDays(30), null, null));
     }
 
     // ── otros ─────────────────────────────────────────────────────────
 
     @Test
     void deberiaListarSiembrasPorEstado() {
-        when(siembraRepository.findByEstadoCultivo(EstadoCultivo.GERMINACION)).thenReturn(List.of(
-                new Siembra(1L, fecha, 100, Variedades.COLOMBIA, loteId),
-                new Siembra(2L, fecha, 200, Variedades.GIGANTE, 2L)));
+        when(siembraRepository.findByEstadoCultivo(EstadoCultivo.GERMINACION))
+                .thenReturn(List.of(
+                        new Siembra(1L, fecha, 100, Variedades.COLOMBIA, loteId),
+                        new Siembra(2L, fecha, 200, Variedades.GIGANTE, 2L)));
 
         assertEquals(2, service.listarSiembrasPorEstado("GERMINACION").size());
     }

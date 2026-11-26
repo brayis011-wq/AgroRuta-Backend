@@ -1,12 +1,8 @@
 package com.agroruta.notification.domain;
 
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyAgreement;
-import javax.crypto.Mac;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.Signature;
@@ -14,9 +10,12 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
 import java.util.Base64;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import javax.crypto.Cipher;
+import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.junit.jupiter.api.Test;
 
 class CifradoWebPushTest {
 
@@ -26,20 +25,24 @@ class CifradoWebPushTest {
     // Ejemplo del apéndice A de RFC 8291
     private static final String TEXTO = "When I grow up, I want to be a watermelon";
     private static final String SERVIDOR_PRIVADA = "yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw";
-    private static final String SERVIDOR_PUBLICA = "BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
+    private static final String SERVIDOR_PUBLICA =
+            "BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8";
     private static final String NAVEGADOR_PRIVADA = "q1dXpw3UpT5VOmu_cf_v6ih07Aems3njxI-JWgLcM94";
-    private static final String NAVEGADOR_PUBLICA = "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+    private static final String NAVEGADOR_PUBLICA =
+            "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
     private static final String AUTH = "BTBZMqHH6r4Tts7J_aSIgg";
     private static final String SAL = "DGv6ra1nlYgDCS1FRnbzlw";
-    private static final String ESPERADO = "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN";
+    private static final String ESPERADO =
+            "DGv6ra1nlYgDCS1FRnbzlwAAEABBBP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZIIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A_yl95bQpu6cVPTpK4Mqgkf1CXztLVBSt2Ks3oZwbuwXPXLWyouBWLVWGNWQexSgSxsj_Qulcy4a-fN";
 
     @Test
     void coincideConElEjemploDelRfc8291() throws Exception {
-        KeyPair efimero = new KeyPair(ClavesVapid.clavePublica(B64.decode(SERVIDOR_PUBLICA)),
+        KeyPair efimero = new KeyPair(
+                ClavesVapid.clavePublica(B64.decode(SERVIDOR_PUBLICA)),
                 ClavesVapid.clavePrivada(B64.decode(SERVIDOR_PRIVADA)));
 
-        byte[] cuerpo = CifradoWebPush.cifrar(TEXTO.getBytes(StandardCharsets.UTF_8), NAVEGADOR_PUBLICA, AUTH,
-                B64.decode(SAL), efimero);
+        byte[] cuerpo = CifradoWebPush.cifrar(
+                TEXTO.getBytes(StandardCharsets.UTF_8), NAVEGADOR_PUBLICA, AUTH, B64.decode(SAL), efimero);
 
         assertThat(A_B64.encodeToString(cuerpo)).isEqualTo(ESPERADO);
     }
@@ -76,7 +79,8 @@ class CifradoWebPushTest {
         byte[] falso = new byte[65];
         falso[0] = 4;
         falso[10] = 7;
-        assertThat(CifradoWebPush.clavesValidas(A_B64.encodeToString(falso), AUTH)).isFalse();
+        assertThat(CifradoWebPush.clavesValidas(A_B64.encodeToString(falso), AUTH))
+                .isFalse();
     }
 
     @Test
@@ -85,14 +89,16 @@ class CifradoWebPushTest {
         assertThat(B64.decode(claves.publica())).hasSize(65);
         assertThat(B64.decode(claves.privada())).hasSize(32);
 
-        String cabecera = claves.autorizacion("https://fcm.googleapis.com", "mailto:soporte@agroruta.test", 1_800_000_000L);
+        String cabecera =
+                claves.autorizacion("https://fcm.googleapis.com", "mailto:soporte@agroruta.test", 1_800_000_000L);
 
         assertThat(cabecera).startsWith("vapid t=").endsWith(", k=" + claves.publica());
         String jwt = cabecera.substring("vapid t=".length(), cabecera.indexOf(", k="));
         String[] partes = jwt.split("\\.");
         assertThat(partes).hasSize(3);
         assertThat(new String(B64.decode(partes[1]), StandardCharsets.UTF_8))
-                .isEqualTo("{\"aud\":\"https://fcm.googleapis.com\",\"exp\":1800000000,\"sub\":\"mailto:soporte@agroruta.test\"}");
+                .isEqualTo(
+                        "{\"aud\":\"https://fcm.googleapis.com\",\"exp\":1800000000,\"sub\":\"mailto:soporte@agroruta.test\"}");
 
         Signature firma = Signature.getInstance("SHA256withECDSAinP1363Format");
         firma.initVerify(ClavesVapid.clavePublica(B64.decode(claves.publica())));
@@ -101,7 +107,8 @@ class CifradoWebPushTest {
     }
 
     /** Lo que hace el navegador al recibir el aviso (RFC 8291, lado del receptor) */
-    private static String descifrar(byte[] cuerpo, ECPrivateKey privada, byte[] publicaNavegador, byte[] auth) throws Exception {
+    private static String descifrar(byte[] cuerpo, ECPrivateKey privada, byte[] publicaNavegador, byte[] auth)
+            throws Exception {
         byte[] sal = Arrays.copyOfRange(cuerpo, 0, 16);
         int largoClave = cuerpo[20] & 0xff;
         byte[] publicaServidor = Arrays.copyOfRange(cuerpo, 21, 21 + largoClave);
@@ -112,7 +119,11 @@ class CifradoWebPushTest {
         acuerdo.doPhase(ClavesVapid.clavePublica(publicaServidor), true);
         byte[] compartido = acuerdo.generateSecret();
 
-        byte[] ikm = hkdf(auth, compartido, unir("WebPush: info\0".getBytes(StandardCharsets.US_ASCII), publicaNavegador, publicaServidor), 32);
+        byte[] ikm = hkdf(
+                auth,
+                compartido,
+                unir("WebPush: info\0".getBytes(StandardCharsets.US_ASCII), publicaNavegador, publicaServidor),
+                32);
         byte[] clave = hkdf(sal, ikm, "Content-Encoding: aes128gcm\0".getBytes(StandardCharsets.US_ASCII), 16);
         byte[] nonce = hkdf(sal, ikm, "Content-Encoding: nonce\0".getBytes(StandardCharsets.US_ASCII), 12);
 
@@ -124,7 +135,7 @@ class CifradoWebPushTest {
     }
 
     private static byte[] hkdf(byte[] sal, byte[] ikm, byte[] info, int largo) throws Exception {
-        return Arrays.copyOf(hmac(hmac(sal, ikm), unir(info, new byte[]{1})), largo);
+        return Arrays.copyOf(hmac(hmac(sal, ikm), unir(info, new byte[] {1})), largo);
     }
 
     private static byte[] hmac(byte[] clave, byte[] datos) throws Exception {

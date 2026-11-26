@@ -1,8 +1,8 @@
 package com.agroruta.notification.application;
 
 import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
-import com.agroruta.notification.domain.PreferenciasCorreo;
 import com.agroruta.notification.application.ports.out.PreferenciasCorreoRepository;
+import com.agroruta.notification.domain.PreferenciasCorreo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

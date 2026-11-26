@@ -1,18 +1,17 @@
 package com.agroruta.crop.application;
 
 import com.agroruta.crop.application.ports.in.FincaUseCase;
-import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.application.ports.out.FincaRepository;
-import com.agroruta.crop.domain.Lote;
 import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.domain.Finca;
+import com.agroruta.crop.domain.Lote;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class FincaService implements FincaUseCase {
@@ -27,15 +26,12 @@ public class FincaService implements FincaUseCase {
     }
 
     @Override
-    public Finca registrarFinca(String nombre, String ubicacion,
-                                Double hectareas, Long agricultorId) {
-
+    public Finca registrarFinca(String nombre, String ubicacion, Double hectareas, Long agricultorId) {
 
         if (fincaRepository.existsByNombreAndAgricultorId(nombre, agricultorId)) {
             throw new BusinessException(
                     ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    String.format("Ya tienes una finca registrada con el nombre '%s'", nombre)
-            );
+                    String.format("Ya tienes una finca registrada con el nombre '%s'", nombre));
         }
 
         Finca finca = new Finca(null, nombre, ubicacion, hectareas, agricultorId);
@@ -44,7 +40,8 @@ public class FincaService implements FincaUseCase {
 
     @Override
     public Finca buscarFincaPorId(Long id) {
-        return fincaRepository.findById(id)
+        return fincaRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Finca no encontrada con ID: " + id));
     }
 
@@ -77,6 +74,7 @@ public class FincaService implements FincaUseCase {
         finca.eliminar(ahora);
         fincaRepository.save(finca);
     }
+
     @Override
     public Finca actualizarFinca(Long id, String nombre, String ubicacion, Double hectareas) {
         Finca finca = buscarFincaPorId(id);

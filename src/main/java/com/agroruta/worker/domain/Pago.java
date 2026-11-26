@@ -1,10 +1,10 @@
 package com.agroruta.worker.domain;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -19,8 +19,8 @@ public class Pago {
     private String comprobante;
     private String observaciones;
 
-    public Pago(Long id, Nomina nomina, LocalDate fechaPago,
-                BigDecimal monto, MetodoPago metodoPago, String comprobante) {
+    public Pago(
+            Long id, Nomina nomina, LocalDate fechaPago, BigDecimal monto, MetodoPago metodoPago, String comprobante) {
         this.id = id;
         this.nomina = nomina;
         this.fechaPago = fechaPago;

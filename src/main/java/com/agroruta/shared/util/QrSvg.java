@@ -1,12 +1,12 @@
 package com.agroruta.shared.util;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -25,21 +25,36 @@ public final class QrSvg {
     static String svg(String texto) {
         BitMatrix m;
         try {
-            m = new QRCodeWriter().encode(texto, BarcodeFormat.QR_CODE, 0, 0,
-                    Map.of(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M, EncodeHintType.MARGIN, 2));
+            m = new QRCodeWriter()
+                    .encode(
+                            texto,
+                            BarcodeFormat.QR_CODE,
+                            0,
+                            0,
+                            Map.of(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M, EncodeHintType.MARGIN, 2));
         } catch (WriterException e) {
-            throw new IllegalStateException("No se pudo crear el código QR", e);
+            throw new FalloInternoException("No se pudo crear el código QR", e);
         }
         int n = m.getWidth();
         StringBuilder d = new StringBuilder();
         for (int y = 0; y < n; y++) {
             int x = 0;
             while (x < n) {
-                if (!m.get(x, y)) { x++; continue; }
+                if (!m.get(x, y)) {
+                    x++;
+                    continue;
+                }
                 int inicio = x;
                 while (x < n && m.get(x, y)) x++;
-                d.append('M').append(inicio).append(' ').append(y).append('h').append(x - inicio).append("v1h-")
-                        .append(x - inicio).append('z');
+                d.append('M')
+                        .append(inicio)
+                        .append(' ')
+                        .append(y)
+                        .append('h')
+                        .append(x - inicio)
+                        .append("v1h-")
+                        .append(x - inicio)
+                        .append('z');
             }
         }
         return "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 " + n + " " + n

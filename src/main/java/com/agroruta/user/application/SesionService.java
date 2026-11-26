@@ -1,21 +1,14 @@
 package com.agroruta.user.application;
 
+import com.agroruta.shared.config.SesionProperties;
 import com.agroruta.shared.evento.ContrasenaCambiada;
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.exception.SesionInvalidaException;
 import com.agroruta.user.application.ports.in.SesionUseCase;
 import com.agroruta.user.application.ports.out.SesionRepository;
 import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Sesion;
 import com.agroruta.user.domain.Usuario;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -25,6 +18,13 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SesionService implements SesionUseCase, com.agroruta.user.application.ports.in.SesionesAbiertasUseCase {
@@ -44,18 +44,25 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
     private final com.agroruta.user.application.ports.out.DispositivoPort dispositivo;
 
     @Autowired
-    public SesionService(SesionRepository sesiones, UsuarioRepository usuarios,
-                         com.agroruta.user.application.ports.out.DispositivoPort dispositivo,
-                         @Value("${app.sesion.duracion-dias:30}") long duracionDias) {
-        this(sesiones, usuarios, Duration.ofDays(duracionDias), Clock.systemDefaultZone(), dispositivo);
+    public SesionService(
+            SesionRepository sesiones,
+            UsuarioRepository usuarios,
+            com.agroruta.user.application.ports.out.DispositivoPort dispositivo,
+            SesionProperties propiedades,
+            Clock reloj) {
+        this(sesiones, usuarios, propiedades.duracion(), reloj, dispositivo);
     }
 
     SesionService(SesionRepository sesiones, UsuarioRepository usuarios, Duration duracion, Clock reloj) {
         this(sesiones, usuarios, duracion, reloj, () -> null);
     }
 
-    SesionService(SesionRepository sesiones, UsuarioRepository usuarios, Duration duracion, Clock reloj,
-                  com.agroruta.user.application.ports.out.DispositivoPort dispositivo) {
+    SesionService(
+            SesionRepository sesiones,
+            UsuarioRepository usuarios,
+            Duration duracion,
+            Clock reloj,
+            com.agroruta.user.application.ports.out.DispositivoPort dispositivo) {
         this.sesiones = sesiones;
         this.usuarios = usuarios;
         this.duracion = duracion;
@@ -80,12 +87,14 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
         if (token == null || token.isBlank()) throw new SesionInvalidaException(TERMINO);
         LocalDateTime ahora = LocalDateTime.now(reloj);
 
-        Sesion sesion = sesiones.buscarPorTokenHash(hash(token))
-                .orElseThrow(() -> new SesionInvalidaException(TERMINO));
+        Sesion sesion =
+                sesiones.buscarPorTokenHash(hash(token)).orElseThrow(() -> new SesionInvalidaException(TERMINO));
         if (sesion.revocada() || sesion.vencida(ahora)) throw new SesionInvalidaException(TERMINO);
 
         if (sesion.rotada() && !sesion.rotadaHaceMenosDe(MARGEN_ROTACION, ahora)) {
-            log.warn("Token de sesión reutilizado para el usuario {}: se cierran todas sus sesiones", sesion.getUsuarioId());
+            log.warn(
+                    "Token de sesión reutilizado para el usuario {}: se cierran todas sus sesiones",
+                    sesion.getUsuarioId());
             sesiones.revocarTodas(sesion.getUsuarioId(), ahora);
             throw new SesionInvalidaException(TERMINO);
         }
@@ -126,11 +135,15 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
         }
         String miFamilia = familiaDe(actual);
         return porFamilia.values().stream()
-                .map(s -> new com.agroruta.user.domain.SesionAbierta(s.getId(), s.getDispositivo(),
-                        instante(s.getIniciadaEn()), instante(s.getCreadoEn()), familiaDe(s).equals(miFamilia)))
-                .sorted(java.util.Comparator
-                        .comparing((com.agroruta.user.domain.SesionAbierta s) -> !s.actual())
-                        .thenComparing(com.agroruta.user.domain.SesionAbierta::ultimoUso, java.util.Comparator.reverseOrder()))
+                .map(s -> new com.agroruta.user.domain.SesionAbierta(
+                        s.getId(),
+                        s.getDispositivo(),
+                        instante(s.getIniciadaEn()),
+                        instante(s.getCreadoEn()),
+                        familiaDe(s).equals(miFamilia)))
+                .sorted(java.util.Comparator.comparing((com.agroruta.user.domain.SesionAbierta s) -> !s.actual())
+                        .thenComparing(
+                                com.agroruta.user.domain.SesionAbierta::ultimoUso, java.util.Comparator.reverseOrder()))
                 .toList();
     }
 
@@ -141,8 +154,10 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
         Sesion actual = vigente(token, ahora);
         // Solo entre las sesiones del dueño del token: nadie cierra la sesión de otra persona
         Sesion objetivo = sesiones.buscarAbiertas(actual.getUsuarioId(), ahora).stream()
-                .filter(s -> s.getId().equals(sesionId)).findFirst()
-                .orElseThrow(() -> new com.agroruta.shared.exception.ResourceNotFoundException("Esa sesión ya no está abierta."));
+                .filter(s -> s.getId().equals(sesionId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new com.agroruta.shared.exception.ResourceNotFoundException("Esa sesión ya no está abierta."));
         cerrarFamilia(objetivo, ahora);
         return familiaDe(objetivo).equals(familiaDe(actual));
     }
@@ -172,7 +187,8 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
         Sesion s = sesiones.buscarPorTokenHash(hash(token)).orElseThrow(() -> new SesionInvalidaException(TERMINO));
         // Recién renovada por otra pestaña: sigue siendo la misma persona
         boolean recienRotada = s.rotada() && s.rotadaHaceMenosDe(MARGEN_ROTACION, ahora);
-        if (s.revocada() || s.vencida(ahora) || (s.rotada() && !recienRotada)) throw new SesionInvalidaException(TERMINO);
+        if (s.revocada() || s.vencida(ahora) || (s.rotada() && !recienRotada))
+            throw new SesionInvalidaException(TERMINO);
         return s;
     }
 
@@ -212,7 +228,7 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
             byte[] d = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(d);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 }

@@ -1,12 +1,11 @@
 package com.agroruta.shared.security;
 
+import com.agroruta.shared.config.SesionProperties;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
+import java.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 /**
  * Cookie con el token de sesión renovable.
@@ -27,14 +26,14 @@ public class CookieSesion {
     private final boolean segura;
     private final Duration duracion;
 
-    public CookieSesion(@Value("${app.sesion.cookie-segura:true}") boolean segura,
-                        @Value("${app.sesion.duracion-dias:30}") long duracionDias) {
-        this.segura = segura;
-        this.duracion = Duration.ofDays(duracionDias);
+    public CookieSesion(SesionProperties propiedades) {
+        this.segura = propiedades.cookieSegura();
+        this.duracion = propiedades.duracion();
     }
 
     public void escribir(HttpServletResponse response, String token) {
-        response.addHeader(HttpHeaders.SET_COOKIE, base(token).maxAge(duracion).build().toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE, base(token).maxAge(duracion).build().toString());
     }
 
     public void borrar(HttpServletResponse response) {

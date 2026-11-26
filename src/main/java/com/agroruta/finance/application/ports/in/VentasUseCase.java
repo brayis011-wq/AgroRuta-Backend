@@ -2,7 +2,6 @@ package com.agroruta.finance.application.ports.in;
 
 import com.agroruta.finance.domain.ResumenVentas;
 import com.agroruta.finance.domain.Venta;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -10,8 +9,16 @@ import java.util.List;
 /** Ventas y cuentas por cobrar: a quién le vendiste, cuánto y cuánto te debe todavía. */
 public interface VentasUseCase {
 
-    record DatosVenta(Long siembraId, String comprador, LocalDate fecha, String producto, BigDecimal cantidadKg,
-                      BigDecimal precioKg, BigDecimal total, LocalDate vence, String observaciones) {}
+    record DatosVenta(
+            Long siembraId,
+            String comprador,
+            LocalDate fecha,
+            String producto,
+            BigDecimal cantidadKg,
+            BigDecimal precioKg,
+            BigDecimal total,
+            LocalDate vence,
+            String observaciones) {}
 
     /** Con pagadoDeContado, queda un abono por el total el mismo día */
     Venta registrar(Long agricultorId, DatosVenta datos, boolean pagadoDeContado, String metodo);

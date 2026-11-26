@@ -1,15 +1,14 @@
 package com.agroruta.crop.domain;
 
-import com.agroruta.shared.exception.DatoInvalidoException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Labores que se repiten, lluvia y presupuesto")
 class ProgramacionYLluviaTest {
@@ -44,7 +43,8 @@ class ProgramacionYLluviaTest {
 
     @Test
     void lasLaboresDeAntesDeLaProgramacionNoCuentan() {
-        var e = ProgramacionActividades.estado(cada30(LocalDate.of(2026, 11, 25)), List.of(LocalDate.of(2026, 9, 1)), HOY);
+        var e = ProgramacionActividades.estado(
+                cada30(LocalDate.of(2026, 11, 25)), List.of(LocalDate.of(2026, 9, 1)), HOY);
         assertThat(e.ultimaVez()).isNull();
         assertThat(e.proxima()).isEqualTo(LocalDate.of(2026, 11, 25));
     }
@@ -77,10 +77,12 @@ class ProgramacionYLluviaTest {
 
     @Test
     void laLluviaSumaLosUltimosDias() {
-        var r = Lluvia.resumir(List.of(
-                new Lluvia(HOY, new BigDecimal("0")),
-                new Lluvia(HOY.minusDays(2), new BigDecimal("12.5")),
-                new Lluvia(HOY.minusDays(10), new BigDecimal("30"))), HOY);
+        var r = Lluvia.resumir(
+                List.of(
+                        new Lluvia(HOY, new BigDecimal("0")),
+                        new Lluvia(HOY.minusDays(2), new BigDecimal("12.5")),
+                        new Lluvia(HOY.minusDays(10), new BigDecimal("30"))),
+                HOY);
         assertThat(r.ultimos7()).isEqualByComparingTo("12.5");
         assertThat(r.ultimos30()).isEqualByComparingTo("42.5");
         assertThat(r.ultimaLluvia()).isEqualTo(HOY.minusDays(2));
@@ -88,8 +90,25 @@ class ProgramacionYLluviaTest {
     }
 
     private static CostosSiembra costos(double manoObra, double insumos, double otros) {
-        return new CostosSiembra(1L, manoObra, 0, insumos, otros, manoObra + insumos + otros, 0, 0, 0,
-                null, null, null, List.of(), List.of(), 0, 0, null, 0);
+        return new CostosSiembra(
+                1L,
+                manoObra,
+                0,
+                insumos,
+                otros,
+                manoObra + insumos + otros,
+                0,
+                0,
+                0,
+                null,
+                null,
+                null,
+                List.of(),
+                List.of(),
+                0,
+                0,
+                null,
+                0);
     }
 
     @Test

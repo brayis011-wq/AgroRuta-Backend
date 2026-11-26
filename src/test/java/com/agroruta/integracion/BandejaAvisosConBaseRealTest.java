@@ -1,17 +1,16 @@
 package com.agroruta.integracion;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.agroruta.notification.application.ports.out.BandejaAvisosRepository;
 import com.agroruta.notification.domain.AvisoBandeja;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /** La bandeja de avisos contra MySQL real: la migración V18 y el INSERT ... ON DUPLICATE KEY UPDATE. */
 @DisplayName("Bandeja de avisos con base real")
@@ -21,13 +20,22 @@ class BandejaAvisosConBaseRealTest extends ConBaseReal {
     private BandejaAvisosRepository bandeja;
 
     private long usuario(String nombre) {
-        return insertar("INSERT INTO usuarios (activo, email, fecha_creacion, nombre, password, rol) VALUES (1, ?, ?, ?, 'sin-clave', 'Trabajador')",
-                nombre + "-" + System.nanoTime() + "@agroruta.test", LocalDateTime.now(), nombre);
+        return insertar(
+                "INSERT INTO usuarios (activo, email, fecha_creacion, nombre, password, rol) VALUES (1, ?, ?, ?, 'sin-clave', 'Trabajador')",
+                nombre + "-" + System.nanoTime() + "@agroruta.test",
+                LocalDateTime.now(),
+                nombre);
     }
 
     private AvisoBandeja.Nuevo pago(long usuario, String etiqueta, String monto) {
-        return new AvisoBandeja.Nuevo(usuario, AvisoBandeja.Tipo.PAGO_REGISTRADO, "Te registraron un pago",
-                "Recibiste $ " + monto, Map.of("monto", monto), "/portal/payments", etiqueta);
+        return new AvisoBandeja.Nuevo(
+                usuario,
+                AvisoBandeja.Tipo.PAGO_REGISTRADO,
+                "Te registraron un pago",
+                "Recibiste $ " + monto,
+                Map.of("monto", monto),
+                "/portal/payments",
+                etiqueta);
     }
 
     @Test

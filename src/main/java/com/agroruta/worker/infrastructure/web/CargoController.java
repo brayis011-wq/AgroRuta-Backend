@@ -1,18 +1,17 @@
 package com.agroruta.worker.infrastructure.web;
 
-import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
 import com.agroruta.worker.application.ports.in.CargoUseCase;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.infrastructure.web.dto.CargoRequest;
 import com.agroruta.worker.infrastructure.web.dto.CargoResponse;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/positions")
@@ -40,10 +39,13 @@ public class CargoController {
 
     @PostMapping
     public ResponseEntity<CargoResponse> crear(@Valid @RequestBody CargoRequest req, Authentication authentication) {
-        CargoResponse response = CargoResponse.from(
-                cargoUseCase.crearCargo(req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo,
-                        CurrentUser.id(authentication))
-        );
+        CargoResponse response = CargoResponse.from(cargoUseCase.crearCargo(
+                req.nombre,
+                req.descripcion,
+                req.modalidadPago,
+                req.valorJornal,
+                req.valorKilo,
+                CurrentUser.id(authentication)));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -51,17 +53,17 @@ public class CargoController {
     @PostMapping("/defaults")
     @PreAuthorize("hasRole('Agricultor')")
     public ResponseEntity<List<CargoResponse>> crearTipicos(Authentication authentication) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cargoUseCase.crearTipicos(CurrentUser.id(authentication))
-                .stream().map(CargoResponse::from).toList());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(cargoUseCase.crearTipicos(CurrentUser.id(authentication)).stream()
+                        .map(CargoResponse::from)
+                        .toList());
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.cargoPropio(#id, authentication)")
-    public ResponseEntity<CargoResponse> actualizar(@PathVariable Long id,
-                                                    @Valid @RequestBody CargoRequest req) {
-        CargoResponse response = CargoResponse.from(
-                cargoUseCase.actualizarCargo(id, req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo)
-        );
+    public ResponseEntity<CargoResponse> actualizar(@PathVariable Long id, @Valid @RequestBody CargoRequest req) {
+        CargoResponse response = CargoResponse.from(cargoUseCase.actualizarCargo(
+                id, req.nombre, req.descripcion, req.modalidadPago, req.valorJornal, req.valorKilo));
         return ResponseEntity.ok(response);
     }
 

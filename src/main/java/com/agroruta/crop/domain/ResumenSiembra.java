@@ -25,11 +25,12 @@ public record ResumenSiembra(
         Restriccion carencia,
         /** Reentrada vigente (no entrar al lote); null si no hay */
         Restriccion reentrada,
-        List<TemporadaComparada> otrasTemporadas
-) {
+        List<TemporadaComparada> otrasTemporadas) {
     /** Kilos de la semana que empieza el lunes {@code semana} */
     public record SemanaCosecha(LocalDate semana, double primera, double segunda, double tercera) {
-        public double total() { return primera + segunda + tercera; }
+        public double total() {
+            return primera + segunda + tercera;
+        }
     }
 
     /**
@@ -39,8 +40,16 @@ public record ResumenSiembra(
      * @param diasRestantes días que faltan desde hoy
      * @param valor        días de carencia u horas de reentrada del producto
      */
-    public record Restriccion(String producto, LocalDate aplicada, LocalDate libreDesde, long diasRestantes, int valor) {}
+    public record Restriccion(
+            String producto, LocalDate aplicada, LocalDate libreDesde, long diasRestantes, int valor) {}
 
-    public record TemporadaComparada(Long siembraId, String cultivo, LocalDate fechaSiembra, LocalDate fechaFin,
-                                     boolean enCurso, double totalKg, Double kgPorPlanta, boolean mismoCultivo) {}
+    public record TemporadaComparada(
+            Long siembraId,
+            String cultivo,
+            LocalDate fechaSiembra,
+            LocalDate fechaFin,
+            boolean enCurso,
+            double totalKg,
+            Double kgPorPlanta,
+            boolean mismoCultivo) {}
 }

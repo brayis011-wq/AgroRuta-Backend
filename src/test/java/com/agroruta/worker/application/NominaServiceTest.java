@@ -1,11 +1,19 @@
 package com.agroruta.worker.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.EstadoInvalidoException;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
-import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,46 +22,49 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias - NominaService")
 class NominaServiceTest {
 
-    @Mock private NominaRepository     nominaRepository;
-    @Mock private JornalRepository     jornalRepository;
-    @Mock private TrabajadorRepository trabajadorRepository;
+    @Mock
+    private NominaRepository nominaRepository;
+
+    @Mock
+    private JornalRepository jornalRepository;
+
+    @Mock
+    private TrabajadorRepository trabajadorRepository;
 
     @InjectMocks
     private NominaService nominaService;
 
-    private Cargo      cargoBase;
+    private Cargo cargoBase;
     private Trabajador trabajador;
-    private Jornal     jornal1;
-    private Jornal     jornal2;
-    private Nomina     nominaPendiente;
-    private Nomina     nominaAprobada;
-    private Nomina     nominaAnulada;
-    private Nomina     nominaPagada;
-    private LocalDate  inicio;
-    private LocalDate  fin;
+    private Jornal jornal1;
+    private Jornal jornal2;
+    private Nomina nominaPendiente;
+    private Nomina nominaAprobada;
+    private Nomina nominaAnulada;
+    private Nomina nominaPagada;
+    private LocalDate inicio;
+    private LocalDate fin;
 
     @BeforeEach
     void setUp() {
-        cargoBase  = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
-        trabajador = new Trabajador(1L, "Carlos", "Pérez", "123456",
-                "3001234567", "Calle 1", LocalDate.of(2022, 1, 10),
-                TipoContrato.JORNAL, cargoBase);
+        cargoBase = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
+        trabajador = new Trabajador(
+                1L,
+                "Carlos",
+                "Pérez",
+                "123456",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2022, 1, 10),
+                TipoContrato.JORNAL,
+                cargoBase);
 
         inicio = LocalDate.of(2024, 6, 1);
-        fin    = LocalDate.of(2024, 6, 30);
+        fin = LocalDate.of(2024, 6, 30);
 
         jornal1 = new Jornal(1L, LocalDate.of(2024, 6, 10), trabajador, 10L, "Cultivo A", "");
         jornal2 = new Jornal(2L, LocalDate.of(2024, 6, 15), trabajador, 10L, "Cultivo A", "");
@@ -77,8 +88,7 @@ class NominaServiceTest {
     @DisplayName("generarNomina debe crear y guardar la nómina con los jornales disponibles")
     void generarNomina_datosValidos_debeCrearYGuardar() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajador));
-        when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin))
-                .thenReturn(List.of(jornal1, jornal2));
+        when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin)).thenReturn(List.of(jornal1, jornal2));
         when(nominaRepository.guardar(any(Nomina.class))).thenReturn(nominaPendiente);
 
         Nomina resultado = nominaService.generarNomina(1L, inicio, fin);
@@ -92,8 +102,7 @@ class NominaServiceTest {
     @DisplayName("generarNomina debe calcular el valorTotal sumando los jornales")
     void generarNomina_debeCalcularValorTotal() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajador));
-        when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin))
-                .thenReturn(List.of(jornal1, jornal2));
+        when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin)).thenReturn(List.of(jornal1, jornal2));
         when(nominaRepository.guardar(any(Nomina.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Nomina resultado = nominaService.generarNomina(1L, inicio, fin);
@@ -107,10 +116,8 @@ class NominaServiceTest {
     void generarNomina_trabajadorInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> nominaService.generarNomina(99L, inicio, fin)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> nominaService.generarNomina(99L, inicio, fin));
 
         assertTrue(ex.getMessage().contains("99"));
         verifyNoInteractions(nominaRepository);
@@ -120,13 +127,10 @@ class NominaServiceTest {
     @DisplayName("generarNomina debe lanzar EstadoInvalidoException cuando no hay jornales disponibles")
     void generarNomina_sinJornalesDisponibles_debeLanzarIllegalStateException() {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajador));
-        when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin))
-                .thenReturn(List.of());
+        when(jornalRepository.buscarDisponiblesParaNomina(1L, inicio, fin)).thenReturn(List.of());
 
-        EstadoInvalidoException ex = assertThrows(
-                EstadoInvalidoException.class,
-                () -> nominaService.generarNomina(1L, inicio, fin)
-        );
+        EstadoInvalidoException ex =
+                assertThrows(EstadoInvalidoException.class, () -> nominaService.generarNomina(1L, inicio, fin));
 
         assertTrue(ex.getMessage().contains("Carlos Pérez"));
         verifyNoInteractions(nominaRepository);
@@ -163,10 +167,8 @@ class NominaServiceTest {
     void aprobarNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> nominaService.aprobarNomina(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> nominaService.aprobarNomina(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(nominaRepository, never()).guardar(any());
@@ -177,10 +179,7 @@ class NominaServiceTest {
     void aprobarNomina_nominaNoEnPendiente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(3L)).thenReturn(Optional.of(nominaAnulada));
 
-        assertThrows(
-                EstadoInvalidoException.class,
-                () -> nominaService.aprobarNomina(3L)
-        );
+        assertThrows(EstadoInvalidoException.class, () -> nominaService.aprobarNomina(3L));
 
         verify(nominaRepository, never()).guardar(any());
     }
@@ -204,10 +203,8 @@ class NominaServiceTest {
     void anularNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> nominaService.anularNomina(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> nominaService.anularNomina(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(nominaRepository, never()).guardar(any());
@@ -218,10 +215,7 @@ class NominaServiceTest {
     void anularNomina_nominaPagada_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(4L)).thenReturn(Optional.of(nominaPagada));
 
-        assertThrows(
-                EstadoInvalidoException.class,
-                () -> nominaService.anularNomina(4L)
-        );
+        assertThrows(EstadoInvalidoException.class, () -> nominaService.anularNomina(4L));
 
         verify(nominaRepository, never()).guardar(any());
     }
@@ -246,10 +240,8 @@ class NominaServiceTest {
     void reactivarNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> nominaService.reactivarNomina(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> nominaService.reactivarNomina(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(nominaRepository, never()).guardar(any());
@@ -260,10 +252,8 @@ class NominaServiceTest {
     void reactivarNomina_nominaNoAnulada_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(1L)).thenReturn(Optional.of(nominaPendiente));
 
-        EstadoInvalidoException ex = assertThrows(
-                EstadoInvalidoException.class,
-                () -> nominaService.reactivarNomina(1L)
-        );
+        EstadoInvalidoException ex =
+                assertThrows(EstadoInvalidoException.class, () -> nominaService.reactivarNomina(1L));
 
         assertTrue(ex.getMessage().contains("ANULADA"));
         verify(nominaRepository, never()).guardar(any());
@@ -286,10 +276,8 @@ class NominaServiceTest {
     void eliminarNomina_nominaInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> nominaService.eliminarNomina(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> nominaService.eliminarNomina(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(nominaRepository, never()).eliminar(any());
@@ -300,10 +288,7 @@ class NominaServiceTest {
     void eliminarNomina_nominaNoEnPendiente_debeLanzarIllegalStateException() {
         when(nominaRepository.buscarPorId(2L)).thenReturn(Optional.of(nominaAprobada));
 
-        assertThrows(
-                EstadoInvalidoException.class,
-                () -> nominaService.eliminarNomina(2L)
-        );
+        assertThrows(EstadoInvalidoException.class, () -> nominaService.eliminarNomina(2L));
 
         verify(nominaRepository, never()).eliminar(any());
     }
@@ -336,10 +321,8 @@ class NominaServiceTest {
     void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(nominaRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> nominaService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> nominaService.buscarPorId(99L));
 
         assertTrue(ex.getMessage().contains("99"));
     }

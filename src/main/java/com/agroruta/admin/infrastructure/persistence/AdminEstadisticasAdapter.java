@@ -6,14 +6,13 @@ import com.agroruta.admin.domain.EstadisticasSistema;
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.EstadoTrabajador;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Transactional(readOnly = true)
@@ -35,8 +34,7 @@ public class AdminEstadisticasAdapter implements AdminEstadisticasPort {
                 aDouble(repository.sumarCosechaKg()),
                 repository.contarTrabajadores(EstadoTrabajador.ACTIVO),
                 repository.contarNominas(List.of(EstadoNomina.PENDIENTE, EstadoNomina.APROBADA)),
-                aBigDecimal(repository.sumarPagos())
-        );
+                aBigDecimal(repository.sumarPagos()));
     }
 
     @Override
@@ -44,26 +42,37 @@ public class AdminEstadisticasAdapter implements AdminEstadisticasPort {
         Map<Long, ConteoAgricultor> conteos = new HashMap<>();
 
         for (Object[] fila : repository.fincasPorAgricultor()) {
-            actualizar(conteos, fila[0], c -> new ConteoAgricultor(
-                    aLong(fila[1]), aDouble(fila[2]), c.trabajadoresActivos(), c.nominas(), c.totalPagado()));
+            actualizar(
+                    conteos,
+                    fila[0],
+                    c -> new ConteoAgricultor(
+                            aLong(fila[1]), aDouble(fila[2]), c.trabajadoresActivos(), c.nominas(), c.totalPagado()));
         }
         for (Object[] fila : repository.trabajadoresPorAgricultor(EstadoTrabajador.ACTIVO)) {
-            actualizar(conteos, fila[0], c -> new ConteoAgricultor(
-                    c.fincas(), c.hectareas(), aLong(fila[1]), c.nominas(), c.totalPagado()));
+            actualizar(
+                    conteos,
+                    fila[0],
+                    c -> new ConteoAgricultor(c.fincas(), c.hectareas(), aLong(fila[1]), c.nominas(), c.totalPagado()));
         }
         for (Object[] fila : repository.nominasPorAgricultor()) {
-            actualizar(conteos, fila[0], c -> new ConteoAgricultor(
-                    c.fincas(), c.hectareas(), c.trabajadoresActivos(), aLong(fila[1]), c.totalPagado()));
+            actualizar(
+                    conteos,
+                    fila[0],
+                    c -> new ConteoAgricultor(
+                            c.fincas(), c.hectareas(), c.trabajadoresActivos(), aLong(fila[1]), c.totalPagado()));
         }
         for (Object[] fila : repository.pagosPorAgricultor()) {
-            actualizar(conteos, fila[0], c -> new ConteoAgricultor(
-                    c.fincas(), c.hectareas(), c.trabajadoresActivos(), c.nominas(), aBigDecimal(fila[1])));
+            actualizar(
+                    conteos,
+                    fila[0],
+                    c -> new ConteoAgricultor(
+                            c.fincas(), c.hectareas(), c.trabajadoresActivos(), c.nominas(), aBigDecimal(fila[1])));
         }
         return conteos;
     }
 
-    private static void actualizar(Map<Long, ConteoAgricultor> conteos, Object id,
-                                   UnaryOperator<ConteoAgricultor> cambio) {
+    private static void actualizar(
+            Map<Long, ConteoAgricultor> conteos, Object id, UnaryOperator<ConteoAgricultor> cambio) {
         if (id == null) return; // datos viejos sin agricultor asignado
         Long agricultorId = aLong(id);
         conteos.put(agricultorId, cambio.apply(conteos.getOrDefault(agricultorId, ConteoAgricultor.VACIO)));

@@ -1,7 +1,6 @@
 package com.agroruta.notification.application.ports.in;
 
 import com.agroruta.notification.domain.AvisoBandeja;
-
 import java.util.List;
 
 /** La bandeja de avisos de la app (la campana) de quien inició sesión. */

@@ -1,11 +1,11 @@
 package com.agroruta.crop.domain;
 
+import com.agroruta.shared.util.Dinero;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.agroruta.shared.util.Dinero;
-import java.time.LocalDate;
-import java.math.BigDecimal;
 
 /**
  * Modelo de dominio de Fumigación (refactorizado).
@@ -33,6 +33,7 @@ public class Fumigacion {
     private BigDecimal costo;
     /** Producto gastado en total (se descuenta de la bodega); la dosis es una concentración */
     private Double cantidadUsada;
+
     private UnidadMedida unidadCantidad;
 
     public static Fumigacion fromCatalog(
@@ -46,14 +47,14 @@ public class Fumigacion {
             Long siembraId) {
 
         Fumigacion f = new Fumigacion();
-        f.fecha               = fecha;
-        f.producto            = producto;
+        f.fecha = fecha;
+        f.producto = producto;
         f.agriculturalInputId = agriculturalInputId;
-        f.dosis               = dosis;
-        f.unidadMedida        = unidadMedida;
-        f.areaAplicada        = areaAplicada;
-        f.observaciones       = observaciones;
-        f.siembraId           = siembraId;
+        f.dosis = dosis;
+        f.unidadMedida = unidadMedida;
+        f.areaAplicada = areaAplicada;
+        f.observaciones = observaciones;
+        f.siembraId = siembraId;
         return f;
     }
 
@@ -66,8 +67,7 @@ public class Fumigacion {
             String observaciones,
             Long siembraId) {
 
-        return fromCatalog(fecha, producto, null, dosis, unidadMedida,
-                areaAplicada, observaciones, siembraId);
+        return fromCatalog(fecha, producto, null, dosis, unidadMedida, areaAplicada, observaciones, siembraId);
     }
 
     public void fijarRestricciones(RestriccionesFumigacion r) {

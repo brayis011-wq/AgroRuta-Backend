@@ -32,8 +32,12 @@ public class AvisosPushListener {
     private final PreferenciasCorreoUseCase preferencias;
     private final AvisosPushUseCase push;
 
-    public AvisosPushListener(UsuarioRepository usuarios, TrabajadorRepository trabajadores, PagoRepository pagos,
-                              PreferenciasCorreoUseCase preferencias, AvisosPushUseCase push) {
+    public AvisosPushListener(
+            UsuarioRepository usuarios,
+            TrabajadorRepository trabajadores,
+            PagoRepository pagos,
+            PreferenciasCorreoUseCase preferencias,
+            AvisosPushUseCase push) {
         this.usuarios = usuarios;
         this.trabajadores = trabajadores;
         this.pagos = pagos;
@@ -47,13 +51,20 @@ public class AvisosPushListener {
     public void pagoRegistrado(PagoRegistrado e) {
         seguro(() -> pagos.buscarPorId(e.pagoId()).ifPresent(p -> {
             Nomina n = p.getNomina();
-            Trabajador t = n == null || n.getTrabajador() == null ? null
+            Trabajador t = n == null || n.getTrabajador() == null
+                    ? null
                     : trabajadores.buscarPorId(n.getTrabajador().getId()).orElse(n.getTrabajador());
             if (t == null || !t.tieneAccesoAprobado() || t.getUsuarioId() == null) return;
-            usuarios.findById(t.getUsuarioId()).filter(Usuario::isActivo).ifPresent(u ->
-                    push.enviar(u.getId(), new AvisoPush("Te registraron un pago",
-                            "Recibiste " + MensajesCorreo.pesos(p.getMonto()) + ". Mira el comprobante en tu portal.",
-                            "/portal/payments", "pago-" + p.getId())));
+            usuarios.findById(t.getUsuarioId())
+                    .filter(Usuario::isActivo)
+                    .ifPresent(u -> push.enviar(
+                            u.getId(),
+                            new AvisoPush(
+                                    "Te registraron un pago",
+                                    "Recibiste " + MensajesCorreo.pesos(p.getMonto())
+                                            + ". Mira el comprobante en tu portal.",
+                                    "/portal/payments",
+                                    "pago-" + p.getId())));
         }));
     }
 
@@ -63,11 +74,16 @@ public class AvisosPushListener {
     public void accesoSolicitado(AccesoPortalSolicitado e) {
         seguro(() -> trabajadores.buscarPorId(e.trabajadorId()).ifPresent(t -> {
             if (t.getAgricultorId() == null) return;
-            usuarios.findById(t.getAgricultorId()).filter(Usuario::isActivo)
+            usuarios.findById(t.getAgricultorId())
+                    .filter(Usuario::isActivo)
                     .filter(a -> preferencias.obtener(a.getId()).avisosTrabajadores())
-                    .ifPresent(a -> push.enviar(a.getId(), new AvisoPush("Solicitud de acceso al portal",
-                            t.getNombreCompleto() + " quiere ver sus jornales y pagos. Apruébalo o recházalo.",
-                            "/worker", "acceso-" + t.getId())));
+                    .ifPresent(a -> push.enviar(
+                            a.getId(),
+                            new AvisoPush(
+                                    "Solicitud de acceso al portal",
+                                    t.getNombreCompleto() + " quiere ver sus jornales y pagos. Apruébalo o recházalo.",
+                                    "/worker",
+                                    "acceso-" + t.getId())));
         }));
     }
 

@@ -3,7 +3,6 @@ package com.agroruta.worker.infrastructure.web.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDate;
 
 /** La quincena de todo el equipo: un solo periodo para todos. */

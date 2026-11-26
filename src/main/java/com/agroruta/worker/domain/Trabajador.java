@@ -1,10 +1,10 @@
 package com.agroruta.worker.domain;
 
 import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -28,14 +28,23 @@ public class Trabajador {
     // ── Acceso al portal del trabajador ──────────────────────────────────────
     /** Cuenta de usuario (rol Trabajador) que pidió ver los datos de este trabajador. */
     private Long usuarioId;
+
     private EstadoAccesoPortal accesoEstado;
     /** Nombre y correo de la cuenta, para que el agricultor reconozca la solicitud. */
     private String accesoNombre;
+
     private String accesoEmail;
 
-    public Trabajador(Long id, String nombre, String apellido, String cedula,
-                      String telefono, String direccion, LocalDate fechaIngreso,
-                      TipoContrato tipoContrato, Cargo cargo) {
+    public Trabajador(
+            Long id,
+            String nombre,
+            String apellido,
+            String cedula,
+            String telefono,
+            String direccion,
+            LocalDate fechaIngreso,
+            TipoContrato tipoContrato,
+            Cargo cargo) {
         this.id = id;
         this.nombre = nombre;
         this.apellido = apellido;
@@ -74,16 +83,28 @@ public class Trabajador {
         return EstadoTrabajador.ACTIVO.equals(this.estado);
     }
 
-    public void desactivar()  { this.estado = EstadoTrabajador.INACTIVO; }
-    public void suspender()   { this.estado = EstadoTrabajador.SUSPENDIDO; }
-    public void reactivar()   { this.estado = EstadoTrabajador.ACTIVO; }
-    public void cambiarCargo(Cargo nuevoCargo) { this.cargo = nuevoCargo; }
+    public void desactivar() {
+        this.estado = EstadoTrabajador.INACTIVO;
+    }
+
+    public void suspender() {
+        this.estado = EstadoTrabajador.SUSPENDIDO;
+    }
+
+    public void reactivar() {
+        this.estado = EstadoTrabajador.ACTIVO;
+    }
+
+    public void cambiarCargo(Cargo nuevoCargo) {
+        this.cargo = nuevoCargo;
+    }
 
     // ── Acceso al portal ─────────────────────────────────────────────────────
 
     /** Una cuenta pide acceso a los datos de este trabajador. Queda pendiente de aprobación. */
     public void solicitarAcceso(Long usuarioId, String nombre, String email) {
-        boolean ocupado = this.usuarioId != null && !this.usuarioId.equals(usuarioId)
+        boolean ocupado = this.usuarioId != null
+                && !this.usuarioId.equals(usuarioId)
                 && (accesoEstado == EstadoAccesoPortal.PENDIENTE || accesoEstado == EstadoAccesoPortal.APROBADO);
         if (ocupado) {
             throw new EstadoInvalidoException("Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");

@@ -1,6 +1,13 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.worker.domain.Cargo;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,14 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CargoRepositoryImpl - Pruebas Unitarias")
@@ -58,10 +57,10 @@ class CargoRepositoryImplTest {
             Cargo resultado = repository.guardar(cargoBase);
 
             assertNotNull(resultado);
-            assertEquals(1L,                       resultado.getId());
-            assertEquals("Operario",               resultado.getNombre());
-            assertEquals("Cargo operario",         resultado.getDescripcion());
-            assertEquals(new BigDecimal("80000"),  resultado.getValorJornal());
+            assertEquals(1L, resultado.getId());
+            assertEquals("Operario", resultado.getNombre());
+            assertEquals("Cargo operario", resultado.getDescripcion());
+            assertEquals(new BigDecimal("80000"), resultado.getValorJornal());
             assertTrue(resultado.isActivo());
             verify(jpa, times(1)).save(any(CargoEntity.class));
         }
@@ -76,8 +75,7 @@ class CargoRepositoryImplTest {
             entityInactivo.setValorJornal(new BigDecimal("120000"));
             entityInactivo.setActivo(false);
 
-            Cargo cargoInactivo = new Cargo(2L, "Supervisor", "Cargo supervisor",
-                    new BigDecimal("120000"), false);
+            Cargo cargoInactivo = new Cargo(2L, "Supervisor", "Cargo supervisor", new BigDecimal("120000"), false);
 
             when(jpa.save(any(CargoEntity.class))).thenReturn(entityInactivo);
 
@@ -105,8 +103,8 @@ class CargoRepositoryImplTest {
             Optional<Cargo> resultado = repository.buscarPorId(1L);
 
             assertTrue(resultado.isPresent());
-            assertEquals(1L,                      resultado.get().getId());
-            assertEquals("Operario",              resultado.get().getNombre());
+            assertEquals(1L, resultado.get().getId());
+            assertEquals("Operario", resultado.get().getNombre());
             assertEquals(new BigDecimal("80000"), resultado.get().getValorJornal());
             assertTrue(resultado.get().isActivo());
             verify(jpa, times(1)).findById(1L);
@@ -145,8 +143,8 @@ class CargoRepositoryImplTest {
 
             List<Cargo> resultado = repository.listarTodos();
 
-            assertEquals(2,            resultado.size());
-            assertEquals("Operario",   resultado.get(0).getNombre());
+            assertEquals(2, resultado.size());
+            assertEquals("Operario", resultado.get(0).getNombre());
             assertEquals("Supervisor", resultado.get(1).getNombre());
             assertTrue(resultado.get(0).isActivo());
             assertFalse(resultado.get(1).isActivo());
@@ -179,7 +177,7 @@ class CargoRepositoryImplTest {
 
             List<Cargo> resultado = repository.listarActivos();
 
-            assertEquals(1,          resultado.size());
+            assertEquals(1, resultado.size());
             assertEquals("Operario", resultado.get(0).getNombre());
             assertTrue(resultado.get(0).isActivo());
             verify(jpa, times(1)).findByActivoTrue();

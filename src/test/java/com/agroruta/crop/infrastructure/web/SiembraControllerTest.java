@@ -1,9 +1,17 @@
 package com.agroruta.crop.infrastructure.web;
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
-import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.Siembra;
 import com.agroruta.crop.domain.Variedades;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,16 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class SiembraControllerTest {
@@ -136,7 +134,7 @@ class SiembraControllerTest {
     @Test
     void deberiaAvanzarEtapaDeGerminacionACrecimiento() throws Exception {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
-        siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
+        siembra.avanzarEtapa(); // GERMINACION → CRECIMIENTO
         when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
         mockMvc.perform(patch("/api/plantings/1/advance-stage"))
@@ -148,8 +146,8 @@ class SiembraControllerTest {
     @Test
     void deberiaAvanzarEtapaHastaProduccion() throws Exception {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L);
-        siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
-        siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
+        siembra.avanzarEtapa(); // GERMINACION → CRECIMIENTO
+        siembra.avanzarEtapa(); // CRECIMIENTO → PRODUCCION
         when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
         mockMvc.perform(patch("/api/plantings/1/advance-stage"))
@@ -161,10 +159,10 @@ class SiembraControllerTest {
     @Test
     void deberiaAvanzarEtapaHastaFinalizado() throws Exception {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.KENYA, 3L);
-        siembra.avanzarEtapa();  // GERMINACION → CRECIMIENTO
-        siembra.avanzarEtapa();  // CRECIMIENTO → PRODUCCION
-        siembra.avanzarEtapa();  // PRODUCCION  → COSECHA
-        siembra.avanzarEtapa();  // COSECHA     → FINALIZADO
+        siembra.avanzarEtapa(); // GERMINACION → CRECIMIENTO
+        siembra.avanzarEtapa(); // CRECIMIENTO → PRODUCCION
+        siembra.avanzarEtapa(); // PRODUCCION  → COSECHA
+        siembra.avanzarEtapa(); // COSECHA     → FINALIZADO
         when(siembraUseCase.avanzarEtapa(1L, null)).thenReturn(siembra);
 
         mockMvc.perform(patch("/api/plantings/1/advance-stage"))
@@ -179,8 +177,8 @@ class SiembraControllerTest {
 
     @Test
     void deberiaListarSiembrasPorEstado() throws Exception {
-        Siembra s1 = new Siembra(1L, FECHA_SIEMBRA,                500, Variedades.COLOMBIA, 3L);
-        Siembra s2 = new Siembra(2L, FECHA_SIEMBRA.plusDays(10), 200, Variedades.GIGANTE,  4L);
+        Siembra s1 = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
+        Siembra s2 = new Siembra(2L, FECHA_SIEMBRA.plusDays(10), 200, Variedades.GIGANTE, 4L);
         when(siembraUseCase.listarSiembrasPorEstado("GERMINACION")).thenReturn(List.of(s1, s2));
 
         mockMvc.perform(get("/api/plantings/status/GERMINACION"))
@@ -209,8 +207,7 @@ class SiembraControllerTest {
     void deberiaEliminarSiembraYRetornar204() throws Exception {
         doNothing().when(siembraUseCase).eliminarSiembra(1L);
 
-        mockMvc.perform(delete("/api/plantings/1"))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/plantings/1")).andExpect(status().isNoContent());
 
         verify(siembraUseCase).eliminarSiembra(1L);
     }
@@ -234,7 +231,8 @@ class SiembraControllerTest {
     void finalizarConDescansoRetorna200() throws Exception {
         Siembra siembra = new Siembra(1L, FECHA_SIEMBRA, 500, Variedades.COLOMBIA, 3L);
         siembra.finalizar(LocalDate.of(2025, 9, 1));
-        when(siembraUseCase.finalizarSiembra(1L, LocalDate.of(2025, 9, 1), true)).thenReturn(siembra);
+        when(siembraUseCase.finalizarSiembra(1L, LocalDate.of(2025, 9, 1), true))
+                .thenReturn(siembra);
 
         mockMvc.perform(patch("/api/plantings/1/finish")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -245,9 +243,10 @@ class SiembraControllerTest {
 
     @Test
     void historialDelLoteDevuelveTodasLasTemporadas() throws Exception {
-        when(siembraUseCase.listarHistorialPorLote(3L)).thenReturn(List.of(
-                new Siembra(2L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L),
-                new Siembra(1L, FECHA_SIEMBRA.minusYears(1), 400, Variedades.COLOMBIA, 3L)));
+        when(siembraUseCase.listarHistorialPorLote(3L))
+                .thenReturn(List.of(
+                        new Siembra(2L, FECHA_SIEMBRA, 500, Variedades.GIGANTE, 3L),
+                        new Siembra(1L, FECHA_SIEMBRA.minusYears(1), 400, Variedades.COLOMBIA, 3L)));
 
         mockMvc.perform(get("/api/plantings/plot/3/history"))
                 .andExpect(status().isOk())

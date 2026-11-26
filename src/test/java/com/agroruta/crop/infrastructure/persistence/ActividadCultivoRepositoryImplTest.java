@@ -1,21 +1,20 @@
 package com.agroruta.crop.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.domain.ActividadCultivo;
 import com.agroruta.crop.domain.TipoActividad;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ActividadCultivoRepositoryImplTest {
@@ -28,14 +27,14 @@ class ActividadCultivoRepositoryImplTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long   ID         = 1L;
-    private static final Long   SIEMBRA_ID = 42L;
-    private static final LocalDate FECHA   = LocalDate.of(2024, 5, 10);
+    private static final Long ID = 1L;
+    private static final Long SIEMBRA_ID = 42L;
+    private static final LocalDate FECHA = LocalDate.of(2024, 5, 10);
     private static final TipoActividad TIPO = TipoActividad.RIEGO;
     private static final String DESCRIPCION = "Riego por goteo";
 
     private ActividadCultivoEntity entityGuardada;
-    private ActividadCultivo       dominioEntrada;
+    private ActividadCultivo dominioEntrada;
 
     @BeforeEach
     void setUp() {
@@ -57,8 +56,7 @@ class ActividadCultivoRepositoryImplTest {
 
     @Test
     void deberiaSalvarYRetornarActividadConId() {
-        when(jpaRepository.save(any(ActividadCultivoEntity.class)))
-                .thenReturn(entityGuardada);
+        when(jpaRepository.save(any(ActividadCultivoEntity.class))).thenReturn(entityGuardada);
 
         ActividadCultivo resultado = repository.save(dominioEntrada);
 
@@ -72,17 +70,15 @@ class ActividadCultivoRepositoryImplTest {
 
     @Test
     void savDeberiaMapearCorrectamenteTodosLosCamposALaEntidad() {
-        when(jpaRepository.save(any(ActividadCultivoEntity.class)))
-                .thenReturn(entityGuardada);
+        when(jpaRepository.save(any(ActividadCultivoEntity.class))).thenReturn(entityGuardada);
 
         repository.save(dominioEntrada);
 
-        verify(jpaRepository).save(argThat(entity ->
-                entity.getTipo()        == TIPO        &&
-                        entity.getDescripcion().equals(DESCRIPCION) &&
-                        entity.getFecha()       .equals(FECHA) &&
-                        entity.getSiembraId()   .equals(SIEMBRA_ID)
-        ));
+        verify(jpaRepository)
+                .save(argThat(entity -> entity.getTipo() == TIPO
+                        && entity.getDescripcion().equals(DESCRIPCION)
+                        && entity.getFecha().equals(FECHA)
+                        && entity.getSiembraId().equals(SIEMBRA_ID)));
     }
 
     // ── findById ─────────────────────────────────────────────────
@@ -94,11 +90,11 @@ class ActividadCultivoRepositoryImplTest {
         Optional<ActividadCultivo> resultado = repository.findById(ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,          resultado.get().getId());
-        assertEquals(TIPO,        resultado.get().getTipo());
+        assertEquals(ID, resultado.get().getId());
+        assertEquals(TIPO, resultado.get().getTipo());
         assertEquals(DESCRIPCION, resultado.get().getDescripcion());
-        assertEquals(FECHA,       resultado.get().getFecha());
-        assertEquals(SIEMBRA_ID,  resultado.get().getSiembraId());
+        assertEquals(FECHA, resultado.get().getFecha());
+        assertEquals(SIEMBRA_ID, resultado.get().getSiembraId());
     }
 
     @Test
@@ -121,13 +117,12 @@ class ActividadCultivoRepositoryImplTest {
         entity2.setFecha(FECHA.plusDays(5));
         entity2.setSiembraId(SIEMBRA_ID);
 
-        when(jpaRepository.findBySiembraId(SIEMBRA_ID))
-                .thenReturn(List.of(entityGuardada, entity2));
+        when(jpaRepository.findBySiembraId(SIEMBRA_ID)).thenReturn(List.of(entityGuardada, entity2));
 
         List<ActividadCultivo> resultado = repository.findBySiembraId(SIEMBRA_ID);
 
         assertEquals(2, resultado.size());
-        assertEquals(ID,                resultado.get(0).getId());
+        assertEquals(ID, resultado.get(0).getId());
         assertEquals(TipoActividad.PODA, resultado.get(1).getTipo());
     }
 
@@ -166,8 +161,7 @@ class ActividadCultivoRepositoryImplTest {
 
         repository.existsByTipoAndFechaAndSiembraId(TipoActividad.DESHIERBE, FECHA, SIEMBRA_ID);
 
-        verify(jpaRepository, times(1))
-                .existsByTipoAndFechaAndSiembraId(TipoActividad.DESHIERBE, FECHA, SIEMBRA_ID);
+        verify(jpaRepository, times(1)).existsByTipoAndFechaAndSiembraId(TipoActividad.DESHIERBE, FECHA, SIEMBRA_ID);
     }
 
     // ── deleteById ───────────────────────────────────────────────

@@ -1,13 +1,8 @@
 package com.agroruta.backup.infrastructure.database;
 
-import com.agroruta.backup.domain.BackupFailedException;
 import com.agroruta.backup.application.ports.out.DatabaseDumpPort;
+import com.agroruta.backup.domain.BackupFailedException;
 import com.agroruta.backup.infrastructure.config.BackupProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -16,6 +11,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Ejecuta mysqldump / mysql como procesos externos.
@@ -35,10 +34,11 @@ public class MysqldumpAdapter implements DatabaseDumpPort {
     private final int port;
     private final String database;
 
-    public MysqldumpAdapter(BackupProperties properties,
-                            @Value("${spring.datasource.url}") String jdbcUrl,
-                            @Value("${spring.datasource.username}") String username,
-                            @Value("${spring.datasource.password}") String password) {
+    public MysqldumpAdapter(
+            BackupProperties properties,
+            @Value("${spring.datasource.url}") String jdbcUrl,
+            @Value("${spring.datasource.username}") String username,
+            @Value("${spring.datasource.password}") String password) {
         this.properties = properties;
         this.username = username;
         this.password = password;
@@ -59,10 +59,10 @@ public class MysqldumpAdapter implements DatabaseDumpPort {
                 "--user=" + username,
                 "--no-tablespaces",
                 // Compatibilidad con TiDB (también funcionan con MySQL 8):
-                "--column-statistics=0",   // TiDB no tiene information_schema.COLUMN_STATISTICS
-                "--set-gtid-purged=OFF",   // TiDB no usa GTID
-                "--skip-triggers",         // TiDB no soporta triggers (la app no los usa)
-                "--skip-add-locks"));      // evita LOCK TABLES al restaurar
+                "--column-statistics=0", // TiDB no tiene information_schema.COLUMN_STATISTICS
+                "--set-gtid-purged=OFF", // TiDB no usa GTID
+                "--skip-triggers", // TiDB no soporta triggers (la app no los usa)
+                "--skip-add-locks")); // evita LOCK TABLES al restaurar
         // MySQL: snapshot consistente. TiDB: no soporta los SAVEPOINT de --single-transaction.
         command.add(properties.isSingleTransaction() ? "--single-transaction" : "--skip-lock-tables");
         addSslArg(command);
@@ -78,11 +78,8 @@ public class MysqldumpAdapter implements DatabaseDumpPort {
 
     @Override
     public void restore(Path source) {
-        List<String> command = new ArrayList<>(List.of(
-                properties.getMysqlPath(),
-                "--host=" + host,
-                "--port=" + port,
-                "--user=" + username));
+        List<String> command = new ArrayList<>(
+                List.of(properties.getMysqlPath(), "--host=" + host, "--port=" + port, "--user=" + username));
         addSslArg(command);
         command.add(database);
         run(command, source);

@@ -1,13 +1,13 @@
 package com.agroruta.worker.domain;
 
 import com.agroruta.shared.exception.EstadoInvalidoException;
-import lombok.Getter;
-import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -29,8 +29,8 @@ public class Nomina {
         this.estado = EstadoNomina.PENDIENTE;
     }
 
-    public Nomina(Long id, Trabajador trabajador, LocalDate periodoInicio,
-                  LocalDate periodoFin, List<Jornal> jornales) {
+    public Nomina(
+            Long id, Trabajador trabajador, LocalDate periodoInicio, LocalDate periodoFin, List<Jornal> jornales) {
         this.id = id;
         this.trabajador = trabajador;
         this.periodoInicio = periodoInicio;
@@ -43,9 +43,7 @@ public class Nomina {
 
     public void calcular() {
         this.totalJornales = this.jornales.size();
-        this.valorTotal = this.jornales.stream()
-                .map(Jornal::getValorJornal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        this.valorTotal = this.jornales.stream().map(Jornal::getValorJornal).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public void aprobar() {
@@ -83,7 +81,8 @@ public class Nomina {
      */
     public void quitarJornal(Long jornalId) {
         if (!estaPendiente()) {
-            throw new EstadoInvalidoException("Solo se pueden corregir nóminas pendientes. Si ya la aprobaste, anúlala y genérala de nuevo.");
+            throw new EstadoInvalidoException(
+                    "Solo se pueden corregir nóminas pendientes. Si ya la aprobaste, anúlala y genérala de nuevo.");
         }
         if (jornales.size() == 1 && java.util.Objects.equals(jornales.get(0).getId(), jornalId)) {
             throw new EstadoInvalidoException("La nómina quedaría sin jornales: mejor elimínala.");

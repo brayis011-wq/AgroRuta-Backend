@@ -1,13 +1,12 @@
 package com.agroruta.shared.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("JacksonConfig")
 class JacksonConfigTest {
@@ -25,8 +24,7 @@ class JacksonConfigTest {
     void shouldHaveJavaTimeModuleRegistered() {
         ObjectMapper mapper = config.objectMapper();
 
-        assertThat(mapper.getRegisteredModuleIds())
-                .anyMatch(id -> id.toString().contains("jackson-datatype-jsr310"));
+        assertThat(mapper.getRegisteredModuleIds()).anyMatch(id -> id.toString().contains("jackson-datatype-jsr310"));
     }
 
     @Test
@@ -34,7 +32,8 @@ class JacksonConfigTest {
     void shouldDisableWriteDatesAsTimestamps() {
         ObjectMapper mapper = config.objectMapper();
 
-        assertThat(mapper.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)).isFalse();
+        assertThat(mapper.isEnabled(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS))
+                .isFalse();
     }
 
     @Test
@@ -45,10 +44,7 @@ class JacksonConfigTest {
 
         String json = mapper.writeValueAsString(dateTime);
 
-        assertThat(json)
-                .startsWith("\"")
-                .contains("2024-06-15")
-                .contains("10:30:00");
+        assertThat(json).startsWith("\"").contains("2024-06-15").contains("10:30:00");
     }
 
     @Test

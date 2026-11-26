@@ -12,12 +12,25 @@ public record WorkerPayrollDetail(
         LocalDate periodoFin,
         Integer totalJornales,
         /** Primera letra del nombre y del apellido, igual que en la lista del equipo */
-        String workerInitials
-) {
+        String workerInitials) {
     /** Sin iniciales calculadas: se toman la primera y la última palabra del nombre completo. */
-    public WorkerPayrollDetail(Long workerId, String workerName, Integer totalPagos, BigDecimal totalPaid,
-                               LocalDate periodoInicio, LocalDate periodoFin, Integer totalJornales) {
-        this(workerId, workerName, totalPagos, totalPaid, periodoInicio, periodoFin, totalJornales, desdeNombre(workerName));
+    public WorkerPayrollDetail(
+            Long workerId,
+            String workerName,
+            Integer totalPagos,
+            BigDecimal totalPaid,
+            LocalDate periodoInicio,
+            LocalDate periodoFin,
+            Integer totalJornales) {
+        this(
+                workerId,
+                workerName,
+                totalPagos,
+                totalPaid,
+                periodoInicio,
+                periodoFin,
+                totalJornales,
+                desdeNombre(workerName));
     }
 
     private static String desdeNombre(String nombre) {

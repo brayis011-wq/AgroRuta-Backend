@@ -1,7 +1,6 @@
 package com.agroruta.worker.infrastructure.web.dto;
 
 import com.agroruta.worker.domain.Jornal;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -18,6 +17,7 @@ public class JornalResponse {
     public boolean liquidado;
     /** Solo en los jornales pagados por kilo */
     public BigDecimal kilos;
+
     public BigDecimal valorKilo;
 
     public static JornalResponse from(Jornal j) {
@@ -27,9 +27,7 @@ public class JornalResponse {
         r.trabajador = TrabajadorResponse.from(j.getTrabajador());
         r.cultivoId = j.getCultivoId();
         r.nombreCultivo = j.getNombreCultivo();
-        r.actividades = j.getActividades().stream()
-                .map(LaborResponse::from)
-                .toList();
+        r.actividades = j.getActividades().stream().map(LaborResponse::from).toList();
         r.observaciones = j.getObservaciones();
         r.valorJornal = j.getValorJornal();
         r.liquidado = j.isLiquidado();

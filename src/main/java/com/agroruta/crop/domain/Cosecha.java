@@ -1,11 +1,11 @@
 package com.agroruta.crop.domain;
 
+import com.agroruta.shared.util.Dinero;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.agroruta.shared.util.Dinero;
-import java.time.LocalDate;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -25,8 +25,8 @@ public class Cosecha {
     /** Quién la recogió (sus jornales); no se guarda aquí, lo llena el servicio al leerla */
     private java.util.List<RecolectorCosecha> recolectores = java.util.List.of();
 
-    public Cosecha(Long id, LocalDate fecha, Double cantidadKg,
-                   CalidadCosecha calidad, String observaciones, Long siembraId) {
+    public Cosecha(
+            Long id, LocalDate fecha, Double cantidadKg, CalidadCosecha calidad, String observaciones, Long siembraId) {
         this.id = id;
         this.fecha = fecha;
         this.cantidadKg = cantidadKg;

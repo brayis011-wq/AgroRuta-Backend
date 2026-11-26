@@ -1,13 +1,21 @@
 package com.agroruta.worker.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.EstadoInvalidoException;
-import com.agroruta.worker.domain.PagosDelMes;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.JornalRepository;
 import com.agroruta.worker.application.ports.out.NominaRepository;
 import com.agroruta.worker.application.ports.out.PagoRepository;
-import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.domain.*;
+import com.agroruta.worker.domain.PagosDelMes;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,63 +24,66 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias - PagoService")
 class PagoServiceTest {
 
-    @Mock private PagoRepository   pagoRepository;
-    @Mock private NominaRepository nominaRepository;
-    @Mock private JornalRepository jornalRepository;
+    @Mock
+    private PagoRepository pagoRepository;
 
-    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+    @Mock
+    private NominaRepository nominaRepository;
+
+    @Mock
+    private JornalRepository jornalRepository;
+
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventos;
 
     @InjectMocks
     private PagoService pagoService;
 
-    private Cargo      cargoBase;
+    private Cargo cargoBase;
     private Trabajador trabajador;
-    private Jornal     jornal;
-    private Nomina     nominaPagada;
-    private Nomina     nominaAprobada;
-    private Nomina     nominaPendiente;
-    private Pago       pagoBase;
+    private Jornal jornal;
+    private Nomina nominaPagada;
+    private Nomina nominaAprobada;
+    private Nomina nominaPendiente;
+    private Pago pagoBase;
 
     @BeforeEach
     void setUp() {
-        cargoBase  = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
-        trabajador = new Trabajador(1L, "Carlos", "Pérez", "123456",
-                "3001234567", "Calle 1", LocalDate.of(2022, 1, 10),
-                TipoContrato.JORNAL, cargoBase);
+        cargoBase = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
+        trabajador = new Trabajador(
+                1L,
+                "Carlos",
+                "Pérez",
+                "123456",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2022, 1, 10),
+                TipoContrato.JORNAL,
+                cargoBase);
 
-        jornal = new Jornal(1L, LocalDate.of(2024, 6, 10),
-                trabajador, 10L, "Cultivo A", "");
+        jornal = new Jornal(1L, LocalDate.of(2024, 6, 10), trabajador, 10L, "Cultivo A", "");
 
-        nominaPagada = new Nomina(1L, trabajador,
-                LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30),
-                List.of(jornal));
+        nominaPagada = new Nomina(1L, trabajador, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30), List.of(jornal));
         nominaPagada.aprobar();
         nominaPagada.marcarComoPagada();
 
-        nominaAprobada = new Nomina(3L, trabajador,
-                LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30),
+        nominaAprobada = new Nomina(
+                3L,
+                trabajador,
+                LocalDate.of(2024, 6, 1),
+                LocalDate.of(2024, 6, 30),
                 List.of(new Jornal(2L, LocalDate.of(2024, 6, 12), trabajador, 10L, "Cultivo A", "")));
         nominaAprobada.aprobar();
 
-        nominaPendiente = new Nomina(2L, trabajador,
-                LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30),
-                List.of(jornal));
+        nominaPendiente =
+                new Nomina(2L, trabajador, LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30), List.of(jornal));
 
-        pagoBase = new Pago(1L, nominaPagada, LocalDate.now(),
-                new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-001");
+        pagoBase = new Pago(
+                1L, nominaPagada, LocalDate.now(), new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-001");
     }
 
     // ── registrarPago ─────────────────────────────────────────────────────
@@ -84,8 +95,8 @@ class PagoServiceTest {
         when(pagoRepository.buscarPorNomina(1L)).thenReturn(Optional.empty());
         when(pagoRepository.guardar(any(Pago.class))).thenReturn(pagoBase);
 
-        Pago resultado = pagoService.registrarPago(
-                1L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-001", "Sin obs");
+        Pago resultado =
+                pagoService.registrarPago(1L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-001", "Sin obs");
 
         assertNotNull(resultado);
         assertEquals(MetodoPago.TRANSFERENCIA, resultado.getMetodoPago());
@@ -113,8 +124,7 @@ class PagoServiceTest {
         when(pagoRepository.buscarPorNomina(1L)).thenReturn(Optional.empty());
         when(pagoRepository.guardar(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Pago resultado = pagoService.registrarPago(
-                1L, new BigDecimal("80000"), MetodoPago.CHEQUE, "COMP-003", "");
+        Pago resultado = pagoService.registrarPago(1L, new BigDecimal("80000"), MetodoPago.CHEQUE, "COMP-003", "");
 
         assertEquals(LocalDate.now(), resultado.getFechaPago());
     }
@@ -126,9 +136,7 @@ class PagoServiceTest {
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
-                () -> pagoService.registrarPago(
-                        99L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
-        );
+                () -> pagoService.registrarPago(99L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", ""));
 
         assertTrue(ex.getMessage().contains("99"));
         verifyNoInteractions(pagoRepository);
@@ -141,9 +149,7 @@ class PagoServiceTest {
 
         EstadoInvalidoException ex = assertThrows(
                 EstadoInvalidoException.class,
-                () -> pagoService.registrarPago(
-                        2L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
-        );
+                () -> pagoService.registrarPago(2L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", ""));
 
         assertTrue(ex.getMessage().contains("APROBADA"));
         verify(pagoRepository, never()).guardar(any());
@@ -157,9 +163,7 @@ class PagoServiceTest {
 
         EstadoInvalidoException ex = assertThrows(
                 EstadoInvalidoException.class,
-                () -> pagoService.registrarPago(
-                        1L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", "")
-        );
+                () -> pagoService.registrarPago(1L, new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP", ""));
 
         assertTrue(ex.getMessage().contains("ya tiene un pago registrado"));
         verify(pagoRepository, never()).guardar(any());
@@ -172,8 +176,8 @@ class PagoServiceTest {
         when(pagoRepository.buscarPorNomina(1L)).thenReturn(Optional.empty());
         when(pagoRepository.guardar(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Pago resultado = pagoService.registrarPago(
-                1L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-004", null);
+        Pago resultado =
+                pagoService.registrarPago(1L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "COMP-004", null);
 
         assertNull(resultado.getObservaciones());
         verify(pagoRepository).guardar(any(Pago.class));
@@ -186,8 +190,8 @@ class PagoServiceTest {
         when(pagoRepository.buscarPorNomina(3L)).thenReturn(Optional.empty());
         when(pagoRepository.guardar(any(Pago.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Pago resultado = pagoService.registrarPago(
-                3L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "TRX-1", null);
+        Pago resultado =
+                pagoService.registrarPago(3L, new BigDecimal("80000"), MetodoPago.TRANSFERENCIA, "TRX-1", null);
 
         assertEquals(EstadoNomina.PAGADA, nominaAprobada.getEstado());
         nominaAprobada.getJornales().forEach(j -> assertTrue(j.isLiquidado()));
@@ -217,8 +221,7 @@ class PagoServiceTest {
 
         DatoInvalidoException ex = assertThrows(
                 DatoInvalidoException.class,
-                () -> pagoService.registrarPago(
-                        3L, new BigDecimal("50000"), MetodoPago.EFECTIVO, null, null));
+                () -> pagoService.registrarPago(3L, new BigDecimal("50000"), MetodoPago.EFECTIVO, null, null));
 
         assertTrue(ex.getMessage().contains("valor total"));
         assertEquals(EstadoNomina.APROBADA, nominaAprobada.getEstado());
@@ -245,10 +248,8 @@ class PagoServiceTest {
     void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(pagoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> pagoService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> pagoService.buscarPorId(99L));
 
         assertTrue(ex.getMessage().contains("99"));
     }
@@ -279,8 +280,8 @@ class PagoServiceTest {
     @Test
     @DisplayName("listarTodos debe retornar todos los pagos registrados")
     void listarTodos_debeRetornarTodosLosPagos() {
-        Pago pago2 = new Pago(2L, nominaPagada, LocalDate.now(),
-                new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP-002");
+        Pago pago2 =
+                new Pago(2L, nominaPagada, LocalDate.now(), new BigDecimal("80000"), MetodoPago.EFECTIVO, "COMP-002");
         when(pagoRepository.listarTodos()).thenReturn(List.of(pagoBase, pago2));
 
         List<Pago> resultado = pagoService.listarTodos();

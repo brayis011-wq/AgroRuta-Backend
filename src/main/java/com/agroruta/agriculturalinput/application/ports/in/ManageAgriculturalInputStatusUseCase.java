@@ -1,7 +1,6 @@
 package com.agroruta.agriculturalinput.application.ports.in;
 
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
-
 import java.util.List;
 
 /** Vista y control del catálogo para el Administrador: ver inactivos y volver a activarlos. */

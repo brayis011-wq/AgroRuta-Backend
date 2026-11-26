@@ -45,15 +45,16 @@ public class ComprobantePagoController {
      */
     @GetMapping("/api/public/receipts/{id}")
     public ResponseEntity<ComprobanteVerificadoResponse> verificar(@PathVariable Long id, @RequestParam String code) {
-        ComprobantePago c = comprobantes.verificar(id, code)
+        ComprobantePago c = comprobantes
+                .verificar(id, code)
                 .orElseThrow(() -> new ResourceNotFoundException("Este comprobante no es válido."));
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-                .body(ComprobanteVerificadoResponse.from(c));
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(ComprobanteVerificadoResponse.from(c));
     }
 
     private static ResponseEntity<byte[]> pdf(Long id, byte[] contenido) {
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"comprobante-" + ComprobantePago.numeroDe(id) + ".pdf\"")
                 .cacheControl(CacheControl.noStore())
                 .body(contenido);

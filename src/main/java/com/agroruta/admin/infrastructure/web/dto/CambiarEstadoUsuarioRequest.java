@@ -4,5 +4,4 @@ import jakarta.validation.constraints.NotNull;
 
 public record CambiarEstadoUsuarioRequest(
         @NotNull(message = "Indica si la cuenta queda activa o no")
-        Boolean activo
-) {}
+        Boolean activo) {}

@@ -1,14 +1,15 @@
 package com.agroruta.user.domain;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import com.agroruta.shared.exception.FalloInternoException;
+import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.nio.charset.StandardCharsets;
-import java.net.URLEncoder;
 import java.util.OptionalLong;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Códigos de 6 dígitos que cambian cada 30 segundos (TOTP, RFC 6238 con HMAC-SHA1): los mismos que
@@ -46,11 +47,13 @@ public final class Totp {
             mac.init(new SecretKeySpec(deBase32(secretoBase32), "HmacSHA1"));
             hash = mac.doFinal(ByteBuffer.allocate(8).putLong(paso).array());
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
         int desde = hash[hash.length - 1] & 0x0f;
-        int binario = ((hash[desde] & 0x7f) << 24) | ((hash[desde + 1] & 0xff) << 16)
-                | ((hash[desde + 2] & 0xff) << 8) | (hash[desde + 3] & 0xff);
+        int binario = ((hash[desde] & 0x7f) << 24)
+                | ((hash[desde + 1] & 0xff) << 16)
+                | ((hash[desde + 2] & 0xff) << 8)
+                | (hash[desde + 3] & 0xff);
         return String.format("%0" + DIGITOS + "d", binario % 1_000_000);
     }
 
@@ -64,7 +67,8 @@ public final class Totp {
         long actual = paso(epochSegundos);
         for (long p = actual - VENTANA; p <= actual + VENTANA; p++) {
             if (ultimoPaso != null && p <= ultimoPaso) continue;
-            if (MessageDigest.isEqual(codigo(secretoBase32, p).getBytes(StandardCharsets.UTF_8),
+            if (MessageDigest.isEqual(
+                    codigo(secretoBase32, p).getBytes(StandardCharsets.UTF_8),
                     codigo.getBytes(StandardCharsets.UTF_8))) {
                 return OptionalLong.of(p);
             }
@@ -74,7 +78,8 @@ public final class Totp {
 
     /** Lo que lleva el QR: la app de autenticación lo entiende y crea la cuenta sola */
     public static String uri(String emisor, String cuenta, String secretoBase32) {
-        String etiqueta = URLEncoder.encode(emisor + ":" + cuenta, StandardCharsets.UTF_8).replace("+", "%20");
+        String etiqueta =
+                URLEncoder.encode(emisor + ":" + cuenta, StandardCharsets.UTF_8).replace("+", "%20");
         return "otpauth://totp/" + etiqueta + "?secret=" + secretoBase32
                 + "&issuer=" + URLEncoder.encode(emisor, StandardCharsets.UTF_8).replace("+", "%20")
                 + "&algorithm=SHA1&digits=" + DIGITOS + "&period=" + PERIODO_SEGUNDOS;

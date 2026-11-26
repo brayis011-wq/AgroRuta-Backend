@@ -1,10 +1,10 @@
 package com.agroruta.user.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -22,8 +22,7 @@ public class Usuario {
     /** Confirmó que el correo es suyo (con el enlace que le llegó). Las cuentas anteriores a la verificación cuentan como confirmadas. */
     private boolean emailVerificado = true;
 
-    public Usuario(Long id, String nombre, String email,
-                   String password, Rol rol) {
+    public Usuario(Long id, String nombre, String email, String password, Rol rol) {
         this.id = id;
         this.nombre = nombre;
         this.email = email;
@@ -33,8 +32,13 @@ public class Usuario {
         this.fechaCreacion = LocalDateTime.now();
     }
 
-    public void desactivar() { this.activo = false; }
-    public void activar()    { this.activo = true; }
+    public void desactivar() {
+        this.activo = false;
+    }
+
+    public void activar() {
+        this.activo = true;
+    }
 
     public void cambiarRol(Rol nuevoRol) {
         if (nuevoRol == null) {

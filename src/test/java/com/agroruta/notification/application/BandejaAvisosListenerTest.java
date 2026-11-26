@@ -1,5 +1,13 @@
 package com.agroruta.notification.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.notification.application.ports.in.BandejaAvisosUseCase;
 import com.agroruta.notification.domain.AvisoBandeja;
 import com.agroruta.shared.evento.AccesoPortalResuelto;
@@ -15,23 +23,14 @@ import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("BandejaAvisosListener")
 class BandejaAvisosListenerTest {
@@ -49,7 +48,8 @@ class BandejaAvisosListenerTest {
     @BeforeEach
     void setUp() {
         listener = new BandejaAvisosListener(usuarios, trabajadores, pagos, bandeja);
-        pedro = new Trabajador(20L, "Pedro", "Gómez", "1052", null, null, LocalDate.of(2026, 1, 1), TipoContrato.JORNAL, null);
+        pedro = new Trabajador(
+                20L, "Pedro", "Gómez", "1052", null, null, LocalDate.of(2026, 1, 1), TipoContrato.JORNAL, null);
         pedro.setAgricultorId(1L);
         pedro.solicitarAcceso(5L, "Pedro Gómez", "pedro@x.com");
         when(trabajadores.buscarPorId(20L)).thenReturn(Optional.of(pedro));
@@ -90,7 +90,10 @@ class BandejaAvisosListenerTest {
         AvisoBandeja.Nuevo a = guardado();
         assertThat(a.usuarioId()).isEqualTo(5L);
         assertThat(a.tipo()).isEqualTo(AvisoBandeja.Tipo.PAGO_REGISTRADO);
-        assertThat(a.datos()).containsEntry("monto", "650000").containsEntry("inicio", "2026-10-01").containsEntry("fin", "2026-10-15");
+        assertThat(a.datos())
+                .containsEntry("monto", "650000")
+                .containsEntry("inicio", "2026-10-01")
+                .containsEntry("fin", "2026-10-15");
         assertThat(a.cuerpo()).contains("650.000");
         assertThat(a.etiqueta()).isEqualTo("pago-40");
     }
@@ -110,6 +113,7 @@ class BandejaAvisosListenerTest {
     @DisplayName("si algo falla al preparar el aviso, no se propaga")
     void tolerante() {
         when(trabajadores.buscarPorId(20L)).thenThrow(new RuntimeException("base caída"));
-        assertThatCode(() -> listener.accesoSolicitado(new AccesoPortalSolicitado(20L))).doesNotThrowAnyException();
+        assertThatCode(() -> listener.accesoSolicitado(new AccesoPortalSolicitado(20L)))
+                .doesNotThrowAnyException();
     }
 }

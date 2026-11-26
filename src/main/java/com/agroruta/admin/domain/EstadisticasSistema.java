@@ -11,5 +11,4 @@ public record EstadisticasSistema(
         double cosechaKg,
         long trabajadoresActivos,
         long nominasPorPagar,
-        BigDecimal totalPagado
-) {}
+        BigDecimal totalPagado) {}

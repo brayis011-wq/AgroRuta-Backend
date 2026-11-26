@@ -1,13 +1,12 @@
 package com.agroruta.configuration.infrastructure.persistence;
 
-import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.configuration.domain.Perfil;
 import com.agroruta.configuration.application.ports.out.ProfileRepository;
+import com.agroruta.configuration.domain.Perfil;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.infrastructure.persistence.JpaUsuarioRepository;
 import com.agroruta.user.infrastructure.persistence.UsuarioEntity;
-import org.springframework.stereotype.Repository;
-
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class ProfileRepositoryAdapter implements ProfileRepository {
@@ -15,27 +14,26 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     private final JpaUsuarioRepository jpaUsuarioRepository;
     private final JpaFotoPerfilRepository jpaFotoPerfilRepository;
 
-    public ProfileRepositoryAdapter(JpaUsuarioRepository jpaUsuarioRepository,
-                                    JpaFotoPerfilRepository jpaFotoPerfilRepository) {
+    public ProfileRepositoryAdapter(
+            JpaUsuarioRepository jpaUsuarioRepository, JpaFotoPerfilRepository jpaFotoPerfilRepository) {
         this.jpaUsuarioRepository = jpaUsuarioRepository;
         this.jpaFotoPerfilRepository = jpaFotoPerfilRepository;
     }
 
     @Override
     public Optional<Perfil> buscarPorEmail(String email) {
-        return jpaUsuarioRepository.findByEmail(email)
-                .map(this::toDomain);
+        return jpaUsuarioRepository.findByEmail(email).map(this::toDomain);
     }
 
     @Override
     public Optional<Perfil> buscarPorId(Long id) {
-        return jpaUsuarioRepository.findById(id)
-                .map(this::toDomain);
+        return jpaUsuarioRepository.findById(id).map(this::toDomain);
     }
 
     @Override
     public Perfil guardar(Perfil perfil) {
-        UsuarioEntity entity = jpaUsuarioRepository.findById(perfil.getId())
+        UsuarioEntity entity = jpaUsuarioRepository
+                .findById(perfil.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         entity.setNombre(perfil.getNombre());
@@ -48,7 +46,8 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
 
     @Override
     public void cambiarPassword(Long id, String nuevaPasswordEncriptada) {
-        UsuarioEntity entity = jpaUsuarioRepository.findById(id)
+        UsuarioEntity entity = jpaUsuarioRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         entity.setPassword(nuevaPasswordEncriptada);
@@ -57,7 +56,8 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
 
     @Override
     public String obtenerPasswordHash(Long id) {
-        return jpaUsuarioRepository.findById(id)
+        return jpaUsuarioRepository
+                .findById(id)
                 .map(UsuarioEntity::getPassword)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
     }
@@ -72,7 +72,8 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
     }
 
     private Perfil toDomain(UsuarioEntity entity) {
-        String foto = jpaFotoPerfilRepository.findById(entity.getId())
+        String foto = jpaFotoPerfilRepository
+                .findById(entity.getId())
                 .map(FotoPerfilEntity::getFoto)
                 .orElse(null);
         return toDomain(entity, foto);
@@ -80,12 +81,6 @@ public class ProfileRepositoryAdapter implements ProfileRepository {
 
     private Perfil toDomain(UsuarioEntity entity, String foto) {
         return new Perfil(
-                entity.getId(),
-                entity.getNombre(),
-                entity.getEmail(),
-                entity.getTelefono(),
-                foto,
-                entity.getRol()
-        );
+                entity.getId(), entity.getNombre(), entity.getEmail(), entity.getTelefono(), foto, entity.getRol());
     }
 }

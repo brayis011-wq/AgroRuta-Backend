@@ -1,9 +1,9 @@
 package com.agroruta.user.domain;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.agroruta.shared.exception.DatoInvalidoException;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class UsuarioTest {
 

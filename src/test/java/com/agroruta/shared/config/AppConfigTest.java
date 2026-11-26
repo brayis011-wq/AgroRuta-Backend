@@ -1,10 +1,10 @@
 package com.agroruta.shared.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("AppConfig")
 class AppConfigTest {

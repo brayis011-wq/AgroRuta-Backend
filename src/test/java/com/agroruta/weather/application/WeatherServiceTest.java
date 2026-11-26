@@ -1,5 +1,8 @@
 package com.agroruta.weather.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.Weather;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +13,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("WeatherService - Pruebas Unitarias")
@@ -46,9 +46,9 @@ class WeatherServiceTest {
             Weather resultado = weatherService.getWeatherByCity("Bogotá");
 
             assertNotNull(resultado);
-            assertEquals("Bogotá",               resultado.getCity());
-            assertEquals(18.5,                   resultado.getTemperature());
-            assertEquals("Parcialmente nublado", resultado.getDescription());
+            assertEquals("Bogotá", resultado.city());
+            assertEquals(18.5, resultado.temperature());
+            assertEquals("Parcialmente nublado", resultado.description());
             verify(weatherApiPort, times(1)).fetchWeatherByCity("Bogotá");
         }
 
@@ -61,8 +61,8 @@ class WeatherServiceTest {
             Weather resultado = weatherService.getWeatherByCity("Medellín");
 
             assertNotNull(resultado);
-            assertEquals("Medellín", resultado.getCity());
-            assertEquals(24.0,       resultado.getTemperature());
+            assertEquals("Medellín", resultado.city());
+            assertEquals(24.0, resultado.temperature());
             verify(weatherApiPort, times(1)).fetchWeatherByCity("Medellín");
             verify(weatherApiPort, never()).fetchWeatherByCity("Bogotá");
         }
@@ -83,8 +83,8 @@ class WeatherServiceTest {
             Weather resultado = weatherService.getWeatherByCoordinates(4.711, -74.0721);
 
             assertNotNull(resultado);
-            assertEquals("Bogotá", resultado.getCity());
-            assertEquals(18.5,     resultado.getTemperature());
+            assertEquals("Bogotá", resultado.city());
+            assertEquals(18.5, resultado.temperature());
             verify(weatherApiPort, times(1)).fetchWeatherByCoordinates(4.711, -74.0721);
         }
 
@@ -97,8 +97,8 @@ class WeatherServiceTest {
             Weather resultado = weatherService.getWeatherByCoordinates(3.4516, -76.5320);
 
             assertNotNull(resultado);
-            assertEquals("Cali", resultado.getCity());
-            assertEquals(27.0,   resultado.getTemperature());
+            assertEquals("Cali", resultado.city());
+            assertEquals(27.0, resultado.temperature());
             verify(weatherApiPort, times(1)).fetchWeatherByCoordinates(3.4516, -76.5320);
             verify(weatherApiPort, never()).fetchWeatherByCoordinates(4.711, -74.0721);
         }

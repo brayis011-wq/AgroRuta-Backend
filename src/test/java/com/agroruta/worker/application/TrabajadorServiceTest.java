@@ -1,10 +1,18 @@
 package com.agroruta.worker.application;
 
-import com.agroruta.worker.application.ports.out.CargoRepository;
-import com.agroruta.worker.application.ports.out.TrabajadorRepository;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.worker.application.ports.out.CargoRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,50 +21,66 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias - TrabajadorService")
 class TrabajadorServiceTest {
 
-    @Mock private TrabajadorRepository trabajadorRepository;
-    @Mock private CargoRepository      cargoRepository;
+    @Mock
+    private TrabajadorRepository trabajadorRepository;
 
-    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+    @Mock
+    private CargoRepository cargoRepository;
+
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventos;
 
     @InjectMocks
     private TrabajadorService trabajadorService;
 
-    private Cargo      cargoBase;
-    private Cargo      cargoNuevo;
+    private Cargo cargoBase;
+    private Cargo cargoNuevo;
     private Trabajador trabajadorActivo;
     private Trabajador trabajadorInactivo;
     private Trabajador trabajadorSuspendido;
 
     @BeforeEach
     void setUp() {
-        cargoBase  = new Cargo(1L, "Operario",   "Cargo base",  new BigDecimal("80000"),  true);
+        cargoBase = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
         cargoNuevo = new Cargo(2L, "Supervisor", "Cargo nuevo", new BigDecimal("120000"), true);
 
-        trabajadorActivo = new Trabajador(1L, "Carlos", "Pérez", "123456",
-                "3001234567", "Calle 1", LocalDate.of(2022, 1, 10),
-                TipoContrato.JORNAL, cargoBase);
+        trabajadorActivo = new Trabajador(
+                1L,
+                "Carlos",
+                "Pérez",
+                "123456",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2022, 1, 10),
+                TipoContrato.JORNAL,
+                cargoBase);
 
-        trabajadorInactivo = new Trabajador(2L, "Ana", "Gómez", "654321",
-                "3009876543", "Calle 2", LocalDate.of(2021, 3, 5),
-                TipoContrato.TEMPORAL, cargoBase);
+        trabajadorInactivo = new Trabajador(
+                2L,
+                "Ana",
+                "Gómez",
+                "654321",
+                "3009876543",
+                "Calle 2",
+                LocalDate.of(2021, 3, 5),
+                TipoContrato.TEMPORAL,
+                cargoBase);
         trabajadorInactivo.desactivar();
 
-        trabajadorSuspendido = new Trabajador(3L, "Luis", "Torres", "111222",
-                "3007654321", "Calle 3", LocalDate.of(2020, 7, 1),
-                TipoContrato.FIJO, cargoBase);
+        trabajadorSuspendido = new Trabajador(
+                3L,
+                "Luis",
+                "Torres",
+                "111222",
+                "3007654321",
+                "Calle 3",
+                LocalDate.of(2020, 7, 1),
+                TipoContrato.FIJO,
+                cargoBase);
         trabajadorSuspendido.suspender();
     }
 
@@ -70,8 +94,15 @@ class TrabajadorServiceTest {
         when(trabajadorRepository.guardar(any(Trabajador.class))).thenReturn(trabajadorActivo);
 
         Trabajador resultado = trabajadorService.registrarTrabajador(
-                "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
-                LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L, 7L);
+                "Carlos",
+                "Pérez",
+                "999999",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2022, 1, 10),
+                TipoContrato.JORNAL,
+                1L,
+                7L);
 
         assertNotNull(resultado);
         assertTrue(resultado.estaActivo());
@@ -86,8 +117,15 @@ class TrabajadorServiceTest {
         when(trabajadorRepository.guardar(any(Trabajador.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Trabajador resultado = trabajadorService.registrarTrabajador(
-                "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
-                LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L, 7L);
+                "Carlos",
+                "Pérez",
+                "999999",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2022, 1, 10),
+                TipoContrato.JORNAL,
+                1L,
+                7L);
 
         assertEquals(cargoBase, resultado.getCargo());
     }
@@ -100,9 +138,15 @@ class TrabajadorServiceTest {
         BusinessException ex = assertThrows(
                 BusinessException.class,
                 () -> trabajadorService.registrarTrabajador(
-                        "Carlos", "Pérez", "123456", "3001234567", "Calle 1",
-                        LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 1L, 7L)
-        );
+                        "Carlos",
+                        "Pérez",
+                        "123456",
+                        "3001234567",
+                        "Calle 1",
+                        LocalDate.of(2022, 1, 10),
+                        TipoContrato.JORNAL,
+                        1L,
+                        7L));
 
         assertTrue(ex.getMessage().contains("123456"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -117,9 +161,15 @@ class TrabajadorServiceTest {
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
                 () -> trabajadorService.registrarTrabajador(
-                        "Carlos", "Pérez", "999999", "3001234567", "Calle 1",
-                        LocalDate.of(2022, 1, 10), TipoContrato.JORNAL, 99L, 7L)
-        );
+                        "Carlos",
+                        "Pérez",
+                        "999999",
+                        "3001234567",
+                        "Calle 1",
+                        LocalDate.of(2022, 1, 10),
+                        TipoContrato.JORNAL,
+                        99L,
+                        7L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -134,15 +184,14 @@ class TrabajadorServiceTest {
         when(trabajadorRepository.guardar(any(Trabajador.class))).thenReturn(trabajadorActivo);
 
         Trabajador resultado = trabajadorService.actualizarTrabajador(
-                1L, "Carlos Updated", "Pérez Updated",
-                "3001111111", "Nueva Calle", TipoContrato.FIJO);
+                1L, "Carlos Updated", "Pérez Updated", "3001111111", "Nueva Calle", TipoContrato.FIJO);
 
         assertNotNull(resultado);
         verify(trabajadorRepository).guardar(trabajadorActivo);
-        assertEquals("Carlos Updated",  trabajadorActivo.getNombre());
-        assertEquals("Pérez Updated",   trabajadorActivo.getApellido());
-        assertEquals("3001111111",      trabajadorActivo.getTelefono());
-        assertEquals("Nueva Calle",     trabajadorActivo.getDireccion());
+        assertEquals("Carlos Updated", trabajadorActivo.getNombre());
+        assertEquals("Pérez Updated", trabajadorActivo.getApellido());
+        assertEquals("3001111111", trabajadorActivo.getTelefono());
+        assertEquals("Nueva Calle", trabajadorActivo.getDireccion());
         assertEquals(TipoContrato.FIJO, trabajadorActivo.getTipoContrato());
     }
 
@@ -154,8 +203,7 @@ class TrabajadorServiceTest {
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
                 () -> trabajadorService.actualizarTrabajador(
-                        99L, "Nombre", "Apellido", "Tel", "Dir", TipoContrato.JORNAL)
-        );
+                        99L, "Nombre", "Apellido", "Tel", "Dir", TipoContrato.JORNAL));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -167,11 +215,10 @@ class TrabajadorServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(trabajadorRepository.guardar(any())).thenReturn(trabajadorActivo);
 
-        trabajadorService.actualizarTrabajador(
-                1L, "Nuevo", "Nombre", "Tel", "Dir", TipoContrato.TEMPORAL);
+        trabajadorService.actualizarTrabajador(1L, "Nuevo", "Nombre", "Tel", "Dir", TipoContrato.TEMPORAL);
 
-        assertEquals("123456",        trabajadorActivo.getCedula());
-        assertEquals(cargoBase,       trabajadorActivo.getCargo());
+        assertEquals("123456", trabajadorActivo.getCedula());
+        assertEquals(cargoBase, trabajadorActivo.getCargo());
         assertTrue(trabajadorActivo.estaActivo());
     }
 
@@ -196,10 +243,8 @@ class TrabajadorServiceTest {
     void cambiarCargo_trabajadorInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> trabajadorService.cambiarCargo(99L, 2L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> trabajadorService.cambiarCargo(99L, 2L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -211,10 +256,8 @@ class TrabajadorServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(cargoRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> trabajadorService.cambiarCargo(1L, 99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> trabajadorService.cambiarCargo(1L, 99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -240,10 +283,8 @@ class TrabajadorServiceTest {
     void desactivarTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> trabajadorService.desactivarTrabajador(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> trabajadorService.desactivarTrabajador(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -268,10 +309,8 @@ class TrabajadorServiceTest {
     void suspenderTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> trabajadorService.suspenderTrabajador(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> trabajadorService.suspenderTrabajador(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -308,10 +347,8 @@ class TrabajadorServiceTest {
     void reactivarTrabajador_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> trabajadorService.reactivarTrabajador(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> trabajadorService.reactivarTrabajador(99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(trabajadorRepository, never()).guardar(any());
@@ -336,10 +373,8 @@ class TrabajadorServiceTest {
     void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(trabajadorRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> trabajadorService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> trabajadorService.buscarPorId(99L));
 
         assertTrue(ex.getMessage().contains("99"));
     }

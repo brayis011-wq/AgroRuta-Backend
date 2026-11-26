@@ -5,48 +5,47 @@ import com.agroruta.agriculturalinput.infrastructure.web.dto.AgriculturalInputRe
 import com.agroruta.agriculturalinput.infrastructure.web.dto.AgriculturalInputResponse;
 import com.agroruta.agriculturalinput.infrastructure.web.dto.AgriculturalInputWebMapper;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Controlador REST (driving adapter).
  * Completamente delgado: valida entrada, delega al caso de uso, mapea salida.
  * No contiene lógica de negocio. Cada endpoint inyecta solo el caso de uso que usa.
  *
-
+ *
  */
 @RestController
 @RequestMapping("/api/agricultural-inputs")
 public class AgriculturalInputController {
 
     // Cada campo es un caso de uso independiente (respeta ISP)
-    private final GetAllAgriculturalInputsUseCase  getAllUseCase;
-    private final SearchAgriculturalInputsUseCase  searchUseCase;
-    private final GetAgriculturalInputByIdUseCase  getByIdUseCase;
-    private final CreateAgriculturalInputUseCase   createUseCase;
-    private final UpdateAgriculturalInputUseCase   updateUseCase;
-    private final DeleteAgriculturalInputUseCase   deleteUseCase;
+    private final GetAllAgriculturalInputsUseCase getAllUseCase;
+    private final SearchAgriculturalInputsUseCase searchUseCase;
+    private final GetAgriculturalInputByIdUseCase getByIdUseCase;
+    private final CreateAgriculturalInputUseCase createUseCase;
+    private final UpdateAgriculturalInputUseCase updateUseCase;
+    private final DeleteAgriculturalInputUseCase deleteUseCase;
     private final ManageAgriculturalInputStatusUseCase statusUseCase;
 
     public AgriculturalInputController(
-            GetAllAgriculturalInputsUseCase  getAllUseCase,
-            SearchAgriculturalInputsUseCase  searchUseCase,
-            GetAgriculturalInputByIdUseCase  getByIdUseCase,
-            CreateAgriculturalInputUseCase   createUseCase,
-            UpdateAgriculturalInputUseCase   updateUseCase,
-            DeleteAgriculturalInputUseCase   deleteUseCase,
+            GetAllAgriculturalInputsUseCase getAllUseCase,
+            SearchAgriculturalInputsUseCase searchUseCase,
+            GetAgriculturalInputByIdUseCase getByIdUseCase,
+            CreateAgriculturalInputUseCase createUseCase,
+            UpdateAgriculturalInputUseCase updateUseCase,
+            DeleteAgriculturalInputUseCase deleteUseCase,
             ManageAgriculturalInputStatusUseCase statusUseCase) {
-        this.getAllUseCase   = getAllUseCase;
-        this.searchUseCase  = searchUseCase;
+        this.getAllUseCase = getAllUseCase;
+        this.searchUseCase = searchUseCase;
         this.getByIdUseCase = getByIdUseCase;
-        this.createUseCase  = createUseCase;
-        this.updateUseCase  = updateUseCase;
-        this.deleteUseCase  = deleteUseCase;
-        this.statusUseCase  = statusUseCase;
+        this.createUseCase = createUseCase;
+        this.updateUseCase = updateUseCase;
+        this.deleteUseCase = deleteUseCase;
+        this.statusUseCase = statusUseCase;
     }
 
     // ── GET /api/v1/agricultural-inputs ──────────────────────────────────────
@@ -57,12 +56,15 @@ public class AgriculturalInputController {
      */
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<AgriculturalInputResponse>> getAll(
-            @RequestParam(required = false) String q) {
+    public ResponseEntity<List<AgriculturalInputResponse>> getAll(@RequestParam(required = false) String q) {
 
         List<AgriculturalInputResponse> result = q != null && !q.isBlank()
-                ? searchUseCase.search(q).stream().map(AgriculturalInputWebMapper::toResponse).toList()
-                : getAllUseCase.getAll().stream().map(AgriculturalInputWebMapper::toResponse).toList();
+                ? searchUseCase.search(q).stream()
+                        .map(AgriculturalInputWebMapper::toResponse)
+                        .toList()
+                : getAllUseCase.getAll().stream()
+                        .map(AgriculturalInputWebMapper::toResponse)
+                        .toList();
 
         return ResponseEntity.ok(result);
     }
@@ -73,14 +75,14 @@ public class AgriculturalInputController {
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<AgriculturalInputResponse>> getAllIncludingInactive() {
         return ResponseEntity.ok(statusUseCase.getAllIncludingInactive().stream()
-                .map(AgriculturalInputWebMapper::toResponse).toList());
+                .map(AgriculturalInputWebMapper::toResponse)
+                .toList());
     }
 
     // ── PATCH /api/agricultural-inputs/{id}/status?activo= (solo Administrador)
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<AgriculturalInputResponse> changeStatus(
-            @PathVariable Long id, @RequestParam boolean activo) {
+    public ResponseEntity<AgriculturalInputResponse> changeStatus(@PathVariable Long id, @RequestParam boolean activo) {
         return ResponseEntity.ok(AgriculturalInputWebMapper.toResponse(statusUseCase.changeStatus(id, activo)));
     }
 
@@ -88,34 +90,25 @@ public class AgriculturalInputController {
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AgriculturalInputResponse> getById(@PathVariable Long id) {
-        return ResponseEntity.ok(
-                AgriculturalInputWebMapper.toResponse(getByIdUseCase.getById(id))
-        );
+        return ResponseEntity.ok(AgriculturalInputWebMapper.toResponse(getByIdUseCase.getById(id)));
     }
 
     // ── POST /api/v1/agricultural-inputs ─────────────────────────────────────
     @PostMapping
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<AgriculturalInputResponse> create(
-            @Valid @RequestBody AgriculturalInputRequest request) {
+    public ResponseEntity<AgriculturalInputResponse> create(@Valid @RequestBody AgriculturalInputRequest request) {
 
-        var created = createUseCase.create(
-                AgriculturalInputWebMapper.toCreateCommand(request)
-        );
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(AgriculturalInputWebMapper.toResponse(created));
+        var created = createUseCase.create(AgriculturalInputWebMapper.toCreateCommand(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(AgriculturalInputWebMapper.toResponse(created));
     }
 
     // ── PUT /api/v1/agricultural-inputs/{id} ─────────────────────────────────
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<AgriculturalInputResponse> update(
-            @PathVariable Long id,
-            @Valid @RequestBody AgriculturalInputRequest request) {
+            @PathVariable Long id, @Valid @RequestBody AgriculturalInputRequest request) {
 
-        var updated = updateUseCase.update(id,
-                AgriculturalInputWebMapper.toUpdateCommand(request)
-        );
+        var updated = updateUseCase.update(id, AgriculturalInputWebMapper.toUpdateCommand(request));
         return ResponseEntity.ok(AgriculturalInputWebMapper.toResponse(updated));
     }
 

@@ -1,12 +1,11 @@
 package com.agroruta.user.domain;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Totp")
 class TotpTest {
@@ -28,10 +27,19 @@ class TotpTest {
     void ventana() {
         long ahora = 1_800_000_000L;
         long paso = Totp.paso(ahora);
-        assertEquals(paso, Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso), ahora, null).orElseThrow());
-        assertEquals(paso - 1, Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso - 1), ahora, null).orElseThrow());
-        assertEquals(paso + 1, Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso + 1), ahora, null).orElseThrow());
-        assertTrue(Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso - 3), ahora, null).isEmpty());
+        assertEquals(
+                paso,
+                Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso), ahora, null).orElseThrow());
+        assertEquals(
+                paso - 1,
+                Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso - 1), ahora, null)
+                        .orElseThrow());
+        assertEquals(
+                paso + 1,
+                Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso + 1), ahora, null)
+                        .orElseThrow());
+        assertTrue(Totp.verificar(SECRETO, Totp.codigo(SECRETO, paso - 3), ahora, null)
+                .isEmpty());
     }
 
     @Test
@@ -59,7 +67,8 @@ class TotpTest {
         assertEquals("GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", Totp.base32(datos));
         assertArrayEquals(datos, Totp.deBase32("gezdgnbvgy3tqojq gezdgnbvgy3tqojq"));
         assertEquals(32, Totp.nuevoSecreto(new SecureRandom()).length());
-        assertEquals("otpauth://totp/AgroRuta%3Aana%40x.com?secret=ABC&issuer=AgroRuta&algorithm=SHA1&digits=6&period=30",
+        assertEquals(
+                "otpauth://totp/AgroRuta%3Aana%40x.com?secret=ABC&issuer=AgroRuta&algorithm=SHA1&digits=6&period=30",
                 Totp.uri("AgroRuta", "ana@x.com", "ABC"));
     }
 }

@@ -12,16 +12,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 
 /** Gastos generales de la finca: transporte, herramientas, servicios… (no son de una siembra). */
 @RestController
@@ -36,12 +35,20 @@ public class GastoFincaController {
 
     public record GastoRequest(
             @NotNull(message = "Elige la finca") Long fincaId,
-            @NotNull(message = "Indica la fecha") @PastOrPresent(message = "La fecha no puede ser futura") LocalDate fecha,
+
+            @NotNull(message = "Indica la fecha") @PastOrPresent(message = "La fecha no puede ser futura")
+            LocalDate fecha,
+
             GastoFinca.Categoria categoria,
-            @NotBlank(message = "Escribe en qué se gastó") @Size(max = 255, message = "Máximo 255 caracteres") String descripcion,
-            @NotNull(message = "Indica el valor") @Positive(message = "El valor debe ser mayor a 0")
+
+            @NotBlank(message = "Escribe en qué se gastó") @Size(max = 255, message = "Máximo 255 caracteres")
+            String descripcion,
+
+            @NotNull(message = "Indica el valor")
+            @Positive(message = "El valor debe ser mayor a 0")
             @DecimalMax(value = "100000000000", message = "El valor es demasiado alto")
-            @Digits(integer = 12, fraction = 2, message = "El valor admite máximo 2 decimales") BigDecimal monto) {}
+            @Digits(integer = 12, fraction = 2, message = "El valor admite máximo 2 decimales")
+            BigDecimal monto) {}
 
     /** ?farmId=3&desde=2026-01-01&hasta=2026-12-31 (todo opcional) */
     @GetMapping
@@ -71,9 +78,11 @@ public class GastoFincaController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@ownership.gastoPropio(#id, authentication) and @ownership.fincaPropia(#req.fincaId, authentication)")
+    @PreAuthorize(
+            "@ownership.gastoPropio(#id, authentication) and @ownership.fincaPropia(#req.fincaId, authentication)")
     public ResponseEntity<GastoFinca> actualizar(@PathVariable Long id, @Valid @RequestBody GastoRequest req) {
-        return ResponseEntity.ok(gastos.actualizar(id, req.fincaId(), req.fecha(), req.categoria(), req.descripcion(), req.monto()));
+        return ResponseEntity.ok(
+                gastos.actualizar(id, req.fincaId(), req.fecha(), req.categoria(), req.descripcion(), req.monto()));
     }
 
     @DeleteMapping("/{id}")

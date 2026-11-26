@@ -3,10 +3,10 @@ package com.agroruta.report.application;
 import com.agroruta.report.application.ports.in.GenerateCropReportUseCase;
 import com.agroruta.report.application.ports.out.CropQueryPort;
 import com.agroruta.report.domain.CropReport;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -16,10 +16,7 @@ public class GenerateCropReportService implements GenerateCropReportUseCase {
 
     @Override
     public CropReport generate() {
-        return new CropReport(
-                LocalDateTime.now(),
-                cropQueryPort.getAllCropDetails()
-        );
+        return new CropReport(LocalDateTime.now(), cropQueryPort.getAllCropDetails());
     }
 
     @Override
@@ -27,9 +24,6 @@ public class GenerateCropReportService implements GenerateCropReportUseCase {
         if (agricultorId == null) {
             return new CropReport(LocalDateTime.now(), List.of());
         }
-        return new CropReport(
-                LocalDateTime.now(),
-                cropQueryPort.getCropDetailsByAgricultor(agricultorId)
-        );
+        return new CropReport(LocalDateTime.now(), cropQueryPort.getCropDetailsByAgricultor(agricultorId));
     }
 }

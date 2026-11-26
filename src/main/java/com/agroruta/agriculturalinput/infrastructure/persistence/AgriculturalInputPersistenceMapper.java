@@ -1,7 +1,6 @@
 package com.agroruta.agriculturalinput.infrastructure.persistence;
 
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
-import com.agroruta.agriculturalinput.infrastructure.persistence.AgriculturalInputEntity;
 
 /**
  * Mapper de persistencia.
@@ -19,8 +18,7 @@ public class AgriculturalInputPersistenceMapper {
                 entity.getUnidadSugerida(),
                 entity.getDosisSugerida(),
                 entity.getReentradaHoras(),
-                entity.getDiasCarencia()
-        );
+                entity.getDiasCarencia());
         domain.setId(entity.getId());
         domain.setActivo(entity.isActivo());
         domain.setCreadoEn(entity.getCreadoEn());

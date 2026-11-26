@@ -1,24 +1,23 @@
 package com.agroruta.crop.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
-import com.agroruta.shared.exception.ErrorCode;
-import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.ErrorCode;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CosechaServiceTest {
@@ -47,7 +46,8 @@ class CosechaServiceTest {
     @Test
     void deberiaRegistrarCosechaCorrectamente() {
         Cosecha cosecha = new Cosecha(1L, fecha, 300.0, CalidadCosecha.PRIMERA, "Buena", siembraId);
-        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA)).thenReturn(false);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA))
+                .thenReturn(false);
         when(cosechaRepository.save(any())).thenReturn(cosecha);
 
         Cosecha resultado = service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId);
@@ -60,10 +60,11 @@ class CosechaServiceTest {
 
     @Test
     void deberiaLanzarExcepcionSiYaHayCosechaDeEsaCalidadEnEsaFecha() {
-        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA)).thenReturn(true);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.PRIMERA))
+                .thenReturn(true);
 
-        BusinessException e = assertThrows(BusinessException.class, () ->
-                service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId));
+        BusinessException e = assertThrows(
+                BusinessException.class, () -> service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId));
         assertTrue(e.getMessage().contains("primera calidad"), e.getMessage());
         verify(cosechaRepository, never()).save(any());
     }
@@ -71,7 +72,8 @@ class CosechaServiceTest {
     @Test
     void elMismoDiaSePuedeRegistrarOtraCalidad() {
         // Ese día ya hay una de primera; solo se pregunta por la calidad que se va a registrar
-        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.SEGUNDA)).thenReturn(false);
+        when(cosechaRepository.existsByFechaAndSiembraIdAndCalidad(fecha, siembraId, CalidadCosecha.SEGUNDA))
+                .thenReturn(false);
         when(cosechaRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Cosecha segunda = service.registrarCosecha(fecha, 80.0, "SEGUNDA", "Más pequeña", siembraId);
@@ -84,12 +86,14 @@ class CosechaServiceTest {
 
     @Test
     void noDejaCosecharEnCarenciaSinConfirmar() {
-        Fumigacion f = Fumigacion.fromManualEntry(fecha.minusDays(3), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
+        Fumigacion f = Fumigacion.fromManualEntry(
+                fecha.minusDays(3), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
         f.fijarRestricciones(new RestriccionesFumigacion(14, null));
         when(fumigacionRepository.findBySiembraId(siembraId)).thenReturn(List.of(f));
 
-        BusinessException e = assertThrows(BusinessException.class, () ->
-                service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, false));
+        BusinessException e = assertThrows(
+                BusinessException.class,
+                () -> service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, false));
 
         assertEquals(ErrorCode.HARVEST_IN_WITHDRAWAL, e.getErrorCode());
         assertTrue(e.getMessage().contains("Mancozeb"));
@@ -98,7 +102,8 @@ class CosechaServiceTest {
 
     @Test
     void conConfirmacionGuardaLaCosechaMarcadaEnCarencia() {
-        Fumigacion f = Fumigacion.fromManualEntry(fecha.minusDays(3), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
+        Fumigacion f = Fumigacion.fromManualEntry(
+                fecha.minusDays(3), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
         f.fijarRestricciones(new RestriccionesFumigacion(14, null));
         when(fumigacionRepository.findBySiembraId(siembraId)).thenReturn(List.of(f));
         when(cosechaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -110,20 +115,21 @@ class CosechaServiceTest {
 
     @Test
     void fueraDeLaCarenciaNoQuedaMarcada() {
-        Fumigacion f = Fumigacion.fromManualEntry(fecha.minusDays(20), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
+        Fumigacion f = Fumigacion.fromManualEntry(
+                fecha.minusDays(20), "Mancozeb", 1.0, UnidadMedida.LITROS, 1.0, null, siembraId);
         f.fijarRestricciones(new RestriccionesFumigacion(14, null));
         when(fumigacionRepository.findBySiembraId(siembraId)).thenReturn(List.of(f));
         when(cosechaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        assertFalse(service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, false).isEnCarencia());
+        assertFalse(service.registrarCosecha(fecha, 300.0, "PRIMERA", "Buena", siembraId, null, false)
+                .isEnCarencia());
     }
 
     @Test
     void deberiaListarCosechasPorSiembra() {
         List<Cosecha> cosechas = List.of(
                 new Cosecha(1L, fecha, 100.0, CalidadCosecha.PRIMERA, "obs", siembraId),
-                new Cosecha(2L, fecha.plusDays(1), 200.0, CalidadCosecha.SEGUNDA, "obs", siembraId)
-        );
+                new Cosecha(2L, fecha.plusDays(1), 200.0, CalidadCosecha.SEGUNDA, "obs", siembraId));
         when(cosechaRepository.findBySiembraId(siembraId)).thenReturn(cosechas);
 
         List<Cosecha> resultado = service.listarCosechasPorSiembra(siembraId);

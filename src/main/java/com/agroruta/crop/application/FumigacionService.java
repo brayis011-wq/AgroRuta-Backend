@@ -1,26 +1,25 @@
 package com.agroruta.crop.application;
 
-import com.agroruta.shared.util.EnumParser;
 import com.agroruta.crop.application.ports.in.FumigacionUseCase;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
-import com.agroruta.crop.application.ports.out.InventarioPort;
-import com.agroruta.crop.domain.Finca;
 import com.agroruta.crop.application.ports.out.FincaRepository;
-import com.agroruta.crop.domain.Fumigacion;
+import com.agroruta.crop.application.ports.out.FumigacionRepository;
+import com.agroruta.crop.application.ports.out.InventarioPort;
 import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.domain.Finca;
+import com.agroruta.crop.domain.Fumigacion;
 import com.agroruta.crop.domain.RestriccionesFumigacion;
 import com.agroruta.crop.domain.Siembra;
+import com.agroruta.crop.domain.UnidadMedida;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import com.agroruta.crop.application.ports.out.FumigacionRepository;
-import com.agroruta.crop.domain.UnidadMedida;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.agroruta.shared.util.EnumParser;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.math.BigDecimal;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Fumigaciones de una siembra. Si el producto es del catálogo y se indica la cantidad total usada,
@@ -36,9 +35,12 @@ public class FumigacionService implements FumigacionUseCase {
     private final LoteRepository loteRepository;
     private final FincaRepository fincaRepository;
 
-    public FumigacionService(FumigacionRepository fumigacionRepository, SiembraUseCase siembraUseCase,
-                             InventarioPort inventario, LoteRepository loteRepository,
-                             FincaRepository fincaRepository) {
+    public FumigacionService(
+            FumigacionRepository fumigacionRepository,
+            SiembraUseCase siembraUseCase,
+            InventarioPort inventario,
+            LoteRepository loteRepository,
+            FincaRepository fincaRepository) {
         this.fumigacionRepository = fumigacionRepository;
         this.siembraUseCase = siembraUseCase;
         this.inventario = inventario;
@@ -48,15 +50,16 @@ public class FumigacionService implements FumigacionUseCase {
 
     @Override
     @Transactional
-    public Fumigacion registrarFumigacion(LocalDate fecha,
-                                          String producto,
-                                          Long agriculturalInputId,   // ← nuevo parámetro
-                                          Double dosis,
-                                          String unidadMedida,
-                                          Double areaAplicada,
-                                          String observaciones,
-                                          Long siembraId,
-                                          RestriccionesFumigacion restricciones) {
+    public Fumigacion registrarFumigacion(
+            LocalDate fecha,
+            String producto,
+            Long agriculturalInputId, // ← nuevo parámetro
+            Double dosis,
+            String unidadMedida,
+            Double areaAplicada,
+            String observaciones,
+            Long siembraId,
+            RestriccionesFumigacion restricciones) {
 
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
         if (!siembra.estaActiva()) {
@@ -72,10 +75,9 @@ public class FumigacionService implements FumigacionUseCase {
          * mantener el historial aunque el insumo sea eliminado del catálogo.
          */
         Fumigacion fumigacion = (agriculturalInputId != null)
-                ? Fumigacion.fromCatalog(fecha, producto, agriculturalInputId,
-                dosis, unidad, areaAplicada, observaciones, siembraId)
-                : Fumigacion.fromManualEntry(fecha, producto,
-                dosis, unidad, areaAplicada, observaciones, siembraId);
+                ? Fumigacion.fromCatalog(
+                        fecha, producto, agriculturalInputId, dosis, unidad, areaAplicada, observaciones, siembraId)
+                : Fumigacion.fromManualEntry(fecha, producto, dosis, unidad, areaAplicada, observaciones, siembraId);
 
         validarCantidad(restricciones);
         fumigacion.fijarRestricciones(restricciones);
@@ -85,16 +87,23 @@ public class FumigacionService implements FumigacionUseCase {
 
     @Override
     public Fumigacion buscarFumigacionPorId(Long id) {
-        return fumigacionRepository.findById(id)
+        return fumigacionRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Fumigación no encontrada con ID: " + id));
     }
 
     @Override
     @Transactional
-    public Fumigacion actualizarFumigacion(Long id, LocalDate fecha, String producto,
-                                           Long agriculturalInputId, Double dosis, String unidadMedida,
-                                           Double areaAplicada, String observaciones,
-                                           RestriccionesFumigacion restricciones) {
+    public Fumigacion actualizarFumigacion(
+            Long id,
+            LocalDate fecha,
+            String producto,
+            Long agriculturalInputId,
+            Double dosis,
+            String unidadMedida,
+            Double areaAplicada,
+            String observaciones,
+            RestriccionesFumigacion restricciones) {
         Fumigacion fumigacion = buscarFumigacionPorId(id);
         if (fecha != null) fumigacion.setFecha(fecha);
         if (producto != null && !producto.isBlank()) {
@@ -138,8 +147,13 @@ public class FumigacionService implements FumigacionUseCase {
         }
         Long agricultorId = agricultorDe(siembra).orElse(null);
         if (agricultorId == null) return f;
-        Optional<BigDecimal> costo = inventario.registrarUso(f.getId(), agricultorId, f.getAgriculturalInputId(),
-                f.getCantidadUsada(), f.getUnidadCantidad().name(), f.getFecha());
+        Optional<BigDecimal> costo = inventario.registrarUso(
+                f.getId(),
+                agricultorId,
+                f.getAgriculturalInputId(),
+                f.getCantidadUsada(),
+                f.getUnidadCantidad().name(),
+                f.getFecha());
         if (f.getCosto() == null && costo.isPresent()) {
             f.setCosto(costo.get());
             return fumigacionRepository.save(f);
@@ -149,7 +163,8 @@ public class FumigacionService implements FumigacionUseCase {
 
     private Optional<Long> agricultorDe(Siembra siembra) {
         if (siembra == null || siembra.getLoteId() == null) return Optional.empty();
-        return loteRepository.findById(siembra.getLoteId())
+        return loteRepository
+                .findById(siembra.getLoteId())
                 .flatMap(l -> fincaRepository.findById(l.getFincaId()))
                 .map(Finca::getAgricultorId);
     }

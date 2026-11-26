@@ -8,13 +8,13 @@ import java.util.List;
  * @param esPlanta false si en la foto no se distingue un cultivo (no se guarda)
  * @param modelo   modelo que respondió, para saber con qué se hizo cada diagnóstico
  */
-public record AnalisisFoto(boolean esPlanta,
-                           String problema,
-                           TipoProblema tipo,
-                           ConfianzaDiagnostico confianza,
-                           String sintomas,
-                           List<String> recomendaciones,
-                           List<String> otrasPosibilidades,
-                           String advertencia,
-                           String modelo) {
-}
+public record AnalisisFoto(
+        boolean esPlanta,
+        String problema,
+        TipoProblema tipo,
+        ConfianzaDiagnostico confianza,
+        String sintomas,
+        List<String> recomendaciones,
+        List<String> otrasPosibilidades,
+        String advertencia,
+        String modelo) {}

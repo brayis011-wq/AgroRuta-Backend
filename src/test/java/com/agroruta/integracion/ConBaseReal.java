@@ -1,5 +1,9 @@
 package com.agroruta.integracion;
 
+import java.security.SecureRandom;
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.Base64;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -8,11 +12,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mysql.MySQLContainer;
-
-import java.security.SecureRandom;
-import java.sql.PreparedStatement;
-import java.sql.Statement;
-import java.util.Base64;
 
 /**
  * Base de las pruebas que levantan la aplicación completa contra un MySQL real en Docker.
@@ -52,11 +51,13 @@ abstract class ConBaseReal {
     /** Inserta una fila y devuelve su id. */
     protected long insertar(String sql, Object... valores) {
         GeneratedKeyHolder llave = new GeneratedKeyHolder();
-        jdbc.update(conexion -> {
-            PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            for (int i = 0; i < valores.length; i++) ps.setObject(i + 1, valores[i]);
-            return ps;
-        }, llave);
+        jdbc.update(
+                conexion -> {
+                    PreparedStatement ps = conexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                    for (int i = 0; i < valores.length; i++) ps.setObject(i + 1, valores[i]);
+                    return ps;
+                },
+                llave);
         return llave.getKey().longValue();
     }
 

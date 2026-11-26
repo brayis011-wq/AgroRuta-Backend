@@ -11,8 +11,8 @@ import java.math.BigDecimal;
  * @param cantidadUsada  producto gastado en total (la dosis es una concentración, p. ej. 500 g por 200 L)
  * @param unidadCantidad LITROS, ML, KG o GRAMOS
  */
-public record RestriccionesFumigacion(Integer diasCarencia, Integer reentradaHoras, BigDecimal costo,
-                                      Double cantidadUsada, String unidadCantidad) {
+public record RestriccionesFumigacion(
+        Integer diasCarencia, Integer reentradaHoras, BigDecimal costo, Double cantidadUsada, String unidadCantidad) {
 
     public static final RestriccionesFumigacion NINGUNA = new RestriccionesFumigacion(null, null, null);
 

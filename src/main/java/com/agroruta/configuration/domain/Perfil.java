@@ -10,26 +10,25 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Perfil {
 
-    private Long   id;
+    private Long id;
     private String nombre;
     private String email;
     private String telefono;
     private String fotoPerfil;
-    private Rol    rol;
+    private Rol rol;
 
-    public Perfil(Long id, String nombre, String email,
-                  String telefono, String fotoPerfil, Rol rol) {
-        this.id         = id;
-        this.nombre     = nombre;
-        this.email      = email;
-        this.telefono   = telefono;
+    public Perfil(Long id, String nombre, String email, String telefono, String fotoPerfil, Rol rol) {
+        this.id = id;
+        this.nombre = nombre;
+        this.email = email;
+        this.telefono = telefono;
         this.fotoPerfil = fotoPerfil;
-        this.rol        = rol;
+        this.rol = rol;
     }
 
     public void actualizarDatos(String nombre, String telefono, String fotoPerfil) {
-        this.nombre     = nombre;
-        this.telefono   = telefono;
+        this.nombre = nombre;
+        this.telefono = telefono;
         this.fotoPerfil = FotoPerfil.validar(fotoPerfil);
     }
 }

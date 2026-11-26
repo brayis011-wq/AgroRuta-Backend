@@ -26,14 +26,28 @@ public class Sesion {
     private final String dispositivo;
     private final LocalDateTime iniciadaEn;
 
-    public Sesion(Long id, Long usuarioId, String tokenHash, LocalDateTime creadoEn, LocalDateTime expiraEn,
-                  LocalDateTime rotadoEn, LocalDateTime revocadoEn) {
+    public Sesion(
+            Long id,
+            Long usuarioId,
+            String tokenHash,
+            LocalDateTime creadoEn,
+            LocalDateTime expiraEn,
+            LocalDateTime rotadoEn,
+            LocalDateTime revocadoEn) {
         this(id, usuarioId, tokenHash, creadoEn, expiraEn, rotadoEn, revocadoEn, null, null, null);
     }
 
-    public Sesion(Long id, Long usuarioId, String tokenHash, LocalDateTime creadoEn, LocalDateTime expiraEn,
-                  LocalDateTime rotadoEn, LocalDateTime revocadoEn,
-                  String familia, String dispositivo, LocalDateTime iniciadaEn) {
+    public Sesion(
+            Long id,
+            Long usuarioId,
+            String tokenHash,
+            LocalDateTime creadoEn,
+            LocalDateTime expiraEn,
+            LocalDateTime rotadoEn,
+            LocalDateTime revocadoEn,
+            String familia,
+            String dispositivo,
+            LocalDateTime iniciadaEn) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.tokenHash = tokenHash;
@@ -51,15 +65,33 @@ public class Sesion {
     }
 
     /** Un inicio de sesión: familia nueva */
-    public static Sesion nueva(Long usuarioId, String tokenHash, LocalDateTime ahora, Duration duracion, String dispositivo) {
-        return new Sesion(null, usuarioId, tokenHash, ahora, ahora.plus(duracion), null, null,
-                UUID.randomUUID().toString(), dispositivo, ahora);
+    public static Sesion nueva(
+            Long usuarioId, String tokenHash, LocalDateTime ahora, Duration duracion, String dispositivo) {
+        return new Sesion(
+                null,
+                usuarioId,
+                tokenHash,
+                ahora,
+                ahora.plus(duracion),
+                null,
+                null,
+                UUID.randomUUID().toString(),
+                dispositivo,
+                ahora);
     }
 
     /** La sesión que reemplaza a esta al renovar: misma familia, dispositivo e inicio */
     public Sesion siguiente(String nuevoTokenHash, LocalDateTime ahora, Duration duracion) {
-        return new Sesion(null, usuarioId, nuevoTokenHash, ahora, ahora.plus(duracion), null, null,
-                familia != null ? familia : UUID.randomUUID().toString(), dispositivo,
+        return new Sesion(
+                null,
+                usuarioId,
+                nuevoTokenHash,
+                ahora,
+                ahora.plus(duracion),
+                null,
+                null,
+                familia != null ? familia : UUID.randomUUID().toString(),
+                dispositivo,
                 iniciadaEn != null ? iniciadaEn : creadoEn);
     }
 
@@ -93,15 +125,43 @@ public class Sesion {
         if (revocadoEn == null) revocadoEn = ahora;
     }
 
-    public Long getId() { return id; }
-    public Long getUsuarioId() { return usuarioId; }
-    public String getTokenHash() { return tokenHash; }
-    public LocalDateTime getCreadoEn() { return creadoEn; }
-    public LocalDateTime getExpiraEn() { return expiraEn; }
-    public LocalDateTime getRotadoEn() { return rotadoEn; }
-    public LocalDateTime getRevocadoEn() { return revocadoEn; }
-    public String getFamilia() { return familia; }
-    public String getDispositivo() { return dispositivo; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getUsuarioId() {
+        return usuarioId;
+    }
+
+    public String getTokenHash() {
+        return tokenHash;
+    }
+
+    public LocalDateTime getCreadoEn() {
+        return creadoEn;
+    }
+
+    public LocalDateTime getExpiraEn() {
+        return expiraEn;
+    }
+
+    public LocalDateTime getRotadoEn() {
+        return rotadoEn;
+    }
+
+    public LocalDateTime getRevocadoEn() {
+        return revocadoEn;
+    }
+
+    public String getFamilia() {
+        return familia;
+    }
+
+    public String getDispositivo() {
+        return dispositivo;
+    }
     /** Cuándo se inició la sesión (el login); en filas antiguas, cuando se creó la fila */
-    public LocalDateTime getIniciadaEn() { return iniciadaEn != null ? iniciadaEn : creadoEn; }
+    public LocalDateTime getIniciadaEn() {
+        return iniciadaEn != null ? iniciadaEn : creadoEn;
+    }
 }

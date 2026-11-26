@@ -1,5 +1,9 @@
 package com.agroruta.user.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.exception.SesionInvalidaException;
 import com.agroruta.user.application.SesionServiceTest.RelojMovil;
@@ -8,17 +12,12 @@ import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.SesionAbierta;
 import com.agroruta.user.domain.Usuario;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Sesiones abiertas")
 class SesionesAbiertasTest {
@@ -31,7 +30,8 @@ class SesionesAbiertasTest {
 
     @BeforeEach
     void preparar() {
-        when(usuarios.findById(7L)).thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash", Rol.Agricultor)));
+        when(usuarios.findById(7L))
+                .thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash", Rol.Agricultor)));
         service = new SesionService(repo, usuarios, Duration.ofDays(30), reloj, () -> dispositivo[0]);
     }
 
@@ -75,7 +75,11 @@ class SesionesAbiertasTest {
     void cerrarOtra() {
         String pc = service.abrir(7L);
         String celular = service.abrir(7L);
-        Long idCelular = service.listar(pc).stream().filter(s -> !s.actual()).findFirst().orElseThrow().id();
+        Long idCelular = service.listar(pc).stream()
+                .filter(s -> !s.actual())
+                .findFirst()
+                .orElseThrow()
+                .id();
 
         assertFalse(service.cerrar(pc, idCelular));
 
@@ -110,7 +114,8 @@ class SesionesAbiertasTest {
     @Test
     @DisplayName("nadie cierra la sesión de otra persona")
     void noCierraLaDeOtro() {
-        when(usuarios.findById(8L)).thenReturn(Optional.of(new Usuario(8L, "Luis", "luis@x.com", "hash", Rol.Agricultor)));
+        when(usuarios.findById(8L))
+                .thenReturn(Optional.of(new Usuario(8L, "Luis", "luis@x.com", "hash", Rol.Agricultor)));
         String ana = service.abrir(7L);
         String luis = service.abrir(8L);
         Long idDeLuis = service.listar(luis).get(0).id();

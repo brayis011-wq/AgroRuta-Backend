@@ -1,15 +1,14 @@
 package com.agroruta.shared.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("OpenApiConfig")
 class OpenApiConfigTest {
@@ -31,8 +30,7 @@ class OpenApiConfigTest {
         void shouldRegisterBearerKeyScheme() {
             OpenAPI api = config.customOpenAPI();
 
-            assertThat(api.getComponents().getSecuritySchemes())
-                    .containsKey("bearer-key");
+            assertThat(api.getComponents().getSecuritySchemes()).containsKey("bearer-key");
         }
 
         @Test
@@ -60,10 +58,7 @@ class OpenApiConfigTest {
         }
 
         private SecurityScheme getScheme() {
-            return config.customOpenAPI()
-                    .getComponents()
-                    .getSecuritySchemes()
-                    .get("bearer-key");
+            return config.customOpenAPI().getComponents().getSecuritySchemes().get("bearer-key");
         }
     }
 
@@ -84,8 +79,7 @@ class OpenApiConfigTest {
         void shouldIncludeBearerKeyInGlobalRequirement() {
             List<SecurityRequirement> requirements = config.customOpenAPI().getSecurity();
 
-            boolean hasBearerKey = requirements.stream()
-                    .anyMatch(req -> req.containsKey("bearer-key"));
+            boolean hasBearerKey = requirements.stream().anyMatch(req -> req.containsKey("bearer-key"));
 
             assertThat(hasBearerKey).isTrue();
         }

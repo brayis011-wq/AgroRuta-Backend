@@ -1,8 +1,9 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
 
 class ActividadCultivoTest {
 
@@ -10,8 +11,7 @@ class ActividadCultivoTest {
     void deberiaCrearActividadConConstructorCompleto() {
         LocalDate fecha = LocalDate.of(2026, 1, 15);
 
-        ActividadCultivo actividad = new ActividadCultivo(
-                1L, TipoActividad.RIEGO, "Riego por goteo", fecha, 10L);
+        ActividadCultivo actividad = new ActividadCultivo(1L, TipoActividad.RIEGO, "Riego por goteo", fecha, 10L);
 
         assertEquals(1L, actividad.getId());
         assertEquals(TipoActividad.RIEGO, actividad.getTipo());
@@ -52,8 +52,7 @@ class ActividadCultivoTest {
     @Test
     void deberiaSoportarTodosLosTiposDeActividad() {
         for (TipoActividad tipo : TipoActividad.values()) {
-            ActividadCultivo actividad = new ActividadCultivo(
-                    1L, tipo, "descripción", LocalDate.now(), 1L);
+            ActividadCultivo actividad = new ActividadCultivo(1L, tipo, "descripción", LocalDate.now(), 1L);
 
             assertEquals(tipo, actividad.getTipo());
         }

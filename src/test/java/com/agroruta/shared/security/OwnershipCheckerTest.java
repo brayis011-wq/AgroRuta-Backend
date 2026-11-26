@@ -1,5 +1,10 @@
 package com.agroruta.shared.security;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.infrastructure.security.CustomUserDetails;
@@ -12,18 +17,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OwnershipChecker")
 class OwnershipCheckerTest {
 
-    @Mock private ConsultaPropiedad consulta;
+    @Mock
+    private ConsultaPropiedad consulta;
 
-    @InjectMocks private OwnershipChecker ownership;
+    @InjectMocks
+    private OwnershipChecker ownership;
 
     private Authentication auth(Long id, Rol rol) {
         CustomUserDetails d = new CustomUserDetails(new Usuario(id, "Nombre", "a@a.com", "pw", rol));

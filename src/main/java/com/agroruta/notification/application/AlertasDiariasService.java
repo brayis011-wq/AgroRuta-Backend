@@ -1,31 +1,29 @@
 package com.agroruta.notification.application;
 
 import com.agroruta.crop.application.ports.in.AlertasCultivoUseCase;
+import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.crop.domain.Finca;
-import com.agroruta.crop.application.ports.out.FincaRepository;
 import com.agroruta.inventory.application.ports.in.StockBajoUseCase;
 import com.agroruta.inventory.domain.StockInsumo;
 import com.agroruta.notification.application.MensajesCorreo.ClimaFinca;
 import com.agroruta.notification.application.ports.in.AlertasDiariasUseCase;
 import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
 import com.agroruta.notification.application.ports.out.CorreoPort;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.weather.application.ports.in.WeatherUseCase;
 import com.agroruta.weather.domain.Pronostico;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.time.Clock;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * El resumen de cada mañana para los agricultores: fumigaciones, labores, reentrada, carencia
@@ -54,25 +52,31 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     /** Último día que se mandó, para que un reintento de la tarea no duplique correos */
     private final AtomicReference<LocalDate> ultimoEnvio = new AtomicReference<>();
 
-    @Autowired
-    public AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
-                                 AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo,
-                                 com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
-        this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo,
-                Clock.system(ZoneId.of("America/Bogota")), consejosClima);
-    }
-
-    AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
-                          AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                          MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj) {
+    AlertasDiariasService(
+            UsuarioRepository usuarios,
+            PreferenciasCorreoUseCase preferencias,
+            AlertasCultivoUseCase alertasCultivo,
+            FincaRepository fincas,
+            WeatherUseCase clima,
+            MensajesCorreo mensajes,
+            CorreoPort correo,
+            StockBajoUseCase stockBajo,
+            Clock reloj) {
         this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo, reloj, null);
     }
 
-    AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
-                          AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                          MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj,
-                          com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
+    @Autowired
+    public AlertasDiariasService(
+            UsuarioRepository usuarios,
+            PreferenciasCorreoUseCase preferencias,
+            AlertasCultivoUseCase alertasCultivo,
+            FincaRepository fincas,
+            WeatherUseCase clima,
+            MensajesCorreo mensajes,
+            CorreoPort correo,
+            StockBajoUseCase stockBajo,
+            Clock reloj,
+            com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
         this.consejosClima = consejosClima;
         this.usuarios = usuarios;
         this.preferencias = preferencias;
@@ -147,23 +151,44 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
         if (alertas.isEmpty() && tiempo.isEmpty() && stock.isEmpty() && consejos.isEmpty()) return false;
         String corto = resumenCorto(alertas, tiempo, stock, consejos, hoy);
         if (porPush) {
-            push.enviar(u.getId(), new com.agroruta.notification.domain.AvisoPush("Tu finca hoy",
-                    corto, "/dashboard", "resumen-" + hoy));
+            push.enviar(
+                    u.getId(),
+                    new com.agroruta.notification.domain.AvisoPush(
+                            "Tu finca hoy", corto, "/dashboard", "resumen-" + hoy));
         }
         if (bandeja != null) {
             // Los conteos dejan armar el texto en inglés; el resumen en español va como cuerpo
-            bandeja.avisar(new com.agroruta.notification.domain.AvisoBandeja.Nuevo(u.getId(),
-                    com.agroruta.notification.domain.AvisoBandeja.Tipo.RESUMEN_DIA, "Tu finca hoy", corto,
-                    java.util.Map.of("fecha", hoy.toString(), "alertas", alertas.size(), "clima", tiempo.size(),
-                            "insumos", stock.size(), "consejos", consejos.size()),
-                    "/dashboard", "resumen-" + hoy));
+            bandeja.avisar(new com.agroruta.notification.domain.AvisoBandeja.Nuevo(
+                    u.getId(),
+                    com.agroruta.notification.domain.AvisoBandeja.Tipo.RESUMEN_DIA,
+                    "Tu finca hoy",
+                    corto,
+                    java.util.Map.of(
+                            "fecha",
+                            hoy.toString(),
+                            "alertas",
+                            alertas.size(),
+                            "clima",
+                            tiempo.size(),
+                            "insumos",
+                            stock.size(),
+                            "consejos",
+                            consejos.size()),
+                    "/dashboard",
+                    "resumen-" + hoy));
         }
-        return porCorreo && correo.enviar(mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock, consejos));
+        return porCorreo
+                && correo.enviar(
+                        mensajes.resumenDiario(u.getNombre(), u.getEmail(), hoy, alertas, tiempo, stock, consejos));
     }
 
     /** Lo esencial del día en una o dos líneas, para la notificación del teléfono */
-    static String resumenCorto(List<AlertaCultivo> alertas, List<ClimaFinca> tiempo, List<StockInsumo> stock,
-                               List<com.agroruta.weather.domain.ConsejoClima> consejos, LocalDate hoy) {
+    static String resumenCorto(
+            List<AlertaCultivo> alertas,
+            List<ClimaFinca> tiempo,
+            List<StockInsumo> stock,
+            List<com.agroruta.weather.domain.ConsejoClima> consejos,
+            LocalDate hoy) {
         List<String> partes = new ArrayList<>();
         // Primero lo que cambia el plan del día: no fumigar, helada, lluvia fuerte
         consejos.stream()

@@ -1,7 +1,6 @@
 package com.agroruta.notification.application.ports.out;
 
 import com.agroruta.notification.domain.AvisoBandeja;
-
 import java.time.Instant;
 import java.util.List;
 

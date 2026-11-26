@@ -1,8 +1,9 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
 
 class FumigacionTest {
 
@@ -19,9 +20,8 @@ class FumigacionTest {
 
     @Test
     void deberiaCrearFumigacionDesdeCatalogoConTodosLosCampos() {
-        Fumigacion f = Fumigacion.fromCatalog(
-                FECHA, PRODUCTO, INSUMO_ID, DOSIS,
-                UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f =
+                Fumigacion.fromCatalog(FECHA, PRODUCTO, INSUMO_ID, DOSIS, UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
 
         assertEquals(FECHA, f.getFecha());
         assertEquals(PRODUCTO, f.getProducto());
@@ -35,9 +35,8 @@ class FumigacionTest {
 
     @Test
     void fromCatalogoDeberiaDejarIdNulo() {
-        Fumigacion f = Fumigacion.fromCatalog(
-                FECHA, PRODUCTO, INSUMO_ID, DOSIS,
-                UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f =
+                Fumigacion.fromCatalog(FECHA, PRODUCTO, INSUMO_ID, DOSIS, UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
 
         assertNull(f.getId());
     }
@@ -46,18 +45,14 @@ class FumigacionTest {
 
     @Test
     void deberiaCrearFumigacionManualSinInsumoDelCatalogo() {
-        Fumigacion f = Fumigacion.fromManualEntry(
-                FECHA, PRODUCTO, DOSIS, UNIDAD,
-                AREA, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f = Fumigacion.fromManualEntry(FECHA, PRODUCTO, DOSIS, UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
 
         assertNull(f.getAgriculturalInputId());
     }
 
     @Test
     void fromManualEntryDeberiaConservarElRestoDeLosCampos() {
-        Fumigacion f = Fumigacion.fromManualEntry(
-                FECHA, PRODUCTO, DOSIS, UNIDAD,
-                AREA, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f = Fumigacion.fromManualEntry(FECHA, PRODUCTO, DOSIS, UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
 
         assertEquals(FECHA, f.getFecha());
         assertEquals(PRODUCTO, f.getProducto());
@@ -72,18 +67,15 @@ class FumigacionTest {
 
     @Test
     void deberiaTenerInsumoDelCatalogoCuandoIdNoEsNulo() {
-        Fumigacion f = Fumigacion.fromCatalog(
-                FECHA, PRODUCTO, INSUMO_ID, DOSIS,
-                UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f =
+                Fumigacion.fromCatalog(FECHA, PRODUCTO, INSUMO_ID, DOSIS, UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
 
         assertTrue(f.tieneInsumoDelCatalogo());
     }
 
     @Test
     void noDeberiaTenerInsumoDelCatalogoCuandoIdEsNulo() {
-        Fumigacion f = Fumigacion.fromManualEntry(
-                FECHA, PRODUCTO, DOSIS, UNIDAD,
-                AREA, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f = Fumigacion.fromManualEntry(FECHA, PRODUCTO, DOSIS, UNIDAD, AREA, OBSERVACIONES, SIEMBRA_ID);
 
         assertFalse(f.tieneInsumoDelCatalogo());
     }
@@ -134,9 +126,8 @@ class FumigacionTest {
     @Test
     void deberiaAceptarTodasLasUnidadesDeMedida() {
         for (UnidadMedida unidad : UnidadMedida.values()) {
-            Fumigacion f = Fumigacion.fromCatalog(
-                    FECHA, PRODUCTO, INSUMO_ID, DOSIS,
-                    unidad, AREA, OBSERVACIONES, SIEMBRA_ID);
+            Fumigacion f =
+                    Fumigacion.fromCatalog(FECHA, PRODUCTO, INSUMO_ID, DOSIS, unidad, AREA, OBSERVACIONES, SIEMBRA_ID);
 
             assertEquals(unidad, f.getUnidadMedida());
         }
@@ -146,9 +137,7 @@ class FumigacionTest {
 
     @Test
     void deberiaAceptarObservacionesNulas() {
-        Fumigacion f = Fumigacion.fromCatalog(
-                FECHA, PRODUCTO, INSUMO_ID, DOSIS,
-                UNIDAD, AREA, null, SIEMBRA_ID);
+        Fumigacion f = Fumigacion.fromCatalog(FECHA, PRODUCTO, INSUMO_ID, DOSIS, UNIDAD, AREA, null, SIEMBRA_ID);
 
         assertNull(f.getObservaciones());
         assertTrue(f.tieneInsumoDelCatalogo());
@@ -156,8 +145,7 @@ class FumigacionTest {
 
     @Test
     void deberiaAceptarDosisCeroYAreaCero() {
-        Fumigacion f = Fumigacion.fromManualEntry(
-                FECHA, PRODUCTO, 0.0, UNIDAD, 0.0, OBSERVACIONES, SIEMBRA_ID);
+        Fumigacion f = Fumigacion.fromManualEntry(FECHA, PRODUCTO, 0.0, UNIDAD, 0.0, OBSERVACIONES, SIEMBRA_ID);
 
         assertEquals(0.0, f.getDosis());
         assertEquals(0.0, f.getAreaAplicada());

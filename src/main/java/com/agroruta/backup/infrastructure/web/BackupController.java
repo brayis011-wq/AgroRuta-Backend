@@ -9,6 +9,8 @@ import com.agroruta.backup.domain.BackupType;
 import com.agroruta.backup.infrastructure.web.dto.BackupResponse;
 import com.agroruta.backup.infrastructure.web.dto.RestoreRequest;
 import jakarta.validation.Valid;
+import java.nio.file.Path;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -24,9 +26,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.nio.file.Path;
-import java.util.List;
 
 /** Acceso restringido a Administrador en SecurityConfig (/api/backups/**). */
 @RestController
@@ -48,22 +47,23 @@ public class BackupController {
 
     @GetMapping
     public ResponseEntity<List<BackupResponse>> listar() {
-        return ResponseEntity.ok(listBackups.list().stream().map(BackupResponse::from).toList());
+        return ResponseEntity.ok(
+                listBackups.list().stream().map(BackupResponse::from).toList());
     }
 
     @GetMapping("/{name:.+}/download")
     public ResponseEntity<Resource> descargar(@PathVariable String name) {
         Path file = downloadBackup.getFile(name);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
                         ContentDisposition.attachment().filename(name).build().toString())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(new FileSystemResource(file));
     }
 
     @PostMapping("/{name:.+}/restore")
-    public ResponseEntity<Void> restaurar(@PathVariable String name,
-                                          @Valid @RequestBody RestoreRequest request) {
+    public ResponseEntity<Void> restaurar(@PathVariable String name, @Valid @RequestBody RestoreRequest request) {
         restoreBackup.restore(name);
         return ResponseEntity.noContent().build();
     }

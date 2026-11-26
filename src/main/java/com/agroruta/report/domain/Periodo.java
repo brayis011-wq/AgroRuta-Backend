@@ -1,7 +1,6 @@
 package com.agroruta.report.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
-
 import java.time.LocalDate;
 
 /**

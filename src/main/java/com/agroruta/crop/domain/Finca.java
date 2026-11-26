@@ -1,10 +1,10 @@
 package com.agroruta.crop.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter

@@ -1,13 +1,12 @@
 package com.agroruta.worker.domain;
 
-import com.agroruta.shared.exception.EstadoInvalidoException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class JornalTest {
 
@@ -17,9 +16,8 @@ class JornalTest {
     @BeforeEach
     void setUp() {
         cargo = new Cargo(1L, "Operario", "Trabajador de campo", new BigDecimal("50000"), true);
-        trabajador = new Trabajador(1L, "Juan", "Pérez", "123456789",
-                "3001234567", "Calle 1", LocalDate.now(),
-                TipoContrato.JORNAL, cargo);
+        trabajador = new Trabajador(
+                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1", LocalDate.now(), TipoContrato.JORNAL, cargo);
     }
 
     @Test
@@ -118,7 +116,8 @@ class JornalTest {
 
         // Sin valor del kilo y con un cargo que no lo tiene, se pide
         Jornal otro = new Jornal(null, LocalDate.now(), trabajador, 10L, "Café", null);
-        var e = assertThrows(com.agroruta.shared.exception.DatoInvalidoException.class,
+        var e = assertThrows(
+                com.agroruta.shared.exception.DatoInvalidoException.class,
                 () -> otro.pagarPorKilo(new BigDecimal("10"), null));
         assertTrue(e.getMessage().contains("kilo"));
     }

@@ -1,27 +1,26 @@
 package com.agroruta.inventory.application;
 
-import com.agroruta.inventory.application.ports.out.InventarioRepository;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
 import com.agroruta.inventory.application.ports.in.InventarioUseCase.CostoEstimado;
 import com.agroruta.inventory.application.ports.out.CatalogoInsumosPort;
+import com.agroruta.inventory.application.ports.out.InventarioRepository;
 import com.agroruta.inventory.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.*;
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("InventarioService")
 class InventarioServiceTest {
@@ -32,8 +31,10 @@ class InventarioServiceTest {
     private final Long ana = 9L;
     private InventarioService service;
 
-    private final InsumoCatalogo glifosato = new InsumoCatalogo(1L, "Glifosato", "HERBICIDA", MeasurementUnit.LITROS, true);
-    private final InsumoCatalogo mancozeb = new InsumoCatalogo(2L, "Mancozeb", "FUNGICIDA", MeasurementUnit.GRAMOS, true);
+    private final InsumoCatalogo glifosato =
+            new InsumoCatalogo(1L, "Glifosato", "HERBICIDA", MeasurementUnit.LITROS, true);
+    private final InsumoCatalogo mancozeb =
+            new InsumoCatalogo(2L, "Mancozeb", "FUNGICIDA", MeasurementUnit.GRAMOS, true);
 
     @BeforeEach
     void setUp() {
@@ -46,13 +47,14 @@ class InventarioServiceTest {
     }
 
     private MovimientoInventario compra(Long insumo, double base, Double costo) {
-        return MovimientoInventario.compra(ana, insumo, base, costo == null ? null : BigDecimal.valueOf(costo),
-                hoy.minusDays(5), null, null);
+        return MovimientoInventario.compra(
+                ana, insumo, base, costo == null ? null : BigDecimal.valueOf(costo), hoy.minusDays(5), null, null);
     }
 
     @Test
     void laCompraSeGuardaEnLaUnidadBase() {
-        MovimientoInventario m = service.registrarCompra(ana, 1L, 2.5, "LITROS", new BigDecimal("90000"), null, " Agro El Valle ", "");
+        MovimientoInventario m =
+                service.registrarCompra(ana, 1L, 2.5, "LITROS", new BigDecimal("90000"), null, " Agro El Valle ", "");
 
         assertEquals(TipoMovimiento.COMPRA, m.getTipo());
         assertEquals(2500, m.getCantidad());
@@ -64,21 +66,22 @@ class InventarioServiceTest {
 
     @Test
     void noSeCompraEnUnaUnidadDeOtroTipo() {
-        assertThrows(BusinessException.class,
-                () -> service.registrarCompra(ana, 1L, 2, "KG", null, null, null, null));
+        assertThrows(BusinessException.class, () -> service.registrarCompra(ana, 1L, 2, "KG", null, null, null, null));
         verify(repo, never()).guardar(any());
     }
 
     @Test
     void noSeCompraConFechaFutura() {
-        assertThrows(BusinessException.class,
+        assertThrows(
+                BusinessException.class,
                 () -> service.registrarCompra(ana, 1L, 1, "LITROS", null, hoy.plusDays(1), null, null));
     }
 
     @Test
     void insumoInexistenteDa404() {
         when(catalogo.buscar(99L)).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class,
+        assertThrows(
+                ResourceNotFoundException.class,
                 () -> service.registrarCompra(ana, 99L, 1, "LITROS", null, null, null, null));
     }
 
@@ -120,7 +123,7 @@ class InventarioServiceTest {
     @Test
     void registrarUsoDescuentaYDevuelveElCostoAPrecioPromedio() {
         when(repo.usoDeFumigacion(7L)).thenReturn(Optional.empty());
-        when(repo.movimientosDe(ana, 1L)).thenReturn(List.of(compra(1L, 4000, 120000.0)));  // 30 $/ml
+        when(repo.movimientosDe(ana, 1L)).thenReturn(List.of(compra(1L, 4000, 120000.0))); // 30 $/ml
 
         Optional<BigDecimal> costo = service.registrarUso(7L, ana, 1L, 0.75, "LITROS", hoy);
 
@@ -165,7 +168,9 @@ class InventarioServiceTest {
 
         List<StockInsumo> stock = service.stock(ana);
 
-        assertEquals(List.of("Glifosato", "Mancozeb"), stock.stream().map(StockInsumo::nombre).toList());
+        assertEquals(
+                List.of("Glifosato", "Mancozeb"),
+                stock.stream().map(StockInsumo::nombre).toList());
         assertEquals(EstadoStock.AGOTADO, stock.get(0).estado());
         assertEquals(EstadoStock.OK, stock.get(1).estado());
     }
@@ -194,7 +199,7 @@ class InventarioServiceTest {
 
     @Test
     void costoEstimadoConPrecioPromedio() {
-        when(repo.movimientosDe(ana, 2L)).thenReturn(List.of(compra(2L, 2000, 50000.0)));  // 25 $/g
+        when(repo.movimientosDe(ana, 2L)).thenReturn(List.of(compra(2L, 2000, 50000.0))); // 25 $/g
 
         CostoEstimado c = service.costoEstimado(ana, 2L, 0.4, "KG");
 

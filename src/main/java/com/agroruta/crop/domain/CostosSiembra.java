@@ -32,8 +32,7 @@ public record CostosSiembra(
         /** De dónde salen los ingresos: VENTAS, COSECHAS (precio anotado en la cosecha) o null si no hay */
         String fuenteIngresos,
         /** Kilos vendidos de la siembra (de sus ventas) */
-        double kgVendidos
-) {
+        double kgVendidos) {
     public record CostoTrabajador(Long trabajadorId, String nombre, int jornales, double valor) {}
 
     /** mes: "2026-10" */
