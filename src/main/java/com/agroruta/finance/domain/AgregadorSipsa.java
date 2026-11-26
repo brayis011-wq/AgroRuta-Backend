@@ -28,7 +28,8 @@ public final class AgregadorSipsa {
 
     /** Una fila de SIPSA; las que no tienen producto, semana o precio se ignoran */
     public void agregar(String producto, LocalDate semana, BigDecimal promedio, BigDecimal minimo, BigDecimal maximo) {
-        if (producto == null || producto.isBlank() || semana == null || promedio == null || promedio.signum() <= 0) return;
+        if (producto == null || producto.isBlank() || semana == null || promedio == null || promedio.signum() <= 0)
+            return;
         Suma s = sumas.computeIfAbsent(new Clave(producto.trim(), semana), k -> new Suma());
         s.total = s.total.add(promedio);
         s.mercados++;
@@ -51,8 +52,13 @@ public final class AgregadorSipsa {
         sumas.forEach((k, s) -> {
             if (!elegidas.contains(k.semana())) return;
             BigDecimal promedio = s.total.divide(BigDecimal.valueOf(s.mercados), 2, RoundingMode.HALF_UP);
-            res.add(new PrecioReferencia(k.producto(), k.semana(), promedio,
-                    s.minimo.setScale(2, RoundingMode.HALF_UP), s.maximo.setScale(2, RoundingMode.HALF_UP), s.mercados));
+            res.add(new PrecioReferencia(
+                    k.producto(),
+                    k.semana(),
+                    promedio,
+                    s.minimo.setScale(2, RoundingMode.HALF_UP),
+                    s.maximo.setScale(2, RoundingMode.HALF_UP),
+                    s.mercados));
         });
         return res;
     }

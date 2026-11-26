@@ -5,11 +5,10 @@ import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.security.CurrentUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.regex.Pattern;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
-
-import java.util.regex.Pattern;
 
 /**
  * Evita registros duplicados cuando el teléfono reenvía lo que guardó sin conexión.
@@ -46,12 +45,13 @@ public class EnvioUnicoInterceptor implements HandlerInterceptor {
         if (!envios.anotar(usuarioId, clave)) {
             throw new BusinessException(ErrorCode.DUPLICATE_SUBMISSION, "Este registro ya se había recibido.");
         }
-        request.setAttribute(ATRIBUTO, new Object[]{usuarioId, clave});
+        request.setAttribute(ATRIBUTO, new Object[] {usuarioId, clave});
         return true;
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
+    public void afterCompletion(
+            HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         if (!(request.getAttribute(ATRIBUTO) instanceof Object[] anotada)) return;
         if (ex != null || response.getStatus() >= 400) {
             envios.olvidar((Long) anotada[0], (String) anotada[1]);

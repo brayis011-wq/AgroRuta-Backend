@@ -1,9 +1,14 @@
 package com.agroruta.configuration.infrastructure.persistence;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.configuration.domain.Perfil;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.infrastructure.persistence.JpaUsuarioRepository;
 import com.agroruta.user.infrastructure.persistence.UsuarioEntity;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -13,12 +18,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.*;
 
 /**
  * Pruebas unitarias para {@link ProfileRepositoryAdapter}.
@@ -70,10 +69,8 @@ class ProfileRepositoryAdapterTest {
         @Test
         @DisplayName("debería retornar Optional con Perfil mapeado cuando el email existe")
         void deberiaRetornarPerfil_cuandoEmailExiste() {
-            when(jpaUsuarioRepository.findByEmail("ana@agroruta.com"))
-                    .thenReturn(Optional.of(entityEjemplo));
-            when(jpaFotoPerfilRepository.findById(1L))
-                    .thenReturn(Optional.of(new FotoPerfilEntity(1L, FOTO)));
+            when(jpaUsuarioRepository.findByEmail("ana@agroruta.com")).thenReturn(Optional.of(entityEjemplo));
+            when(jpaFotoPerfilRepository.findById(1L)).thenReturn(Optional.of(new FotoPerfilEntity(1L, FOTO)));
 
             Optional<Perfil> resultado = adapter.buscarPorEmail("ana@agroruta.com");
 
@@ -91,8 +88,7 @@ class ProfileRepositoryAdapterTest {
         @Test
         @DisplayName("debería retornar Optional vacío cuando el email no existe")
         void deberiaRetornarEmpty_cuandoEmailNoExiste() {
-            when(jpaUsuarioRepository.findByEmail("nadie@agroruta.com"))
-                    .thenReturn(Optional.empty());
+            when(jpaUsuarioRepository.findByEmail("nadie@agroruta.com")).thenReturn(Optional.empty());
 
             Optional<Perfil> resultado = adapter.buscarPorEmail("nadie@agroruta.com");
 
@@ -110,8 +106,7 @@ class ProfileRepositoryAdapterTest {
         @Test
         @DisplayName("debería retornar Optional con Perfil mapeado cuando el id existe")
         void deberiaRetornarPerfil_cuandoIdExiste() {
-            when(jpaUsuarioRepository.findById(1L))
-                    .thenReturn(Optional.of(entityEjemplo));
+            when(jpaUsuarioRepository.findById(1L)).thenReturn(Optional.of(entityEjemplo));
 
             Optional<Perfil> resultado = adapter.buscarPorId(1L);
 
@@ -124,8 +119,7 @@ class ProfileRepositoryAdapterTest {
         @Test
         @DisplayName("debería retornar Optional vacío cuando el id no existe")
         void deberiaRetornarEmpty_cuandoIdNoExiste() {
-            when(jpaUsuarioRepository.findById(99L))
-                    .thenReturn(Optional.empty());
+            when(jpaUsuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
             Optional<Perfil> resultado = adapter.buscarPorId(99L);
 
@@ -144,9 +138,12 @@ class ProfileRepositoryAdapterTest {
         @DisplayName("debería actualizar los campos de la entidad y retornar el Perfil guardado")
         void deberiaActualizarEntityYRetornarPerfil() {
             Perfil perfilActualizado = new Perfil(
-                    1L, "Ana Nueva", "ana@agroruta.com",
-                    "3109876543", "https://cdn.agroruta.com/nueva.jpg", Rol.Agricultor
-            );
+                    1L,
+                    "Ana Nueva",
+                    "ana@agroruta.com",
+                    "3109876543",
+                    "https://cdn.agroruta.com/nueva.jpg",
+                    Rol.Agricultor);
 
             // findById devuelve la entidad original
             when(jpaUsuarioRepository.findById(1L)).thenReturn(Optional.of(entityEjemplo));
@@ -214,9 +211,7 @@ class ProfileRepositoryAdapterTest {
         @Test
         @DisplayName("debería lanzar RuntimeException cuando el usuario no existe al guardar")
         void deberiaLanzarExcepcion_cuandoUsuarioNoExisteAlGuardar() {
-            Perfil perfilInexistente = new Perfil(
-                    99L, "X", "x@x.com", "000", "url", Rol.Agricultor
-            );
+            Perfil perfilInexistente = new Perfil(99L, "X", "x@x.com", "000", "url", Rol.Agricultor);
             when(jpaUsuarioRepository.findById(99L)).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> adapter.guardar(perfilInexistente))

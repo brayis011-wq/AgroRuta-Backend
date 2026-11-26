@@ -1,8 +1,14 @@
 package com.agroruta.report.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.report.application.ports.out.CropQueryPort;
 import com.agroruta.report.domain.CropDetail;
 import com.agroruta.report.domain.CropReport;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,13 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 /**
  * Pruebas unitarias para {@link GenerateCropReportService}.
@@ -40,15 +39,7 @@ class GenerateCropReportServiceTest {
 
     // ── fixture ──────────────────────────────────────────────────────────────
     private CropDetail detalleMock(Long id, String variedad) {
-        return new CropDetail(
-                id,
-                variedad,
-                "EN_PRODUCCION",
-                LocalDate.of(2025, 1, 10),
-                120L,
-                350.5,
-                3
-        );
+        return new CropDetail(id, variedad, "EN_PRODUCCION", LocalDate.of(2025, 1, 10), 120L, 350.5, 3);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -86,17 +77,12 @@ class GenerateCropReportServiceTest {
         @Test
         @DisplayName("debería propagar la lista de detalles del puerto sin modificarla")
         void deberiaPropagaListaDetalles() {
-            List<CropDetail> detalles = List.of(
-                    detalleMock(1L, "AURORA"),
-                    detalleMock(2L, "COLOMBIA")
-            );
+            List<CropDetail> detalles = List.of(detalleMock(1L, "AURORA"), detalleMock(2L, "COLOMBIA"));
             when(cropQueryPort.getAllCropDetails()).thenReturn(detalles);
 
             CropReport reporte = service.generate();
 
-            assertThat(reporte.cropDetails())
-                    .hasSize(2)
-                    .containsExactlyElementsOf(detalles);
+            assertThat(reporte.cropDetails()).hasSize(2).containsExactlyElementsOf(detalles);
         }
 
         @Test
@@ -136,15 +122,8 @@ class GenerateCropReportServiceTest {
         @Test
         @DisplayName("debería preservar todos los campos de cada CropDetail")
         void deberiaPreservarCamposDelDetalle() {
-            CropDetail detalle = new CropDetail(
-                    42L,
-                    "COLOMBIA",
-                    "COSECHADO",
-                    LocalDate.of(2024, 6, 1),
-                    300L,
-                    1200.75,
-                    8
-            );
+            CropDetail detalle =
+                    new CropDetail(42L, "COLOMBIA", "COSECHADO", LocalDate.of(2024, 6, 1), 300L, 1200.75, 8);
             when(cropQueryPort.getAllCropDetails()).thenReturn(List.of(detalle));
 
             CropReport reporte = service.generate();

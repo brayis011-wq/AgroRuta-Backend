@@ -1,15 +1,14 @@
 package com.agroruta.weather.infrastructure;
 
+import com.agroruta.shared.exception.ExternalApiException;
 import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.Pronostico;
 import com.agroruta.weather.domain.Weather;
-import com.agroruta.shared.exception.ExternalApiException;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-
 import java.util.List;
 import java.util.Map;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 @Component
 public class OpenWeatherAdapter implements WeatherApiPort {
@@ -27,15 +26,13 @@ public class OpenWeatherAdapter implements WeatherApiPort {
 
     @Override
     public Weather fetchWeatherByCity(String city) {
-        String url = String.format("%s/weather?q=%s&appid=%s&units=metric&lang=es",
-                baseUrl, city, apiKey);
+        String url = String.format("%s/weather?q=%s&appid=%s&units=metric&lang=es", baseUrl, city, apiKey);
         return callApi(url);
     }
 
     @Override
     public Weather fetchWeatherByCoordinates(double lat, double lon) {
-        String url = String.format("%s/weather?lat=%s&lon=%s&appid=%s&units=metric&lang=es",
-                baseUrl, lat, lon, apiKey);
+        String url = String.format("%s/weather?lat=%s&lon=%s&appid=%s&units=metric&lang=es", baseUrl, lat, lon, apiKey);
         return callApi(url);
     }
 
@@ -43,12 +40,19 @@ public class OpenWeatherAdapter implements WeatherApiPort {
     @Override
     @SuppressWarnings("unchecked")
     public Pronostico fetchPronostico24h(double lat, double lon) {
-        String url = String.format(java.util.Locale.ROOT, "%s/forecast?lat=%s&lon=%s&cnt=8&appid=%s&units=metric",
-                baseUrl, lat, lon, apiKey);
+        String url = String.format(
+                java.util.Locale.ROOT,
+                "%s/forecast?lat=%s&lon=%s&cnt=8&appid=%s&units=metric",
+                baseUrl,
+                lat,
+                lon,
+                apiKey);
         try {
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            List<Map<String, Object>> franjas = response == null ? null : (List<Map<String, Object>>) response.get("list");
-            if (franjas == null || franjas.isEmpty()) throw new ExternalApiException("Pronóstico vacío de OpenWeatherMap");
+            List<Map<String, Object>> franjas =
+                    response == null ? null : (List<Map<String, Object>>) response.get("list");
+            if (franjas == null || franjas.isEmpty())
+                throw new ExternalApiException("Pronóstico vacío de OpenWeatherMap");
             return resumir(franjas);
         } catch (ExternalApiException e) {
             throw e;
@@ -62,12 +66,19 @@ public class OpenWeatherAdapter implements WeatherApiPort {
     @Override
     @SuppressWarnings("unchecked")
     public List<com.agroruta.weather.domain.FranjaClima> fetchFranjas48h(double lat, double lon) {
-        String url = String.format(java.util.Locale.ROOT, "%s/forecast?lat=%s&lon=%s&cnt=16&appid=%s&units=metric",
-                baseUrl, lat, lon, apiKey);
+        String url = String.format(
+                java.util.Locale.ROOT,
+                "%s/forecast?lat=%s&lon=%s&cnt=16&appid=%s&units=metric",
+                baseUrl,
+                lat,
+                lon,
+                apiKey);
         try {
             Map<String, Object> response = restTemplate.getForObject(url, Map.class);
-            List<Map<String, Object>> franjas = response == null ? null : (List<Map<String, Object>>) response.get("list");
-            if (franjas == null || franjas.isEmpty()) throw new ExternalApiException("Pronóstico vacío de OpenWeatherMap");
+            List<Map<String, Object>> franjas =
+                    response == null ? null : (List<Map<String, Object>>) response.get("list");
+            if (franjas == null || franjas.isEmpty())
+                throw new ExternalApiException("Pronóstico vacío de OpenWeatherMap");
             return franjas(franjas);
         } catch (ExternalApiException e) {
             throw e;
@@ -125,9 +136,9 @@ public class OpenWeatherAdapter implements WeatherApiPort {
 
             if (response == null) throw new ExternalApiException("Respuesta vacía de OpenWeatherMap");
 
-            Map<String, Object> main    = (Map<String, Object>) response.get("main");
-            Map<String, Object> wind    = (Map<String, Object>) response.get("wind");
-            Map<String, Object> sys     = (Map<String, Object>) response.get("sys");
+            Map<String, Object> main = (Map<String, Object>) response.get("main");
+            Map<String, Object> wind = (Map<String, Object>) response.get("wind");
+            Map<String, Object> sys = (Map<String, Object>) response.get("sys");
             List<Map<String, Object>> weatherList = (List<Map<String, Object>>) response.get("weather");
             Map<String, Object> weatherInfo = weatherList.get(0);
 

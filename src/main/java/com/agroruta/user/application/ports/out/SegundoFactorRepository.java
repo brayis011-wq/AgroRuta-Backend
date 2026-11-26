@@ -1,7 +1,6 @@
 package com.agroruta.user.application.ports.out;
 
 import com.agroruta.user.domain.SegundoFactor;
-
 import java.util.Optional;
 
 public interface SegundoFactorRepository {

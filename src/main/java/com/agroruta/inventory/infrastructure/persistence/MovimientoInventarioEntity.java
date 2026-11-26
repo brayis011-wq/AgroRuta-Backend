@@ -2,12 +2,11 @@ package com.agroruta.inventory.infrastructure.persistence;
 
 import com.agroruta.inventory.domain.TipoMovimiento;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.math.BigDecimal;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "movimientos_inventario")

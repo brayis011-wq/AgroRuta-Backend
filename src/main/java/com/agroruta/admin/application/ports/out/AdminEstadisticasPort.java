@@ -2,7 +2,6 @@ package com.agroruta.admin.application.ports.out;
 
 import com.agroruta.admin.domain.ConteoAgricultor;
 import com.agroruta.admin.domain.EstadisticasSistema;
-
 import java.util.Map;
 
 public interface AdminEstadisticasPort {

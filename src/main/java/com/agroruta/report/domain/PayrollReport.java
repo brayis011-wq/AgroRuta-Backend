@@ -12,8 +12,7 @@ public record PayrollReport(
         List<MonthlyPayment> pagosPorMes,
         /** Suma de nóminas pendientes y aprobadas que aún no se pagan */
         BigDecimal totalPendiente,
-        int nominasPendientes
-) {
+        int nominasPendientes) {
     public PayrollReport {
         totalAccumulated = totalAccumulated != null ? totalAccumulated : BigDecimal.ZERO;
         workerDetails = workerDetails != null ? workerDetails : List.of();
@@ -22,7 +21,8 @@ public record PayrollReport(
     }
 
     /** Solo los datos básicos (sin serie mensual ni pendientes). */
-    public PayrollReport(LocalDateTime generatedAt, BigDecimal totalAccumulated, List<WorkerPayrollDetail> workerDetails) {
+    public PayrollReport(
+            LocalDateTime generatedAt, BigDecimal totalAccumulated, List<WorkerPayrollDetail> workerDetails) {
         this(generatedAt, totalAccumulated, workerDetails, List.of(), BigDecimal.ZERO, 0);
     }
 }

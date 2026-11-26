@@ -1,13 +1,13 @@
 package com.agroruta.worker.application.ports.out;
 
 import com.agroruta.worker.domain.Trabajador;
-
 import java.util.List;
 import java.util.Optional;
 
 public interface TrabajadorRepository {
 
     Trabajador guardar(Trabajador trabajador);
+
     Optional<Trabajador> buscarPorId(Long id);
 
     /**
@@ -18,10 +18,15 @@ public interface TrabajadorRepository {
 
     /** Trabajador vinculado a una cuenta de usuario (portal del trabajador). */
     Optional<Trabajador> buscarPorUsuarioId(Long usuarioId);
+
     List<Trabajador> listarTodos();
+
     List<Trabajador> listarActivos();
+
     List<Trabajador> listarTodosPorAgricultor(Long agricultorId);
+
     List<Trabajador> listarActivosPorAgricultor(Long agricultorId);
+
     void eliminar(Long id);
     /** ¿Ese agricultor ya registró esa cédula? Otro agricultor sí puede registrar a la misma persona. */
     boolean existePorCedulaYAgricultor(String cedula, Long agricultorId);

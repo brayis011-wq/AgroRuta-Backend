@@ -9,9 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 @ConfigurationPropertiesScan
 public class AgrorutaApplication {
 
-	public static void main(String[] args) {
-		ZonaHoraria.fijarPorDefecto();
-		SpringApplication.run(AgrorutaApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        ZonaHoraria.fijarPorDefecto();
+        SpringApplication.run(AgrorutaApplication.class, args);
+    }
 }

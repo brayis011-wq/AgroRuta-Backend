@@ -1,21 +1,22 @@
 package com.agroruta.worker.infrastructure.persistence;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "cargos", uniqueConstraints = {
-        @UniqueConstraint(
-                name = "uk_cargo_nombre_agricultor",
-                columnNames = {"nombre", "agricultor_id"}
-        )
-})
+@Table(
+        name = "cargos",
+        uniqueConstraints = {
+            @UniqueConstraint(
+                    name = "uk_cargo_nombre_agricultor",
+                    columnNames = {"nombre", "agricultor_id"})
+        })
 public class CargoEntity {
 
     @Id

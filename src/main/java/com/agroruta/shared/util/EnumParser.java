@@ -19,9 +19,8 @@ public final class EnumParser {
         try {
             return Enum.valueOf(type, value.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            String opciones = Arrays.stream(type.getEnumConstants())
-                    .map(Enum::name)
-                    .collect(Collectors.joining(", "));
+            String opciones =
+                    Arrays.stream(type.getEnumConstants()).map(Enum::name).collect(Collectors.joining(", "));
             throw new DatoInvalidoException(
                     "Valor no válido para " + campo + ": '" + value + "'. Opciones: " + opciones);
         }

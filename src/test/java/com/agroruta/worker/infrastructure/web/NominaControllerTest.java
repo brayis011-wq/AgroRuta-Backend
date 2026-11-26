@@ -1,5 +1,9 @@
 package com.agroruta.worker.infrastructure.web;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.EstadoInvalidoException;
@@ -11,6 +15,9 @@ import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.domain.*;
 import com.agroruta.worker.infrastructure.web.dto.NominaRequest;
 import com.agroruta.worker.infrastructure.web.dto.NominaResponse;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,15 +30,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("NominaController - Pruebas Unitarias")
@@ -48,18 +46,23 @@ class NominaControllerTest {
     private Cargo cargoBase;
 
     private final LocalDate INICIO = LocalDate.of(2025, 1, 1);
-    private final LocalDate FIN    = LocalDate.of(2025, 1, 31);
-    private final LocalDate FECHA  = LocalDate.of(2025, 1, 15);
+    private final LocalDate FIN = LocalDate.of(2025, 1, 31);
+    private final LocalDate FECHA = LocalDate.of(2025, 1, 15);
 
     @BeforeEach
     void setUp() {
         cargoBase = new Cargo(1L, "Operario", "Cargo operario", new BigDecimal("80000"), true);
 
         trabajadorBase = new Trabajador(
-                1L, "Juan", "Pérez", "123456789",
-                "3001234567", "Calle 1", LocalDate.of(2020, 1, 1),
-                TipoContrato.JORNAL, cargoBase
-        );
+                1L,
+                "Juan",
+                "Pérez",
+                "123456789",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2020, 1, 1),
+                TipoContrato.JORNAL,
+                cargoBase);
 
         Jornal jornal = new Jornal(1L, FECHA, trabajadorBase, 10L, "Maíz", "Sin observaciones");
         nominaBase = new Nomina(1L, trabajadorBase, INICIO, FIN, List.of(jornal));
@@ -72,9 +75,9 @@ class NominaControllerTest {
 
     private NominaRequest request() {
         NominaRequest req = new NominaRequest();
-        req.trabajadorId  = 1L;
+        req.trabajadorId = 1L;
         req.periodoInicio = INICIO;
-        req.periodoFin    = FIN;
+        req.periodoFin = FIN;
         return req;
     }
 
@@ -94,10 +97,10 @@ class NominaControllerTest {
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,                    response.getBody().id);
-            assertEquals(INICIO,                response.getBody().periodoInicio);
-            assertEquals(FIN,                   response.getBody().periodoFin);
-            assertEquals(1,                     response.getBody().totalJornales);
+            assertEquals(1L, response.getBody().id);
+            assertEquals(INICIO, response.getBody().periodoInicio);
+            assertEquals(FIN, response.getBody().periodoFin);
+            assertEquals(1, response.getBody().totalJornales);
             assertEquals(new BigDecimal("80000"), response.getBody().valorTotal);
             assertEquals(EstadoNomina.PENDIENTE, response.getBody().estado);
             verify(nominaUseCase, times(1)).generarNomina(1L, INICIO, FIN);
@@ -109,10 +112,8 @@ class NominaControllerTest {
             when(nominaUseCase.generarNomina(any(), any(), any()))
                     .thenThrow(new ResourceNotFoundException("Trabajador", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> nominaController.generar(request())
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> nominaController.generar(request()));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(nominaUseCase, times(1)).generarNomina(any(), any(), any());
@@ -123,13 +124,9 @@ class NominaControllerTest {
         void debePropaglarExcepcionSiNoHayJornales() {
             when(nominaUseCase.generarNomina(any(), any(), any()))
                     .thenThrow(new BusinessException(
-                            ErrorCode.BUSINESS_RULE_VIOLATION,
-                            "No hay jornales en el periodo indicado"));
+                            ErrorCode.BUSINESS_RULE_VIOLATION, "No hay jornales en el periodo indicado"));
 
-            BusinessException ex = assertThrows(
-                    BusinessException.class,
-                    () -> nominaController.generar(request())
-            );
+            BusinessException ex = assertThrows(BusinessException.class, () -> nominaController.generar(request()));
 
             assertEquals(ErrorCode.BUSINESS_RULE_VIOLATION, ex.getErrorCode());
             verify(nominaUseCase, times(1)).generarNomina(any(), any(), any());
@@ -152,22 +149,19 @@ class NominaControllerTest {
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,    response.getBody().id);
+            assertEquals(1L, response.getBody().id);
             assertEquals(INICIO, response.getBody().periodoInicio);
-            assertEquals(FIN,    response.getBody().periodoFin);
+            assertEquals(FIN, response.getBody().periodoFin);
             verify(nominaUseCase, times(1)).buscarPorId(1L);
         }
 
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
-            when(nominaUseCase.buscarPorId(99L))
-                    .thenThrow(new ResourceNotFoundException("Nomina", 99L));
+            when(nominaUseCase.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("Nomina", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> nominaController.buscarPorId(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> nominaController.buscarPorId(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(nominaUseCase, times(1)).buscarPorId(99L);
@@ -219,8 +213,7 @@ class NominaControllerTest {
         void debeRetornar200ConTodasLasNominas() {
             when(nominaUseCase.listarTodas()).thenReturn(List.of(nominaBase));
 
-            ResponseEntity<List<NominaResponse>> response =
-                    nominaController.listarTodas(auth(99L, Rol.Administrador));
+            ResponseEntity<List<NominaResponse>> response = nominaController.listarTodas(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -233,8 +226,7 @@ class NominaControllerTest {
         void debeRetornar200ConListaVacia() {
             when(nominaUseCase.listarTodas()).thenReturn(List.of());
 
-            ResponseEntity<List<NominaResponse>> response =
-                    nominaController.listarTodas(auth(99L, Rol.Administrador));
+            ResponseEntity<List<NominaResponse>> response = nominaController.listarTodas(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getBody().isEmpty());
@@ -266,13 +258,10 @@ class NominaControllerTest {
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
-            when(nominaUseCase.aprobarNomina(99L))
-                    .thenThrow(new ResourceNotFoundException("Nomina", 99L));
+            when(nominaUseCase.aprobarNomina(99L)).thenThrow(new ResourceNotFoundException("Nomina", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> nominaController.aprobar(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> nominaController.aprobar(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(nominaUseCase, times(1)).aprobarNomina(99L);
@@ -282,13 +271,10 @@ class NominaControllerTest {
         @DisplayName("Debe propagar EstadoInvalidoException si la nómina no está en estado PENDIENTE")
         void debePropaglarExcepcionSiEstadoInvalido() {
             when(nominaUseCase.aprobarNomina(1L))
-                    .thenThrow(new EstadoInvalidoException(
-                            "Solo se pueden aprobar nóminas en estado PENDIENTE."));
+                    .thenThrow(new EstadoInvalidoException("Solo se pueden aprobar nóminas en estado PENDIENTE."));
 
-            EstadoInvalidoException ex = assertThrows(
-                    EstadoInvalidoException.class,
-                    () -> nominaController.aprobar(1L)
-            );
+            EstadoInvalidoException ex =
+                    assertThrows(EstadoInvalidoException.class, () -> nominaController.aprobar(1L));
 
             assertTrue(ex.getMessage().contains("PENDIENTE"));
             verify(nominaUseCase, times(1)).aprobarNomina(1L);
@@ -318,12 +304,11 @@ class NominaControllerTest {
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
             doThrow(new ResourceNotFoundException("Nomina", 99L))
-                    .when(nominaUseCase).anularNomina(99L);
+                    .when(nominaUseCase)
+                    .anularNomina(99L);
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> nominaController.anular(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> nominaController.anular(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(nominaUseCase, times(1)).anularNomina(99L);
@@ -333,12 +318,10 @@ class NominaControllerTest {
         @DisplayName("Debe propagar EstadoInvalidoException si la nómina ya está pagada")
         void debePropaglarExcepcionSiNominaYaPagada() {
             doThrow(new EstadoInvalidoException("No se puede anular una nómina ya pagada."))
-                    .when(nominaUseCase).anularNomina(1L);
+                    .when(nominaUseCase)
+                    .anularNomina(1L);
 
-            EstadoInvalidoException ex = assertThrows(
-                    EstadoInvalidoException.class,
-                    () -> nominaController.anular(1L)
-            );
+            EstadoInvalidoException ex = assertThrows(EstadoInvalidoException.class, () -> nominaController.anular(1L));
 
             assertTrue(ex.getMessage().contains("pagada"));
             verify(nominaUseCase, times(1)).anularNomina(1L);
@@ -370,13 +353,10 @@ class NominaControllerTest {
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
-            when(nominaUseCase.reactivarNomina(99L))
-                    .thenThrow(new ResourceNotFoundException("Nomina", 99L));
+            when(nominaUseCase.reactivarNomina(99L)).thenThrow(new ResourceNotFoundException("Nomina", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> nominaController.reactivar(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> nominaController.reactivar(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(nominaUseCase, times(1)).reactivarNomina(99L);
@@ -386,13 +366,10 @@ class NominaControllerTest {
         @DisplayName("Debe propagar EstadoInvalidoException si la nómina no está ANULADA")
         void debePropaglarExcepcionSiEstadoInvalido() {
             when(nominaUseCase.reactivarNomina(1L))
-                    .thenThrow(new EstadoInvalidoException(
-                            "Solo se pueden reactivar nóminas en estado ANULADA."));
+                    .thenThrow(new EstadoInvalidoException("Solo se pueden reactivar nóminas en estado ANULADA."));
 
-            EstadoInvalidoException ex = assertThrows(
-                    EstadoInvalidoException.class,
-                    () -> nominaController.reactivar(1L)
-            );
+            EstadoInvalidoException ex =
+                    assertThrows(EstadoInvalidoException.class, () -> nominaController.reactivar(1L));
 
             assertTrue(ex.getMessage().contains("ANULADA"));
             verify(nominaUseCase, times(1)).reactivarNomina(1L);
@@ -422,12 +399,11 @@ class NominaControllerTest {
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
             doThrow(new ResourceNotFoundException("Nomina", 99L))
-                    .when(nominaUseCase).eliminarNomina(99L);
+                    .when(nominaUseCase)
+                    .eliminarNomina(99L);
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> nominaController.eliminar(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> nominaController.eliminar(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(nominaUseCase, times(1)).eliminarNomina(99L);
@@ -436,14 +412,11 @@ class NominaControllerTest {
         @Test
         @DisplayName("Debe propagar BusinessException si la nómina no se puede eliminar")
         void debePropaglarExcepcionPorReglaNegocio() {
-            doThrow(new BusinessException(
-                    ErrorCode.INVALID_OPERATION, "No se puede eliminar una nómina aprobada"))
-                    .when(nominaUseCase).eliminarNomina(1L);
+            doThrow(new BusinessException(ErrorCode.INVALID_OPERATION, "No se puede eliminar una nómina aprobada"))
+                    .when(nominaUseCase)
+                    .eliminarNomina(1L);
 
-            BusinessException ex = assertThrows(
-                    BusinessException.class,
-                    () -> nominaController.eliminar(1L)
-            );
+            BusinessException ex = assertThrows(BusinessException.class, () -> nominaController.eliminar(1L));
 
             assertEquals(ErrorCode.INVALID_OPERATION, ex.getErrorCode());
             verify(nominaUseCase, times(1)).eliminarNomina(1L);
@@ -462,8 +435,7 @@ class NominaControllerTest {
         void listarTodasSoloLasSuyas() {
             when(nominaUseCase.listarTodasDe(5L)).thenReturn(List.of(nominaBase));
 
-            ResponseEntity<List<NominaResponse>> response =
-                    nominaController.listarTodas(auth(5L, Rol.Agricultor));
+            ResponseEntity<List<NominaResponse>> response = nominaController.listarTodas(auth(5L, Rol.Agricultor));
 
             assertEquals(1, response.getBody().size());
             verify(nominaUseCase).listarTodasDe(5L);

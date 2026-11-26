@@ -1,7 +1,6 @@
 package com.agroruta.finance.application.ports.out;
 
 import com.agroruta.finance.domain.PrecioReferencia;
-
 import java.io.InputStream;
 import java.util.List;
 

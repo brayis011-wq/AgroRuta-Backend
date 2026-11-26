@@ -1,21 +1,19 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import java.time.LocalDateTime;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.domain.Finca;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FincaRepositoryImplTest {
@@ -28,17 +26,17 @@ class FincaRepositoryImplTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long          ID             = 1L;
-    private static final Long          AGRICULTOR_ID  = 10L;
-    private static final String        NOMBRE         = "Finca El Paraíso";
-    private static final String        UBICACION      = "Cundinamarca";
-    private static final Double        HECTAREAS      = 50.0;
+    private static final Long ID = 1L;
+    private static final Long AGRICULTOR_ID = 10L;
+    private static final String NOMBRE = "Finca El Paraíso";
+    private static final String UBICACION = "Cundinamarca";
+    private static final Double HECTAREAS = 50.0;
     private static final LocalDateTime FECHA_REGISTRO = LocalDateTime.of(2023, 3, 15, 0, 0);
-    private static final Double        LAT            = 4.7110;
-    private static final Double        LNG            = -74.0721;
+    private static final Double LAT = 4.7110;
+    private static final Double LNG = -74.0721;
 
     private FincaEntity entityGuardada;
-    private Finca       dominioEntrada;
+    private Finca dominioEntrada;
 
     @BeforeEach
     void setUp() {
@@ -70,14 +68,14 @@ class FincaRepositoryImplTest {
 
         Finca resultado = repository.save(dominioEntrada);
 
-        assertEquals(ID,             resultado.getId());
-        assertEquals(NOMBRE,         resultado.getNombre());
-        assertEquals(UBICACION,      resultado.getUbicacion());
-        assertEquals(HECTAREAS,      resultado.getHectareas());
-        assertEquals(AGRICULTOR_ID,  resultado.getAgricultorId());
+        assertEquals(ID, resultado.getId());
+        assertEquals(NOMBRE, resultado.getNombre());
+        assertEquals(UBICACION, resultado.getUbicacion());
+        assertEquals(HECTAREAS, resultado.getHectareas());
+        assertEquals(AGRICULTOR_ID, resultado.getAgricultorId());
         assertEquals(FECHA_REGISTRO, resultado.getFechaRegistro());
-        assertEquals(LAT,            resultado.getCentroideLat());
-        assertEquals(LNG,            resultado.getCentroideLng());
+        assertEquals(LAT, resultado.getCentroideLat());
+        assertEquals(LNG, resultado.getCentroideLng());
         verify(jpaRepository, times(1)).save(any(FincaEntity.class));
     }
 
@@ -87,15 +85,14 @@ class FincaRepositoryImplTest {
 
         repository.save(dominioEntrada);
 
-        verify(jpaRepository).save(argThat(entity ->
-                entity.getNombre()       .equals(NOMBRE)         &&
-                        entity.getUbicacion()    .equals(UBICACION)      &&
-                        entity.getHectareas()    .equals(HECTAREAS)      &&
-                        entity.getAgricultorId() .equals(AGRICULTOR_ID)  &&
-                        entity.getFechaRegistro().equals(FECHA_REGISTRO) &&
-                        entity.getCentroideLat() .equals(LAT)            &&
-                        entity.getCentroideLng() .equals(LNG)
-        ));
+        verify(jpaRepository)
+                .save(argThat(entity -> entity.getNombre().equals(NOMBRE)
+                        && entity.getUbicacion().equals(UBICACION)
+                        && entity.getHectareas().equals(HECTAREAS)
+                        && entity.getAgricultorId().equals(AGRICULTOR_ID)
+                        && entity.getFechaRegistro().equals(FECHA_REGISTRO)
+                        && entity.getCentroideLat().equals(LAT)
+                        && entity.getCentroideLng().equals(LNG)));
     }
 
     @Test
@@ -132,14 +129,14 @@ class FincaRepositoryImplTest {
         Optional<Finca> resultado = repository.findById(ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,             resultado.get().getId());
-        assertEquals(NOMBRE,         resultado.get().getNombre());
-        assertEquals(UBICACION,      resultado.get().getUbicacion());
-        assertEquals(HECTAREAS,      resultado.get().getHectareas());
-        assertEquals(AGRICULTOR_ID,  resultado.get().getAgricultorId());
+        assertEquals(ID, resultado.get().getId());
+        assertEquals(NOMBRE, resultado.get().getNombre());
+        assertEquals(UBICACION, resultado.get().getUbicacion());
+        assertEquals(HECTAREAS, resultado.get().getHectareas());
+        assertEquals(AGRICULTOR_ID, resultado.get().getAgricultorId());
         assertEquals(FECHA_REGISTRO, resultado.get().getFechaRegistro());
-        assertEquals(LAT,            resultado.get().getCentroideLat());
-        assertEquals(LNG,            resultado.get().getCentroideLng());
+        assertEquals(LAT, resultado.get().getCentroideLat());
+        assertEquals(LNG, resultado.get().getCentroideLng());
     }
 
     @Test
@@ -181,14 +178,15 @@ class FincaRepositoryImplTest {
 
         List<Finca> resultado = repository.findByAgricultorId(AGRICULTOR_ID);
 
-        assertEquals(2,                    resultado.size());
-        assertEquals(NOMBRE,               resultado.get(0).getNombre());
+        assertEquals(2, resultado.size());
+        assertEquals(NOMBRE, resultado.get(0).getNombre());
         assertEquals("Finca La Esperanza", resultado.get(1).getNombre());
     }
 
     @Test
     void deberiaRetornarListaVaciaSiElAgricultorNoTieneFincas() {
-        when(jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(AGRICULTOR_ID)).thenReturn(List.of());
+        when(jpaRepository.findByAgricultorIdAndEliminadoEnIsNull(AGRICULTOR_ID))
+                .thenReturn(List.of());
 
         List<Finca> resultado = repository.findByAgricultorId(AGRICULTOR_ID);
 
@@ -215,8 +213,8 @@ class FincaRepositoryImplTest {
 
         assertEquals(AGRICULTOR_ID, resultado.get(0).getAgricultorId());
         assertEquals(AGRICULTOR_ID, resultado.get(1).getAgricultorId());
-        assertEquals(5.0,           resultado.get(1).getCentroideLat());
-        assertEquals(-75.0,         resultado.get(1).getCentroideLng());
+        assertEquals(5.0, resultado.get(1).getCentroideLat());
+        assertEquals(-75.0, resultado.get(1).getCentroideLng());
     }
 
     // ── existsByNombreAndAgricultorId ─────────────────────────────
@@ -239,12 +237,12 @@ class FincaRepositoryImplTest {
 
     @Test
     void existsDeberiaDelegarAlJpaConLosParametrosCorrectos() {
-        when(jpaRepository.existsByNombreAndAgricultorIdAndEliminadoEnIsNull(any(), any())).thenReturn(false);
+        when(jpaRepository.existsByNombreAndAgricultorIdAndEliminadoEnIsNull(any(), any()))
+                .thenReturn(false);
 
         repository.existsByNombreAndAgricultorId(NOMBRE, AGRICULTOR_ID);
 
-        verify(jpaRepository, times(1))
-                .existsByNombreAndAgricultorIdAndEliminadoEnIsNull(NOMBRE, AGRICULTOR_ID);
+        verify(jpaRepository, times(1)).existsByNombreAndAgricultorIdAndEliminadoEnIsNull(NOMBRE, AGRICULTOR_ID);
     }
 
     // ── Borrado lógico ───────────────────────────────────────────

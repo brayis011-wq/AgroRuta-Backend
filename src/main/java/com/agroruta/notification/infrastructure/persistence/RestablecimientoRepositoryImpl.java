@@ -1,11 +1,10 @@
 package com.agroruta.notification.infrastructure.persistence;
 
-import com.agroruta.notification.domain.RestablecimientoContrasena;
 import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.notification.domain.RestablecimientoContrasena;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class RestablecimientoRepositoryImpl implements RestablecimientoRepository {
@@ -44,7 +43,7 @@ public class RestablecimientoRepositoryImpl implements RestablecimientoRepositor
     }
 
     private static RestablecimientoContrasena aDominio(RestablecimientoEntity e) {
-        return new RestablecimientoContrasena(e.getId(), e.getUsuarioId(), e.getTokenHash(),
-                e.getCreadoEn(), e.getExpiraEn(), e.getUsadoEn());
+        return new RestablecimientoContrasena(
+                e.getId(), e.getUsuarioId(), e.getTokenHash(), e.getCreadoEn(), e.getExpiraEn(), e.getUsadoEn());
     }
 }

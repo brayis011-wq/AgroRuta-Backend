@@ -2,16 +2,18 @@ package com.agroruta.portal.application;
 
 import com.agroruta.portal.application.ports.in.PortalTrabajadorUseCase;
 import com.agroruta.portal.domain.EstadoPortal;
+import com.agroruta.shared.evento.AccesoPortalSolicitado;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.PagoUseCase;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.EstadoAccesoPortal;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.EstadoTrabajador;
@@ -19,15 +21,12 @@ import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.application.ports.out.TrabajadorRepository;
-import com.agroruta.shared.evento.AccesoPortalSolicitado;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
@@ -40,12 +39,13 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     private final PagoUseCase pagoUseCase;
     private final ApplicationEventPublisher eventos;
 
-    public PortalTrabajadorService(TrabajadorRepository trabajadorRepository,
-                                   UsuarioRepository usuarioRepository,
-                                   JornalUseCase jornalUseCase,
-                                   NominaUseCase nominaUseCase,
-                                   PagoUseCase pagoUseCase,
-                                   ApplicationEventPublisher eventos) {
+    public PortalTrabajadorService(
+            TrabajadorRepository trabajadorRepository,
+            UsuarioRepository usuarioRepository,
+            JornalUseCase jornalUseCase,
+            NominaUseCase nominaUseCase,
+            PagoUseCase pagoUseCase,
+            ApplicationEventPublisher eventos) {
         this.trabajadorRepository = trabajadorRepository;
         this.usuarioRepository = usuarioRepository;
         this.jornalUseCase = jornalUseCase;
@@ -60,7 +60,8 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     @Transactional(readOnly = true)
     public void validarCedulaDisponible(String cedula) {
         if (buscarPorCedula(cedula).stream().anyMatch(t -> estaOcupado(t, null))) {
-            throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
                     "Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
         }
     }
@@ -69,25 +70,27 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     public void solicitarAcceso(Long usuarioId, String nombre, String email, String cedula) {
         List<Trabajador> conEsaCedula = buscarPorCedula(cedula);
         if (conEsaCedula.stream().anyMatch(t -> estaOcupado(t, usuarioId))) {
-            throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS,
                     "Esta cédula ya tiene una cuenta vinculada o una solicitud en curso.");
         }
         Trabajador destino = elegir(conEsaCedula, usuarioId);
 
         // Si esta cuenta tenía otra solicitud (rechazada o pendiente), se libera
-        trabajadorRepository.buscarPorUsuarioId(usuarioId)
+        trabajadorRepository
+                .buscarPorUsuarioId(usuarioId)
                 .filter(anterior -> !anterior.getId().equals(destino.getId()))
                 .ifPresent(anterior -> {
                     if (anterior.tieneAccesoAprobado()) {
-                        throw new BusinessException(ErrorCode.INVALID_OPERATION,
-                                "Tu cuenta ya está vinculada a un trabajador.");
+                        throw new BusinessException(
+                                ErrorCode.INVALID_OPERATION, "Tu cuenta ya está vinculada a un trabajador.");
                     }
                     anterior.liberarAcceso();
                     trabajadorRepository.guardar(anterior);
                 });
 
-        boolean yaPendiente = usuarioId.equals(destino.getUsuarioId())
-                && destino.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE;
+        boolean yaPendiente =
+                usuarioId.equals(destino.getUsuarioId()) && destino.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE;
         destino.solicitarAcceso(usuarioId, nombre, email);
         trabajadorRepository.guardar(destino);
         if (!yaPendiente && destino.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE) {
@@ -108,14 +111,19 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
         if (!t.tieneAccesoAprobado()) {
             return new EstadoPortal(t.getAccesoEstado().name(), null, null);
         }
-        String empleador = t.getAgricultorId() == null ? null
-                : usuarioRepository.findById(t.getAgricultorId()).map(Usuario::getNombre).orElse(null);
+        String empleador = t.getAgricultorId() == null
+                ? null
+                : usuarioRepository
+                        .findById(t.getAgricultorId())
+                        .map(Usuario::getNombre)
+                        .orElse(null);
         return new EstadoPortal(EstadoAccesoPortal.APROBADO.name(), t, empleador);
     }
 
     @Override
     public EstadoPortal solicitar(Long usuarioId, String cedula) {
-        Usuario usuario = usuarioRepository.findById(usuarioId)
+        Usuario usuario = usuarioRepository
+                .findById(usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + usuarioId));
         solicitarAcceso(usuarioId, usuario.getNombre(), usuario.getEmail(), cedula);
         return estado(usuarioId);
@@ -161,7 +169,8 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
         }
         List<Trabajador> encontrados = trabajadorRepository.buscarPorCedulaNormalizada(normalizada);
         if (encontrados.isEmpty()) {
-            throw new BusinessException(ErrorCode.INVALID_OPERATION,
+            throw new BusinessException(
+                    ErrorCode.INVALID_OPERATION,
                     "Ningún agricultor ha registrado esta cédula. Pídele a tu empleador que te registre primero.");
         }
         return encontrados;
@@ -183,14 +192,16 @@ public class PortalTrabajadorService implements PortalTrabajadorUseCase, Vinculo
     /** Ya hay otra cuenta usando a este trabajador (pendiente o aprobada). */
     private static boolean estaOcupado(Trabajador t, Long usuarioId) {
         boolean enUso = t.getUsuarioId() != null
-                && (t.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE || t.getAccesoEstado() == EstadoAccesoPortal.APROBADO);
+                && (t.getAccesoEstado() == EstadoAccesoPortal.PENDIENTE
+                        || t.getAccesoEstado() == EstadoAccesoPortal.APROBADO);
         return enUso && !t.getUsuarioId().equals(usuarioId);
     }
 
     private Trabajador trabajadorAprobado(Long usuarioId) {
-        return trabajadorRepository.buscarPorUsuarioId(usuarioId)
+        return trabajadorRepository
+                .buscarPorUsuarioId(usuarioId)
                 .filter(Trabajador::tieneAccesoAprobado)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED,
-                        "Tu acceso todavía no ha sido aprobado por tu empleador."));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.ACCESS_DENIED, "Tu acceso todavía no ha sido aprobado por tu empleador."));
     }
 }

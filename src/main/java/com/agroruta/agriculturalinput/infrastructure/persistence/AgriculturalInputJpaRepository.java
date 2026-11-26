@@ -1,15 +1,12 @@
 package com.agroruta.agriculturalinput.infrastructure.persistence;
 
-import com.agroruta.agriculturalinput.infrastructure.persistence.AgriculturalInputEntity;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface AgriculturalInputJpaRepository
-        extends JpaRepository<AgriculturalInputEntity, Long> {
+public interface AgriculturalInputJpaRepository extends JpaRepository<AgriculturalInputEntity, Long> {
 
     List<AgriculturalInputEntity> findByActivoTrue();
 

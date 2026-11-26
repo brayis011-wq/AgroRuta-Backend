@@ -15,7 +15,8 @@ public class OpenApiConfig {
         return new OpenAPI()
                 // 1. Define el esquema de seguridad (JWT Bearer)
                 .components(new Components()
-                        .addSecuritySchemes("bearer-key",
+                        .addSecuritySchemes(
+                                "bearer-key",
                                 new SecurityScheme()
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")

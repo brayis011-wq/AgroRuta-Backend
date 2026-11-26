@@ -1,17 +1,16 @@
 package com.agroruta.weather.domain;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.agroruta.weather.domain.VentanaFumigacion.Estado;
 import com.agroruta.weather.domain.VentanaFumigacion.Motivo;
 import com.agroruta.weather.domain.VentanaFumigacion.Resultado;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("VentanaFumigacion")
 class VentanaFumigacionTest {
@@ -23,14 +22,16 @@ class VentanaFumigacionTest {
     private static List<FranjaClima> secas() {
         List<FranjaClima> f = new ArrayList<>();
         for (int d = 0; d < 2; d++) {
-            for (int h = 1; h < 24; h += 3) f.add(new FranjaClima(HOY.plusDays(d).atTime(h, 0), 18, 0, 0.1, 2));
+            for (int h = 1; h < 24; h += 3)
+                f.add(new FranjaClima(HOY.plusDays(d).atTime(h, 0), 18, 0, 0.1, 2));
         }
         return f;
     }
 
     private static void poner(List<FranjaClima> f, LocalDateTime inicio, double lluvia, double viento) {
         for (int i = 0; i < f.size(); i++) {
-            if (f.get(i).inicio().equals(inicio)) f.set(i, new FranjaClima(inicio, 18, lluvia, lluvia > 0 ? 0.9 : 0.1, viento));
+            if (f.get(i).inicio().equals(inicio))
+                f.set(i, new FranjaClima(inicio, 18, lluvia, lluvia > 0 ? 0.9 : 0.1, viento));
         }
     }
 
@@ -95,7 +96,8 @@ class VentanaFumigacionTest {
     @DisplayName("de noche ya no hay nada que decir de hoy")
     void deNoche() {
         assertTrue(VentanaFumigacion.para(secas(), HOY.atTime(20, 0), HOY).isEmpty());
-        assertTrue(VentanaFumigacion.para(secas(), HOY.atTime(20, 0), HOY.plusDays(1)).isPresent());
+        assertTrue(VentanaFumigacion.para(secas(), HOY.atTime(20, 0), HOY.plusDays(1))
+                .isPresent());
     }
 
     @Test

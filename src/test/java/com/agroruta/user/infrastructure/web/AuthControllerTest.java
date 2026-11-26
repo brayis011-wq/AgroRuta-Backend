@@ -1,14 +1,19 @@
 package com.agroruta.user.infrastructure.web;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.SesionInvalidaException;
 import com.agroruta.shared.security.CookieSesion;
 import com.agroruta.user.application.AuthService;
-import com.agroruta.user.application.ports.in.SesionUseCase;
-import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.application.ports.in.DatosLogin;
 import com.agroruta.user.application.ports.in.DatosRegistro;
 import com.agroruta.user.application.ports.in.SesionIniciada;
+import com.agroruta.user.application.ports.in.SesionUseCase;
+import com.agroruta.user.domain.Usuario;
+import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.infrastructure.web.dto.LoginRequest;
 import com.agroruta.user.infrastructure.web.dto.RegisterRequest;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,11 +26,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthController - Pruebas Unitarias")
@@ -44,15 +44,10 @@ class AuthControllerTest {
 
     @BeforeEach
     void setUp() {
-        authController = new AuthController(authService, sesiones, new CookieSesion(new com.agroruta.shared.config.SesionProperties(30, true)));
+        authController = new AuthController(
+                authService, sesiones, new CookieSesion(new com.agroruta.shared.config.SesionProperties(30, true)));
         response = new MockHttpServletResponse();
-        authResponseBase = new SesionIniciada(
-                1L,
-                "jwt.token.ejemplo",
-                "juan@agroruta.com",
-                "Juan Pérez",
-                "Agricultor"
-        );
+        authResponseBase = new SesionIniciada(1L, "jwt.token.ejemplo", "juan@agroruta.com", "Juan Pérez", "Agricultor");
     }
 
     // ══════════════════════════════════════════════════════════════════════
@@ -65,39 +60,40 @@ class AuthControllerTest {
         @Test
         @DisplayName("Debe retornar 200 y el AuthResponse cuando el registro es exitoso")
         void debeRetornar200ConAuthResponseAlRegistrar() {
-            RegisterRequest request = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "password123", "Agricultor", null);
+            RegisterRequest request =
+                    new RegisterRequest("Juan Pérez", "juan@agroruta.com", "password123", "Agricultor", null);
 
             when(authService.registrar(any(DatosRegistro.class))).thenReturn(authResponseBase);
 
             ResponseEntity<AuthResponse> respuesta = authController.registro(request);
 
             assertNotNull(respuesta);
-            assertEquals(HttpStatus.OK,            respuesta.getStatusCode());
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
             assertNotNull(respuesta.getBody());
-            assertEquals(1L,                       respuesta.getBody().id());
-            assertEquals("jwt.token.ejemplo",      respuesta.getBody().token());
-            assertEquals("juan@agroruta.com",      respuesta.getBody().email());
-            assertEquals("Juan Pérez",             respuesta.getBody().nombre());
-            assertEquals("Agricultor",             respuesta.getBody().rol());
+            assertEquals(1L, respuesta.getBody().id());
+            assertEquals("jwt.token.ejemplo", respuesta.getBody().token());
+            assertEquals("juan@agroruta.com", respuesta.getBody().email());
+            assertEquals("Juan Pérez", respuesta.getBody().nombre());
+            assertEquals("Agricultor", respuesta.getBody().rol());
             verify(authService, times(1)).registrar(any(DatosRegistro.class));
         }
 
         @Test
         @DisplayName("Debe delegar al authService el request de registro completo")
         void debeDelegarAlServiceElRequestDeRegistro() {
-            RegisterRequest request = new RegisterRequest("Ana López", "ana@agroruta.com", "pass456", "Administrador", null);
+            RegisterRequest request =
+                    new RegisterRequest("Ana López", "ana@agroruta.com", "pass456", "Administrador", null);
 
-            SesionIniciada otraRespuesta = new SesionIniciada(
-                    2L, "otro.jwt.token", "ana@agroruta.com", "Ana López", "Administrador"
-            );
+            SesionIniciada otraRespuesta =
+                    new SesionIniciada(2L, "otro.jwt.token", "ana@agroruta.com", "Ana López", "Administrador");
 
             when(authService.registrar(any(DatosRegistro.class))).thenReturn(otraRespuesta);
 
             ResponseEntity<AuthResponse> respuesta = authController.registro(request);
 
-            assertEquals(HttpStatus.OK,       respuesta.getStatusCode());
-            assertEquals("ana@agroruta.com",  respuesta.getBody().email());
-            assertEquals("Administrador",     respuesta.getBody().rol());
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+            assertEquals("ana@agroruta.com", respuesta.getBody().email());
+            assertEquals("Administrador", respuesta.getBody().rol());
             verify(authService, times(1)).registrar(any(DatosRegistro.class));
         }
     }
@@ -119,13 +115,13 @@ class AuthControllerTest {
             ResponseEntity<AuthResponse> respuesta = authController.login(request, null, response);
 
             assertNotNull(respuesta);
-            assertEquals(HttpStatus.OK,        respuesta.getStatusCode());
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
             assertNotNull(respuesta.getBody());
-            assertEquals(1L,                   respuesta.getBody().id());
-            assertEquals("jwt.token.ejemplo",  respuesta.getBody().token());
-            assertEquals("juan@agroruta.com",  respuesta.getBody().email());
-            assertEquals("Juan Pérez",         respuesta.getBody().nombre());
-            assertEquals("Agricultor",         respuesta.getBody().rol());
+            assertEquals(1L, respuesta.getBody().id());
+            assertEquals("jwt.token.ejemplo", respuesta.getBody().token());
+            assertEquals("juan@agroruta.com", respuesta.getBody().email());
+            assertEquals("Juan Pérez", respuesta.getBody().nombre());
+            assertEquals("Agricultor", respuesta.getBody().rol());
             verify(authService, times(1)).login(any(DatosLogin.class), any());
         }
 
@@ -134,16 +130,15 @@ class AuthControllerTest {
         void debeDelegarAlServiceElRequestDeLogin() {
             LoginRequest request = new LoginRequest("ana@agroruta.com", "pass456", null, null);
 
-            SesionIniciada otraRespuesta = new SesionIniciada(
-                    2L, "otro.jwt.token", "ana@agroruta.com", "Ana López", "Administrador"
-            );
+            SesionIniciada otraRespuesta =
+                    new SesionIniciada(2L, "otro.jwt.token", "ana@agroruta.com", "Ana López", "Administrador");
 
             when(authService.login(any(DatosLogin.class), any())).thenReturn(otraRespuesta);
 
             ResponseEntity<AuthResponse> respuesta = authController.login(request, null, response);
 
-            assertEquals(HttpStatus.OK,      respuesta.getStatusCode());
-            assertEquals("otro.jwt.token",   respuesta.getBody().token());
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+            assertEquals("otro.jwt.token", respuesta.getBody().token());
             assertEquals("ana@agroruta.com", respuesta.getBody().email());
             verify(authService, times(1)).login(any(DatosLogin.class), any());
         }
@@ -153,7 +148,8 @@ class AuthControllerTest {
     @DisplayName("verificar() confirma el correo y devuelve la sesión")
     void verificarDevuelveSesion() {
         when(authService.verificarCorreo("tok")).thenReturn(authResponseBase);
-        var r = authController.verificar(new com.agroruta.user.infrastructure.web.dto.VerificarRequest("tok"), response);
+        var r = authController.verificar(
+                new com.agroruta.user.infrastructure.web.dto.VerificarRequest("tok"), response);
         org.junit.jupiter.api.Assertions.assertEquals(200, r.getStatusCode().value());
         org.junit.jupiter.api.Assertions.assertEquals(AuthResponse.de(authResponseBase), r.getBody());
     }
@@ -202,7 +198,9 @@ class AuthControllerTest {
             authController.login(request, null, response);
 
             String cookie = response.getHeaders("Set-Cookie").stream()
-                    .filter(c -> c.startsWith("agroruta_dispositivo=")).findFirst().orElseThrow();
+                    .filter(c -> c.startsWith("agroruta_dispositivo="))
+                    .findFirst()
+                    .orElseThrow();
             assertTrue(cookie.startsWith("agroruta_dispositivo=1.999.firma"));
             assertTrue(cookie.contains("Max-Age=2592000"), "30 días");
             assertTrue(cookie.contains("HttpOnly"));

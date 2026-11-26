@@ -4,16 +4,6 @@ import com.agroruta.finance.application.ports.out.SipsaPort;
 import com.agroruta.finance.domain.AgregadorSipsa;
 import com.agroruta.finance.domain.PrecioReferencia;
 import com.agroruta.shared.exception.ExternalApiException;
-import org.springframework.beans.factory.annotation.Value;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import javax.net.ssl.SSLParameters;
-import org.springframework.stereotype.Component;
-
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -26,6 +16,15 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import javax.net.ssl.SSLParameters;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamConstants;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * Servicio web SOAP de SIPSA (DANE), método promediosSipsaSemanaMadr: precios mayoristas semanales
@@ -49,10 +48,12 @@ public class SipsaSoapAdapter implements SipsaPort {
     private final HttpClient http;
     /** Reintentos: solo TLS 1.2, lo más compatible con servidores y cortafuegos viejos */
     private final HttpClient compatible;
+
     private final Duration espera;
 
     @org.springframework.beans.factory.annotation.Autowired
-    public SipsaSoapAdapter(@Value("${sipsa.url:https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService}") String url) {
+    public SipsaSoapAdapter(
+            @Value("${sipsa.url:https://appweb.dane.gov.co/sipsaWS/SrvSipsaUpraBeanService}") String url) {
         this(url, Duration.ofSeconds(5));
     }
 
@@ -96,7 +97,9 @@ public class SipsaSoapAdapter implements SipsaPort {
 
     /** Falla de la red o del servidor del DANE: vale la pena volver a intentar */
     static final class Reintentable extends RuntimeException {
-        Reintentable(String mensaje) { super(mensaje); }
+        Reintentable(String mensaje) {
+            super(mensaje);
+        }
     }
 
     private void esperar() {
@@ -154,7 +157,11 @@ public class SipsaSoapAdapter implements SipsaPort {
                 if (evento == XMLStreamConstants.START_ELEMENT) {
                     String nombre = x.getLocalName();
                     if ("return".equals(nombre)) {
-                        producto = null; semana = null; promedio = null; minimo = null; maximo = null;
+                        producto = null;
+                        semana = null;
+                        promedio = null;
+                        minimo = null;
+                        maximo = null;
                     }
                     campo = nombre;
                     texto.setLength(0);
@@ -170,7 +177,7 @@ public class SipsaSoapAdapter implements SipsaPort {
                         case "minimoKg" -> minimo = numero(valor);
                         case "maximoKg" -> maximo = numero(valor);
                         case "return" -> agregador.agregar(producto, semana, promedio, minimo, maximo);
-                        default -> { }
+                        default -> {}
                     }
                     campo = null;
                     texto.setLength(0);

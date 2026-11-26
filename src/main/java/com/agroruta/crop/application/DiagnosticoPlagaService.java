@@ -15,9 +15,6 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ExternalApiException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -25,6 +22,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 /**
  * Diagnóstico de plagas y enfermedades con una foto. La foto se reduce y se le quitan los
@@ -43,9 +42,13 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
     private final int maxTotalDia;
     private final Clock reloj;
 
-    public DiagnosticoPlagaService(DiagnosticoPlagaRepository repositorio, DiagnosticoIaPort ia, SiembraRepository siembras,
-                                   @Value("${app.diagnostico.max-por-dia:15}") int maxPorDia,
-                                   @Value("${app.diagnostico.max-total-dia:300}") int maxTotalDia, Clock reloj) {
+    public DiagnosticoPlagaService(
+            DiagnosticoPlagaRepository repositorio,
+            DiagnosticoIaPort ia,
+            SiembraRepository siembras,
+            @Value("${app.diagnostico.max-por-dia:15}") int maxPorDia,
+            @Value("${app.diagnostico.max-total-dia:300}") int maxTotalDia,
+            Clock reloj) {
         this.repositorio = repositorio;
         this.ia = ia;
         this.siembras = siembras;
@@ -56,14 +59,16 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
 
     @Override
     public DiagnosticosSiembra deSiembra(Long siembraId, Long usuarioId) {
-        int restantes = usuarioId == null ? 0 : Math.max(0, maxPorDia - repositorio.usoDe(usuarioId, LocalDate.now(reloj)));
+        int restantes =
+                usuarioId == null ? 0 : Math.max(0, maxPorDia - repositorio.usoDe(usuarioId, LocalDate.now(reloj)));
         return new DiagnosticosSiembra(ia.disponible(), restantes, repositorio.deSiembra(siembraId, LIMITE_LISTA));
     }
 
     @Override
     public DiagnosticoPlaga diagnosticar(Long siembraId, Long usuarioId, byte[] archivo, String nota) {
         if (!ia.disponible()) {
-            throw new BusinessException(ErrorCode.INVALID_OPERATION, "El diagnóstico con foto no está activado en este servidor.");
+            throw new BusinessException(
+                    ErrorCode.INVALID_OPERATION, "El diagnóstico con foto no está activado en este servidor.");
         }
         Siembra siembra = siembras.findById(siembraId)
                 .filter(s -> !s.estaEliminada())
@@ -73,12 +78,13 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
 
         LocalDate hoy = LocalDate.now(reloj);
         if (repositorio.usoDe(usuarioId, hoy) >= maxPorDia) {
-            throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS,
+            throw new BusinessException(
+                    ErrorCode.TOO_MANY_ATTEMPTS,
                     "Ya usaste los " + maxPorDia + " diagnósticos de hoy. Mañana puedes analizar más fotos.");
         }
         if (repositorio.usoTotal(hoy) >= maxTotalDia) {
-            throw new BusinessException(ErrorCode.TOO_MANY_ATTEMPTS,
-                    "El diagnóstico con foto llegó a su tope por hoy. Inténtalo mañana.");
+            throw new BusinessException(
+                    ErrorCode.TOO_MANY_ATTEMPTS, "El diagnóstico con foto llegó a su tope por hoy. Inténtalo mañana.");
         }
 
         // Se cuenta antes de llamar: el análisis se cobra aunque la foto no sirva
@@ -86,7 +92,8 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
         AnalisisFoto analisis;
         try {
             analisis = ia.analizar(foto.paraAnalizar(), contexto(siembra, notaLimpia, hoy))
-                    .orElseThrow(() -> new BusinessException(ErrorCode.INVALID_OPERATION,
+                    .orElseThrow(() -> new BusinessException(
+                            ErrorCode.INVALID_OPERATION,
                             "No se pudo analizar esta foto. Prueba con otra donde se vea de cerca la parte afectada."));
         } catch (ExternalApiException e) {
             repositorio.devolverUso(usuarioId, hoy);
@@ -95,12 +102,14 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
         if (!analisis.esPlanta()) {
             throw new BusinessException(ErrorCode.INVALID_OPERATION, mensajeSinPlanta(analisis.problema()));
         }
-        return repositorio.guardar(siembraId, usuarioId, LocalDateTime.now(reloj), foto.paraGuardar(), notaLimpia, ordenar(analisis));
+        return repositorio.guardar(
+                siembraId, usuarioId, LocalDateTime.now(reloj), foto.paraGuardar(), notaLimpia, ordenar(analisis));
     }
 
     @Override
     public byte[] foto(Long siembraId, Long diagnosticoId) {
-        return repositorio.foto(siembraId, diagnosticoId)
+        return repositorio
+                .foto(siembraId, diagnosticoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Diagnóstico", diagnosticoId));
     }
 
@@ -112,8 +121,11 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
     }
 
     private static ContextoCultivo contexto(Siembra siembra, String nota, LocalDate hoy) {
-        Long dias = siembra.getFechaSiembra() == null ? null : Math.max(0, ChronoUnit.DAYS.between(siembra.getFechaSiembra(), hoy));
-        String etapa = siembra.getEstadoCultivo() == null ? null
+        Long dias = siembra.getFechaSiembra() == null
+                ? null
+                : Math.max(0, ChronoUnit.DAYS.between(siembra.getFechaSiembra(), hoy));
+        String etapa = siembra.getEstadoCultivo() == null
+                ? null
                 : siembra.getEstadoCultivo().name().toLowerCase(Locale.ROOT).replace('_', ' ');
         return new ContextoCultivo(siembra.getTipoCultivo(), siembra.getVariedad(), etapa, dias, nota);
     }
@@ -121,7 +133,8 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
     /** Deja la respuesta dentro de lo que cabe en la bitácora y sin campos vacíos */
     private static AnalisisFoto ordenar(AnalisisFoto a) {
         String problema = limpiar(a.problema(), 160);
-        return new AnalisisFoto(true,
+        return new AnalisisFoto(
+                true,
                 problema == null ? "No se pudo determinar" : problema,
                 a.tipo() == null ? TipoProblema.INDETERMINADO : a.tipo(),
                 a.confianza() == null ? ConfianzaDiagnostico.BAJA : a.confianza(),
@@ -135,12 +148,18 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
     private static String mensajeSinPlanta(String explicacion) {
         String detalle = limpiar(explicacion, 200);
         return "En la foto no se distingue un cultivo que se pueda evaluar."
-                + (detalle == null ? " Toma otra de cerca, con buena luz, de la hoja, el tallo o el fruto afectado." : " " + detalle);
+                + (detalle == null
+                        ? " Toma otra de cerca, con buena luz, de la hoja, el tallo o el fruto afectado."
+                        : " " + detalle);
     }
 
     private static List<String> lista(List<String> textos, int maximo) {
         if (textos == null) return List.of();
-        return textos.stream().map(t -> limpiar(t, 400)).filter(Objects::nonNull).limit(maximo).toList();
+        return textos.stream()
+                .map(t -> limpiar(t, 400))
+                .filter(Objects::nonNull)
+                .limit(maximo)
+                .toList();
     }
 
     /** Una sola línea, sin espacios de sobra y recortada; null si queda vacía */
@@ -148,6 +167,8 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
         if (texto == null) return null;
         String limpio = texto.replaceAll("\\s+", " ").trim();
         if (limpio.isEmpty()) return null;
-        return limpio.length() <= maximo ? limpio : limpio.substring(0, maximo - 1).trim() + "…";
+        return limpio.length() <= maximo
+                ? limpio
+                : limpio.substring(0, maximo - 1).trim() + "…";
     }
 }

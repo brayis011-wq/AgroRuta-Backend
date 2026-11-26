@@ -1,12 +1,10 @@
 package com.agroruta.backup.infrastructure.storage;
 
 import com.agroruta.backup.application.ports.out.BackupStoragePort;
-import com.agroruta.backup.infrastructure.config.BackupProperties;
 import com.agroruta.backup.domain.Backup;
+import com.agroruta.backup.infrastructure.config.BackupProperties;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -15,6 +13,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.springframework.stereotype.Component;
 
 @Component
 public class FileSystemBackupStorage implements BackupStoragePort {
@@ -51,8 +50,7 @@ public class FileSystemBackupStorage implements BackupStoragePort {
     @Override
     public List<Backup> findAll() {
         try (Stream<Path> files = Files.list(root)) {
-            return files
-                    .filter(Files::isRegularFile)
+            return files.filter(Files::isRegularFile)
                     .filter(p -> Backup.isValidName(p.getFileName().toString()))
                     .map(this::toBackup)
                     .flatMap(Optional::stream)
@@ -76,10 +74,7 @@ public class FileSystemBackupStorage implements BackupStoragePort {
         try {
             String name = path.getFileName().toString();
             return Optional.of(new Backup(
-                    name,
-                    Files.size(path),
-                    Files.getLastModifiedTime(path).toInstant(),
-                    Backup.typeOf(name)));
+                    name, Files.size(path), Files.getLastModifiedTime(path).toInstant(), Backup.typeOf(name)));
         } catch (IOException e) {
             return Optional.empty();
         }

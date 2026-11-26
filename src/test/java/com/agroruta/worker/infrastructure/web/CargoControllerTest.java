@@ -1,5 +1,10 @@
 package com.agroruta.worker.infrastructure.web;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -10,6 +15,8 @@ import com.agroruta.worker.application.ports.in.CargoUseCase;
 import com.agroruta.worker.domain.Cargo;
 import com.agroruta.worker.infrastructure.web.dto.CargoRequest;
 import com.agroruta.worker.infrastructure.web.dto.CargoResponse;
+import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,14 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-
-import java.math.BigDecimal;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CargoController - Pruebas Unitarias")
@@ -72,18 +71,16 @@ class CargoControllerTest {
         @DisplayName("Debe retornar 200 con la lista de cargos activos")
         void debeRetornar200ConLista() {
             List<Cargo> activos = List.of(
-                    new Cargo(1L, "Operario",  "Desc 1", new BigDecimal("80000"),  true),
-                    new Cargo(2L, "Supervisor", "Desc 2", new BigDecimal("120000"), true)
-            );
+                    new Cargo(1L, "Operario", "Desc 1", new BigDecimal("80000"), true),
+                    new Cargo(2L, "Supervisor", "Desc 2", new BigDecimal("120000"), true));
             when(cargoUseCase.listarActivos()).thenReturn(activos);
 
-            ResponseEntity<List<CargoResponse>> response =
-                    cargoController.listar(auth(99L, Rol.Administrador));
+            ResponseEntity<List<CargoResponse>> response = cargoController.listar(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
             assertEquals(2, response.getBody().size());
-            assertEquals("Operario",   response.getBody().get(0).nombre);
+            assertEquals("Operario", response.getBody().get(0).nombre);
             assertEquals("Supervisor", response.getBody().get(1).nombre);
             verify(cargoUseCase, times(1)).listarActivos();
         }
@@ -93,8 +90,7 @@ class CargoControllerTest {
         void debeRetornar200ConListaVacia() {
             when(cargoUseCase.listarActivos()).thenReturn(List.of());
 
-            ResponseEntity<List<CargoResponse>> response =
-                    cargoController.listar(auth(99L, Rol.Administrador));
+            ResponseEntity<List<CargoResponse>> response = cargoController.listar(auth(99L, Rol.Administrador));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
@@ -119,10 +115,10 @@ class CargoControllerTest {
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,                       response.getBody().id);
-            assertEquals("Operario",               response.getBody().nombre);
-            assertEquals("Cargo operario",         response.getBody().descripcion);
-            assertEquals(new BigDecimal("80000"),  response.getBody().valorJornal);
+            assertEquals(1L, response.getBody().id);
+            assertEquals("Operario", response.getBody().nombre);
+            assertEquals("Cargo operario", response.getBody().descripcion);
+            assertEquals(new BigDecimal("80000"), response.getBody().valorJornal);
             assertTrue(response.getBody().activo);
             verify(cargoUseCase, times(1)).buscarPorId(1L);
         }
@@ -130,13 +126,10 @@ class CargoControllerTest {
         @Test
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
-            when(cargoUseCase.buscarPorId(99L))
-                    .thenThrow(new ResourceNotFoundException("Cargo", 99L));
+            when(cargoUseCase.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("Cargo", 99L));
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> cargoController.buscarPorId(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> cargoController.buscarPorId(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(cargoUseCase, times(1)).buscarPorId(99L);
@@ -157,14 +150,13 @@ class CargoControllerTest {
                     .thenReturn(cargoBase);
 
             ResponseEntity<CargoResponse> response = cargoController.crear(
-                    request("Operario", "Cargo operario", new BigDecimal("80000")), auth(5L, Rol.Agricultor)
-            );
+                    request("Operario", "Cargo operario", new BigDecimal("80000")), auth(5L, Rol.Agricultor));
 
             assertEquals(HttpStatus.CREATED, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,                      response.getBody().id);
-            assertEquals("Operario",              response.getBody().nombre);
-            assertEquals("Cargo operario",        response.getBody().descripcion);
+            assertEquals(1L, response.getBody().id);
+            assertEquals("Operario", response.getBody().nombre);
+            assertEquals("Cargo operario", response.getBody().descripcion);
             assertEquals(new BigDecimal("80000"), response.getBody().valorJornal);
             assertTrue(response.getBody().activo);
             verify(cargoUseCase, times(1))
@@ -175,14 +167,12 @@ class CargoControllerTest {
         @DisplayName("Debe propagar BusinessException si el nombre ya existe")
         void debePropaglarExcepcionSiNombreDuplicado() {
             when(cargoUseCase.crearCargo(any(), any(), any(), any(), any(), any()))
-                    .thenThrow(new BusinessException(
-                            ErrorCode.RESOURCE_ALREADY_EXISTS, "Operario ya existe"));
+                    .thenThrow(new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Operario ya existe"));
 
             BusinessException ex = assertThrows(
                     BusinessException.class,
                     () -> cargoController.crear(
-                            request("Operario", "Desc", new BigDecimal("80000")), auth(5L, Rol.Agricultor))
-            );
+                            request("Operario", "Desc", new BigDecimal("80000")), auth(5L, Rol.Agricultor)));
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             assertTrue(ex.getMessage().contains("Operario"));
@@ -204,16 +194,15 @@ class CargoControllerTest {
             when(cargoUseCase.actualizarCargo(1L, "Supervisor", "Nuevo desc", null, new BigDecimal("120000"), null))
                     .thenReturn(actualizado);
 
-            ResponseEntity<CargoResponse> response = cargoController.actualizar(
-                    1L, request("Supervisor", "Nuevo desc", new BigDecimal("120000"))
-            );
+            ResponseEntity<CargoResponse> response =
+                    cargoController.actualizar(1L, request("Supervisor", "Nuevo desc", new BigDecimal("120000")));
 
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertNotNull(response.getBody());
-            assertEquals(1L,                        response.getBody().id);
-            assertEquals("Supervisor",              response.getBody().nombre);
-            assertEquals("Nuevo desc",              response.getBody().descripcion);
-            assertEquals(new BigDecimal("120000"),  response.getBody().valorJornal);
+            assertEquals(1L, response.getBody().id);
+            assertEquals("Supervisor", response.getBody().nombre);
+            assertEquals("Nuevo desc", response.getBody().descripcion);
+            assertEquals(new BigDecimal("120000"), response.getBody().valorJornal);
             verify(cargoUseCase, times(1))
                     .actualizarCargo(1L, "Supervisor", "Nuevo desc", null, new BigDecimal("120000"), null);
         }
@@ -226,9 +215,7 @@ class CargoControllerTest {
 
             ResourceNotFoundException ex = assertThrows(
                     ResourceNotFoundException.class,
-                    () -> cargoController.actualizar(
-                            99L, request("Supervisor", "Desc", new BigDecimal("120000")))
-            );
+                    () -> cargoController.actualizar(99L, request("Supervisor", "Desc", new BigDecimal("120000"))));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(cargoUseCase, times(1)).actualizarCargo(eq(99L), any(), any(), any(), any(), any());
@@ -238,14 +225,11 @@ class CargoControllerTest {
         @DisplayName("Debe propagar BusinessException si el nuevo nombre ya existe en otro cargo")
         void debePropaglarExcepcionSiNombreDuplicadoEnOtro() {
             when(cargoUseCase.actualizarCargo(eq(1L), any(), any(), any(), any(), any()))
-                    .thenThrow(new BusinessException(
-                            ErrorCode.RESOURCE_ALREADY_EXISTS, "Supervisor ya existe"));
+                    .thenThrow(new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS, "Supervisor ya existe"));
 
             BusinessException ex = assertThrows(
                     BusinessException.class,
-                    () -> cargoController.actualizar(
-                            1L, request("Supervisor", "Desc", new BigDecimal("120000")))
-            );
+                    () -> cargoController.actualizar(1L, request("Supervisor", "Desc", new BigDecimal("120000"))));
 
             assertEquals(ErrorCode.RESOURCE_ALREADY_EXISTS, ex.getErrorCode());
             verify(cargoUseCase, times(1)).actualizarCargo(eq(1L), any(), any(), any(), any(), any());
@@ -275,12 +259,11 @@ class CargoControllerTest {
         @DisplayName("Debe propagar ResourceNotFoundException si el id no existe")
         void debePropaglarExcepcionSiIdNoExiste() {
             doThrow(new ResourceNotFoundException("Cargo", 99L))
-                    .when(cargoUseCase).desactivarCargo(99L);
+                    .when(cargoUseCase)
+                    .desactivarCargo(99L);
 
-            ResourceNotFoundException ex = assertThrows(
-                    ResourceNotFoundException.class,
-                    () -> cargoController.desactivar(99L)
-            );
+            ResourceNotFoundException ex =
+                    assertThrows(ResourceNotFoundException.class, () -> cargoController.desactivar(99L));
 
             assertTrue(ex.getMessage().contains("99"));
             verify(cargoUseCase, times(1)).desactivarCargo(99L);
@@ -299,8 +282,7 @@ class CargoControllerTest {
         void listarSoloSusCargos() {
             when(cargoUseCase.listarActivosDe(5L)).thenReturn(List.of(cargoBase));
 
-            ResponseEntity<List<CargoResponse>> response =
-                    cargoController.listar(auth(5L, Rol.Agricultor));
+            ResponseEntity<List<CargoResponse>> response = cargoController.listar(auth(5L, Rol.Agricultor));
 
             assertEquals(1, response.getBody().size());
             verify(cargoUseCase).listarActivosDe(5L);

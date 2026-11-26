@@ -1,5 +1,14 @@
 package com.agroruta.notification.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
 import com.agroruta.notification.application.ports.out.CorreoPort;
 import com.agroruta.notification.domain.Correo;
@@ -9,34 +18,24 @@ import com.agroruta.shared.evento.AccesoPortalSolicitado;
 import com.agroruta.shared.evento.ContrasenaCambiada;
 import com.agroruta.shared.evento.CuentaBloqueada;
 import com.agroruta.shared.evento.PagoRegistrado;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
+import com.agroruta.worker.application.ports.out.PagoRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
-import com.agroruta.worker.application.ports.out.PagoRepository;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
-import com.agroruta.worker.application.ports.out.TrabajadorRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("AvisosCorreoListener")
 class AvisosCorreoListenerTest {
@@ -54,9 +53,10 @@ class AvisosCorreoListenerTest {
 
     @BeforeEach
     void setUp() {
-        listener = new AvisosCorreoListener(usuarios, trabajadores, pagos, preferencias,
-                new MensajesCorreo("https://agroruta.app"), correo);
-        pedro = new Trabajador(20L, "Pedro", "Gómez", "1052", null, null, LocalDate.of(2026, 1, 1), TipoContrato.JORNAL, null);
+        listener = new AvisosCorreoListener(
+                usuarios, trabajadores, pagos, preferencias, new MensajesCorreo("https://agroruta.app"), correo);
+        pedro = new Trabajador(
+                20L, "Pedro", "Gómez", "1052", null, null, LocalDate.of(2026, 1, 1), TipoContrato.JORNAL, null);
         pedro.setAgricultorId(1L);
         pedro.solicitarAcceso(5L, "Pedro Gómez", "pedro@x.com");
         when(trabajadores.buscarPorId(20L)).thenReturn(Optional.of(pedro));
@@ -97,8 +97,14 @@ class AvisosCorreoListenerTest {
         assertThat(c.asunto()).contains("aprobado");
         assertThat(c.texto()).contains("Carlos Ruiz aprobó");
 
-        assertThat(new MensajesCorreo("u").accesoResuelto("Pedro", "p@x", false, true, "Carlos").asunto()).contains("retirado");
-        assertThat(new MensajesCorreo("u").accesoResuelto("Pedro", "p@x", false, false, null).texto()).contains("Tu empleador no aprobó");
+        assertThat(new MensajesCorreo("u")
+                        .accesoResuelto("Pedro", "p@x", false, true, "Carlos")
+                        .asunto())
+                .contains("retirado");
+        assertThat(new MensajesCorreo("u")
+                        .accesoResuelto("Pedro", "p@x", false, false, null)
+                        .texto())
+                .contains("Tu empleador no aprobó");
     }
 
     @Test
@@ -134,6 +140,7 @@ class AvisosCorreoListenerTest {
     @DisplayName("un error al armar el correo nunca se propaga")
     void errorNoSePropaga() {
         when(trabajadores.buscarPorId(99L)).thenThrow(new RuntimeException("base caída"));
-        assertThatCode(() -> listener.accesoSolicitado(new AccesoPortalSolicitado(99L))).doesNotThrowAnyException();
+        assertThatCode(() -> listener.accesoSolicitado(new AccesoPortalSolicitado(99L)))
+                .doesNotThrowAnyException();
     }
 }

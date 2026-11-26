@@ -1,13 +1,12 @@
 package com.agroruta.crop.domain;
 
-import com.agroruta.crop.domain.AlertaCultivo.Tipo;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.agroruta.crop.domain.AlertaCultivo.Tipo;
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("AlertasCultivo")
 class AlertasCultivoTest {
@@ -25,8 +24,10 @@ class AlertasCultivoTest {
     }
 
     private List<AlertaCultivo> alertas(Siembra s, List<ActividadCultivo> act, List<Fumigacion> fum) {
-        return AlertasCultivo.delDia(new CalendarioCultivo.DatosSiembra(s, 9L, "Lote 1", List.of(), act, fum, List.of()),
-                "La Esperanza", hoy);
+        return AlertasCultivo.delDia(
+                new CalendarioCultivo.DatosSiembra(s, 9L, "Lote 1", List.of(), act, fum, List.of()),
+                "La Esperanza",
+                hoy);
     }
 
     private List<Tipo> tipos(List<AlertaCultivo> a) {
@@ -54,7 +55,8 @@ class AlertasCultivoTest {
     void atrasadaSoloAlgunosDias() {
         assertThat(tipos(alertas(siembra(), List.of(), List.of(fumigacion(hoy.minusDays(8), null, null)))))
                 .containsExactly(Tipo.FUMIGACION_ATRASADA);
-        assertThat(alertas(siembra(), List.of(), List.of(fumigacion(hoy.minusDays(9), null, null)))).isEmpty();
+        assertThat(alertas(siembra(), List.of(), List.of(fumigacion(hoy.minusDays(9), null, null))))
+                .isEmpty();
         List<AlertaCultivo> tres = alertas(siembra(), List.of(), List.of(fumigacion(hoy.minusDays(10), null, null)));
         assertThat(tipos(tres)).containsExactly(Tipo.FUMIGACION_ATRASADA);
         assertThat(tres.get(0).detalle()).isEqualTo("3");
@@ -64,14 +66,16 @@ class AlertasCultivoTest {
     @Test
     @DisplayName("usa el intervalo habitual entre fumigaciones")
     void intervaloHabitual() {
-        List<Fumigacion> f = List.of(fumigacion(hoy.minusDays(20), null, null), fumigacion(hoy.minusDays(10), null, null));
+        List<Fumigacion> f =
+                List.of(fumigacion(hoy.minusDays(20), null, null), fumigacion(hoy.minusDays(10), null, null));
         assertThat(tipos(alertas(siembra(), List.of(), f))).containsExactly(Tipo.FUMIGACION_HOY);
     }
 
     @Test
     @DisplayName("si se fumigó hoy no avisa que toca fumigar")
     void fumigadoHoy() {
-        assertThat(tipos(alertas(siembra(), List.of(), List.of(fumigacion(hoy, null, null))))).isEmpty();
+        assertThat(tipos(alertas(siembra(), List.of(), List.of(fumigacion(hoy, null, null)))))
+                .isEmpty();
     }
 
     @Test
@@ -106,7 +110,10 @@ class AlertasCultivoTest {
     void finalizada() {
         Siembra s = siembra();
         s.finalizar(hoy.minusDays(1));
-        assertThat(alertas(s, List.of(new ActividadCultivo(1L, TipoActividad.RIEGO, null, hoy, 1L)),
-                List.of(fumigacion(hoy.minusDays(7), null, null)))).isEmpty();
+        assertThat(alertas(
+                        s,
+                        List.of(new ActividadCultivo(1L, TipoActividad.RIEGO, null, hoy, 1L)),
+                        List.of(fumigacion(hoy.minusDays(7), null, null))))
+                .isEmpty();
     }
 }

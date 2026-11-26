@@ -8,10 +8,9 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -50,10 +49,11 @@ public class CatalogoCultivoService implements CatalogoCultivoUseCase {
                 .orElseThrow(() -> new ResourceNotFoundException("Cultivo no encontrado con ID: " + tipoCultivoId));
         String limpio = limpiar(nombre);
         if (catalogo.existeVariedad(tipo.getId(), limpio)) {
-            throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    tipo.getNombre() + " ya tiene la variedad " + limpio + ".");
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS, tipo.getNombre() + " ya tiene la variedad " + limpio + ".");
         }
-        return catalogo.guardarVariedad(new VariedadCultivo(null, limpio, true, tipo.getId(), tipo.getNombre(), tipo.isActivo()));
+        return catalogo.guardarVariedad(
+                new VariedadCultivo(null, limpio, true, tipo.getId(), tipo.getNombre(), tipo.isActivo()));
     }
 
     @Override

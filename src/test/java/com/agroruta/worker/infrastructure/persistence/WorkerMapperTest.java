@@ -1,16 +1,15 @@
 package com.agroruta.worker.infrastructure.persistence;
 
-import com.agroruta.worker.domain.*;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
+import com.agroruta.worker.domain.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("WorkerMapper")
 class WorkerMapperTest {
@@ -30,8 +29,7 @@ class WorkerMapperTest {
     }
 
     private Cargo cargoDomain() {
-        return new Cargo(1L, "Operario de campo", "Labores agrícolas generales",
-                new BigDecimal("85000.00"), true);
+        return new Cargo(1L, "Operario de campo", "Labores agrícolas generales", new BigDecimal("85000.00"), true);
     }
 
     private LaborEntity actividadEntity() {
@@ -65,8 +63,13 @@ class WorkerMapperTest {
 
     private Trabajador trabajadorDomain() {
         // El constructor fija estado=ACTIVO por defecto
-        return new Trabajador(3L, "Carlos", "Ramírez", "1098765432",
-                "3001234567", "Vereda El Rosal",
+        return new Trabajador(
+                3L,
+                "Carlos",
+                "Ramírez",
+                "1098765432",
+                "3001234567",
+                "Vereda El Rosal",
                 LocalDate.of(2023, 1, 15),
                 TipoContrato.JORNAL,
                 cargoDomain());
@@ -88,8 +91,7 @@ class WorkerMapperTest {
 
     private Jornal jornalDomain() {
         // El constructor toma valorJornal del cargo del trabajador
-        Jornal j = new Jornal(4L, LocalDate.of(2024, 6, 10),
-                trabajadorDomain(), 10L, "Café", "Sin novedad");
+        Jornal j = new Jornal(4L, LocalDate.of(2024, 6, 10), trabajadorDomain(), 10L, "Café", "Sin novedad");
         j.setActividades(new ArrayList<>(List.of(actividadDomain())));
         return j;
     }
@@ -111,8 +113,11 @@ class WorkerMapperTest {
 
     private Nomina nominaDomain() {
         // El constructor llama calcular() y fija fechaGeneracion=now()
-        Nomina n = new Nomina(5L, trabajadorDomain(),
-                LocalDate.of(2024, 6, 1), LocalDate.of(2024, 6, 30),
+        Nomina n = new Nomina(
+                5L,
+                trabajadorDomain(),
+                LocalDate.of(2024, 6, 1),
+                LocalDate.of(2024, 6, 30),
                 new ArrayList<>(List.of(jornalDomain())));
         n.setObservaciones("Primera quincena");
         return n;
@@ -131,7 +136,9 @@ class WorkerMapperTest {
     }
 
     private Pago pagoDomain() {
-        Pago p = new Pago(6L, nominaDomain(),
+        Pago p = new Pago(
+                6L,
+                nominaDomain(),
                 LocalDate.of(2024, 7, 5),
                 new BigDecimal("85000.00"),
                 MetodoPago.TRANSFERENCIA,
@@ -394,8 +401,8 @@ class WorkerMapperTest {
             Jornal d = WorkerMapper.toDomain(e);
 
             assertEquals(1, d.getActividades().size());
-            assertEquals(e.getActividades().get(0).getId(),
-                    d.getActividades().get(0).getId());
+            assertEquals(
+                    e.getActividades().get(0).getId(), d.getActividades().get(0).getId());
         }
 
         @Test
@@ -438,8 +445,8 @@ class WorkerMapperTest {
             JornalEntity e = WorkerMapper.toEntity(d);
 
             assertEquals(1, e.getActividades().size());
-            assertEquals(d.getActividades().get(0).getId(),
-                    e.getActividades().get(0).getId());
+            assertEquals(
+                    d.getActividades().get(0).getId(), e.getActividades().get(0).getId());
         }
     }
 
@@ -495,8 +502,7 @@ class WorkerMapperTest {
             Nomina d = WorkerMapper.toDomain(e);
 
             assertEquals(1, d.getJornales().size());
-            assertEquals(e.getJornales().get(0).getId(),
-                    d.getJornales().get(0).getId());
+            assertEquals(e.getJornales().get(0).getId(), d.getJornales().get(0).getId());
         }
 
         @Test
@@ -533,8 +539,7 @@ class WorkerMapperTest {
             NominaEntity e = WorkerMapper.toEntity(d);
 
             assertEquals(d.getJornales().size(), e.getJornales().size());
-            assertEquals(d.getJornales().get(0).getId(),
-                    e.getJornales().get(0).getId());
+            assertEquals(d.getJornales().get(0).getId(), e.getJornales().get(0).getId());
         }
     }
 

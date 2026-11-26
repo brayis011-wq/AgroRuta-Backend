@@ -1,5 +1,9 @@
 package com.agroruta.worker.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.ComprobantePdfPort;
@@ -12,6 +16,10 @@ import com.agroruta.worker.domain.MetodoPago;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.domain.Trabajador;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,23 +28,21 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("ComprobantePagoService")
 class ComprobantePagoServiceTest {
 
-    @Mock private PagoRepository pagoRepository;
-    @Mock private TrabajadorRepository trabajadorRepository;
-    @Mock private EmpleadorPort empleadorPort;
-    @Mock private ComprobantePdfPort pdfPort;
+    @Mock
+    private PagoRepository pagoRepository;
+
+    @Mock
+    private TrabajadorRepository trabajadorRepository;
+
+    @Mock
+    private EmpleadorPort empleadorPort;
+
+    @Mock
+    private ComprobantePdfPort pdfPort;
 
     private ComprobantePagoService service;
     private Trabajador trabajador;
@@ -44,8 +50,13 @@ class ComprobantePagoServiceTest {
 
     @BeforeEach
     void preparar() {
-        service = new ComprobantePagoService(pagoRepository, trabajadorRepository, empleadorPort, pdfPort,
-                "c2VjcmV0by1kZS1wcnVlYmEtcGFyYS1sb3MtdGVzdHM=", "https://app.ejemplo.test/");
+        service = new ComprobantePagoService(
+                pagoRepository,
+                trabajadorRepository,
+                empleadorPort,
+                pdfPort,
+                "c2VjcmV0by1kZS1wcnVlYmEtcGFyYS1sb3MtdGVzdHM=",
+                "https://app.ejemplo.test/");
         trabajador = new Trabajador();
         trabajador.setId(4L);
         trabajador.setNombre("Juan");
@@ -55,7 +66,8 @@ class ComprobantePagoServiceTest {
         trabajador.setUsuarioId(77L);
         trabajador.setAccesoEstado(EstadoAccesoPortal.APROBADO);
         Nomina nomina = new Nomina(3L, trabajador, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 15), List.of());
-        pago = new Pago(12L, nomina, LocalDate.of(2026, 10, 16), new BigDecimal("450000.00"), MetodoPago.EFECTIVO, "REC-1");
+        pago = new Pago(
+                12L, nomina, LocalDate.of(2026, 10, 16), new BigDecimal("450000.00"), MetodoPago.EFECTIVO, "REC-1");
     }
 
     @Test
@@ -63,9 +75,9 @@ class ComprobantePagoServiceTest {
     void armaElComprobante() {
         when(pagoRepository.buscarPorId(12L)).thenReturn(Optional.of(pago));
         when(empleadorPort.nombre(9L)).thenReturn(Optional.of("Finca La Esperanza"));
-        when(pdfPort.generar(any())).thenReturn(new byte[]{1});
+        when(pdfPort.generar(any())).thenReturn(new byte[] {1});
 
-        assertArrayEquals(new byte[]{1}, service.pdf(12L));
+        assertArrayEquals(new byte[] {1}, service.pdf(12L));
 
         ArgumentCaptor<ComprobantePago> c = ArgumentCaptor.forClass(ComprobantePago.class);
         verify(pdfPort).generar(c.capture());
@@ -73,7 +85,9 @@ class ComprobantePagoServiceTest {
         assertEquals("Juan Pérez", c.getValue().trabajador());
         assertEquals("Finca La Esperanza", c.getValue().empleador());
         assertEquals(16, c.getValue().codigo().length());
-        assertEquals("https://app.ejemplo.test/receipt/12/" + c.getValue().codigo(), c.getValue().urlVerificacion());
+        assertEquals(
+                "https://app.ejemplo.test/receipt/12/" + c.getValue().codigo(),
+                c.getValue().urlVerificacion());
     }
 
     @Test
@@ -118,9 +132,9 @@ class ComprobantePagoServiceTest {
     void trabajadorDescargaElSuyo() {
         when(trabajadorRepository.buscarPorUsuarioId(77L)).thenReturn(Optional.of(trabajador));
         when(pagoRepository.buscarPorId(12L)).thenReturn(Optional.of(pago));
-        when(pdfPort.generar(any())).thenReturn(new byte[]{7});
+        when(pdfPort.generar(any())).thenReturn(new byte[] {7});
 
-        assertArrayEquals(new byte[]{7}, service.pdfDelTrabajador(77L, 12L));
+        assertArrayEquals(new byte[] {7}, service.pdfDelTrabajador(77L, 12L));
     }
 
     @Test

@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 
 class AgrorutaApplicationTests {
 
-	@Test
-	void contextLoads() {
-
-	}
+    @Test
+    void contextLoads() {}
 }

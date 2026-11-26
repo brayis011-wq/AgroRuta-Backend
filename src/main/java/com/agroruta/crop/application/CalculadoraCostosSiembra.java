@@ -1,10 +1,8 @@
 package com.agroruta.crop.application;
 
-import com.agroruta.crop.domain.*;
-
 import com.agroruta.crop.application.ports.out.ManoObraPort.JornalDeSiembra;
 import com.agroruta.crop.application.ports.out.VentasSiembraPort.VentaDeSiembra;
-
+import com.agroruta.crop.domain.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -27,15 +25,22 @@ public final class CalculadoraCostosSiembra {
 
     private CalculadoraCostosSiembra() {}
 
-    public static CostosSiembra calcular(Long siembraId, List<JornalDeSiembra> jornales,
-                                         List<Fumigacion> fumigaciones, List<ActividadCultivo> actividades,
-                                         List<Cosecha> cosechas) {
+    public static CostosSiembra calcular(
+            Long siembraId,
+            List<JornalDeSiembra> jornales,
+            List<Fumigacion> fumigaciones,
+            List<ActividadCultivo> actividades,
+            List<Cosecha> cosechas) {
         return calcular(siembraId, jornales, fumigaciones, actividades, cosechas, List.of());
     }
 
-    public static CostosSiembra calcular(Long siembraId, List<JornalDeSiembra> jornales,
-                                         List<Fumigacion> fumigaciones, List<ActividadCultivo> actividades,
-                                         List<Cosecha> cosechas, List<VentaDeSiembra> ventas) {
+    public static CostosSiembra calcular(
+            Long siembraId,
+            List<JornalDeSiembra> jornales,
+            List<Fumigacion> fumigaciones,
+            List<ActividadCultivo> actividades,
+            List<Cosecha> cosechas,
+            List<VentaDeSiembra> ventas) {
         TreeMap<YearMonth, BigDecimal[]> meses = new TreeMap<>(); // manoObra, insumos, otros, ingresos
 
         BigDecimal manoObra = BigDecimal.ZERO;
@@ -57,7 +62,10 @@ public final class CalculadoraCostosSiembra {
         BigDecimal insumos = BigDecimal.ZERO;
         int fumSinCosto = 0;
         for (Fumigacion f : fumigaciones) {
-            if (f.getCosto() == null) { fumSinCosto++; continue; }
+            if (f.getCosto() == null) {
+                fumSinCosto++;
+                continue;
+            }
             insumos = insumos.add(f.getCosto());
             sumar(meses, f.getFecha(), INSUMOS, f.getCosto());
         }
@@ -78,7 +86,10 @@ public final class CalculadoraCostosSiembra {
             kgTotal += kg;
             if (conVentas) continue;
             // Sin ventas: lo de antes, kilos × precio anotado en la cosecha (valor estimado)
-            if (c.getPrecioKg() == null) { sinPrecio++; continue; }
+            if (c.getPrecioKg() == null) {
+                sinPrecio++;
+                continue;
+            }
             BigDecimal ingreso = BigDecimal.valueOf(kg).multiply(c.getPrecioKg());
             ingresos = ingresos.add(ingreso);
             kgConPrecio += kg;
@@ -100,19 +111,32 @@ public final class CalculadoraCostosSiembra {
         List<CostosSiembra.CostoTrabajador> trabajadores = new ArrayList<>();
         valorPorTrabajador.forEach((clave, valor) -> trabajadores.add(new CostosSiembra.CostoTrabajador(
                 idTrabajador.get(clave), nombres.get(clave), jornalesPorTrabajador.get(clave), pesos(valor))));
-        trabajadores.sort(Comparator.comparingDouble(CostosSiembra.CostoTrabajador::valor).reversed());
+        trabajadores.sort(
+                Comparator.comparingDouble(CostosSiembra.CostoTrabajador::valor).reversed());
 
         List<CostosSiembra.CostoMes> lista = new ArrayList<>();
         meses.forEach((m, v) -> lista.add(new CostosSiembra.CostoMes(
                 m.toString(), pesos(v[MANO_OBRA]), pesos(v[INSUMOS]), pesos(v[OTROS]), pesos(v[INGRESOS]))));
 
         return new CostosSiembra(
-                siembraId, pesos(manoObra), jornales.size(), pesos(insumos), pesos(otros),
-                pesos(costoTotal), pesos(ingresos), kgTotal, kgConPrecio,
+                siembraId,
+                pesos(manoObra),
+                jornales.size(),
+                pesos(insumos),
+                pesos(otros),
+                pesos(costoTotal),
+                pesos(ingresos),
+                kgTotal,
+                kgConPrecio,
                 kgConPrecio > 0 ? pesos(dividir(ingresos, kgConPrecio)) : null,
                 fuente != null ? pesos(ingresos.subtract(costoTotal)) : null,
                 kgTotal > 0 ? pesos(dividir(costoTotal, kgTotal)) : null,
-                trabajadores, lista, fumSinCosto, sinPrecio, fuente, kgVendidos);
+                trabajadores,
+                lista,
+                fumSinCosto,
+                sinPrecio,
+                fuente,
+                kgVendidos);
     }
 
     private static void sumar(TreeMap<YearMonth, BigDecimal[]> meses, LocalDate fecha, int i, BigDecimal v) {

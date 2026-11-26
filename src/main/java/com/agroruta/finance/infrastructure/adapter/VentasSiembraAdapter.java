@@ -2,9 +2,8 @@ package com.agroruta.finance.infrastructure.adapter;
 
 import com.agroruta.crop.application.ports.out.VentasSiembraPort;
 import com.agroruta.finance.application.ports.out.VentasRepository;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
+import org.springframework.stereotype.Component;
 
 /** Expone las ventas de cada siembra al módulo de cultivos: son los ingresos de la temporada. */
 @Component

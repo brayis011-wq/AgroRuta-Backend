@@ -1,7 +1,6 @@
 package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.Lluvia;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

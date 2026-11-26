@@ -20,8 +20,5 @@ public record FincaRequest(
         @DecimalMax(value = "100000", message = "Las hectáreas no pueden superar 100000")
         Double hectareas,
 
-        @NotNull(message = "El agricultor es obligatorio")
-        @Positive(message = "El agricultor no es válido")
-        Long agricultorId
-) {
-}
+        @NotNull(message = "El agricultor es obligatorio") @Positive(message = "El agricultor no es válido")
+        Long agricultorId) {}

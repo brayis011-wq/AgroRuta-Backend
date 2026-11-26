@@ -26,19 +26,84 @@ public final class BuscadorPrecio {
      */
     private static final Set<String> NO_SON_CULTIVO = Set.of(
             // Procesados
-            "molido", "molida", "instantaneo", "enlatado", "enlatada", "lata", "harina", "precocida", "precocido",
-            "fecula", "cuchuco", "pulpa", "jugo", "mermelada", "polvo", "pasta", "pastas", "aceite", "galleta",
-            "galletas", "tostado", "panela", "chocolate", "cafe", "avena", "gelatina", "mayonesa", "mostaza",
-            "salsa", "sal", "vinagre", "color", "margarina", "manteca",
+            "molido",
+            "molida",
+            "instantaneo",
+            "enlatado",
+            "enlatada",
+            "lata",
+            "harina",
+            "precocida",
+            "precocido",
+            "fecula",
+            "cuchuco",
+            "pulpa",
+            "jugo",
+            "mermelada",
+            "polvo",
+            "pasta",
+            "pastas",
+            "aceite",
+            "galleta",
+            "galletas",
+            "tostado",
+            "panela",
+            "chocolate",
+            "cafe",
+            "avena",
+            "gelatina",
+            "mayonesa",
+            "mostaza",
+            "salsa",
+            "sal",
+            "vinagre",
+            "color",
+            "margarina",
+            "manteca",
             // Carnes y pollo
-            "carne", "cerdo", "res", "pollo", "alas", "muslos", "pechuga", "menudencias", "rabadillas", "pierna",
-            "piernas", "pernil",
+            "carne",
+            "cerdo",
+            "res",
+            "pollo",
+            "alas",
+            "muslos",
+            "pechuga",
+            "menudencias",
+            "rabadillas",
+            "pierna",
+            "piernas",
+            "pernil",
             // Huevos y lácteos
-            "huevo", "queso", "leche",
+            "huevo",
+            "queso",
+            "leche",
             // Pescados y mariscos
-            "pescado", "bagre", "basa", "blanquillo", "bocachico", "cachama", "capaz", "corvina", "merluza",
-            "mojarra", "nicuro", "pargo", "robalo", "salmon", "sierra", "tilapia", "toyo", "trucha", "calamar",
-            "camaron", "langostino", "almejas", "mariscos", "atun", "sardinas", "mar");
+            "pescado",
+            "bagre",
+            "basa",
+            "blanquillo",
+            "bocachico",
+            "cachama",
+            "capaz",
+            "corvina",
+            "merluza",
+            "mojarra",
+            "nicuro",
+            "pargo",
+            "robalo",
+            "salmon",
+            "sierra",
+            "tilapia",
+            "toyo",
+            "trucha",
+            "calamar",
+            "camaron",
+            "langostino",
+            "almejas",
+            "mariscos",
+            "atun",
+            "sardinas",
+            "mar");
 
     /** Procesados solo si el nombre empieza así: "Azúcar morena" sí, "Mango de azúcar" (variedad) no */
     private static final Set<String> NO_SON_CULTIVO_AL_INICIO = Set.of("azucar", "bocadillo");
@@ -83,7 +148,8 @@ public final class BuscadorPrecio {
     /** Si el producto sale de un cultivo (no es carne, pescado, huevo, lácteo ni procesado) */
     public static boolean esCultivo(String producto) {
         String primera = normalizar(producto).split(" ")[0];
-        return !NO_SON_CULTIVO_AL_INICIO.contains(primera) && palabras(producto).stream().noneMatch(NO_SON_CULTIVO::contains);
+        return !NO_SON_CULTIVO_AL_INICIO.contains(primera)
+                && palabras(producto).stream().noneMatch(NO_SON_CULTIVO::contains);
     }
 
     /**
@@ -94,11 +160,13 @@ public final class BuscadorPrecio {
     public static List<PrecioReferencia> buscar(List<PrecioReferencia> precios, String texto, int maximo) {
         String q = normalizar(texto);
         if (q.length() < 2) return List.of();
-        List<String> buscadas = Arrays.stream(q.split(" ")).filter(p -> !p.isEmpty()).toList();
+        List<String> buscadas =
+                Arrays.stream(q.split(" ")).filter(p -> !p.isEmpty()).toList();
         return precios.stream()
                 .filter(p -> esCultivo(p.producto()))
                 .filter(p -> {
-                    List<String> delProducto = Arrays.asList(normalizar(p.producto()).split(" "));
+                    List<String> delProducto =
+                            Arrays.asList(normalizar(p.producto()).split(" "));
                     return buscadas.stream().allMatch(b -> delProducto.stream().anyMatch(w -> w.startsWith(b)));
                 })
                 .sorted(Comparator.comparingInt((PrecioReferencia p) -> rango(normalizar(p.producto()), q))

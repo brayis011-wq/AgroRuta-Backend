@@ -1,11 +1,10 @@
 package com.agroruta.shared.config;
 
 import jakarta.validation.constraints.Positive;
+import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.validation.annotation.Validated;
-
-import java.time.Duration;
 
 /**
  * Sesión larga del navegador (refresh token en cookie).
@@ -15,8 +14,9 @@ import java.time.Duration;
  */
 @Validated
 @ConfigurationProperties("app.sesion")
-public record SesionProperties(@DefaultValue("30") @Positive long duracionDias,
-                               @DefaultValue("true") boolean cookieSegura) {
+public record SesionProperties(
+        @DefaultValue("30") @Positive long duracionDias,
+        @DefaultValue("true") boolean cookieSegura) {
 
     public Duration duracion() {
         return Duration.ofDays(duracionDias);

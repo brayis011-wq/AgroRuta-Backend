@@ -1,13 +1,5 @@
 package com.agroruta.shared.config;
 
-import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.configuration.FluentConfiguration;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-
-import javax.sql.DataSource;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -16,6 +8,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import javax.sql.DataSource;
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 
 @DisplayName("FlywayConfig")
 class FlywayConfigTest {
@@ -166,7 +165,8 @@ class FlywayConfigTest {
     }
 
     @Test
-    @DisplayName("prepararHistorial() crea la tabla e inserta la línea base cuando no existe (TiDB no soporta CREATE TABLE ... SELECT)")
+    @DisplayName(
+            "prepararHistorial() crea la tabla e inserta la línea base cuando no existe (TiDB no soporta CREATE TABLE ... SELECT)")
     void prepararHistorialCreaTablaYLineaBase() throws Exception {
         DataSource dataSource = mock(DataSource.class);
         java.sql.Connection c = mock(java.sql.Connection.class);
@@ -175,8 +175,10 @@ class FlywayConfigTest {
         java.sql.ResultSet rs = mock(java.sql.ResultSet.class);
         java.sql.Statement st = mock(java.sql.Statement.class);
         when(dataSource.getConnection()).thenReturn(c);
-        when(c.prepareStatement(org.mockito.ArgumentMatchers.contains("information_schema"))).thenReturn(consulta);
-        when(c.prepareStatement(org.mockito.ArgumentMatchers.startsWith("INSERT"))).thenReturn(insert);
+        when(c.prepareStatement(org.mockito.ArgumentMatchers.contains("information_schema")))
+                .thenReturn(consulta);
+        when(c.prepareStatement(org.mockito.ArgumentMatchers.startsWith("INSERT")))
+                .thenReturn(insert);
         when(consulta.executeQuery()).thenReturn(rs);
         when(rs.next()).thenReturn(true);
         when(rs.getLong(1)).thenReturn(0L, 19L); // sin historial, con tablas
@@ -241,8 +243,7 @@ class FlywayConfigTest {
 
         FlywayConfig.jpaDespuesDeFlyway().postProcessBeanFactory(bf);
 
-        assertThat(bf.getBeanDefinition("entityManagerFactory").getDependsOn())
-                .containsExactly("dataSource", "flyway");
+        assertThat(bf.getBeanDefinition("entityManagerFactory").getDependsOn()).containsExactly("dataSource", "flyway");
     }
 
     @Test

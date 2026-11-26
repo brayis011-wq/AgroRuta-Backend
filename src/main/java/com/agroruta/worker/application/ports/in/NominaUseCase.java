@@ -1,10 +1,9 @@
 package com.agroruta.worker.application.ports.in;
 
-import com.agroruta.worker.domain.ResumenNominas;
-import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.shared.util.Pagina;
+import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.Nomina;
-
+import com.agroruta.worker.domain.ResumenNominas;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -25,17 +24,28 @@ public interface NominaUseCase {
 
     /** Suma a una nómina pendiente los jornales de su periodo que se anotaron después de generarla. */
     Nomina traerJornalesNuevos(Long nominaId);
+
     Nomina aprobarNomina(Long nominaId);
+
     void anularNomina(Long nominaId);
+
     void eliminarNomina(Long nominaId);
+
     Nomina reactivarNomina(Long nominaId); // ✅ NUEVO
+
     Nomina buscarPorId(Long id);
+
     List<Nomina> listarPorTrabajador(Long trabajadorId);
+
     List<Nomina> listarPendientesPorTrabajador(Long trabajadorId);
+
     List<Nomina> listarPorPeriodo(LocalDate inicio, LocalDate fin);
+
     List<Nomina> listarTodas();
+
     List<Nomina> listarTodasDe(Long agricultorId);
 
     Pagina<Nomina> pagina(Long agricultorId, Long trabajadorId, EstadoNomina estado, int pagina, int tamano);
+
     List<ResumenNominas> resumenPorEstado(Long agricultorId, Long trabajadorId);
 }

@@ -34,8 +34,7 @@ public class AgriculturalInputWebMapper {
                 request.unidadSugerida(),
                 request.dosisSugerida(),
                 request.reentradaHoras(),
-                request.diasCarencia()
-        );
+                request.diasCarencia());
     }
 
     public static UpdateAgriculturalInputCommand toUpdateCommand(AgriculturalInputRequest request) {
@@ -45,7 +44,6 @@ public class AgriculturalInputWebMapper {
                 request.unidadSugerida(),
                 request.dosisSugerida(),
                 request.reentradaHoras(),
-                request.diasCarencia()
-        );
+                request.diasCarencia());
     }
 }

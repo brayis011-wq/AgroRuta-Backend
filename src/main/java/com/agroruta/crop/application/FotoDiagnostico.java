@@ -2,14 +2,6 @@ package com.agroruta.crop.application;
 
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
-
-import javax.imageio.IIOImage;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.ImageWriter;
-import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageOutputStream;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
@@ -20,6 +12,13 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageOutputStream;
 
 /**
  * Revisa la foto que sube la persona y la vuelve a codificar. Al redibujarla se pierden los
@@ -33,9 +32,11 @@ public final class FotoDiagnostico {
     static final int LADO_ANALISIS = 1280;
     /** Lado mayor de la copia que queda en la bitácora */
     static final int LADO_GUARDADO = 640;
+
     private static final int LADO_MINIMO = 200;
     /** Una imagen enorme en píxeles puede pesar poco en disco y agotar la memoria al abrirla */
     private static final int LADO_MAXIMO = 8000;
+
     private static final Set<String> FORMATOS = Set.of("jpeg", "jpg", "png");
 
     /** @param paraAnalizar JPEG de hasta 1280 px; @param paraGuardar JPEG de hasta 640 px */
@@ -52,7 +53,8 @@ public final class FotoDiagnostico {
         }
         BufferedImage imagen = leer(archivo);
         try {
-            return new Preparada(jpeg(escalar(imagen, LADO_ANALISIS), 0.85f), jpeg(escalar(imagen, LADO_GUARDADO), 0.8f));
+            return new Preparada(
+                    jpeg(escalar(imagen, LADO_ANALISIS), 0.85f), jpeg(escalar(imagen, LADO_GUARDADO), 0.8f));
         } catch (IOException | RuntimeException e) {
             throw noEsFoto();
         }
@@ -73,7 +75,9 @@ public final class FotoDiagnostico {
                 alto = lector.getHeight(0);
                 // Las medidas se revisan antes de abrir la imagen completa
                 if (ancho > LADO_MAXIMO || alto > LADO_MAXIMO) {
-                    throw new BusinessException(ErrorCode.INVALID_ARGUMENT, "La foto es demasiado grande. Tómala de nuevo con menos resolución.");
+                    throw new BusinessException(
+                            ErrorCode.INVALID_ARGUMENT,
+                            "La foto es demasiado grande. Tómala de nuevo con menos resolución.");
                 }
                 if (ancho < LADO_MINIMO || alto < LADO_MINIMO) {
                     throw new BusinessException(ErrorCode.INVALID_ARGUMENT, "La foto es muy pequeña para analizarla.");
@@ -129,6 +133,7 @@ public final class FotoDiagnostico {
     }
 
     private static BusinessException noEsFoto() {
-        return new BusinessException(ErrorCode.INVALID_ARGUMENT, "El archivo no es una foto válida. Usa una imagen JPG o PNG.");
+        return new BusinessException(
+                ErrorCode.INVALID_ARGUMENT, "El archivo no es una foto válida. Usa una imagen JPG o PNG.");
     }
 }

@@ -6,11 +6,10 @@ import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.FranjaClima;
 import com.agroruta.weather.domain.Pronostico;
 import com.agroruta.weather.domain.Weather;
-import org.springframework.stereotype.Service;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
+import org.springframework.stereotype.Service;
 
 /**
  * El clima con copias de corta duración: el actual cambia poco en diez minutos y los pronósticos en media hora.
@@ -45,7 +44,8 @@ public class WeatherService implements WeatherUseCase {
 
     @Override
     public Weather getWeatherByCoordinates(double lat, double lon) {
-        return actualPorLugar.obtener(CopiaBreve.lugar(lat, lon), () -> weatherApiPort.fetchWeatherByCoordinates(lat, lon));
+        return actualPorLugar.obtener(
+                CopiaBreve.lugar(lat, lon), () -> weatherApiPort.fetchWeatherByCoordinates(lat, lon));
     }
 
     @Override

@@ -1,7 +1,6 @@
 package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.ActividadProgramada;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

@@ -1,7 +1,6 @@
 package com.agroruta.inventory.application.ports.out;
 
 import com.agroruta.inventory.domain.MovimientoInventario;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

@@ -8,8 +8,14 @@ import java.util.List;
  *
  * @param compradores los que deben algo, del que más debe al que menos
  */
-public record ResumenVentas(BigDecimal porCobrar, BigDecimal vencido, int ventasPendientes, int ventasVencidas,
-                            BigDecimal vendidoMes, BigDecimal cobradoMes, List<Deudor> compradores) {
+public record ResumenVentas(
+        BigDecimal porCobrar,
+        BigDecimal vencido,
+        int ventasPendientes,
+        int ventasVencidas,
+        BigDecimal vendidoMes,
+        BigDecimal cobradoMes,
+        List<Deudor> compradores) {
 
     public record Deudor(String comprador, BigDecimal saldo, int ventas, boolean conVencidas) {}
 }

@@ -5,11 +5,10 @@ import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.GestionarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
-import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.application.ports.out.UsuarioRepository;
-import org.springframework.stereotype.Service;
-
+import com.agroruta.user.domain.Usuario;
 import java.util.List;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -33,14 +32,16 @@ public class UserService implements RegistrarUsuarioUseCase, BuscarUsuarioUseCas
     @Transactional(readOnly = true)
     @Override
     public Usuario buscarPorId(Long id) {
-        return usuarioRepository.findById(id)
+        return usuarioRepository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + id));
     }
 
     @Transactional(readOnly = true)
     @Override
     public Usuario buscarPorEmail(String email) {
-        return usuarioRepository.findByEmail(email)
+        return usuarioRepository
+                .findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con el correo: " + email));
     }
 

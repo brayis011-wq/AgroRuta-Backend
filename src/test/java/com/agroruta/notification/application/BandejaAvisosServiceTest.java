@@ -1,16 +1,5 @@
 package com.agroruta.notification.application;
 
-import com.agroruta.notification.application.ports.out.BandejaAvisosRepository;
-import com.agroruta.notification.domain.AvisoBandeja;
-import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,6 +9,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.agroruta.notification.application.ports.out.BandejaAvisosRepository;
+import com.agroruta.notification.domain.AvisoBandeja;
+import com.agroruta.shared.exception.ResourceNotFoundException;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
 @DisplayName("BandejaAvisosService")
 class BandejaAvisosServiceTest {
 
@@ -28,8 +27,14 @@ class BandejaAvisosServiceTest {
     private final BandejaAvisosService servicio = new BandejaAvisosService(repo, Clock.fixed(AHORA, ZoneOffset.UTC));
 
     private AvisoBandeja.Nuevo aviso(Long usuario, String etiqueta) {
-        return new AvisoBandeja.Nuevo(usuario, AvisoBandeja.Tipo.PAGO_REGISTRADO, "Te registraron un pago", "Recibiste $ 10",
-                Map.of("monto", "10"), "/portal/payments", etiqueta);
+        return new AvisoBandeja.Nuevo(
+                usuario,
+                AvisoBandeja.Tipo.PAGO_REGISTRADO,
+                "Te registraron un pago",
+                "Recibiste $ 10",
+                Map.of("monto", "10"),
+                "/portal/payments",
+                etiqueta);
     }
 
     @Test

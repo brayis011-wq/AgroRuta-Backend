@@ -1,16 +1,15 @@
 package com.agroruta.report.infrastructure.pdf;
 
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.List;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
-
-import java.awt.Color;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * Lienzo sencillo sobre PDFBox para los reportes: maneja páginas, encabezado,
@@ -34,6 +33,7 @@ final class PdfLienzo implements AutoCloseable {
     static final Color AMBAR = new Color(0xB2, 0x6A, 0x00);
     /** Pérdidas */
     static final Color ROJO = new Color(0xC6, 0x28, 0x28);
+
     static final Color BLANCO = Color.WHITE;
 
     static final float ANCHO = PDRectangle.A4.getWidth();
@@ -296,7 +296,8 @@ final class PdfLienzo implements AutoCloseable {
             rectRedondo(x + 10, base + alto - 14, 18, 3, 1.5f, t.acento(), null);
             texto(ajustar(t.etiqueta(), NORMAL, 8, w - 20), NORMAL, 8, x + 10, base + alto - 26, TINTA_3);
             texto(ajustar(t.valor(), NEGRITA, 15, w - 20), NEGRITA, 15, x + 10, base + 22, TINTA);
-            if (t.detalle() != null) texto(ajustar(t.detalle(), NORMAL, 7.5f, w - 20), NORMAL, 7.5f, x + 10, base + 9, TINTA_3);
+            if (t.detalle() != null)
+                texto(ajustar(t.detalle(), NORMAL, 7.5f, w - 20), NORMAL, 7.5f, x + 10, base + 9, TINTA_3);
         }
         y = base - 16;
     }
@@ -319,7 +320,13 @@ final class PdfLienzo implements AutoCloseable {
         // líneas guía
         for (int i = 0; i <= 4; i++) {
             float gy = base + alto * i / 4f;
-            linea(MARGEN, gy, MARGEN + CONTENIDO, gy, i == 0 ? BORDE : new Color(0xF0, 0xF3, 0xF0), i == 0 ? 0.9f : 0.6f);
+            linea(
+                    MARGEN,
+                    gy,
+                    MARGEN + CONTENIDO,
+                    gy,
+                    i == 0 ? BORDE : new Color(0xF0, 0xF3, 0xF0),
+                    i == 0 ? 0.9f : 0.6f);
         }
         float slot = CONTENIDO / Math.max(1, barras.size());
         float w = Math.min(46, slot * 0.55f);
@@ -328,7 +335,15 @@ final class PdfLienzo implements AutoCloseable {
             float cx = MARGEN + slot * i + slot / 2;
             float h = max > 0 ? (float) (b.valor() / max) * (alto - 14) : 0;
             boolean ultimo = i == barras.size() - 1;
-            if (h > 0) rectRedondo(cx - w / 2, base, w, Math.max(h, 2), Math.min(4, h / 2), ultimo ? VERDE : new Color(0x81, 0xC7, 0x84), null);
+            if (h > 0)
+                rectRedondo(
+                        cx - w / 2,
+                        base,
+                        w,
+                        Math.max(h, 2),
+                        Math.min(4, h / 2),
+                        ultimo ? VERDE : new Color(0x81, 0xC7, 0x84),
+                        null);
             if (b.valor() > 0) textoCentro(b.valorTexto(), NEGRITA, 7.8f, cx, base + h + 5, TINTA_2);
             textoCentro(b.etiqueta(), ultimo ? NEGRITA : NORMAL, 8.2f, cx, base - 12, ultimo ? TINTA : TINTA_3);
         }
@@ -380,7 +395,10 @@ final class PdfLienzo implements AutoCloseable {
         for (Segmento s : segs) {
             String t = s.etiqueta() + " (" + s.cantidad() + ")";
             float tw = ancho(t, NORMAL, 8.5f) + 22;
-            if (lx + tw > MARGEN + CONTENIDO) { lx = MARGEN; ly -= 14; }
+            if (lx + tw > MARGEN + CONTENIDO) {
+                lx = MARGEN;
+                ly -= 14;
+            }
             rectRedondo(lx, ly - 1, 9, 9, 2, s.color(), null);
             texto(t, NORMAL, 8.5f, lx + 13, ly, s.cantidad() > 0 ? TINTA_2 : TINTA_3);
             lx += tw;
@@ -394,8 +412,13 @@ final class PdfLienzo implements AutoCloseable {
 
     /** Celda: texto y, opcionalmente, una "píldora" de color detrás (para estados) */
     record Celda(String texto, Color pildora, Color colorTexto, boolean negrita) {
-        static Celda de(String t) { return new Celda(t, null, null, false); }
-        static Celda negrita(String t) { return new Celda(t, null, null, true); }
+        static Celda de(String t) {
+            return new Celda(t, null, null, false);
+        }
+
+        static Celda negrita(String t) {
+            return new Celda(t, null, null, true);
+        }
     }
 
     void tabla(List<Columna> cols, List<List<Celda>> filas) throws IOException {
@@ -450,7 +473,8 @@ final class PdfLienzo implements AutoCloseable {
         int total = doc.getNumberOfPages();
         for (int i = 0; i < total; i++) {
             PDPage page = doc.getPage(i);
-            try (PDPageContentStream pie = new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+            try (PDPageContentStream pie =
+                    new PDPageContentStream(doc, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
                 pie.setStrokingColor(BORDE);
                 pie.setLineWidth(0.8f);
                 pie.moveTo(MARGEN, PIE);
@@ -467,7 +491,8 @@ final class PdfLienzo implements AutoCloseable {
         }
     }
 
-    private static void escribir(PDPageContentStream s, String t, PDType1Font f, float size, float x, float yy, Color c) throws IOException {
+    private static void escribir(PDPageContentStream s, String t, PDType1Font f, float size, float x, float yy, Color c)
+            throws IOException {
         s.beginText();
         s.setFont(f, size);
         s.setNonStrokingColor(c);

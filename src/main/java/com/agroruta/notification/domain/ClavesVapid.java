@@ -32,7 +32,8 @@ public record ClavesVapid(String publica, String privada) {
 
     public static ClavesVapid generar() {
         KeyPair par = parNuevo();
-        return new ClavesVapid(B64.encodeToString(puntoSinComprimir((ECPublicKey) par.getPublic())),
+        return new ClavesVapid(
+                B64.encodeToString(puntoSinComprimir((ECPublicKey) par.getPublic())),
                 B64.encodeToString(a32Bytes(((ECPrivateKey) par.getPrivate()).getS())));
     }
 
@@ -45,8 +46,9 @@ public record ClavesVapid(String publica, String privada) {
      */
     public String autorizacion(String audiencia, String contacto, long expiraEnSegundos) {
         String cabecera = B64.encodeToString("{\"typ\":\"JWT\",\"alg\":\"ES256\"}".getBytes(StandardCharsets.UTF_8));
-        String datos = B64.encodeToString(("{\"aud\":\"" + audiencia + "\",\"exp\":" + expiraEnSegundos
-                + ",\"sub\":\"" + contacto + "\"}").getBytes(StandardCharsets.UTF_8));
+        String datos = B64.encodeToString(
+                ("{\"aud\":\"" + audiencia + "\",\"exp\":" + expiraEnSegundos + ",\"sub\":\"" + contacto + "\"}")
+                        .getBytes(StandardCharsets.UTF_8));
         String porFirmar = cabecera + "." + datos;
         try {
             // P1363: la firma sale como R||S (64 bytes), que es el formato de JWT
@@ -87,14 +89,18 @@ public record ClavesVapid(String publica, String privada) {
     }
 
     static ECPublicKey clavePublica(byte[] punto) throws GeneralSecurityException {
-        if (punto.length != 65 || punto[0] != 4) throw new GeneralSecurityException("Clave pública con formato inesperado");
+        if (punto.length != 65 || punto[0] != 4)
+            throw new GeneralSecurityException("Clave pública con formato inesperado");
         BigInteger x = new BigInteger(1, java.util.Arrays.copyOfRange(punto, 1, 33));
         BigInteger y = new BigInteger(1, java.util.Arrays.copyOfRange(punto, 33, 65));
         ECParameterSpec curva = curva();
         // KeyFactory no comprueba que el punto esté en la curva (y² = x³ + ax + b mod p): una clave
         // inventada debilitaría el acuerdo de claves
         BigInteger p = ((java.security.spec.ECFieldFp) curva.getCurve().getField()).getP();
-        BigInteger derecha = x.pow(3).add(curva.getCurve().getA().multiply(x)).add(curva.getCurve().getB()).mod(p);
+        BigInteger derecha = x.pow(3)
+                .add(curva.getCurve().getA().multiply(x))
+                .add(curva.getCurve().getB())
+                .mod(p);
         if (x.compareTo(p) >= 0 || y.compareTo(p) >= 0 || !y.multiply(y).mod(p).equals(derecha)) {
             throw new GeneralSecurityException("La clave pública no es un punto de la curva P-256");
         }
@@ -102,8 +108,8 @@ public record ClavesVapid(String publica, String privada) {
     }
 
     static ECPrivateKey clavePrivada(byte[] escalar) throws GeneralSecurityException {
-        return (ECPrivateKey) KeyFactory.getInstance("EC")
-                .generatePrivate(new ECPrivateKeySpec(new BigInteger(1, escalar), curva()));
+        return (ECPrivateKey)
+                KeyFactory.getInstance("EC").generatePrivate(new ECPrivateKeySpec(new BigInteger(1, escalar), curva()));
     }
 
     private static byte[] a32Bytes(BigInteger n) {

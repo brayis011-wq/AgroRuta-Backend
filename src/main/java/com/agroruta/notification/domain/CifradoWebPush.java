@@ -1,10 +1,5 @@
 package com.agroruta.notification.domain;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyAgreement;
-import javax.crypto.Mac;
-import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -13,6 +8,11 @@ import java.security.SecureRandom;
 import java.security.interfaces.ECPublicKey;
 import java.util.Arrays;
 import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.KeyAgreement;
+import javax.crypto.Mac;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Cifrado del contenido de un aviso push (RFC 8291, codificación aes128gcm de RFC 8188).
@@ -57,7 +57,8 @@ public final class CifradoWebPush {
             byte[] compartido = acuerdo.generateSecret();
 
             // Clave de entrada: mezcla el secreto compartido con el secreto de autenticación y las dos claves públicas
-            byte[] info = unir("WebPush: info\0".getBytes(StandardCharsets.US_ASCII), publicaNavegador, publicaServidor);
+            byte[] info =
+                    unir("WebPush: info\0".getBytes(StandardCharsets.US_ASCII), publicaNavegador, publicaServidor);
             byte[] ikm = hkdf(secretoAuth, compartido, info, 32);
 
             byte[] clave = hkdf(sal, ikm, "Content-Encoding: aes128gcm\0".getBytes(StandardCharsets.US_ASCII), 16);
@@ -66,13 +67,17 @@ public final class CifradoWebPush {
             Cipher aes = Cipher.getInstance("AES/GCM/NoPadding");
             aes.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(clave, "AES"), new GCMParameterSpec(128, nonce));
             // 0x02 marca el final del último (y único) registro
-            byte[] cifrado = aes.doFinal(unir(mensaje, new byte[]{2}));
+            byte[] cifrado = aes.doFinal(unir(mensaje, new byte[] {2}));
 
             // Cabecera: sal (16) | tamaño de registro (4) | largo de la clave (1) | clave pública efímera (65)
             ByteArrayOutputStream cuerpo = new ByteArrayOutputStream(86 + cifrado.length);
             cuerpo.write(sal);
-            cuerpo.write(new byte[]{(byte) (TAMANO_REGISTRO >>> 24), (byte) (TAMANO_REGISTRO >>> 16),
-                    (byte) (TAMANO_REGISTRO >>> 8), (byte) TAMANO_REGISTRO});
+            cuerpo.write(new byte[] {
+                (byte) (TAMANO_REGISTRO >>> 24),
+                (byte) (TAMANO_REGISTRO >>> 16),
+                (byte) (TAMANO_REGISTRO >>> 8),
+                (byte) TAMANO_REGISTRO
+            });
             cuerpo.write(publicaServidor.length);
             cuerpo.write(publicaServidor);
             cuerpo.write(cifrado);
@@ -96,7 +101,7 @@ public final class CifradoWebPush {
     /** HKDF-SHA256 (RFC 5869) para salidas de hasta 32 bytes: un solo bloque */
     private static byte[] hkdf(byte[] sal, byte[] ikm, byte[] info, int largo) throws GeneralSecurityException {
         byte[] prk = hmac(sal, ikm);
-        return Arrays.copyOf(hmac(prk, unir(info, new byte[]{1})), largo);
+        return Arrays.copyOf(hmac(prk, unir(info, new byte[] {1})), largo);
     }
 
     private static byte[] hmac(byte[] clave, byte[] datos) throws GeneralSecurityException {

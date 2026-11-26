@@ -5,18 +5,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * TEMPORAL: traduce las rutas viejas de la API (en español) a las nuevas (en inglés).
@@ -100,8 +99,7 @@ public class RutasAntiguasFilter extends OncePerRequestFilter {
             Map.entry("desactivar", "deactivate"),
             Map.entry("suspender", "suspend"),
             Map.entry("acceso", "access"),
-            Map.entry("rechazar", "reject")
-    );
+            Map.entry("rechazar", "reject"));
 
     /** Cambios de estado que antes eran PUT y ahora son PATCH. */
     private static final Pattern PUT_A_PATCH =
@@ -118,8 +116,12 @@ public class RutasAntiguasFilter extends OncePerRequestFilter {
             chain.doFilter(request, response);
             return;
         }
-        log.info("Ruta vieja de la API: {} {} → {} {}",
-                request.getMethod(), request.getRequestURI(), t.metodo(), t.ruta());
+        log.info(
+                "Ruta vieja de la API: {} {} → {} {}",
+                request.getMethod(),
+                request.getRequestURI(),
+                t.metodo(),
+                t.ruta());
         chain.doFilter(new Traducida(request, t), response);
     }
 
@@ -160,10 +162,23 @@ public class RutasAntiguasFilter extends OncePerRequestFilter {
             this.t = t;
         }
 
-        @Override public String getMethod() { return t.metodo(); }
-        @Override public String getRequestURI() { return getContextPath() + t.ruta(); }
-        @Override public String getServletPath() { return t.ruta(); }
-        @Override public StringBuffer getRequestURL() {
+        @Override
+        public String getMethod() {
+            return t.metodo();
+        }
+
+        @Override
+        public String getRequestURI() {
+            return getContextPath() + t.ruta();
+        }
+
+        @Override
+        public String getServletPath() {
+            return t.ruta();
+        }
+
+        @Override
+        public StringBuffer getRequestURL() {
             StringBuffer url = new StringBuffer(getScheme()).append("://").append(getServerName());
             int puerto = getServerPort();
             if (puerto != 80 && puerto != 443) url.append(':').append(puerto);

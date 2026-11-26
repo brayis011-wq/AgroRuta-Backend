@@ -2,10 +2,10 @@ package com.agroruta.crop.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -58,16 +58,20 @@ public class Lote {
         this.area = area;
     }
 
-    public void ponerEnDescanso() { this.estado = EstadoLote.EN_DESCANSO; }
-    public void disponibilizar()  { this.estado = EstadoLote.DISPONIBLE; }
+    public void ponerEnDescanso() {
+        this.estado = EstadoLote.EN_DESCANSO;
+    }
 
-    public void actualizarGeometria(String coordenadas, Double area,
-                                    Double centroideLat, Double centroideLng) {
+    public void disponibilizar() {
+        this.estado = EstadoLote.DISPONIBLE;
+    }
+
+    public void actualizarGeometria(String coordenadas, Double area, Double centroideLat, Double centroideLng) {
         if (coordenadas == null || coordenadas.isBlank()) {
             throw new DatoInvalidoException("Las coordenadas del lote no pueden estar vacías.");
         }
-        this.coordenadas  = coordenadas;
-        this.area         = area;
+        this.coordenadas = coordenadas;
+        this.area = area;
         this.centroideLat = centroideLat;
         this.centroideLng = centroideLng;
     }

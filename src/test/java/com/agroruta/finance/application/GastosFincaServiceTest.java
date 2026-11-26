@@ -1,18 +1,5 @@
 package com.agroruta.finance.application;
 
-import com.agroruta.finance.application.ports.out.GastosFincaRepository;
-import com.agroruta.finance.domain.GastoFinca;
-import com.agroruta.shared.exception.DatoInvalidoException;
-import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -20,6 +7,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.agroruta.finance.application.ports.out.GastosFincaRepository;
+import com.agroruta.finance.domain.GastoFinca;
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.ResourceNotFoundException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @DisplayName("Gastos generales de la finca")
 class GastosFincaServiceTest {
@@ -58,13 +57,17 @@ class GastosFincaServiceTest {
     @Test
     void rechazaGastosIncompletos() {
         assertThatThrownBy(() -> servicio.registrar(null, HOY, null, "Algo", BigDecimal.TEN))
-                .isInstanceOf(DatoInvalidoException.class).hasMessageContaining("finca");
+                .isInstanceOf(DatoInvalidoException.class)
+                .hasMessageContaining("finca");
         assertThatThrownBy(() -> servicio.registrar(3L, null, null, "Algo", BigDecimal.TEN))
-                .isInstanceOf(DatoInvalidoException.class).hasMessageContaining("fecha");
+                .isInstanceOf(DatoInvalidoException.class)
+                .hasMessageContaining("fecha");
         assertThatThrownBy(() -> servicio.registrar(3L, HOY, null, "Algo", BigDecimal.ZERO))
-                .isInstanceOf(DatoInvalidoException.class).hasMessageContaining("mayor a 0");
+                .isInstanceOf(DatoInvalidoException.class)
+                .hasMessageContaining("mayor a 0");
         assertThatThrownBy(() -> servicio.registrar(3L, HOY, null, "   ", BigDecimal.TEN))
-                .isInstanceOf(DatoInvalidoException.class).hasMessageContaining("en qué se gastó");
+                .isInstanceOf(DatoInvalidoException.class)
+                .hasMessageContaining("en qué se gastó");
         verify(repo, never()).crear(any());
     }
 

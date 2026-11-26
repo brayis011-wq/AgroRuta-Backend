@@ -1,12 +1,11 @@
 package com.agroruta.shared.security;
 
-import jakarta.servlet.http.HttpServletResponse;
 import com.agroruta.shared.config.SesionProperties;
+import jakarta.servlet.http.HttpServletResponse;
+import java.time.Duration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 /**
  * Cookie con el token de sesión renovable.
@@ -33,7 +32,8 @@ public class CookieSesion {
     }
 
     public void escribir(HttpServletResponse response, String token) {
-        response.addHeader(HttpHeaders.SET_COOKIE, base(token).maxAge(duracion).build().toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE, base(token).maxAge(duracion).build().toString());
     }
 
     public void borrar(HttpServletResponse response) {

@@ -11,14 +11,13 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Precio de referencia de lo cosechado: el promedio mayorista semanal de SIPSA (DANE) o el precio
@@ -37,9 +36,10 @@ public class PrecioReferenciaController {
 
     /** ?crop=Aguacate&variety=Hass */
     @GetMapping("/crop")
-    public ResponseEntity<PrecioCultivo> deCultivo(@RequestParam("crop") String cultivo,
-                                                   @RequestParam(value = "variety", required = false) String variedad,
-                                                   Authentication authentication) {
+    public ResponseEntity<PrecioCultivo> deCultivo(
+            @RequestParam("crop") String cultivo,
+            @RequestParam(value = "variety", required = false) String variedad,
+            Authentication authentication) {
         return ResponseEntity.ok(precios.precioDe(CurrentUser.id(authentication), cultivo, variedad));
     }
 
@@ -62,16 +62,22 @@ public class PrecioReferenciaController {
     }
 
     public record EleccionRequest(
-            @NotBlank(message = "Indica el cultivo") @Size(max = 80) String cultivo,
+            @NotBlank(message = "Indica el cultivo") @Size(max = 80)
+            String cultivo,
+
             @Size(max = 120) String producto,
+
             @Positive(message = "El precio debe ser mayor a 0")
             @DecimalMax(value = "100000000", message = "El precio es demasiado alto")
-            @Digits(integer = 12, fraction = 2, message = "El precio admite máximo 2 decimales") BigDecimal precioKg) {}
+            @Digits(integer = 12, fraction = 2, message = "El precio admite máximo 2 decimales")
+            BigDecimal precioKg) {}
 
     @PutMapping("/mine")
     @PreAuthorize("hasRole('Agricultor')")
-    public ResponseEntity<PreferenciaPrecio> elegir(@Valid @RequestBody EleccionRequest req, Authentication authentication) {
-        return ResponseEntity.ok(precios.elegir(CurrentUser.id(authentication), req.cultivo(), req.producto(), req.precioKg()));
+    public ResponseEntity<PreferenciaPrecio> elegir(
+            @Valid @RequestBody EleccionRequest req, Authentication authentication) {
+        return ResponseEntity.ok(
+                precios.elegir(CurrentUser.id(authentication), req.cultivo(), req.producto(), req.precioKg()));
     }
 
     /** Vuelve a la búsqueda automática: ?crop=Café */

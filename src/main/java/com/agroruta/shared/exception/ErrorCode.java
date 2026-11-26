@@ -40,6 +40,11 @@ public enum ErrorCode {
         this.defaultMessage = defaultMessage;
     }
 
-    public String getCode() { return code; }
-    public String getDefaultMessage() { return defaultMessage; }
+    public String getCode() {
+        return code;
+    }
+
+    public String getDefaultMessage() {
+        return defaultMessage;
+    }
 }

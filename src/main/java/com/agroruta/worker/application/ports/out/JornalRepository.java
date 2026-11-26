@@ -1,9 +1,8 @@
 package com.agroruta.worker.application.ports.out;
 
-import com.agroruta.worker.domain.ResumenJornales;
 import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.domain.Jornal;
-
+import com.agroruta.worker.domain.ResumenJornales;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -11,15 +10,19 @@ import java.util.Optional;
 public interface JornalRepository {
 
     Jornal guardar(Jornal jornal);
+
     Optional<Jornal> buscarPorId(Long id);
 
     List<Jornal> buscarPorTrabajador(Long trabajadorId);
+
     List<Jornal> buscarPorTrabajadorYPeriodo(Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     List<Jornal> buscarPorCultivo(Long cultivoId);
+
     List<Jornal> buscarPorCultivoYPeriodo(Long cultivoId, LocalDate inicio, LocalDate fin);
 
     List<Jornal> buscarNoLiquidadosPorTrabajador(Long trabajadorId);
+
     List<Jornal> buscarNoLiquidadosPorTrabajadorYPeriodo(Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     // ✅ NUEVO: excluye jornales que ya están en alguna nómina
@@ -28,7 +31,8 @@ public interface JornalRepository {
     void eliminar(Long id);
 
     /** Kilos y pagos por trabajador entre dos fechas (solo jornales con kilos). agricultorId null: todos */
-    List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(Long agricultorId, LocalDate inicio, LocalDate fin);
+    List<com.agroruta.worker.domain.RendimientoTrabajador> rendimiento(
+            Long agricultorId, LocalDate inicio, LocalDate fin);
 
     /** Los jornales de los recolectores de esas cosechas */
     List<Jornal> buscarPorCosechas(java.util.Collection<Long> cosechaIds);
@@ -46,7 +50,8 @@ public interface JornalRepository {
     Pagina<Jornal> paginaPorTrabajador(Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
 
     /** Jornales del equipo del agricultor (o de un trabajador si viene), más recientes primero. agricultorId null: todos. */
-    Pagina<Jornal> paginaDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
+    Pagina<Jornal> paginaDelEquipo(
+            Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin, int pagina, int tamano);
 
     /** Totales con los mismos filtros */
     ResumenJornales resumenDelEquipo(Long agricultorId, Long trabajadorId, LocalDate inicio, LocalDate fin);

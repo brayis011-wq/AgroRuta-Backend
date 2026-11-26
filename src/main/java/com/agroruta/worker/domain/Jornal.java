@@ -2,14 +2,14 @@ package com.agroruta.worker.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.EstadoInvalidoException;
-import java.math.RoundingMode;
-import lombok.Getter;
-import lombok.Setter;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -38,8 +38,13 @@ public class Jornal {
         this.liquidado = false;
     }
 
-    public Jornal(Long id, LocalDate fecha, Trabajador trabajador,
-                  Long cultivoId, String nombreCultivo, String observaciones) {
+    public Jornal(
+            Long id,
+            LocalDate fecha,
+            Trabajador trabajador,
+            Long cultivoId,
+            String nombreCultivo,
+            String observaciones) {
         this.id = id;
         this.fecha = fecha;
         this.trabajador = trabajador;
@@ -135,8 +140,9 @@ public class Jornal {
     /** Kilos que recogió quien cobra por día; null = no se anotaron */
     public void anotarKilosRecogidos(BigDecimal kilos) {
         if (kilos != null && kilos.signum() <= 0) {
-            throw new DatoInvalidoException("Los kilos que recogió " + (trabajador == null ? "el recolector" : trabajador.getNombreCompleto())
-                    + " deben ser mayores a 0.");
+            throw new DatoInvalidoException(
+                    "Los kilos que recogió " + (trabajador == null ? "el recolector" : trabajador.getNombreCompleto())
+                            + " deben ser mayores a 0.");
         }
         this.kilosRecogidos = kilos == null ? null : kilos.setScale(2, RoundingMode.HALF_UP);
     }

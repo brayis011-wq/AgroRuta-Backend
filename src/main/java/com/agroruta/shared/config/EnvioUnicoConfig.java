@@ -18,9 +18,17 @@ public class EnvioUnicoConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(envioUnico)
-                // Lo que el teléfono puede guardar sin señal y reenviar después (ver offline-interceptor.ts del frontend)
-                .addPathPatterns("/api/workdays", "/api/workdays/batch", "/api/sprayings", "/api/harvests",
-                        "/api/activities", "/api/sales", "/api/sales/*/payments", "/api/farm-expenses",
+                // Lo que el teléfono puede guardar sin señal y reenviar después (ver offline-interceptor.ts del
+                // frontend)
+                .addPathPatterns(
+                        "/api/workdays",
+                        "/api/workdays/batch",
+                        "/api/sprayings",
+                        "/api/harvests",
+                        "/api/activities",
+                        "/api/sales",
+                        "/api/sales/*/payments",
+                        "/api/farm-expenses",
                         "/api/inventory/purchases");
     }
 }

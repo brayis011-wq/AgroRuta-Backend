@@ -1,29 +1,28 @@
 package com.agroruta.user.application;
 
-import com.agroruta.shared.exception.DatoInvalidoException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.context.ApplicationEventPublisher;
 import com.agroruta.shared.evento.CuentaBloqueada;
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ErrorCode;
-import com.agroruta.user.application.ports.out.VerificacionCorreoPort;
-import org.springframework.transaction.annotation.Transactional;
-import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
-import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
-import com.agroruta.user.application.ports.out.TokenPort;
-import com.agroruta.user.domain.Rol;
-import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.application.ports.in.DatosLogin;
 import com.agroruta.user.application.ports.in.DatosRegistro;
+import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.SesionIniciada;
+import com.agroruta.user.application.ports.out.TokenPort;
+import com.agroruta.user.application.ports.out.VerificacionCorreoPort;
+import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
+import java.util.EnumSet;
+import java.util.Set;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.EnumSet;
-import java.util.Set;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
@@ -42,16 +41,17 @@ public class AuthService {
     private final VerificacionCorreoPort verificacion;
     private final com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor;
 
-    public AuthService(RegistrarUsuarioUseCase registrarUsuarioUseCase,
-                       BuscarUsuarioUseCase buscarUsuarioUseCase,
-                       TokenPort tokenPort,
-                       PasswordEncoder passwordEncoder,
-                       AuthenticationManager authenticationManager,
-                       VinculoTrabajadorPort vinculoTrabajador,
-                       IntentosLogin intentosLogin,
-                       ApplicationEventPublisher eventos,
-                       VerificacionCorreoPort verificacion,
-                       com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor) {
+    public AuthService(
+            RegistrarUsuarioUseCase registrarUsuarioUseCase,
+            BuscarUsuarioUseCase buscarUsuarioUseCase,
+            TokenPort tokenPort,
+            PasswordEncoder passwordEncoder,
+            AuthenticationManager authenticationManager,
+            VinculoTrabajadorPort vinculoTrabajador,
+            IntentosLogin intentosLogin,
+            ApplicationEventPublisher eventos,
+            VerificacionCorreoPort verificacion,
+            com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor) {
         this.segundoFactor = segundoFactor;
         this.registrarUsuarioUseCase = registrarUsuarioUseCase;
         this.buscarUsuarioUseCase = buscarUsuarioUseCase;
@@ -82,8 +82,7 @@ public class AuthService {
                 request.nombre(),
                 normalizarEmail(request.email()),
                 passwordEncoder.encode(request.password()),
-                rol
-        );
+                rol);
         boolean verificar = verificacion.activa();
         usuario.setEmailVerificado(!verificar);
 
@@ -95,8 +94,13 @@ public class AuthService {
         if (verificar) {
             // Sin sesión hasta que confirme el correo con el enlace
             verificacion.enviarEnlace(guardado);
-            return new SesionIniciada(guardado.getId(), null, guardado.getEmail(), guardado.getNombre(),
-                    guardado.getRol().name(), true);
+            return new SesionIniciada(
+                    guardado.getId(),
+                    null,
+                    guardado.getEmail(),
+                    guardado.getNombre(),
+                    guardado.getRol().name(),
+                    true);
         }
         String token = tokenPort.generarToken(guardado);
 
@@ -105,8 +109,7 @@ public class AuthService {
                 token,
                 guardado.getEmail(),
                 guardado.getNombre(),
-                guardado.getRol().name()
-        );
+                guardado.getRol().name());
     }
 
     public SesionIniciada login(DatosLogin request) {
@@ -121,11 +124,7 @@ public class AuthService {
         intentosLogin.exigirNoBloqueado(request.email());
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.email(),
-                            request.password()
-                    )
-            );
+                    new UsernamePasswordAuthenticationToken(request.email(), request.password()));
         } catch (BadCredentialsException e) {
             if (intentosLogin.registrarFallo(request.email())) {
                 eventos.publishEvent(new CuentaBloqueada(request.email(), IntentosLogin.BLOQUEO.toMinutes()));
@@ -139,7 +138,8 @@ public class AuthService {
 
         // Se revisa después de la contraseña, para no contarle a cualquiera qué cuentas faltan por confirmar
         if (!usuario.isEmailVerificado() && verificacion.activa()) {
-            throw new BusinessException(ErrorCode.EMAIL_NOT_VERIFIED,
+            throw new BusinessException(
+                    ErrorCode.EMAIL_NOT_VERIFIED,
                     "Confirma tu correo para entrar: abre el enlace que te enviamos a " + usuario.getEmail() + ".");
         }
         return respuestaDeSesion(usuario);
@@ -156,14 +156,15 @@ public class AuthService {
         if (segundoFactor.dispositivoRecordado(usuario.getId(), dispositivo)) return;
         String codigo = request.codigo();
         if (codigo == null || codigo.isBlank()) {
-            throw new BusinessException(ErrorCode.TWO_FACTOR_REQUIRED,
-                    "Escribe el código de 6 dígitos de tu app de autenticación.");
+            throw new BusinessException(
+                    ErrorCode.TWO_FACTOR_REQUIRED, "Escribe el código de 6 dígitos de tu app de autenticación.");
         }
         if (!segundoFactor.verificar(usuario.getId(), codigo)) {
             if (intentosLogin.registrarFallo(request.email())) {
                 eventos.publishEvent(new CuentaBloqueada(request.email(), IntentosLogin.BLOQUEO.toMinutes()));
             }
-            throw new BusinessException(ErrorCode.TWO_FACTOR_INVALID,
+            throw new BusinessException(
+                    ErrorCode.TWO_FACTOR_INVALID,
                     "El código no es correcto. Usa el más reciente de tu app o un código de respaldo.");
         }
     }
@@ -191,8 +192,7 @@ public class AuthService {
                 token,
                 usuario.getEmail(),
                 usuario.getNombre(),
-                usuario.getRol().name()
-        );
+                usuario.getRol().name());
     }
 
     /** Los correos se guardan en minúscula y sin espacios: "Ana@X.com " y "ana@x.com" son la misma cuenta. */

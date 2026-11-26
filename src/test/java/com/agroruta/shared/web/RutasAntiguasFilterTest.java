@@ -1,14 +1,12 @@
 package com.agroruta.shared.web;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class RutasAntiguasFilterTest {
 
@@ -26,7 +24,8 @@ class RutasAntiguasFilterTest {
 
     @Test
     void traduceSegmentoPorSegmento() {
-        assertThat(t("GET", "/api/lotes/finca/7")).isEqualTo(new RutasAntiguasFilter.Traduccion("GET", "/api/plots/farm/7"));
+        assertThat(t("GET", "/api/lotes/finca/7"))
+                .isEqualTo(new RutasAntiguasFilter.Traduccion("GET", "/api/plots/farm/7"));
         assertThat(t("GET", "/api/siembras/estado/ACTIVA").ruta()).isEqualTo("/api/plantings/status/ACTIVA");
         assertThat(t("PATCH", "/api/trabajadores/3/acceso/aprobar").ruta()).isEqualTo("/api/workers/3/access/approve");
         assertThat(t("POST", "/api/tareas/alertas-diarias").ruta()).isEqualTo("/api/jobs/daily-alerts");
@@ -59,8 +58,8 @@ class RutasAntiguasFilterTest {
         req.setServletPath("/api/siembras/4/finalizar");
         AtomicReference<HttpServletRequest> recibida = new AtomicReference<>();
 
-        new RutasAntiguasFilter().doFilter(req, new MockHttpServletResponse(),
-                (r, s) -> recibida.set((HttpServletRequest) r));
+        new RutasAntiguasFilter()
+                .doFilter(req, new MockHttpServletResponse(), (r, s) -> recibida.set((HttpServletRequest) r));
 
         assertThat(recibida.get().getMethod()).isEqualTo("PATCH");
         assertThat(recibida.get().getRequestURI()).isEqualTo("/api/plantings/4/finish");

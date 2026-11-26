@@ -2,7 +2,6 @@ package com.agroruta.finance.application.ports.out;
 
 import com.agroruta.finance.domain.GastoFinca;
 import com.agroruta.finance.domain.ResumenGastos;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

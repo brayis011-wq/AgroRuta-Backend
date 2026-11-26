@@ -1,29 +1,30 @@
 package com.agroruta.user.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.DatoInvalidoException;
-import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
 import com.agroruta.user.application.ports.in.BuscarUsuarioUseCase;
-import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
-import com.agroruta.user.application.ports.out.TokenPort;
-import com.agroruta.user.domain.Rol;
-import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.application.ports.in.DatosLogin;
 import com.agroruta.user.application.ports.in.DatosRegistro;
+import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.application.ports.in.SesionIniciada;
+import com.agroruta.user.application.ports.out.TokenPort;
+import com.agroruta.user.application.ports.out.VinculoTrabajadorPort;
+import com.agroruta.user.domain.Rol;
+import com.agroruta.user.domain.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.mockito.InOrder;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -49,24 +50,27 @@ class AuthServiceTest {
     @org.mockito.Spy
     private IntentosLogin intentosLogin = new IntentosLogin(java.time.Clock.systemUTC());
 
-    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventos;
 
-    @Mock private com.agroruta.user.application.ports.out.VerificacionCorreoPort verificacion;
+    @Mock
+    private com.agroruta.user.application.ports.out.VerificacionCorreoPort verificacion;
 
-    @Mock private com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor;
+    @Mock
+    private com.agroruta.user.application.ports.in.SegundoFactorUseCase segundoFactor;
 
     @InjectMocks
     private AuthService authService;
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long   ID       = 1L;
-    private static final String NOMBRE   = "Juan Pérez";
-    private static final String EMAIL    = "juan@agroruta.com";
+    private static final Long ID = 1L;
+    private static final String NOMBRE = "Juan Pérez";
+    private static final String EMAIL = "juan@agroruta.com";
     private static final String PASSWORD = "secret123";
     private static final String PASSWORD_ENCODED = "$2a$10$hashedpassword";
-    private static final String TOKEN    = "eyJhbGciOiJIUzI1NiJ9.test.token";
-    private static final Rol    ROL      = Rol.Agricultor;
+    private static final String TOKEN = "eyJhbGciOiJIUzI1NiJ9.test.token";
+    private static final Rol ROL = Rol.Agricultor;
 
     private Usuario usuarioGuardado;
 
@@ -87,10 +91,10 @@ class AuthServiceTest {
 
         SesionIniciada response = authService.registrar(request);
 
-        assertEquals(ID,       response.id());
-        assertEquals(TOKEN,    response.token());
-        assertEquals(EMAIL,    response.email());
-        assertEquals(NOMBRE,   response.nombre());
+        assertEquals(ID, response.id());
+        assertEquals(TOKEN, response.token());
+        assertEquals(EMAIL, response.email());
+        assertEquals(NOMBRE, response.nombre());
         assertEquals(ROL.name(), response.rol());
     }
 
@@ -132,8 +136,7 @@ class AuthServiceTest {
     void registrarTrabajadorSinCedulaDeberiaFallar() {
         DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Trabajador.name(), null);
 
-        DatoInvalidoException ex = assertThrows(DatoInvalidoException.class,
-                () -> authService.registrar(request));
+        DatoInvalidoException ex = assertThrows(DatoInvalidoException.class, () -> authService.registrar(request));
 
         assertTrue(ex.getMessage().contains("cédula"));
         verifyNoInteractions(registrarUsuarioUseCase, vinculoTrabajador);
@@ -143,7 +146,8 @@ class AuthServiceTest {
     void registrarTrabajadorConCedulaNoRegistradaNoCreaLaCuenta() {
         DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Trabajador.name(), "999999");
         doThrow(new com.agroruta.shared.exception.BusinessException("Ningún agricultor ha registrado esta cédula."))
-                .when(vinculoTrabajador).validarCedulaDisponible("999999");
+                .when(vinculoTrabajador)
+                .validarCedulaDisponible("999999");
 
         assertThrows(com.agroruta.shared.exception.BusinessException.class, () -> authService.registrar(request));
 
@@ -218,15 +222,15 @@ class AuthServiceTest {
 
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(registrarUsuarioUseCase).registrar(captor.capture());
-        assertEquals(NOMBRE,          captor.getValue().getNombre());
-        assertEquals(EMAIL,           captor.getValue().getEmail());
+        assertEquals(NOMBRE, captor.getValue().getNombre());
+        assertEquals(EMAIL, captor.getValue().getEmail());
         assertEquals(PASSWORD_ENCODED, captor.getValue().getPassword());
-        assertEquals(ROL,             captor.getValue().getRol());
+        assertEquals(ROL, captor.getValue().getRol());
     }
 
     @Test
     void registrarDeberiaCubrirLosRolesPermitidos() {
-        for (Rol rol : new Rol[]{Rol.Agricultor, Rol.Trabajador}) {
+        for (Rol rol : new Rol[] {Rol.Agricultor, Rol.Trabajador}) {
             DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, rol.name(), "1052334120");
 
             Usuario usuario = new Usuario(ID, NOMBRE, EMAIL, PASSWORD_ENCODED, rol);
@@ -252,10 +256,10 @@ class AuthServiceTest {
 
         SesionIniciada response = authService.login(request);
 
-        assertEquals(ID,         response.id());
-        assertEquals(TOKEN,      response.token());
-        assertEquals(EMAIL,      response.email());
-        assertEquals(NOMBRE,     response.nombre());
+        assertEquals(ID, response.id());
+        assertEquals(TOKEN, response.token());
+        assertEquals(EMAIL, response.email());
+        assertEquals(NOMBRE, response.nombre());
         assertEquals(ROL.name(), response.rol());
     }
 
@@ -272,7 +276,7 @@ class AuthServiceTest {
         ArgumentCaptor<UsernamePasswordAuthenticationToken> captor =
                 ArgumentCaptor.forClass(UsernamePasswordAuthenticationToken.class);
         verify(authenticationManager).authenticate(captor.capture());
-        assertEquals(EMAIL,    captor.getValue().getPrincipal());
+        assertEquals(EMAIL, captor.getValue().getPrincipal());
         assertEquals(PASSWORD, captor.getValue().getCredentials());
     }
 
@@ -311,10 +315,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new org.springframework.security.core.AuthenticationException("Bad credentials") {});
 
-        assertThrows(
-                org.springframework.security.core.AuthenticationException.class,
-                () -> authService.login(request)
-        );
+        assertThrows(org.springframework.security.core.AuthenticationException.class, () -> authService.login(request));
 
         verifyNoInteractions(buscarUsuarioUseCase);
         verifyNoInteractions(tokenPort);
@@ -329,15 +330,17 @@ class AuthServiceTest {
                 .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
 
         for (int i = 0; i < IntentosLogin.MAX_FALLOS; i++) {
-            assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+            assertThrows(
+                    org.springframework.security.authentication.BadCredentialsException.class,
                     () -> authService.login(request));
         }
 
-        com.agroruta.shared.exception.BusinessException e = assertThrows(
-                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        com.agroruta.shared.exception.BusinessException e =
+                assertThrows(com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
         org.junit.jupiter.api.Assertions.assertEquals(
                 com.agroruta.shared.exception.ErrorCode.TOO_MANY_ATTEMPTS, e.getErrorCode());
-        verify(authenticationManager, org.mockito.Mockito.times(IntentosLogin.MAX_FALLOS)).authenticate(any());
+        verify(authenticationManager, org.mockito.Mockito.times(IntentosLogin.MAX_FALLOS))
+                .authenticate(any());
         verify(eventos).publishEvent(new com.agroruta.shared.evento.CuentaBloqueada(EMAIL, 15));
     }
 
@@ -398,8 +401,8 @@ class AuthServiceTest {
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
         when(verificacion.activa()).thenReturn(true);
 
-        com.agroruta.shared.exception.BusinessException e = assertThrows(
-                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        com.agroruta.shared.exception.BusinessException e =
+                assertThrows(com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
         assertEquals(com.agroruta.shared.exception.ErrorCode.EMAIL_NOT_VERIFIED, e.getErrorCode());
         verify(authenticationManager).authenticate(any());
         verifyNoInteractions(tokenPort);
@@ -429,8 +432,8 @@ class AuthServiceTest {
     void loginConSegundoFactorSinCodigoDeberiaPedirlo() {
         DatosLogin request = loginConCodigo(null);
 
-        com.agroruta.shared.exception.BusinessException e = assertThrows(
-                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        com.agroruta.shared.exception.BusinessException e =
+                assertThrows(com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
 
         assertEquals(com.agroruta.shared.exception.ErrorCode.TWO_FACTOR_REQUIRED, e.getErrorCode());
         verify(segundoFactor, never()).verificar(any(), any());
@@ -448,8 +451,8 @@ class AuthServiceTest {
             assertEquals(com.agroruta.shared.exception.ErrorCode.TWO_FACTOR_INVALID, e.getErrorCode());
         }
         // Después de diez códigos equivocados la cuenta queda bloqueada, aunque la contraseña sea buena
-        com.agroruta.shared.exception.BusinessException bloqueo = assertThrows(
-                com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
+        com.agroruta.shared.exception.BusinessException bloqueo =
+                assertThrows(com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
         assertEquals(com.agroruta.shared.exception.ErrorCode.TOO_MANY_ATTEMPTS, bloqueo.getErrorCode());
         verifyNoInteractions(tokenPort);
     }
@@ -488,9 +491,11 @@ class AuthServiceTest {
     @Test
     void laMarcaDeDispositivoNoSirveSinLaContrasena() {
         DatosLogin request = new DatosLogin(EMAIL, "otra", null, null);
-        when(authenticationManager.authenticate(any())).thenThrow(new org.springframework.security.authentication.BadCredentialsException("mala"));
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("mala"));
 
-        assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+        assertThrows(
+                org.springframework.security.authentication.BadCredentialsException.class,
                 () -> authService.login(request, "marca-valida"));
         verifyNoInteractions(segundoFactor, tokenPort);
     }

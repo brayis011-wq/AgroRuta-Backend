@@ -3,7 +3,6 @@ package com.agroruta.report.application.ports.out;
 import com.agroruta.report.domain.AplicacionCampo;
 import com.agroruta.report.domain.GastosGenerales;
 import com.agroruta.report.domain.Periodo;
-
 import java.util.List;
 
 /** Datos del campo para el cuaderno de campo y la ganancia real. */

@@ -1,11 +1,11 @@
 package com.agroruta.crop.domain;
 
+import com.agroruta.shared.util.Dinero;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import com.agroruta.shared.util.Dinero;
-import java.time.LocalDate;
-import java.math.BigDecimal;
 
 @Getter
 @Setter
@@ -21,12 +21,12 @@ public class ActividadCultivo {
     private BigDecimal costo;
     /** Insumo que se gastó (abonado...): nombre, producto de la bodega y cantidad total usada */
     private String producto;
+
     private Long agriculturalInputId;
     private Double cantidadUsada;
     private String unidadCantidad;
 
-    public ActividadCultivo(Long id, TipoActividad tipo, String descripcion,
-                            LocalDate fecha, Long siembraId) {
+    public ActividadCultivo(Long id, TipoActividad tipo, String descripcion, LocalDate fecha, Long siembraId) {
         this.id = id;
         this.tipo = tipo;
         this.descripcion = descripcion;
@@ -44,7 +44,8 @@ public class ActividadCultivo {
     }
 
     public UsoInsumo usoInsumo() {
-        return producto == null && agriculturalInputId == null ? null
+        return producto == null && agriculturalInputId == null
+                ? null
                 : new UsoInsumo(agriculturalInputId, producto, cantidadUsada, unidadCantidad);
     }
 

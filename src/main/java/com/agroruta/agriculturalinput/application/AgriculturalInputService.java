@@ -1,17 +1,16 @@
 package com.agroruta.agriculturalinput.application;
 
-import com.agroruta.shared.exception.BusinessException;
-import com.agroruta.shared.exception.DatoInvalidoException;
-import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.agriculturalinput.application.ports.in.*;
 import com.agroruta.agriculturalinput.application.ports.out.AgriculturalInputRepositoryPort;
-import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
 import com.agroruta.agriculturalinput.domain.AgriculturalInputType;
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.DatoInvalidoException;
+import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.ResourceNotFoundException;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Servicio de aplicación.
@@ -25,12 +24,12 @@ import java.util.List;
 @Transactional
 public class AgriculturalInputService
         implements GetAllAgriculturalInputsUseCase,
-        SearchAgriculturalInputsUseCase,
-        GetAgriculturalInputByIdUseCase,
-        CreateAgriculturalInputUseCase,
-        UpdateAgriculturalInputUseCase,
-        DeleteAgriculturalInputUseCase,
-        ManageAgriculturalInputStatusUseCase {
+                SearchAgriculturalInputsUseCase,
+                GetAgriculturalInputByIdUseCase,
+                CreateAgriculturalInputUseCase,
+                UpdateAgriculturalInputUseCase,
+                DeleteAgriculturalInputUseCase,
+                ManageAgriculturalInputStatusUseCase {
 
     private final AgriculturalInputRepositoryPort repository;
 
@@ -58,7 +57,8 @@ public class AgriculturalInputService
     @Override
     @Transactional(readOnly = true)
     public AgriculturalInput getById(Long id) {
-        return repository.findById(id)
+        return repository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Insumo agrícola no encontrado con id: " + id));
     }
 
@@ -74,14 +74,14 @@ public class AgriculturalInputService
                 MeasurementUnit.valueOf(command.unidadSugerida()),
                 command.dosisSugerida(),
                 command.reentradaHoras(),
-                command.diasCarencia()
-        );
+                command.diasCarencia());
         return repository.save(input);
     }
 
     @Override
     public AgriculturalInput update(Long id, UpdateAgriculturalInputCommand command) {
-        AgriculturalInput input = repository.findById(id)
+        AgriculturalInput input = repository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Insumo agrícola no encontrado con id: " + id));
 
         String nombre = limpiarNombre(command.nombre());
@@ -92,14 +92,14 @@ public class AgriculturalInputService
                 MeasurementUnit.valueOf(command.unidadSugerida()),
                 command.dosisSugerida(),
                 command.reentradaHoras(),
-                command.diasCarencia()
-        );
+                command.diasCarencia());
         return repository.save(input);
     }
 
     @Override
     public void delete(Long id) {
-        AgriculturalInput input = repository.findById(id)
+        AgriculturalInput input = repository
+                .findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Insumo agrícola no encontrado con id: " + id));
         input.deactivate();
         repository.save(input);
@@ -115,7 +115,8 @@ public class AgriculturalInputService
 
     @Override
     public AgriculturalInput changeStatus(Long id, boolean activo) {
-        AgriculturalInput input = repository.findAnyById(id)
+        AgriculturalInput input = repository
+                .findAnyById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Insumo agrícola no encontrado con id: " + id));
         if (activo == input.isActivo()) {
             return input;
@@ -143,8 +144,8 @@ public class AgriculturalInputService
     /** Evita dos insumos activos con el mismo nombre (los agricultores no sabrían cuál elegir). */
     private void exigirNombreLibre(String nombre, Long excluirId) {
         if (repository.existsActiveByNombre(nombre, excluirId)) {
-            throw new BusinessException(ErrorCode.RESOURCE_ALREADY_EXISTS,
-                    "Ya existe un insumo activo llamado " + nombre + ".");
+            throw new BusinessException(
+                    ErrorCode.RESOURCE_ALREADY_EXISTS, "Ya existe un insumo activo llamado " + nombre + ".");
         }
     }
 }

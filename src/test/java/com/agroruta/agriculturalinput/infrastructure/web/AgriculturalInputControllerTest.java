@@ -1,11 +1,16 @@
 package com.agroruta.agriculturalinput.infrastructure.web;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.agriculturalinput.application.ports.in.*;
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
 import com.agroruta.agriculturalinput.domain.AgriculturalInputType;
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
 import com.agroruta.agriculturalinput.infrastructure.web.dto.AgriculturalInputRequest;
 import com.agroruta.agriculturalinput.infrastructure.web.dto.AgriculturalInputResponse;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,23 +22,30 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AgriculturalInputController - Pruebas Unitarias")
 class AgriculturalInputControllerTest {
 
-    @Mock private GetAllAgriculturalInputsUseCase  getAllUseCase;
-    @Mock private SearchAgriculturalInputsUseCase  searchUseCase;
-    @Mock private GetAgriculturalInputByIdUseCase  getByIdUseCase;
-    @Mock private CreateAgriculturalInputUseCase   createUseCase;
-    @Mock private UpdateAgriculturalInputUseCase   updateUseCase;
-    @Mock private DeleteAgriculturalInputUseCase   deleteUseCase;
-    @Mock private ManageAgriculturalInputStatusUseCase statusUseCase;
+    @Mock
+    private GetAllAgriculturalInputsUseCase getAllUseCase;
+
+    @Mock
+    private SearchAgriculturalInputsUseCase searchUseCase;
+
+    @Mock
+    private GetAgriculturalInputByIdUseCase getByIdUseCase;
+
+    @Mock
+    private CreateAgriculturalInputUseCase createUseCase;
+
+    @Mock
+    private UpdateAgriculturalInputUseCase updateUseCase;
+
+    @Mock
+    private DeleteAgriculturalInputUseCase deleteUseCase;
+
+    @Mock
+    private ManageAgriculturalInputStatusUseCase statusUseCase;
 
     @InjectMocks
     private AgriculturalInputController controller;
@@ -43,13 +55,8 @@ class AgriculturalInputControllerTest {
 
     @BeforeEach
     void setUp() {
-        inputBase = AgriculturalInput.create(
-                "Glifosato",
-                AgriculturalInputType.HERBICIDA,
-                MeasurementUnit.LITROS,
-                2.5,
-                48
-        );
+        inputBase =
+                AgriculturalInput.create("Glifosato", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 2.5, 48);
         inputBase.setId(1L);
 
         requestBase = new AgriculturalInputRequest("Glifosato", "HERBICIDA", "LITROS", 2.5, 48, null);
@@ -69,11 +76,11 @@ class AgriculturalInputControllerTest {
 
             ResponseEntity<List<AgriculturalInputResponse>> respuesta = controller.getAll(null);
 
-            assertEquals(HttpStatus.OK,  respuesta.getStatusCode());
-            assertEquals(1,              respuesta.getBody().size());
-            assertEquals("Glifosato",    respuesta.getBody().get(0).getNombre());
-            assertEquals("HERBICIDA",    respuesta.getBody().get(0).getTipo());
-            assertEquals("Herbicida",    respuesta.getBody().get(0).getTipoDisplay());
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+            assertEquals(1, respuesta.getBody().size());
+            assertEquals("Glifosato", respuesta.getBody().get(0).getNombre());
+            assertEquals("HERBICIDA", respuesta.getBody().get(0).getTipo());
+            assertEquals("Herbicida", respuesta.getBody().get(0).getTipoDisplay());
             verify(getAllUseCase, times(1)).getAll();
             verify(searchUseCase, never()).search(any());
         }
@@ -98,8 +105,8 @@ class AgriculturalInputControllerTest {
             ResponseEntity<List<AgriculturalInputResponse>> respuesta = controller.getAll("Glif");
 
             assertEquals(HttpStatus.OK, respuesta.getStatusCode());
-            assertEquals(1,             respuesta.getBody().size());
-            assertEquals("Glifosato",   respuesta.getBody().get(0).getNombre());
+            assertEquals(1, respuesta.getBody().size());
+            assertEquals("Glifosato", respuesta.getBody().get(0).getNombre());
             verify(searchUseCase, times(1)).search("Glif");
             verify(getAllUseCase, never()).getAll();
         }
@@ -131,14 +138,14 @@ class AgriculturalInputControllerTest {
             ResponseEntity<AgriculturalInputResponse> respuesta = controller.getById(1L);
 
             assertNotNull(respuesta);
-            assertEquals(HttpStatus.OK,   respuesta.getStatusCode());
-            assertEquals(1L,              respuesta.getBody().getId());
-            assertEquals("Glifosato",     respuesta.getBody().getNombre());
-            assertEquals("HERBICIDA",     respuesta.getBody().getTipo());
-            assertEquals("Herbicida",     respuesta.getBody().getTipoDisplay());
-            assertEquals("LITROS",        respuesta.getBody().getUnidadSugerida());
-            assertEquals(2.5,             respuesta.getBody().getDosisSugerida());
-            assertEquals(48,              respuesta.getBody().getReentradaHoras());
+            assertEquals(HttpStatus.OK, respuesta.getStatusCode());
+            assertEquals(1L, respuesta.getBody().getId());
+            assertEquals("Glifosato", respuesta.getBody().getNombre());
+            assertEquals("HERBICIDA", respuesta.getBody().getTipo());
+            assertEquals("Herbicida", respuesta.getBody().getTipoDisplay());
+            assertEquals("LITROS", respuesta.getBody().getUnidadSugerida());
+            assertEquals(2.5, respuesta.getBody().getDosisSugerida());
+            assertEquals(48, respuesta.getBody().getReentradaHoras());
             assertTrue(respuesta.getBody().getActivo());
             verify(getByIdUseCase, times(1)).getById(1L);
         }
@@ -160,9 +167,9 @@ class AgriculturalInputControllerTest {
 
             assertEquals(HttpStatus.CREATED, respuesta.getStatusCode());
             assertNotNull(respuesta.getBody());
-            assertEquals("Glifosato",        respuesta.getBody().getNombre());
-            assertEquals("HERBICIDA",        respuesta.getBody().getTipo());
-            assertEquals(2.5,                respuesta.getBody().getDosisSugerida());
+            assertEquals("Glifosato", respuesta.getBody().getNombre());
+            assertEquals("HERBICIDA", respuesta.getBody().getTipo());
+            assertEquals(2.5, respuesta.getBody().getDosisSugerida());
             assertTrue(respuesta.getBody().getActivo());
             verify(createUseCase, times(1)).create(any());
         }
@@ -174,13 +181,10 @@ class AgriculturalInputControllerTest {
 
             controller.create(requestBase);
 
-            verify(createUseCase, times(1)).create(
-                    argThat(cmd ->
-                            cmd.nombre().equals("Glifosato") &&
-                                    cmd.tipo().equals("HERBICIDA")   &&
-                                    cmd.unidadSugerida().equals("LITROS")
-                    )
-            );
+            verify(createUseCase, times(1))
+                    .create(argThat(cmd -> cmd.nombre().equals("Glifosato")
+                            && cmd.tipo().equals("HERBICIDA")
+                            && cmd.unidadSugerida().equals("LITROS")));
         }
     }
 
@@ -200,7 +204,7 @@ class AgriculturalInputControllerTest {
 
             assertEquals(HttpStatus.OK, respuesta.getStatusCode());
             assertNotNull(respuesta.getBody());
-            assertEquals("Glifosato",   respuesta.getBody().getNombre());
+            assertEquals("Glifosato", respuesta.getBody().getNombre());
             verify(updateUseCase, times(1)).update(eq(1L), any());
         }
 
@@ -211,14 +215,12 @@ class AgriculturalInputControllerTest {
 
             controller.update(1L, requestBase);
 
-            verify(updateUseCase, times(1)).update(
-                    eq(1L),
-                    argThat(cmd ->
-                            cmd.nombre().equals("Glifosato") &&
-                                    cmd.tipo().equals("HERBICIDA")   &&
-                                    cmd.dosisSugerida().equals(2.5)
-                    )
-            );
+            verify(updateUseCase, times(1))
+                    .update(
+                            eq(1L),
+                            argThat(cmd -> cmd.nombre().equals("Glifosato")
+                                    && cmd.tipo().equals("HERBICIDA")
+                                    && cmd.dosisSugerida().equals(2.5)));
         }
     }
 

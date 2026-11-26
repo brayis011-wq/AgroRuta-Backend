@@ -2,7 +2,6 @@ package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.Recolector;
 import com.agroruta.crop.domain.RecolectorCosecha;
-
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;

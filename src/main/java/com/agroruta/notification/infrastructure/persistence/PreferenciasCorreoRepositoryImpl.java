@@ -1,10 +1,9 @@
 package com.agroruta.notification.infrastructure.persistence;
 
-import com.agroruta.notification.domain.PreferenciasCorreo;
 import com.agroruta.notification.application.ports.out.PreferenciasCorreoRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.notification.domain.PreferenciasCorreo;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class PreferenciasCorreoRepositoryImpl implements PreferenciasCorreoRepository {

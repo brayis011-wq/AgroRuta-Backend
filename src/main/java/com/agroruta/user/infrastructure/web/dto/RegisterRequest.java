@@ -21,14 +21,13 @@ public record RegisterRequest(
         String password,
 
         // Opcional: AuthService decide qué roles se permiten en el autorregistro.
-        @Size(max = 20, message = "Rol no válido")
-        String rol,
+        @Size(max = 20, message = "Rol no válido") String rol,
 
         // Obligatoria solo para el rol Trabajador (lo valida AuthService).
-        @Pattern(regexp = "^$|^[0-9A-Za-z.\\- ]{5,20}$",
-        message = "La cédula debe tener entre 5 y 20 caracteres (números, letras, puntos o guiones)")
-        String cedula
-) {
+        @Pattern(
+                regexp = "^$|^[0-9A-Za-z.\\- ]{5,20}$",
+                message = "La cédula debe tener entre 5 y 20 caracteres (números, letras, puntos o guiones)")
+        String cedula) {
 
     public com.agroruta.user.application.ports.in.DatosRegistro aDatos() {
         return new com.agroruta.user.application.ports.in.DatosRegistro(nombre, email, password, rol, cedula);

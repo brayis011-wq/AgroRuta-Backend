@@ -12,6 +12,4 @@ public record UpdateProfileRequest(
         String telefono,
 
         @Size(max = 350_000, message = "La foto es muy pesada. Elige una imagen más pequeña.")
-        String fotoPerfil
-) {
-}
+        String fotoPerfil) {}

@@ -20,8 +20,7 @@ public record LoginRequest(
         String codigo,
 
         /** Con el código: no volver a pedirlo en este dispositivo durante 30 días (por defecto, sí) */
-        Boolean recordarDispositivo
-) {
+        Boolean recordarDispositivo) {
 
     public com.agroruta.user.application.ports.in.DatosLogin aDatos() {
         return new com.agroruta.user.application.ports.in.DatosLogin(email, password, codigo, recordarDispositivo);

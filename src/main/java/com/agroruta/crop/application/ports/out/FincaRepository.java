@@ -1,7 +1,6 @@
 package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.Finca;
-
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +11,7 @@ import java.util.Optional;
  */
 public interface FincaRepository {
     Finca save(Finca finca);
+
     Optional<Finca> findById(Long id);
     /** Fincas vigentes del agricultor */
     List<Finca> findByAgricultorId(Long agricultorId);

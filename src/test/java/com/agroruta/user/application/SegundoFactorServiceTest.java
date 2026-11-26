@@ -1,5 +1,9 @@
 package com.agroruta.user.application;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.user.application.SesionServiceTest.RelojMovil;
@@ -10,29 +14,37 @@ import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.SegundoFactor;
 import com.agroruta.user.domain.Totp;
 import com.agroruta.user.domain.Usuario;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.security.crypto.password.PasswordEncoder;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @DisplayName("SegundoFactorService")
 class SegundoFactorServiceTest {
 
     static class EnMemoria implements SegundoFactorRepository {
         final Map<Long, SegundoFactor> filas = new HashMap<>();
-        @Override public Optional<SegundoFactor> buscar(Long id) { return Optional.ofNullable(filas.get(id)); }
-        @Override public SegundoFactor guardar(SegundoFactor s) { filas.put(s.getUsuarioId(), s); return s; }
-        @Override public void borrar(Long id) { filas.remove(id); }
+
+        @Override
+        public Optional<SegundoFactor> buscar(Long id) {
+            return Optional.ofNullable(filas.get(id));
+        }
+
+        @Override
+        public SegundoFactor guardar(SegundoFactor s) {
+            filas.put(s.getUsuarioId(), s);
+            return s;
+        }
+
+        @Override
+        public void borrar(Long id) {
+            filas.remove(id);
+        }
     }
 
     private final RelojMovil reloj = new RelojMovil();
@@ -43,7 +55,8 @@ class SegundoFactorServiceTest {
 
     @BeforeEach
     void preparar() {
-        when(usuarios.findById(7L)).thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash", Rol.Administrador)));
+        when(usuarios.findById(7L))
+                .thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash", Rol.Administrador)));
         when(encoder.matches("clave-buena", "hash")).thenReturn(true);
         service = new SegundoFactorService(repo, usuarios, encoder, "secreto-del-servidor-para-pruebas", reloj);
     }
@@ -174,7 +187,8 @@ class SegundoFactorServiceTest {
 
         assertFalse(service.dispositivoRecordado(8L, marca));
         assertFalse(service.dispositivoRecordado(7L, "8." + p[1] + "." + p[2]));
-        assertFalse(service.dispositivoRecordado(7L, p[0] + "." + (Long.parseLong(p[1]) + 86_400 * 365) + "." + p[2]),
+        assertFalse(
+                service.dispositivoRecordado(7L, p[0] + "." + (Long.parseLong(p[1]) + 86_400 * 365) + "." + p[2]),
                 "no se puede alargar la fecha");
         assertFalse(service.dispositivoRecordado(7L, p[0] + "." + p[1] + ".firma-inventada"));
         assertFalse(service.dispositivoRecordado(7L, "nada"));
@@ -188,7 +202,8 @@ class SegundoFactorServiceTest {
         activar(new java.util.ArrayList<>());
         String marca = service.recordarDispositivo(7L).orElseThrow();
 
-        when(usuarios.findById(7L)).thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash-nuevo", Rol.Administrador)));
+        when(usuarios.findById(7L))
+                .thenReturn(Optional.of(new Usuario(7L, "Ana", "ana@x.com", "hash-nuevo", Rol.Administrador)));
 
         assertFalse(service.dispositivoRecordado(7L, marca));
     }

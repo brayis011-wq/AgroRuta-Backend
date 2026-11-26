@@ -7,6 +7,4 @@ import jakarta.validation.constraints.Pattern;
 public record RestoreRequest(
         @NotBlank(message = "La confirmación es obligatoria")
         @Pattern(regexp = "RESTAURAR", message = "Debes escribir RESTAURAR para confirmar")
-        String confirmacion
-) {
-}
+        String confirmacion) {}

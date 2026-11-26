@@ -21,9 +21,7 @@ public class WeatherController {
     }
 
     @GetMapping("/coordinates")
-    public ResponseEntity<WeatherResponseDto> getByCoordinates(
-            @RequestParam double lat,
-            @RequestParam double lon) {
+    public ResponseEntity<WeatherResponseDto> getByCoordinates(@RequestParam double lat, @RequestParam double lon) {
         Weather weather = weatherUseCase.getWeatherByCoordinates(lat, lon);
         return ResponseEntity.ok(toDto(weather));
     }

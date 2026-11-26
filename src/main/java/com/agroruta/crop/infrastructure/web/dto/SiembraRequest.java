@@ -4,7 +4,6 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
-
 import java.time.LocalDate;
 
 public record SiembraRequest(
@@ -18,12 +17,8 @@ public record SiembraRequest(
         Integer cantidadPlantas,
 
         // Variedad del catálogo de cultivos; SiembraService valida que exista y esté activa.
-        @NotNull(message = "La variedad es obligatoria")
-        @Positive(message = "La variedad no es válida")
+        @NotNull(message = "La variedad es obligatoria") @Positive(message = "La variedad no es válida")
         Long variedadId,
 
-        @NotNull(message = "El lote es obligatorio")
-        @Positive(message = "El lote no es válido")
-        Long loteId
-) {
-}
+        @NotNull(message = "El lote es obligatorio") @Positive(message = "El lote no es válido")
+        Long loteId) {}

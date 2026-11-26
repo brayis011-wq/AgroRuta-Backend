@@ -1,13 +1,12 @@
 package com.agroruta.worker.infrastructure.persistence;
 
-import org.springframework.data.domain.Pageable;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.time.LocalDate;
-import java.util.List;
 
 interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
 
@@ -17,8 +16,8 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
         WHERE (:agricultorId IS NULL OR j.trabajador.agricultorId = :agricultorId)
           AND j.fecha BETWEEN :inicio AND :fin
         """)
-    List<JornalEntity> delEquipoEntre(@Param("agricultorId") Long agricultorId,
-                                      @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+    List<JornalEntity> delEquipoEntre(
+            @Param("agricultorId") Long agricultorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /** Jornales del equipo (o de un trabajador), más recientes primero; todo opcional salvo el dueño */
     @Query(value = """
@@ -34,8 +33,12 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND (:inicio IS NULL OR j.fecha >= :inicio)
           AND (:fin IS NULL OR j.fecha <= :fin)
         """)
-    Page<JornalEntity> paginaDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
-                                       @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin, Pageable pageable);
+    Page<JornalEntity> paginaDelEquipo(
+            @Param("agricultorId") Long agricultorId,
+            @Param("trabajadorId") Long trabajadorId,
+            @Param("inicio") LocalDate inicio,
+            @Param("fin") LocalDate fin,
+            Pageable pageable);
 
     @Query("""
         SELECT COUNT(j), SUM(j.valorJornal),
@@ -49,8 +52,11 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND (:inicio IS NULL OR j.fecha >= :inicio)
           AND (:fin IS NULL OR j.fecha <= :fin)
         """)
-    List<Object[]> resumenDelEquipo(@Param("agricultorId") Long agricultorId, @Param("trabajadorId") Long trabajadorId,
-                                    @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+    List<Object[]> resumenDelEquipo(
+            @Param("agricultorId") Long agricultorId,
+            @Param("trabajadorId") Long trabajadorId,
+            @Param("inicio") LocalDate inicio,
+            @Param("fin") LocalDate fin);
 
     /**
      * Rendimiento por trabajador: [id, nombre, apellido, cargo, modalidad del cargo, días por día, kilos por día,
@@ -70,7 +76,8 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND j.fecha >= :inicio AND j.fecha <= :fin
         GROUP BY t.id, t.nombre, t.apellido, c.nombre, c.modalidadPago
         """)
-    List<Object[]> rendimiento(@Param("agricultorId") Long agricultorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+    List<Object[]> rendimiento(
+            @Param("agricultorId") Long agricultorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /** De esos jornales, los que ya quedaron en alguna nómina */
     /** [id del jornal, estado de su nómina]; las anuladas no cuentan (sus jornales quedan libres) */
@@ -83,15 +90,13 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
 
     List<JornalEntity> findByTrabajadorId(Long trabajadorId);
 
-    List<JornalEntity> findByTrabajadorIdAndFechaBetween(
-            Long trabajadorId, LocalDate inicio, LocalDate fin);
+    List<JornalEntity> findByTrabajadorIdAndFechaBetween(Long trabajadorId, LocalDate inicio, LocalDate fin);
 
     List<JornalEntity> findByCultivoId(Long cultivoId);
 
     List<JornalEntity> findByCosechaIdIn(java.util.Collection<Long> cosechaIds);
 
-    List<JornalEntity> findByCultivoIdAndFechaBetween(
-            Long cultivoId, LocalDate inicio, LocalDate fin);
+    List<JornalEntity> findByCultivoIdAndFechaBetween(Long cultivoId, LocalDate inicio, LocalDate fin);
 
     List<JornalEntity> findByTrabajadorIdAndLiquidadoFalse(Long trabajadorId);
 
@@ -109,9 +114,7 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
         )
     """)
     List<JornalEntity> findDisponiblesParaNomina(
-            @Param("trabajadorId") Long trabajadorId,
-            @Param("inicio") LocalDate inicio,
-            @Param("fin") LocalDate fin);
+            @Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     @Query(value = """
         SELECT j FROM JornalEntity j
@@ -124,8 +127,11 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND (:inicio IS NULL OR j.fecha >= :inicio)
           AND (:fin IS NULL OR j.fecha <= :fin)
         """)
-    Page<JornalEntity> paginaPorTrabajador(@Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio,
-                                           @Param("fin") LocalDate fin, Pageable pageable);
+    Page<JornalEntity> paginaPorTrabajador(
+            @Param("trabajadorId") Long trabajadorId,
+            @Param("inicio") LocalDate inicio,
+            @Param("fin") LocalDate fin,
+            Pageable pageable);
 
     @Query("""
         SELECT COUNT(j), SUM(j.valorJornal),
@@ -138,8 +144,8 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND (:inicio IS NULL OR j.fecha >= :inicio)
           AND (:fin IS NULL OR j.fecha <= :fin)
         """)
-    List<Object[]> resumenPorTrabajador(@Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio,
-                                        @Param("fin") LocalDate fin);
+    List<Object[]> resumenPorTrabajador(
+            @Param("trabajadorId") Long trabajadorId, @Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /** [jornales desde inicioMes, jornales anteriores a inicioMes] entre desde y hoy, de trabajadores en ese estado */
     @Query("""
@@ -150,10 +156,12 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND j.trabajador.estado = :estado
           AND j.fecha >= :desde AND j.fecha <= :hoy
         """)
-    List<Object[]> conteoPorMes(@Param("agricultorId") Long agricultorId,
-                                @Param("estado") com.agroruta.worker.domain.EstadoTrabajador estado,
-                                @Param("desde") LocalDate desde, @Param("inicioMes") LocalDate inicioMes,
-                                @Param("hoy") LocalDate hoy);
+    List<Object[]> conteoPorMes(
+            @Param("agricultorId") Long agricultorId,
+            @Param("estado") com.agroruta.worker.domain.EstadoTrabajador estado,
+            @Param("desde") LocalDate desde,
+            @Param("inicioMes") LocalDate inicioMes,
+            @Param("hoy") LocalDate hoy);
 
     @Query("""
         SELECT DISTINCT j.trabajador.id FROM JornalEntity j
@@ -161,7 +169,8 @@ interface JpaJornalRepository extends JpaRepository<JornalEntity, Long> {
           AND j.trabajador.estado = :estado
           AND j.fecha = :hoy
         """)
-    List<Long> trabajadoresConJornal(@Param("agricultorId") Long agricultorId,
-                                     @Param("estado") com.agroruta.worker.domain.EstadoTrabajador estado,
-                                     @Param("hoy") LocalDate hoy);
+    List<Long> trabajadoresConJornal(
+            @Param("agricultorId") Long agricultorId,
+            @Param("estado") com.agroruta.worker.domain.EstadoTrabajador estado,
+            @Param("hoy") LocalDate hoy);
 }

@@ -1,22 +1,21 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import java.time.LocalDateTime;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.domain.EstadoLote;
 import com.agroruta.crop.domain.Lote;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LoteRepositoryImplTest {
@@ -32,17 +31,17 @@ class LoteRepositoryImplTest {
 
     // ── Fixtures ─────────────────────────────────────────────────
 
-    private static final Long      ID        = 1L;
-    private static final Long      FINCA_ID  = 20L;
-    private static final String    NOMBRE    = "Lote Norte";
-    private static final Double    AREA      = 12.5;
-    private static final EstadoLote ESTADO   = EstadoLote.DISPONIBLE;
-    private static final String    COORDENADAS = "[[4.71,-74.07],[4.72,-74.08]]";
-    private static final Double    LAT       = 4.7110;
-    private static final Double    LNG       = -74.0721;
+    private static final Long ID = 1L;
+    private static final Long FINCA_ID = 20L;
+    private static final String NOMBRE = "Lote Norte";
+    private static final Double AREA = 12.5;
+    private static final EstadoLote ESTADO = EstadoLote.DISPONIBLE;
+    private static final String COORDENADAS = "[[4.71,-74.07],[4.72,-74.08]]";
+    private static final Double LAT = 4.7110;
+    private static final Double LNG = -74.0721;
 
     private LoteEntity entityGuardada;
-    private Lote       dominioEntrada;
+    private Lote dominioEntrada;
 
     @BeforeEach
     void setUp() {
@@ -74,14 +73,14 @@ class LoteRepositoryImplTest {
 
         Lote resultado = repository.save(dominioEntrada);
 
-        assertEquals(ID,          resultado.getId());
-        assertEquals(NOMBRE,      resultado.getNombre());
-        assertEquals(AREA,        resultado.getArea());
-        assertEquals(ESTADO,      resultado.getEstado());
-        assertEquals(FINCA_ID,    resultado.getFincaId());
+        assertEquals(ID, resultado.getId());
+        assertEquals(NOMBRE, resultado.getNombre());
+        assertEquals(AREA, resultado.getArea());
+        assertEquals(ESTADO, resultado.getEstado());
+        assertEquals(FINCA_ID, resultado.getFincaId());
         assertEquals(COORDENADAS, resultado.getCoordenadas());
-        assertEquals(LAT,         resultado.getCentroideLat());
-        assertEquals(LNG,         resultado.getCentroideLng());
+        assertEquals(LAT, resultado.getCentroideLat());
+        assertEquals(LNG, resultado.getCentroideLng());
         verify(jpaRepository, times(1)).save(any(LoteEntity.class));
     }
 
@@ -91,15 +90,14 @@ class LoteRepositoryImplTest {
 
         repository.save(dominioEntrada);
 
-        verify(jpaRepository).save(argThat(entity ->
-                entity.getNombre()      .equals(NOMBRE)       &&
-                        entity.getArea()        .equals(AREA)         &&
-                        entity.getEstado()      == ESTADO             &&
-                        entity.getFincaId()     .equals(FINCA_ID)     &&
-                        entity.getCoordenadas() .equals(COORDENADAS)  &&
-                        entity.getCentroideLat().equals(LAT)          &&
-                        entity.getCentroideLng().equals(LNG)
-        ));
+        verify(jpaRepository)
+                .save(argThat(entity -> entity.getNombre().equals(NOMBRE)
+                        && entity.getArea().equals(AREA)
+                        && entity.getEstado() == ESTADO
+                        && entity.getFincaId().equals(FINCA_ID)
+                        && entity.getCoordenadas().equals(COORDENADAS)
+                        && entity.getCentroideLat().equals(LAT)
+                        && entity.getCentroideLng().equals(LNG)));
     }
 
     @Test
@@ -139,14 +137,14 @@ class LoteRepositoryImplTest {
         Optional<Lote> resultado = repository.findById(ID);
 
         assertTrue(resultado.isPresent());
-        assertEquals(ID,          resultado.get().getId());
-        assertEquals(NOMBRE,      resultado.get().getNombre());
-        assertEquals(AREA,        resultado.get().getArea());
-        assertEquals(ESTADO,      resultado.get().getEstado());
-        assertEquals(FINCA_ID,    resultado.get().getFincaId());
+        assertEquals(ID, resultado.get().getId());
+        assertEquals(NOMBRE, resultado.get().getNombre());
+        assertEquals(AREA, resultado.get().getArea());
+        assertEquals(ESTADO, resultado.get().getEstado());
+        assertEquals(FINCA_ID, resultado.get().getFincaId());
         assertEquals(COORDENADAS, resultado.get().getCoordenadas());
-        assertEquals(LAT,         resultado.get().getCentroideLat());
-        assertEquals(LNG,         resultado.get().getCentroideLng());
+        assertEquals(LAT, resultado.get().getCentroideLat());
+        assertEquals(LNG, resultado.get().getCentroideLng());
     }
 
     @Test
@@ -185,13 +183,12 @@ class LoteRepositoryImplTest {
         entity2.setFincaId(FINCA_ID);
         entity2.setCoordenadas(null);
 
-        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID))
-                .thenReturn(List.of(entityGuardada, entity2));
+        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID)).thenReturn(List.of(entityGuardada, entity2));
 
         List<Lote> resultado = repository.findByFincaId(FINCA_ID);
 
-        assertEquals(2,                   resultado.size());
-        assertEquals(NOMBRE,              resultado.get(0).getNombre());
+        assertEquals(2, resultado.size());
+        assertEquals(NOMBRE, resultado.get(0).getNombre());
         assertEquals(EstadoLote.EN_CULTIVO, resultado.get(1).getEstado());
     }
 
@@ -216,15 +213,14 @@ class LoteRepositoryImplTest {
         entity2.setCentroideLat(5.0);
         entity2.setCentroideLng(-75.0);
 
-        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID))
-                .thenReturn(List.of(entityGuardada, entity2));
+        when(jpaRepository.findByFincaIdAndEliminadoEnIsNull(FINCA_ID)).thenReturn(List.of(entityGuardada, entity2));
 
         List<Lote> resultado = repository.findByFincaId(FINCA_ID);
 
-        assertEquals(FINCA_ID,              resultado.get(0).getFincaId());
-        assertEquals(FINCA_ID,              resultado.get(1).getFincaId());
+        assertEquals(FINCA_ID, resultado.get(0).getFincaId());
+        assertEquals(FINCA_ID, resultado.get(1).getFincaId());
         assertEquals(EstadoLote.EN_DESCANSO, resultado.get(1).getEstado());
-        assertEquals(5.0,                   resultado.get(1).getCentroideLat());
+        assertEquals(5.0, resultado.get(1).getCentroideLat());
     }
 
     // ── existsSiembraActivaEnLote ─────────────────────────────────
@@ -252,7 +248,8 @@ class LoteRepositoryImplTest {
 
         repository.existsSiembraActivaEnLote(ID);
 
-        verify(jpaSiembraRepository, times(1)).existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(ID, EstadoCultivo.FINALIZADO);
+        verify(jpaSiembraRepository, times(1))
+                .existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(ID, EstadoCultivo.FINALIZADO);
         verifyNoInteractions(jpaRepository);
     }
 
@@ -260,21 +257,24 @@ class LoteRepositoryImplTest {
 
     @Test
     void deberiaRetornarTrueSiExisteLoteConMismoNombreYFinca() {
-        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID)).thenReturn(true);
+        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID))
+                .thenReturn(true);
 
         assertTrue(repository.existsByNombreAndFincaId(NOMBRE, FINCA_ID));
     }
 
     @Test
     void deberiaRetornarFalseSiNoExisteLoteConEsaCombinacion() {
-        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID)).thenReturn(false);
+        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(NOMBRE, FINCA_ID))
+                .thenReturn(false);
 
         assertFalse(repository.existsByNombreAndFincaId(NOMBRE, FINCA_ID));
     }
 
     @Test
     void existsByNombreDeberiaDelegarAlJpaConLosParametrosCorrectos() {
-        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(any(), any())).thenReturn(false);
+        when(jpaRepository.existsByNombreAndFincaIdAndEliminadoEnIsNull(any(), any()))
+                .thenReturn(false);
 
         repository.existsByNombreAndFincaId(NOMBRE, FINCA_ID);
 

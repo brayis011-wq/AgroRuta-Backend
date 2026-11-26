@@ -1,7 +1,6 @@
 package com.agroruta.finance.application.ports.out;
 
 import com.agroruta.finance.domain.Venta;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;

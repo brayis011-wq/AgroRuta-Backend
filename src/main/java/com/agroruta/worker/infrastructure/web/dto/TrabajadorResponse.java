@@ -4,7 +4,6 @@ import com.agroruta.worker.domain.EstadoAccesoPortal;
 import com.agroruta.worker.domain.EstadoTrabajador;
 import com.agroruta.worker.domain.TipoContrato;
 import com.agroruta.worker.domain.Trabajador;
-
 import java.time.LocalDate;
 
 public class TrabajadorResponse {
@@ -21,6 +20,7 @@ public class TrabajadorResponse {
     public CargoResponse cargo;
     /** Acceso al portal: null (sin solicitud), PENDIENTE, APROBADO o RECHAZADO. */
     public EstadoAccesoPortal accesoEstado;
+
     public String accesoNombre;
     public String accesoEmail;
 

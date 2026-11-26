@@ -1,8 +1,15 @@
 package com.agroruta.report.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.report.application.ports.out.PayrollQueryPort;
 import com.agroruta.report.domain.PayrollReport;
 import com.agroruta.report.domain.WorkerPayrollDetail;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,14 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
 /**
  * Pruebas unitarias para {@link GeneratePayrollReportService}.
@@ -42,15 +41,7 @@ class GeneratePayrollReportServiceTest {
 
     // ── fixture ──────────────────────────────────────────────────────────────
     private WorkerPayrollDetail detalleMock(Long id, String nombre, BigDecimal total) {
-        return new WorkerPayrollDetail(
-                id,
-                nombre,
-                3,
-                total,
-                LocalDate.of(2025, 1, 1),
-                LocalDate.of(2025, 1, 31),
-                22
-        );
+        return new WorkerPayrollDetail(id, nombre, 3, total, LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 31), 22);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -96,8 +87,7 @@ class GeneratePayrollReportServiceTest {
 
             PayrollReport reporte = service.generate();
 
-            assertThat(reporte.totalAccumulated())
-                    .isEqualByComparingTo(esperado);
+            assertThat(reporte.totalAccumulated()).isEqualByComparingTo(esperado);
         }
 
         @Test
@@ -115,17 +105,14 @@ class GeneratePayrollReportServiceTest {
         @DisplayName("debería propagar la lista de detalles por trabajador sin modificarla")
         void deberiaPropagar_workerDetails() {
             List<WorkerPayrollDetail> detalles = List.of(
-                    detalleMock(1L, "Carlos López",  new BigDecimal("1500000")),
-                    detalleMock(2L, "María Herrera", new BigDecimal("1200000"))
-            );
+                    detalleMock(1L, "Carlos López", new BigDecimal("1500000")),
+                    detalleMock(2L, "María Herrera", new BigDecimal("1200000")));
             when(payrollQueryPort.getTotalAccumulated()).thenReturn(new BigDecimal("2700000"));
             when(payrollQueryPort.getDetailPerWorker()).thenReturn(detalles);
 
             PayrollReport reporte = service.generate();
 
-            assertThat(reporte.workerDetails())
-                    .hasSize(2)
-                    .containsExactlyElementsOf(detalles);
+            assertThat(reporte.workerDetails()).hasSize(2).containsExactlyElementsOf(detalles);
         }
 
         @Test
@@ -164,8 +151,7 @@ class GeneratePayrollReportServiceTest {
                     new BigDecimal("2100000.50"),
                     LocalDate.of(2025, 2, 1),
                     LocalDate.of(2025, 2, 28),
-                    18
-            );
+                    18);
             when(payrollQueryPort.getTotalAccumulated()).thenReturn(detalle.totalPaid());
             when(payrollQueryPort.getDetailPerWorker()).thenReturn(List.of(detalle));
 
@@ -192,10 +178,8 @@ class GeneratePayrollReportServiceTest {
         @Test
         @DisplayName("debería consultar solo los pagos del agricultor")
         void deberiaConsultarSoloLosDelAgricultor() {
-            List<WorkerPayrollDetail> detalles =
-                    List.of(detalleMock(1L, "Carlos López", new BigDecimal("1500000")));
-            when(payrollQueryPort.getTotalAccumulatedByAgricultor(7L))
-                    .thenReturn(new BigDecimal("1500000"));
+            List<WorkerPayrollDetail> detalles = List.of(detalleMock(1L, "Carlos López", new BigDecimal("1500000")));
+            when(payrollQueryPort.getTotalAccumulatedByAgricultor(7L)).thenReturn(new BigDecimal("1500000"));
             when(payrollQueryPort.getDetailPerWorkerByAgricultor(7L)).thenReturn(detalles);
 
             PayrollReport reporte = service.generateFor(7L);
@@ -228,13 +212,15 @@ class GeneratePayrollReportServiceTest {
         @Test
         @DisplayName("ordena a los trabajadores de mayor a menor pagado")
         void ordenaPorTotalPagado() {
-            when(payrollQueryPort.getDetailPerWorkerByAgricultor(7L)).thenReturn(List.of(
-                    detalleMock(1L, "Poco", new BigDecimal("100")),
-                    detalleMock(2L, "Mucho", new BigDecimal("900"))));
+            when(payrollQueryPort.getDetailPerWorkerByAgricultor(7L))
+                    .thenReturn(List.of(
+                            detalleMock(1L, "Poco", new BigDecimal("100")),
+                            detalleMock(2L, "Mucho", new BigDecimal("900"))));
 
             PayrollReport reporte = service.generateFor(7L);
 
-            assertThat(reporte.workerDetails()).extracting(WorkerPayrollDetail::workerName)
+            assertThat(reporte.workerDetails())
+                    .extracting(WorkerPayrollDetail::workerName)
                     .containsExactly("Mucho", "Poco");
         }
 
@@ -242,7 +228,8 @@ class GeneratePayrollReportServiceTest {
         @DisplayName("incluye pendiente por pagar y la serie de 6 meses desde el día 1")
         void incluyePendienteYSerie() {
             when(payrollQueryPort.getPendingPayroll(7L))
-                    .thenReturn(new com.agroruta.report.application.ports.out.PayrollQueryPort.PendingPayroll(2, new BigDecimal("300")));
+                    .thenReturn(new com.agroruta.report.application.ports.out.PayrollQueryPort.PendingPayroll(
+                            2, new BigDecimal("300")));
             java.util.List<com.agroruta.report.domain.MonthlyPayment> serie =
                     List.of(new com.agroruta.report.domain.MonthlyPayment("2026-11", new BigDecimal("50"), 1));
             when(payrollQueryPort.getMonthlyPayments(eq(7L), any())).thenReturn(serie);
@@ -252,10 +239,12 @@ class GeneratePayrollReportServiceTest {
             assertThat(reporte.nominasPendientes()).isEqualTo(2);
             assertThat(reporte.totalPendiente()).isEqualByComparingTo("300");
             assertThat(reporte.pagosPorMes()).isEqualTo(serie);
-            org.mockito.ArgumentCaptor<java.time.LocalDate> desde = org.mockito.ArgumentCaptor.forClass(java.time.LocalDate.class);
+            org.mockito.ArgumentCaptor<java.time.LocalDate> desde =
+                    org.mockito.ArgumentCaptor.forClass(java.time.LocalDate.class);
             verify(payrollQueryPort).getMonthlyPayments(eq(7L), desde.capture());
             assertThat(desde.getValue().getDayOfMonth()).isEqualTo(1);
-            assertThat(desde.getValue()).isEqualTo(java.time.LocalDate.now().withDayOfMonth(1).minusMonths(5));
+            assertThat(desde.getValue())
+                    .isEqualTo(java.time.LocalDate.now().withDayOfMonth(1).minusMonths(5));
         }
 
         @Test
@@ -273,8 +262,8 @@ class GeneratePayrollReportServiceTest {
     @DisplayName("generateEn() con periodo")
     class ConPeriodo {
 
-        private final com.agroruta.report.domain.Periodo anio =
-                com.agroruta.report.domain.Periodo.de(java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 12, 31));
+        private final com.agroruta.report.domain.Periodo anio = com.agroruta.report.domain.Periodo.de(
+                java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 12, 31));
 
         @Test
         @DisplayName("suma solo los pagos del periodo y la gráfica va de enero a diciembre")
@@ -285,7 +274,8 @@ class GeneratePayrollReportServiceTest {
             PayrollReport reporte = service.generateEn(7L, false, anio);
 
             assertThat(reporte.totalAccumulated()).isEqualByComparingTo("900");
-            verify(payrollQueryPort).getMonthlyPayments(7L, java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 12, 31));
+            verify(payrollQueryPort)
+                    .getMonthlyPayments(7L, java.time.LocalDate.of(2025, 1, 1), java.time.LocalDate.of(2025, 12, 31));
             verify(payrollQueryPort, never()).getTotalAccumulatedByAgricultor(any());
         }
 
@@ -311,7 +301,8 @@ class GeneratePayrollReportServiceTest {
         void serieConTope() {
             var largo = com.agroruta.report.domain.Periodo.de(java.time.LocalDate.of(2015, 1, 1), null);
             java.time.LocalDate inicio = GeneratePayrollReportService.inicioSerie(largo);
-            assertThat(inicio).isEqualTo(java.time.LocalDate.now().withDayOfMonth(1).minusMonths(23));
+            assertThat(inicio)
+                    .isEqualTo(java.time.LocalDate.now().withDayOfMonth(1).minusMonths(23));
         }
     }
 }

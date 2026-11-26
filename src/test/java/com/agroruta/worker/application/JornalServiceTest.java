@@ -1,14 +1,22 @@
 package com.agroruta.worker.application;
 
-import com.agroruta.shared.exception.EstadoInvalidoException;
-import com.agroruta.worker.application.ports.out.JornalRepository;
-import com.agroruta.worker.application.ports.out.LaborRepository;
-import com.agroruta.worker.application.ports.out.TrabajadorRepository;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.shared.exception.BusinessException;
+import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.application.ports.out.CultivoPort.CultivoInfo;
+import com.agroruta.worker.application.ports.out.JornalRepository;
+import com.agroruta.worker.application.ports.out.LaborRepository;
+import com.agroruta.worker.application.ports.out.TrabajadorRepository;
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,49 +25,61 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias - JornalService")
 class JornalServiceTest {
 
-    @Mock private JornalRepository     jornalRepository;
-    @Mock private TrabajadorRepository trabajadorRepository;
-    @Mock private LaborRepository  laborRepository;
-    @Mock private CultivoPort          cultivoPort;
+    @Mock
+    private JornalRepository jornalRepository;
+
+    @Mock
+    private TrabajadorRepository trabajadorRepository;
+
+    @Mock
+    private LaborRepository laborRepository;
+
+    @Mock
+    private CultivoPort cultivoPort;
 
     @InjectMocks
     private JornalService jornalService;
 
-    private Cargo        cargoBase;
-    private Trabajador   trabajadorActivo;
-    private Trabajador   trabajadorInactivo;
-    private Labor    actividad1;
-    private Labor    actividad2;
-    private Jornal       jornalBase;
-    private LocalDate    fecha;
+    private Cargo cargoBase;
+    private Trabajador trabajadorActivo;
+    private Trabajador trabajadorInactivo;
+    private Labor actividad1;
+    private Labor actividad2;
+    private Jornal jornalBase;
+    private LocalDate fecha;
 
     @BeforeEach
     void setUp() {
         cargoBase = new Cargo(1L, "Operario", "Cargo base", new BigDecimal("80000"), true);
 
-        trabajadorActivo = new Trabajador(1L, "Carlos", "Pérez", "123456",
-                "3001234567", "Calle 1", LocalDate.of(2022, 1, 10),
-                TipoContrato.JORNAL, cargoBase);
+        trabajadorActivo = new Trabajador(
+                1L,
+                "Carlos",
+                "Pérez",
+                "123456",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2022, 1, 10),
+                TipoContrato.JORNAL,
+                cargoBase);
 
-        trabajadorInactivo = new Trabajador(2L, "Ana", "Gómez", "654321",
-                "3009876543", "Calle 2", LocalDate.of(2021, 3, 5),
-                TipoContrato.JORNAL, cargoBase);
+        trabajadorInactivo = new Trabajador(
+                2L,
+                "Ana",
+                "Gómez",
+                "654321",
+                "3009876543",
+                "Calle 2",
+                LocalDate.of(2021, 3, 5),
+                TipoContrato.JORNAL,
+                cargoBase);
         trabajadorInactivo.desactivar();
 
-        actividad1 = new Labor(1L, "Siembra",   "Desc siembra");
+        actividad1 = new Labor(1L, "Siembra", "Desc siembra");
         actividad2 = new Labor(2L, "Fumigación", "Desc fumigación");
 
         fecha = LocalDate.of(2024, 6, 15);
@@ -83,8 +103,7 @@ class JornalServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(jornalRepository.guardar(any(Jornal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Jornal resultado = jornalService.registrarJornal(
-                1L, 10L, "cualquier cosa", fecha, List.of(), "Obs");
+        Jornal resultado = jornalService.registrarJornal(1L, 10L, "cualquier cosa", fecha, List.of(), "Obs");
 
         assertEquals("Lote 2 · La Esperanza", resultado.getNombreCultivo());
     }
@@ -95,7 +114,8 @@ class JornalServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(cultivoPort.buscar(555L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class,
+        assertThrows(
+                ResourceNotFoundException.class,
                 () -> jornalService.registrarJornal(1L, 555L, null, fecha, List.of(), null));
         verifyNoInteractions(jornalRepository);
     }
@@ -106,8 +126,8 @@ class JornalServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(cultivoPort.buscar(10L)).thenReturn(Optional.of(cultivo(8L, "PRODUCCION")));
 
-        assertThrows(BusinessException.class,
-                () -> jornalService.registrarJornal(1L, 10L, null, fecha, List.of(), null));
+        assertThrows(
+                BusinessException.class, () -> jornalService.registrarJornal(1L, 10L, null, fecha, List.of(), null));
         verifyNoInteractions(jornalRepository);
     }
 
@@ -117,8 +137,8 @@ class JornalServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(cultivoPort.buscar(10L)).thenReturn(Optional.of(cultivo(7L, "FINALIZADO")));
 
-        BusinessException ex = assertThrows(BusinessException.class,
-                () -> jornalService.registrarJornal(1L, 10L, null, fecha, List.of(), null));
+        BusinessException ex = assertThrows(
+                BusinessException.class, () -> jornalService.registrarJornal(1L, 10L, null, fecha, List.of(), null));
         assertTrue(ex.getMessage().contains("finalizado"));
     }
 
@@ -140,8 +160,8 @@ class JornalServiceTest {
         when(laborRepository.buscarPorId(2L)).thenReturn(Optional.of(actividad2));
         when(jornalRepository.guardar(any(Jornal.class))).thenReturn(jornalBase);
 
-        Jornal resultado = jornalService.registrarJornal(
-                1L, 10L, "Cultivo A", fecha, List.of(1L, 2L), "Sin observaciones");
+        Jornal resultado =
+                jornalService.registrarJornal(1L, 10L, "Cultivo A", fecha, List.of(1L, 2L), "Sin observaciones");
 
         assertNotNull(resultado);
         verify(jornalRepository).guardar(any(Jornal.class));
@@ -153,8 +173,7 @@ class JornalServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(jornalRepository.guardar(any(Jornal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Jornal resultado = jornalService.registrarJornal(
-                1L, 10L, "Cultivo A", fecha, List.of(), "Obs");
+        Jornal resultado = jornalService.registrarJornal(1L, 10L, "Cultivo A", fecha, List.of(), "Obs");
 
         assertEquals(new BigDecimal("80000"), resultado.getValorJornal());
     }
@@ -166,9 +185,7 @@ class JornalServiceTest {
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
-                () -> jornalService.registrarJornal(
-                        99L, 10L, "Cultivo A", fecha, List.of(), "Obs")
-        );
+                () -> jornalService.registrarJornal(99L, 10L, "Cultivo A", fecha, List.of(), "Obs"));
 
         assertTrue(ex.getMessage().contains("99"));
         verifyNoInteractions(jornalRepository);
@@ -181,9 +198,7 @@ class JornalServiceTest {
 
         EstadoInvalidoException ex = assertThrows(
                 EstadoInvalidoException.class,
-                () -> jornalService.registrarJornal(
-                        2L, 10L, "Cultivo A", fecha, List.of(), "Obs")
-        );
+                () -> jornalService.registrarJornal(2L, 10L, "Cultivo A", fecha, List.of(), "Obs"));
 
         assertTrue(ex.getMessage().contains("Ana Gómez"));
         verifyNoInteractions(jornalRepository);
@@ -197,9 +212,7 @@ class JornalServiceTest {
 
         ResourceNotFoundException ex = assertThrows(
                 ResourceNotFoundException.class,
-                () -> jornalService.registrarJornal(
-                        1L, 10L, "Cultivo A", fecha, List.of(99L), "Obs")
-        );
+                () -> jornalService.registrarJornal(1L, 10L, "Cultivo A", fecha, List.of(99L), "Obs"));
 
         assertTrue(ex.getMessage().contains("99"));
         verifyNoInteractions(jornalRepository);
@@ -211,8 +224,7 @@ class JornalServiceTest {
         when(trabajadorRepository.buscarPorId(1L)).thenReturn(Optional.of(trabajadorActivo));
         when(jornalRepository.guardar(any(Jornal.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        Jornal resultado = jornalService.registrarJornal(
-                1L, 10L, "Cultivo A", fecha, List.of(), "Obs");
+        Jornal resultado = jornalService.registrarJornal(1L, 10L, "Cultivo A", fecha, List.of(), "Obs");
 
         assertTrue(resultado.getActividades().isEmpty());
         verify(jornalRepository).guardar(any(Jornal.class));
@@ -238,10 +250,8 @@ class JornalServiceTest {
     void agregarActividad_jornalInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> jornalService.agregarActividad(99L, 1L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> jornalService.agregarActividad(99L, 1L));
 
         assertTrue(ex.getMessage().contains("99"));
         verifyNoInteractions(laborRepository);
@@ -253,10 +263,8 @@ class JornalServiceTest {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> jornalService.agregarActividad(1L, 99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> jornalService.agregarActividad(1L, 99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(jornalRepository, never()).guardar(any());
@@ -269,10 +277,7 @@ class JornalServiceTest {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
 
-        assertThrows(
-                EstadoInvalidoException.class,
-                () -> jornalService.agregarActividad(1L, 1L)
-        );
+        assertThrows(EstadoInvalidoException.class, () -> jornalService.agregarActividad(1L, 1L));
 
         verify(jornalRepository, never()).guardar(any());
     }
@@ -298,10 +303,8 @@ class JornalServiceTest {
     void removerActividad_jornalInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> jornalService.removerActividad(99L, 1L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> jornalService.removerActividad(99L, 1L));
 
         assertTrue(ex.getMessage().contains("99"));
         verifyNoInteractions(laborRepository);
@@ -313,10 +316,8 @@ class JornalServiceTest {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(laborRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> jornalService.removerActividad(1L, 99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> jornalService.removerActividad(1L, 99L));
 
         assertTrue(ex.getMessage().contains("99"));
         verify(jornalRepository, never()).guardar(any());
@@ -330,10 +331,7 @@ class JornalServiceTest {
         when(jornalRepository.buscarPorId(1L)).thenReturn(Optional.of(jornalBase));
         when(laborRepository.buscarPorId(1L)).thenReturn(Optional.of(actividad1));
 
-        assertThrows(
-                EstadoInvalidoException.class,
-                () -> jornalService.removerActividad(1L, 1L)
-        );
+        assertThrows(EstadoInvalidoException.class, () -> jornalService.removerActividad(1L, 1L));
 
         verify(jornalRepository, never()).guardar(any());
     }
@@ -356,10 +354,8 @@ class JornalServiceTest {
     void buscarPorId_idInexistente_debeLanzarResourceNotFoundException() {
         when(jornalRepository.buscarPorId(99L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(
-                ResourceNotFoundException.class,
-                () -> jornalService.buscarPorId(99L)
-        );
+        ResourceNotFoundException ex =
+                assertThrows(ResourceNotFoundException.class, () -> jornalService.buscarPorId(99L));
 
         assertTrue(ex.getMessage().contains("99"));
     }
@@ -391,9 +387,8 @@ class JornalServiceTest {
     @DisplayName("listarPorTrabajadorYPeriodo debe retornar jornales en el rango de fechas")
     void listarPorTrabajadorYPeriodo_debeRetornarLista() {
         LocalDate inicio = LocalDate.of(2024, 6, 1);
-        LocalDate fin    = LocalDate.of(2024, 6, 30);
-        when(jornalRepository.buscarPorTrabajadorYPeriodo(1L, inicio, fin))
-                .thenReturn(List.of(jornalBase));
+        LocalDate fin = LocalDate.of(2024, 6, 30);
+        when(jornalRepository.buscarPorTrabajadorYPeriodo(1L, inicio, fin)).thenReturn(List.of(jornalBase));
 
         List<Jornal> resultado = jornalService.listarPorTrabajadorYPeriodo(1L, inicio, fin);
 
@@ -405,7 +400,7 @@ class JornalServiceTest {
     @DisplayName("listarPorTrabajadorYPeriodo debe retornar lista vacía cuando no hay jornales en el periodo")
     void listarPorTrabajadorYPeriodo_sinJornales_debeRetornarListaVacia() {
         LocalDate inicio = LocalDate.of(2024, 1, 1);
-        LocalDate fin    = LocalDate.of(2024, 1, 31);
+        LocalDate fin = LocalDate.of(2024, 1, 31);
         when(jornalRepository.buscarPorTrabajadorYPeriodo(1L, inicio, fin)).thenReturn(List.of());
 
         assertTrue(jornalService.listarPorTrabajadorYPeriodo(1L, inicio, fin).isEmpty());
@@ -438,9 +433,8 @@ class JornalServiceTest {
     @DisplayName("listarPorCultivoYPeriodo debe retornar jornales en el rango de fechas")
     void listarPorCultivoYPeriodo_debeRetornarLista() {
         LocalDate inicio = LocalDate.of(2024, 6, 1);
-        LocalDate fin    = LocalDate.of(2024, 6, 30);
-        when(jornalRepository.buscarPorCultivoYPeriodo(10L, inicio, fin))
-                .thenReturn(List.of(jornalBase));
+        LocalDate fin = LocalDate.of(2024, 6, 30);
+        when(jornalRepository.buscarPorCultivoYPeriodo(10L, inicio, fin)).thenReturn(List.of(jornalBase));
 
         List<Jornal> resultado = jornalService.listarPorCultivoYPeriodo(10L, inicio, fin);
 
@@ -452,7 +446,7 @@ class JornalServiceTest {
     @DisplayName("listarPorCultivoYPeriodo debe retornar lista vacía cuando no hay jornales en el periodo")
     void listarPorCultivoYPeriodo_sinJornales_debeRetornarListaVacia() {
         LocalDate inicio = LocalDate.of(2024, 1, 1);
-        LocalDate fin    = LocalDate.of(2024, 1, 31);
+        LocalDate fin = LocalDate.of(2024, 1, 31);
         when(jornalRepository.buscarPorCultivoYPeriodo(10L, inicio, fin)).thenReturn(List.of());
 
         assertTrue(jornalService.listarPorCultivoYPeriodo(10L, inicio, fin).isEmpty());
@@ -461,7 +455,8 @@ class JornalServiceTest {
     @Test
     @DisplayName("resumenInicio usa la fecha pedida")
     void resumenInicio_conFecha() {
-        com.agroruta.worker.domain.ResumenJornalesInicio r = new com.agroruta.worker.domain.ResumenJornalesInicio(3, 4, List.of(1L));
+        com.agroruta.worker.domain.ResumenJornalesInicio r =
+                new com.agroruta.worker.domain.ResumenJornalesInicio(3, 4, List.of(1L));
         when(jornalRepository.resumenInicio(7L, fecha)).thenReturn(r);
 
         assertSame(r, jornalService.resumenInicio(7L, fecha));

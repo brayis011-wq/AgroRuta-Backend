@@ -1,15 +1,14 @@
 package com.agroruta.crop.infrastructure.web;
 
-import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
-import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.CosechaUseCase;
 import com.agroruta.crop.infrastructure.web.dto.CosechaRequest;
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
+import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/harvests")
@@ -24,11 +23,16 @@ public class CosechaController {
     @PostMapping
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
     public ResponseEntity<CosechaResponse> registrar(@Valid @RequestBody CosechaRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(CosechaResponse.from(cosechaUseCase.registrarCosecha(
-                        req.fecha(), req.cantidadKg(),
-                        req.calidad(), req.observaciones(), req.siembraId(), req.precioKg(),
-                        req.confirmarCarencia(), req.recolectoresDominio()
-                )));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(CosechaResponse.from(cosechaUseCase.registrarCosecha(
+                        req.fecha(),
+                        req.cantidadKg(),
+                        req.calidad(),
+                        req.observaciones(),
+                        req.siembraId(),
+                        req.precioKg(),
+                        req.confirmarCarencia(),
+                        req.recolectoresDominio())));
     }
 
     @GetMapping("/{id}")
@@ -42,8 +46,14 @@ public class CosechaController {
     @PreAuthorize("@ownership.cosechaPropia(#id, authentication)")
     public ResponseEntity<CosechaResponse> actualizar(@PathVariable Long id, @Valid @RequestBody CosechaRequest req) {
         return ResponseEntity.ok(CosechaResponse.from(cosechaUseCase.actualizarCosecha(
-                id, req.fecha(), req.cantidadKg(), req.calidad(), req.observaciones(), req.precioKg(),
-                req.confirmarCarencia(), req.recolectoresDominio())));
+                id,
+                req.fecha(),
+                req.cantidadKg(),
+                req.calidad(),
+                req.observaciones(),
+                req.precioKg(),
+                req.confirmarCarencia(),
+                req.recolectoresDominio())));
     }
 
     @DeleteMapping("/{id}")
@@ -56,7 +66,9 @@ public class CosechaController {
     @GetMapping("/planting/{siembraId}")
     @PreAuthorize("@ownership.siembraPropia(#siembraId, authentication)")
     public ResponseEntity<List<CosechaResponse>> listarPorSiembra(@PathVariable Long siembraId) {
-        return ResponseEntity.ok(cosechaUseCase.listarCosechasPorSiembra(siembraId).stream().map(CosechaResponse::from).toList());
+        return ResponseEntity.ok(cosechaUseCase.listarCosechasPorSiembra(siembraId).stream()
+                .map(CosechaResponse::from)
+                .toList());
     }
 
     @GetMapping("/planting/{siembraId}/total-kg")

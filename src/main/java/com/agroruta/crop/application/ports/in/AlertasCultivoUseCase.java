@@ -1,7 +1,6 @@
 package com.agroruta.crop.application.ports.in;
 
 import com.agroruta.crop.domain.AlertaCultivo;
-
 import java.time.LocalDate;
 import java.util.List;
 

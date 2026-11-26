@@ -27,9 +27,11 @@ public final class ProgramacionActividades {
     public static Estado estado(ActividadProgramada p, List<LocalDate> hechas, LocalDate hoy) {
         // Hacerla un poco antes de la primera fecha también cuenta
         LocalDate cuentaDesde = p.desde().minusDays(Math.max(1, p.cadaDias() / 2));
-        LocalDate ultima = hechas.stream().filter(Objects::nonNull)
+        LocalDate ultima = hechas.stream()
+                .filter(Objects::nonNull)
                 .filter(f -> !f.isBefore(cuentaDesde) && !f.isAfter(hoy))
-                .max(LocalDate::compareTo).orElse(null);
+                .max(LocalDate::compareTo)
+                .orElse(null);
         LocalDate proxima = ultima == null ? p.desde() : ultima.plusDays(p.cadaDias());
         if (proxima.isBefore(p.desde())) proxima = p.desde();
         if (p.hasta() != null && proxima.isAfter(p.hasta())) return new Estado(null, ultima, false, 0);
@@ -41,7 +43,8 @@ public final class ProgramacionActividades {
      * Las próximas fechas en que toca dentro del rango. Si está atrasada, la atrasada no sale aquí (se
      * muestra aparte, hoy) y las siguientes cuentan desde hoy: se supone que se hará ahora.
      */
-    public static List<LocalDate> fechas(ActividadProgramada p, Estado e, LocalDate desde, LocalDate hasta, LocalDate hoy) {
+    public static List<LocalDate> fechas(
+            ActividadProgramada p, Estado e, LocalDate desde, LocalDate hasta, LocalDate hoy) {
         List<LocalDate> res = new ArrayList<>();
         if (e.proxima() == null) return res;
         LocalDate fin = p.hasta() != null && p.hasta().isBefore(hasta) ? p.hasta() : hasta;

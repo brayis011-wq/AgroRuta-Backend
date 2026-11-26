@@ -1,11 +1,18 @@
 package com.agroruta.configuration.infrastructure.web;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
 import com.agroruta.configuration.application.ports.in.UpdateProfileUseCase;
 import com.agroruta.configuration.domain.Perfil;
 import com.agroruta.user.domain.Rol;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -24,15 +31,6 @@ import org.springframework.security.web.method.annotation.AuthenticationPrincipa
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.List;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
 /**
  * Pruebas unitarias de la capa web para {@link ProfileController}.
  *
@@ -44,33 +42,45 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("ProfileController - Pruebas Unitarias")
 class ProfileControllerTest {
 
-    private static final String BASE_URL     = "/api/configuration/profile";
+    private static final String BASE_URL = "/api/configuration/profile";
     private static final String PASSWORD_URL = BASE_URL + "/password";
-    private static final String USER_EMAIL   = "ana@agroruta.com";
+    private static final String USER_EMAIL = "ana@agroruta.com";
 
-    @Mock private GetProfileUseCase     obtenerPerfilUseCase;
-    @Mock private UpdateProfileUseCase  actualizarPerfilUseCase;
-    @Mock private ChangePasswordUseCase cambiarPasswordUseCase;
-    @Mock private com.agroruta.shared.security.JwtService jwtService;
-    @Mock private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
-    @Mock private com.agroruta.user.application.ports.in.SesionUseCase sesiones;
-    @Mock private com.agroruta.shared.security.CookieSesion cookie;
+    @Mock
+    private GetProfileUseCase obtenerPerfilUseCase;
+
+    @Mock
+    private UpdateProfileUseCase actualizarPerfilUseCase;
+
+    @Mock
+    private ChangePasswordUseCase cambiarPasswordUseCase;
+
+    @Mock
+    private com.agroruta.shared.security.JwtService jwtService;
+
+    @Mock
+    private org.springframework.security.core.userdetails.UserDetailsService userDetailsService;
+
+    @Mock
+    private com.agroruta.user.application.ports.in.SesionUseCase sesiones;
+
+    @Mock
+    private com.agroruta.shared.security.CookieSesion cookie;
 
     @InjectMocks
     private ProfileController profileController;
 
-    private MockMvc     mockMvc;
+    private MockMvc mockMvc;
     private ObjectMapper objectMapper;
-    private Perfil       perfilEjemplo;
-    private UserDetails  userDetails;
+    private Perfil perfilEjemplo;
+    private UserDetails userDetails;
 
     @BeforeEach
     void configurar() {
         objectMapper = new ObjectMapper();
 
         // MockMvc con el resolver de @AuthenticationPrincipal
-        mockMvc = MockMvcBuilders
-                .standaloneSetup(profileController)
+        mockMvc = MockMvcBuilders.standaloneSetup(profileController)
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
 
@@ -84,17 +94,13 @@ class ProfileControllerTest {
 
         // Perfil de dominio de ejemplo
         perfilEjemplo = new Perfil(
-                1L, "Ana Gómez", USER_EMAIL,
-                "3001234567", "https://cdn.agroruta.com/foto.jpg",
-                Rol.Agricultor
-        );
+                1L, "Ana Gómez", USER_EMAIL, "3001234567", "https://cdn.agroruta.com/foto.jpg", Rol.Agricultor);
     }
 
     /** Registra el usuario en el SecurityContextHolder para el test actual. */
     private void autenticar(UserDetails ud) {
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities())
-        );
+        SecurityContextHolder.getContext()
+                .setAuthentication(new UsernamePasswordAuthenticationToken(ud, null, ud.getAuthorities()));
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -107,8 +113,7 @@ class ProfileControllerTest {
         @Test
         @DisplayName("debería retornar 200 con el perfil del usuario autenticado")
         void deberiaRetornar200_conPerfil() throws Exception {
-            when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL))
-                    .thenReturn(perfilEjemplo);
+            when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL)).thenReturn(perfilEjemplo);
 
             mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -124,8 +129,7 @@ class ProfileControllerTest {
             when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL))
                     .thenThrow(new RuntimeException("Perfil no encontrado"));
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON)))
+            assertThatThrownBy(() -> mockMvc.perform(get(BASE_URL).accept(MediaType.APPLICATION_JSON)))
                     .hasRootCauseInstanceOf(RuntimeException.class)
                     .hasMessageContaining("Perfil no encontrado");
         }
@@ -140,10 +144,9 @@ class ProfileControllerTest {
 
         private String body(String nombre, String telefono, String foto) throws Exception {
             return objectMapper.writeValueAsString(Map.of(
-                    "nombre",     nombre,
-                    "telefono",   telefono,
-                    "fotoPerfil", foto
-            ));
+                    "nombre", nombre,
+                    "telefono", telefono,
+                    "fotoPerfil", foto));
         }
 
         @Test
@@ -155,17 +158,14 @@ class ProfileControllerTest {
 
             mockMvc.perform(put(BASE_URL)
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(body("Ana Actualizada", "3109876543",
-                                    "https://cdn.agroruta.com/nueva.jpg")))
+                            .content(body("Ana Actualizada", "3109876543", "https://cdn.agroruta.com/nueva.jpg")))
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON));
 
             verify(obtenerPerfilUseCase).obtenerPorEmail(USER_EMAIL);
-            verify(actualizarPerfilUseCase).actualizar(
-                    eq(1L),
-                    eq("Ana Actualizada"),
-                    eq("3109876543"),
-                    eq("https://cdn.agroruta.com/nueva.jpg"));
+            verify(actualizarPerfilUseCase)
+                    .actualizar(
+                            eq(1L), eq("Ana Actualizada"), eq("3109876543"), eq("https://cdn.agroruta.com/nueva.jpg"));
         }
 
         @Test
@@ -175,9 +175,8 @@ class ProfileControllerTest {
             when(actualizarPerfilUseCase.actualizar(anyLong(), anyString(), anyString(), anyString()))
                     .thenReturn(perfilEjemplo);
 
-            mockMvc.perform(put(BASE_URL)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(body("X", "Y", "Z")));
+            mockMvc.perform(
+                    put(BASE_URL).contentType(MediaType.APPLICATION_JSON).content(body("X", "Y", "Z")));
 
             verify(actualizarPerfilUseCase).actualizar(eq(1L), anyString(), anyString(), anyString());
         }
@@ -188,8 +187,7 @@ class ProfileControllerTest {
             when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL))
                     .thenThrow(new RuntimeException("Perfil no encontrado"));
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(put(BASE_URL)
+            assertThatThrownBy(() -> mockMvc.perform(put(BASE_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body("X", "Y", "Z"))))
                     .hasRootCauseInstanceOf(RuntimeException.class)
@@ -209,16 +207,14 @@ class ProfileControllerTest {
         private String body(String actual, String nueva) throws Exception {
             return objectMapper.writeValueAsString(Map.of(
                     "passwordActual", actual,
-                    "nuevaPassword",  nueva
-            ));
+                    "nuevaPassword", nueva));
         }
 
         @Test
         @DisplayName("debería devolver un token nuevo cuando la contraseña se cambia exitosamente")
         void deberiaDevolverTokenNuevo_cuandoCambioExitoso() throws Exception {
             when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL)).thenReturn(perfilEjemplo);
-            doNothing().when(cambiarPasswordUseCase)
-                    .cambiarPassword(anyLong(), anyString(), anyString());
+            doNothing().when(cambiarPasswordUseCase).cambiarPassword(anyLong(), anyString(), anyString());
             when(userDetailsService.loadUserByUsername(USER_EMAIL)).thenReturn(userDetails);
             when(jwtService.generateToken(userDetails)).thenReturn("token-nuevo");
             when(sesiones.abrir(1L)).thenReturn("sesion-nueva");
@@ -227,7 +223,8 @@ class ProfileControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body("secret123", "nuevoSecret456")))
                     .andExpect(status().isOk())
-                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.token").value("token-nuevo"));
+                    .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.token")
+                            .value("token-nuevo"));
 
             verify(cambiarPasswordUseCase).cambiarPassword(1L, "secret123", "nuevoSecret456");
             // Las sesiones viejas se cerraron: quien cambió la contraseña recibe una cookie nueva
@@ -256,8 +253,7 @@ class ProfileControllerTest {
                     .when(cambiarPasswordUseCase)
                     .cambiarPassword(anyLong(), anyString(), anyString());
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(patch(PASSWORD_URL)
+            assertThatThrownBy(() -> mockMvc.perform(patch(PASSWORD_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body("wrongPass", "nuevoSecret456"))))
                     .hasRootCauseInstanceOf(RuntimeException.class)
@@ -270,8 +266,7 @@ class ProfileControllerTest {
             when(obtenerPerfilUseCase.obtenerPorEmail(USER_EMAIL))
                     .thenThrow(new RuntimeException("Perfil no encontrado"));
 
-            assertThatThrownBy(() ->
-                    mockMvc.perform(patch(PASSWORD_URL)
+            assertThatThrownBy(() -> mockMvc.perform(patch(PASSWORD_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(body("secret123", "nuevoSecret456"))))
                     .hasRootCauseInstanceOf(RuntimeException.class)

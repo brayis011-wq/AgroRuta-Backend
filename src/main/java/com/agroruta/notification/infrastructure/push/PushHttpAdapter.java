@@ -1,16 +1,15 @@
 package com.agroruta.notification.infrastructure.push;
 
 import com.agroruta.notification.application.ports.out.PushPort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /** Entrega el aviso cifrado al servicio de avisos del navegador (protocolo Web Push, RFC 8030). */
 @Component

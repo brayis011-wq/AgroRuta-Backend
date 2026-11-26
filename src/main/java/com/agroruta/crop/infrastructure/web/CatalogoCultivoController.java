@@ -1,15 +1,14 @@
 package com.agroruta.crop.infrastructure.web;
 
-import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import com.agroruta.crop.application.ports.in.CatalogoCultivoUseCase;
 import com.agroruta.crop.infrastructure.web.dto.NombreCatalogoRequest;
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /** Catálogo de cultivos: lectura para agricultores, edición solo para el administrador. */
 @RestController
@@ -25,27 +24,31 @@ public class CatalogoCultivoController {
     /** Cultivos y variedades activos (para registrar una siembra) */
     @GetMapping
     public ResponseEntity<List<TipoCultivoResponse>> activos() {
-        return ResponseEntity.ok(catalogo.listar(true).stream().map(TipoCultivoResponse::from).toList());
+        return ResponseEntity.ok(
+                catalogo.listar(true).stream().map(TipoCultivoResponse::from).toList());
     }
 
     /** Todo el catálogo, incluidos los desactivados (pantalla de administración) */
     @GetMapping("/all")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<TipoCultivoResponse>> todos() {
-        return ResponseEntity.ok(catalogo.listar(false).stream().map(TipoCultivoResponse::from).toList());
+        return ResponseEntity.ok(
+                catalogo.listar(false).stream().map(TipoCultivoResponse::from).toList());
     }
 
     @PostMapping("/types")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<TipoCultivoResponse> crearTipo(@Valid @RequestBody NombreCatalogoRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(TipoCultivoResponse.from(catalogo.crearTipo(req.nombre())));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(TipoCultivoResponse.from(catalogo.crearTipo(req.nombre())));
     }
 
     @PostMapping("/types/{id}/varieties")
     @PreAuthorize("hasRole('Administrador')")
-    public ResponseEntity<VariedadCultivoResponse> crearVariedad(@PathVariable Long id,
-                                                         @Valid @RequestBody NombreCatalogoRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(VariedadCultivoResponse.from(catalogo.crearVariedad(id, req.nombre())));
+    public ResponseEntity<VariedadCultivoResponse> crearVariedad(
+            @PathVariable Long id, @Valid @RequestBody NombreCatalogoRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(VariedadCultivoResponse.from(catalogo.crearVariedad(id, req.nombre())));
     }
 
     @PatchMapping("/types/{id}/status")

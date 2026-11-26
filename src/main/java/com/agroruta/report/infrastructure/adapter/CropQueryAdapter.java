@@ -1,16 +1,14 @@
 package com.agroruta.report.infrastructure.adapter;
 
-import com.agroruta.report.application.ports.out.CropQueryPort;
-import com.agroruta.report.domain.CropDetail;
 import com.agroruta.crop.infrastructure.persistence.FincaEntity;
 import com.agroruta.crop.infrastructure.persistence.JpaCosechaRepository;
 import com.agroruta.crop.infrastructure.persistence.JpaFincaRepository;
 import com.agroruta.crop.infrastructure.persistence.JpaLoteRepository;
-import com.agroruta.crop.infrastructure.persistence.LoteEntity;
 import com.agroruta.crop.infrastructure.persistence.JpaSiembraRepository;
+import com.agroruta.crop.infrastructure.persistence.LoteEntity;
 import com.agroruta.crop.infrastructure.persistence.SiembraEntity;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import com.agroruta.report.application.ports.out.CropQueryPort;
+import com.agroruta.report.domain.CropDetail;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -20,6 +18,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -47,15 +47,19 @@ public class CropQueryAdapter implements CropQueryPort {
     private List<CropDetail> toDetails(List<SiembraEntity> siembras, Long agricultorId) {
         if (siembras.isEmpty()) return List.of();
 
-        Set<Long> loteIds = siembras.stream().map(SiembraEntity::getLoteId)
-                .filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<Long, LoteEntity> lotes = jpaLoteRepository.findAllById(loteIds).stream()
-                .collect(Collectors.toMap(LoteEntity::getId, l -> l));
+        Set<Long> loteIds = siembras.stream()
+                .map(SiembraEntity::getLoteId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, LoteEntity> lotes =
+                jpaLoteRepository.findAllById(loteIds).stream().collect(Collectors.toMap(LoteEntity::getId, l -> l));
 
-        Set<Long> fincaIds = lotes.values().stream().map(LoteEntity::getFincaId)
-                .filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<Long, FincaEntity> fincas = jpaFincaRepository.findAllById(fincaIds).stream()
-                .collect(Collectors.toMap(FincaEntity::getId, f -> f));
+        Set<Long> fincaIds = lotes.values().stream()
+                .map(LoteEntity::getFincaId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, FincaEntity> fincas =
+                jpaFincaRepository.findAllById(fincaIds).stream().collect(Collectors.toMap(FincaEntity::getId, f -> f));
 
         // [siembraId, kg, cosechas]; la siembra sin cosechas no aparece
         Map<Long, Object[]> cosechas = new HashMap<>();
@@ -66,7 +70,8 @@ public class CropQueryAdapter implements CropQueryPort {
         return siembras.stream()
                 .map(siembra -> {
                     Optional<LoteEntity> lote = Optional.ofNullable(lotes.get(siembra.getLoteId()));
-                    Optional<FincaEntity> finca = lote.map(LoteEntity::getFincaId).map(fincas::get);
+                    Optional<FincaEntity> finca =
+                            lote.map(LoteEntity::getFincaId).map(fincas::get);
                     // Las eliminadas siguen aquí (borrado lógico): el historial de gastos e ingresos se conserva
                     boolean eliminada = siembra.getEliminadoEn() != null
                             || lote.map(LoteEntity::getEliminadoEn).isPresent()

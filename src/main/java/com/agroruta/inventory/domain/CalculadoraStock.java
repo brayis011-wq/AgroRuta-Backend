@@ -15,7 +15,8 @@ public final class CalculadoraStock {
     private CalculadoraStock() {}
 
     public static double cantidad(List<MovimientoInventario> movimientos) {
-        return redondear(movimientos.stream().mapToDouble(MovimientoInventario::efecto).sum());
+        return redondear(
+                movimientos.stream().mapToDouble(MovimientoInventario::efecto).sum());
     }
 
     /**
@@ -44,10 +45,22 @@ public final class CalculadoraStock {
         double cantidad = cantidad(movimientos);
         Double promedio = costoPromedio(movimientos);
         Double valor = promedio == null ? null : Math.round(Math.max(cantidad, 0) * promedio * 100) / 100.0;
-        LocalDate ultimo = movimientos.stream().map(MovimientoInventario::getFecha)
-                .filter(Objects::nonNull).max(Comparator.naturalOrder()).orElse(null);
-        return new StockInsumo(insumo.id(), insumo.nombre(), insumo.tipo(), insumo.unidadBase(),
-                cantidad, minimo, promedio, valor, estado(cantidad, minimo), ultimo);
+        LocalDate ultimo = movimientos.stream()
+                .map(MovimientoInventario::getFecha)
+                .filter(Objects::nonNull)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+        return new StockInsumo(
+                insumo.id(),
+                insumo.nombre(),
+                insumo.tipo(),
+                insumo.unidadBase(),
+                cantidad,
+                minimo,
+                promedio,
+                valor,
+                estado(cantidad, minimo),
+                ultimo);
     }
 
     private static double redondear(double v) {

@@ -1,8 +1,8 @@
 package com.agroruta.worker.application;
 
-import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.worker.application.ports.in.ComprobantePagoUseCase;
 import com.agroruta.worker.application.ports.out.ComprobantePdfPort;
@@ -13,18 +13,17 @@ import com.agroruta.worker.domain.ComprobantePago;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
 import com.agroruta.worker.domain.Trabajador;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
@@ -37,12 +36,13 @@ public class ComprobantePagoService implements ComprobantePagoUseCase {
     private final byte[] clave;
     private final String frontend;
 
-    public ComprobantePagoService(PagoRepository pagoRepository,
-                                  TrabajadorRepository trabajadorRepository,
-                                  EmpleadorPort empleadorPort,
-                                  ComprobantePdfPort pdfPort,
-                                  @Value("${jwt.secret}") String secreto,
-                                  @Value("${app.frontend-url:http://localhost:4200}") String frontend) {
+    public ComprobantePagoService(
+            PagoRepository pagoRepository,
+            TrabajadorRepository trabajadorRepository,
+            EmpleadorPort empleadorPort,
+            ComprobantePdfPort pdfPort,
+            @Value("${jwt.secret}") String secreto,
+            @Value("${app.frontend-url:http://localhost:4200}") String frontend) {
         this.pagoRepository = pagoRepository;
         this.trabajadorRepository = trabajadorRepository;
         this.empleadorPort = empleadorPort;
@@ -60,10 +60,11 @@ public class ComprobantePagoService implements ComprobantePagoUseCase {
 
     @Override
     public byte[] pdfDelTrabajador(Long usuarioId, Long pagoId) {
-        Trabajador yo = trabajadorRepository.buscarPorUsuarioId(usuarioId)
+        Trabajador yo = trabajadorRepository
+                .buscarPorUsuarioId(usuarioId)
                 .filter(Trabajador::tieneAccesoAprobado)
-                .orElseThrow(() -> new BusinessException(ErrorCode.ACCESS_DENIED,
-                        "Tu acceso todavía no ha sido aprobado por tu empleador."));
+                .orElseThrow(() -> new BusinessException(
+                        ErrorCode.ACCESS_DENIED, "Tu acceso todavía no ha sido aprobado por tu empleador."));
         Pago pago = buscar(pagoId);
         Trabajador delPago = pago.getNomina() == null ? null : pago.getNomina().getTrabajador();
         // El mismo mensaje que si no existiera: no se confirma que el pago de otra persona existe
@@ -74,9 +75,11 @@ public class ComprobantePagoService implements ComprobantePagoUseCase {
     @Override
     public Optional<ComprobantePago> verificar(Long pagoId, String codigo) {
         if (pagoId == null || codigo == null || codigo.isBlank()) return Optional.empty();
-        return pagoRepository.buscarPorId(pagoId)
+        return pagoRepository
+                .buscarPorId(pagoId)
                 .filter(p -> MessageDigest.isEqual(
-                        codigo(p).getBytes(StandardCharsets.UTF_8), codigo.trim().getBytes(StandardCharsets.UTF_8)))
+                        codigo(p).getBytes(StandardCharsets.UTF_8),
+                        codigo.trim().getBytes(StandardCharsets.UTF_8)))
                 .map(this::comprobante);
     }
 
@@ -93,8 +96,13 @@ public class ComprobantePagoService implements ComprobantePagoUseCase {
         Trabajador t = n == null ? null : n.getTrabajador();
         String codigo = codigo(p);
         return new ComprobantePago(
-                p.getId(), ComprobantePago.numeroDe(p.getId()), p.getFechaPago(), p.getMonto(), p.getMetodoPago(),
-                p.getComprobante(), p.getObservaciones(),
+                p.getId(),
+                ComprobantePago.numeroDe(p.getId()),
+                p.getFechaPago(),
+                p.getMonto(),
+                p.getMetodoPago(),
+                p.getComprobante(),
+                p.getObservaciones(),
                 t == null ? null : nombreCompleto(t),
                 t == null ? null : t.getCedula(),
                 t == null ? null : empleadorPort.nombre(t.getAgricultorId()).orElse(null),

@@ -4,7 +4,6 @@ import com.agroruta.portal.domain.EstadoPortal;
 import com.agroruta.worker.domain.Jornal;
 import com.agroruta.worker.domain.Nomina;
 import com.agroruta.worker.domain.Pago;
-
 import java.util.List;
 
 /** Portal de solo lectura para la cuenta con rol Trabajador. */

@@ -17,7 +17,15 @@ public record Pronostico(double tempMin, double tempMax, double lluviaMm, double
     /** Con esta lluvia el producto recién aplicado se lava */
     public static final double LLUVIA_LAVA_PRODUCTO_MM = 5.0;
 
-    public boolean riesgoHelada() { return tempMin <= TEMP_HELADA; }
-    public boolean lluviaFuerte() { return lluviaMm >= LLUVIA_FUERTE_MM; }
-    public boolean lluviaLavaProducto() { return lluviaMm >= LLUVIA_LAVA_PRODUCTO_MM; }
+    public boolean riesgoHelada() {
+        return tempMin <= TEMP_HELADA;
+    }
+
+    public boolean lluviaFuerte() {
+        return lluviaMm >= LLUVIA_FUERTE_MM;
+    }
+
+    public boolean lluviaLavaProducto() {
+        return lluviaMm >= LLUVIA_LAVA_PRODUCTO_MM;
+    }
 }

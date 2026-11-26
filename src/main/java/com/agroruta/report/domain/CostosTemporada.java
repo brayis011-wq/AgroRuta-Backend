@@ -17,5 +17,4 @@ public record CostosTemporada(
         /** Ingresos − costos; null si ninguna cosecha tiene precio */
         Double ganancia,
         /** Costo total ÷ kilos cosechados; null sin cosechas */
-        Double costoPorKg
-) {}
+        Double costoPorKg) {}

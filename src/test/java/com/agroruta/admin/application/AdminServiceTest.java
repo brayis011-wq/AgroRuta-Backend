@@ -1,5 +1,10 @@
 package com.agroruta.admin.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.admin.application.ports.out.AdminEstadisticasPort;
 import com.agroruta.admin.domain.AgricultorDetalle;
 import com.agroruta.admin.domain.AgricultorResumen;
@@ -11,12 +16,16 @@ import com.agroruta.crop.domain.Finca;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.worker.application.ports.in.NominaUseCase;
 import com.agroruta.worker.application.ports.in.TrabajadorUseCase;
 import com.agroruta.worker.application.ports.out.TrabajadorRepository;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -26,28 +35,30 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AdminService")
 class AdminServiceTest {
 
-    @Mock private UsuarioRepository usuarioRepository;
-    @Mock private AdminEstadisticasPort estadisticasPort;
-    @Mock private FincaUseCase fincaUseCase;
-    @Mock private TrabajadorUseCase trabajadorUseCase;
-    @Mock private NominaUseCase nominaUseCase;
-    @Mock private TrabajadorRepository trabajadorRepository;
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
-    @InjectMocks private AdminService service;
+    @Mock
+    private AdminEstadisticasPort estadisticasPort;
+
+    @Mock
+    private FincaUseCase fincaUseCase;
+
+    @Mock
+    private TrabajadorUseCase trabajadorUseCase;
+
+    @Mock
+    private NominaUseCase nominaUseCase;
+
+    @Mock
+    private TrabajadorRepository trabajadorRepository;
+
+    @InjectMocks
+    private AdminService service;
 
     private Usuario admin;
     private Usuario otroAdmin;
@@ -72,8 +83,7 @@ class AdminServiceTest {
     void resumenCuentaUsuarios() {
         trabajador.desactivar();
         when(usuarioRepository.findAll()).thenReturn(List.of(admin, agricultor, trabajador));
-        EstadisticasSistema stats = new EstadisticasSistema(
-                2, 15.5, 4, 3, 120.0, 6, 1, new BigDecimal("500000"));
+        EstadisticasSistema stats = new EstadisticasSistema(2, 15.5, 4, 3, 120.0, 6, 1, new BigDecimal("500000"));
         when(estadisticasPort.estadisticasSistema()).thenReturn(stats);
 
         ResumenSistema r = service.resumen();
@@ -185,8 +195,7 @@ class AdminServiceTest {
             when(usuarioRepository.findById(2L)).thenReturn(Optional.of(otroAdmin));
             when(usuarioRepository.countActivosPorRol(Rol.Administrador)).thenReturn(1L);
 
-            assertThatThrownBy(() -> service.cambiarRol(1L, 2L, "Agricultor"))
-                    .isInstanceOf(BusinessException.class);
+            assertThatThrownBy(() -> service.cambiarRol(1L, 2L, "Agricultor")).isInstanceOf(BusinessException.class);
             verify(usuarioRepository, never()).save(any());
         }
 
@@ -247,8 +256,7 @@ class AdminServiceTest {
     void detalleNoAgricultor() {
         when(usuarioRepository.findById(4L)).thenReturn(Optional.of(trabajador));
 
-        assertThatThrownBy(() -> service.detalleAgricultor(4L))
-                .isInstanceOf(ResourceNotFoundException.class);
+        assertThatThrownBy(() -> service.detalleAgricultor(4L)).isInstanceOf(ResourceNotFoundException.class);
     }
 
     // ── cambio de rol sin dejar datos huérfanos ──────────────────────────────
@@ -256,7 +264,8 @@ class AdminServiceTest {
     @DisplayName("cambiarRol no cambia a un agricultor que ya tiene fincas")
     void noCambiaAgricultorConFincas() {
         when(usuarioRepository.findById(3L)).thenReturn(Optional.of(agricultor));
-        when(fincaUseCase.listarFincasPorAgricultor(3L)).thenReturn(List.of(mock(com.agroruta.crop.domain.Finca.class)));
+        when(fincaUseCase.listarFincasPorAgricultor(3L))
+                .thenReturn(List.of(mock(com.agroruta.crop.domain.Finca.class)));
 
         assertThatThrownBy(() -> service.cambiarRol(1L, 3L, "Trabajador"))
                 .isInstanceOf(BusinessException.class)

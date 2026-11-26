@@ -1,12 +1,5 @@
 package com.agroruta.configuration.infrastructure.web;
 
-import com.agroruta.shared.security.CookieSesion;
-import com.agroruta.user.application.ports.in.SesionUseCase;
-import jakarta.servlet.http.HttpServletResponse;
-
-import com.agroruta.shared.security.JwtService;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import java.util.Map;
 import com.agroruta.configuration.application.ports.in.ChangePasswordUseCase;
 import com.agroruta.configuration.application.ports.in.GetProfileUseCase;
 import com.agroruta.configuration.application.ports.in.UpdateProfileUseCase;
@@ -14,65 +7,62 @@ import com.agroruta.configuration.domain.Perfil;
 import com.agroruta.configuration.infrastructure.web.dto.ChangePasswordRequest;
 import com.agroruta.configuration.infrastructure.web.dto.ProfileResponse;
 import com.agroruta.configuration.infrastructure.web.dto.UpdateProfileRequest;
+import com.agroruta.shared.security.CookieSesion;
+import com.agroruta.shared.security.JwtService;
+import com.agroruta.user.application.ports.in.SesionUseCase;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/configuration/profile")
 public class ProfileController {
 
-    private final GetProfileUseCase     obtenerPerfilUseCase;
-    private final UpdateProfileUseCase  actualizarPerfilUseCase;
+    private final GetProfileUseCase obtenerPerfilUseCase;
+    private final UpdateProfileUseCase actualizarPerfilUseCase;
     private final ChangePasswordUseCase cambiarPasswordUseCase;
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
     private final SesionUseCase sesiones;
     private final CookieSesion cookie;
 
-    public ProfileController(GetProfileUseCase obtenerPerfilUseCase,
-                             UpdateProfileUseCase actualizarPerfilUseCase,
-                             ChangePasswordUseCase cambiarPasswordUseCase,
-                             JwtService jwtService,
-                             UserDetailsService userDetailsService,
-                             SesionUseCase sesiones,
-                             CookieSesion cookie) {
-        this.obtenerPerfilUseCase    = obtenerPerfilUseCase;
+    public ProfileController(
+            GetProfileUseCase obtenerPerfilUseCase,
+            UpdateProfileUseCase actualizarPerfilUseCase,
+            ChangePasswordUseCase cambiarPasswordUseCase,
+            JwtService jwtService,
+            UserDetailsService userDetailsService,
+            SesionUseCase sesiones,
+            CookieSesion cookie) {
+        this.obtenerPerfilUseCase = obtenerPerfilUseCase;
         this.actualizarPerfilUseCase = actualizarPerfilUseCase;
-        this.cambiarPasswordUseCase  = cambiarPasswordUseCase;
-        this.jwtService              = jwtService;
-        this.userDetailsService      = userDetailsService;
-        this.sesiones                = sesiones;
-        this.cookie                  = cookie;
+        this.cambiarPasswordUseCase = cambiarPasswordUseCase;
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
+        this.sesiones = sesiones;
+        this.cookie = cookie;
     }
 
     @GetMapping
-    public ResponseEntity<ProfileResponse> obtener(
-            @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<ProfileResponse> obtener(@AuthenticationPrincipal UserDetails userDetails) {
 
-        Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(
-                userDetails.getUsername()
-        );
+        Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(userDetails.getUsername());
         return ResponseEntity.ok(ProfileResponse.from(perfil));
     }
 
     @PutMapping
     public ResponseEntity<ProfileResponse> actualizar(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UpdateProfileRequest request) {
+            @AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateProfileRequest request) {
 
-        Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(
-                userDetails.getUsername()
-        );
+        Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(userDetails.getUsername());
 
         Perfil actualizado = actualizarPerfilUseCase.actualizar(
-                perfil.getId(),
-                request.nombre(),
-                request.telefono(),
-                request.fotoPerfil()
-        );
+                perfil.getId(), request.nombre(), request.telefono(), request.fotoPerfil());
 
         return ResponseEntity.ok(ProfileResponse.from(actualizado));
     }
@@ -87,15 +77,9 @@ public class ProfileController {
             @Valid @RequestBody ChangePasswordRequest request,
             HttpServletResponse response) {
 
-        Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(
-                userDetails.getUsername()
-        );
+        Perfil perfil = obtenerPerfilUseCase.obtenerPorEmail(userDetails.getUsername());
 
-        cambiarPasswordUseCase.cambiarPassword(
-                perfil.getId(),
-                request.passwordActual(),
-                request.nuevaPassword()
-        );
+        cambiarPasswordUseCase.cambiarPassword(perfil.getId(), request.passwordActual(), request.nuevaPassword());
 
         cookie.escribir(response, sesiones.abrir(perfil.getId()));
         UserDetails actualizado = userDetailsService.loadUserByUsername(userDetails.getUsername());

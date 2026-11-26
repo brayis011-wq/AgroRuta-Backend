@@ -1,6 +1,8 @@
 package com.agroruta.report.infrastructure.pdf;
 
-import com.agroruta.shared.exception.FalloInternoException;
+import static com.agroruta.report.infrastructure.pdf.FormatoReporte.*;
+import static com.agroruta.report.infrastructure.pdf.PdfLienzo.*;
+
 import com.agroruta.report.domain.CostosTemporada;
 import com.agroruta.report.domain.CropDetail;
 import com.agroruta.report.domain.CropReport;
@@ -15,8 +17,7 @@ import com.agroruta.report.infrastructure.pdf.PdfLienzo.Celda;
 import com.agroruta.report.infrastructure.pdf.PdfLienzo.Columna;
 import com.agroruta.report.infrastructure.pdf.PdfLienzo.Segmento;
 import com.agroruta.report.infrastructure.pdf.PdfLienzo.Tarjeta;
-import org.springframework.stereotype.Service;
-
+import com.agroruta.shared.exception.FalloInternoException;
 import java.awt.Color;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -28,9 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-
-import static com.agroruta.report.infrastructure.pdf.FormatoReporte.*;
-import static com.agroruta.report.infrastructure.pdf.PdfLienzo.*;
+import org.springframework.stereotype.Service;
 
 /**
  * PDF de los reportes de nómina, cultivos, costos y rentabilidad (cada uno con resumen, gráficas y tabla
@@ -43,6 +42,7 @@ public class PdfReportService {
     private static final int MAX_BARRAS = 10;
 
     private static final Map<String, Color> COLOR_ETAPA = new LinkedHashMap<>();
+
     static {
         COLOR_ETAPA.put("GERMINACION", new Color(0xA5, 0xD6, 0xA7));
         COLOR_ETAPA.put("CRECIMIENTO", new Color(0x66, 0xBB, 0x6A));
@@ -63,7 +63,8 @@ public class PdfReportService {
 
     public byte[] generatePayrollPdf(PayrollReport r, String preparadoPara) {
         try (PdfLienzo pdf = new PdfLienzo("Reporte de Nómina", SUB_NOMINA)) {
-            pdf.encabezadoDerecha("Generado el " + fechaHora(r.generatedAt()),
+            pdf.encabezadoDerecha(
+                    "Generado el " + fechaHora(r.generatedAt()),
                     preparadoPara != null ? "Para " + preparadoPara : null);
             nomina(pdf, r);
             return pdf.terminar();
@@ -75,66 +76,102 @@ public class PdfReportService {
     private static final String SUB_NOMINA = "Pagos realizados a tus trabajadores y lo que queda por pagar";
     private static final String SUB_CULTIVOS = "Siembras, etapas y cosechas de tus fincas";
     private static final String SUB_COSTOS = "Lo que costó y lo que dejó cada temporada";
-    private static final String SUB_RENTABILIDAD = "Cuánto dejó cada lote y cómo le fue a cada temporada frente a la anterior";
+    private static final String SUB_RENTABILIDAD =
+            "Cuánto dejó cada lote y cómo le fue a cada temporada frente a la anterior";
 
     private void nomina(PdfLienzo pdf, PayrollReport r) throws IOException {
-            List<WorkerPayrollDetail> ws = r.workerDetails();
-            int jornales = ws.stream().map(WorkerPayrollDetail::totalJornales).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
-            int pagos = ws.stream().map(WorkerPayrollDetail::totalPagos).filter(Objects::nonNull).mapToInt(Integer::intValue).sum();
-            BigDecimal promedio = ws.isEmpty() ? BigDecimal.ZERO
-                    : r.totalAccumulated().divide(BigDecimal.valueOf(ws.size()), 0, RoundingMode.HALF_UP);
+        List<WorkerPayrollDetail> ws = r.workerDetails();
+        int jornales = ws.stream()
+                .map(WorkerPayrollDetail::totalJornales)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+        int pagos = ws.stream()
+                .map(WorkerPayrollDetail::totalPagos)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .sum();
+        BigDecimal promedio = ws.isEmpty()
+                ? BigDecimal.ZERO
+                : r.totalAccumulated().divide(BigDecimal.valueOf(ws.size()), 0, RoundingMode.HALF_UP);
 
-            pdf.tarjetas(List.of(
-                    new Tarjeta("Total pagado", pesos(r.totalAccumulated()), pagos + (pagos == 1 ? " pago" : " pagos"), VERDE),
-                    new Tarjeta("Pendiente por pagar", pesos(r.totalPendiente()),
-                            r.nominasPendientes() + (r.nominasPendientes() == 1 ? " nómina" : " nóminas"), AMBAR),
-                    new Tarjeta("Trabajadores pagados", String.valueOf(ws.size()), "Promedio " + pesos(promedio), new Color(0x1F, 0x5F, 0xA8)),
-                    new Tarjeta("Jornales liquidados", numero(jornales, 0), "en las nóminas pagadas", new Color(0x81, 0xC7, 0x84))));
+        pdf.tarjetas(List.of(
+                new Tarjeta(
+                        "Total pagado", pesos(r.totalAccumulated()), pagos + (pagos == 1 ? " pago" : " pagos"), VERDE),
+                new Tarjeta(
+                        "Pendiente por pagar",
+                        pesos(r.totalPendiente()),
+                        r.nominasPendientes() + (r.nominasPendientes() == 1 ? " nómina" : " nóminas"),
+                        AMBAR),
+                new Tarjeta(
+                        "Trabajadores pagados",
+                        String.valueOf(ws.size()),
+                        "Promedio " + pesos(promedio),
+                        new Color(0x1F, 0x5F, 0xA8)),
+                new Tarjeta(
+                        "Jornales liquidados",
+                        numero(jornales, 0),
+                        "en las nóminas pagadas",
+                        new Color(0x81, 0xC7, 0x84))));
 
-            if (!r.pagosPorMes().isEmpty()) {
-                pdf.seccion("Pagos por mes");
-                List<MonthlyPayment> meses = r.pagosPorMes();
-                List<Barra> barras = new ArrayList<>();
-                for (int i = 0; i < meses.size(); i++) {
-                    MonthlyPayment m = meses.get(i);
-                    boolean cambiaAnio = i > 0 && !m.mes().substring(0, 4).equals(meses.get(i - 1).mes().substring(0, 4));
-                    barras.add(new Barra(mesCorto(m.mes(), cambiaAnio), m.total().doubleValue(), pesosCorto(m.total()), null));
-                }
-                if (barras.stream().allMatch(b -> b.valor() == 0)) pdf.nota("No hubo pagos en los últimos " + meses.size() + " meses.");
-                else pdf.barrasVerticales(barras, 120);
+        if (!r.pagosPorMes().isEmpty()) {
+            pdf.seccion("Pagos por mes");
+            List<MonthlyPayment> meses = r.pagosPorMes();
+            List<Barra> barras = new ArrayList<>();
+            for (int i = 0; i < meses.size(); i++) {
+                MonthlyPayment m = meses.get(i);
+                boolean cambiaAnio = i > 0
+                        && !m.mes()
+                                .substring(0, 4)
+                                .equals(meses.get(i - 1).mes().substring(0, 4));
+                barras.add(
+                        new Barra(mesCorto(m.mes(), cambiaAnio), m.total().doubleValue(), pesosCorto(m.total()), null));
             }
+            if (barras.stream().allMatch(b -> b.valor() == 0))
+                pdf.nota("No hubo pagos en los últimos " + meses.size() + " meses.");
+            else pdf.barrasVerticales(barras, 120);
+        }
 
-            pdf.seccion("Pagado por trabajador");
-            if (ws.isEmpty()) {
-                pdf.nota("Todavía no hay pagos registrados.");
-            } else {
-                double total = r.totalAccumulated().doubleValue();
-                pdf.barrasHorizontales(ws.stream().limit(MAX_BARRAS).map(w -> new Barra(
-                        w.workerName(), valor(w.totalPaid()), pesos(w.totalPaid()),
-                        total > 0 ? numero(valor(w.totalPaid()) * 100 / total, 0) + " %" : null)).toList());
-                if (ws.size() > MAX_BARRAS) pdf.nota("Y " + (ws.size() - MAX_BARRAS) + " trabajadores más en la tabla.");
+        pdf.seccion("Pagado por trabajador");
+        if (ws.isEmpty()) {
+            pdf.nota("Todavía no hay pagos registrados.");
+        } else {
+            double total = r.totalAccumulated().doubleValue();
+            pdf.barrasHorizontales(ws.stream()
+                    .limit(MAX_BARRAS)
+                    .map(w -> new Barra(
+                            w.workerName(),
+                            valor(w.totalPaid()),
+                            pesos(w.totalPaid()),
+                            total > 0 ? numero(valor(w.totalPaid()) * 100 / total, 0) + " %" : null))
+                    .toList());
+            if (ws.size() > MAX_BARRAS) pdf.nota("Y " + (ws.size() - MAX_BARRAS) + " trabajadores más en la tabla.");
 
-                pdf.seccion("Detalle por trabajador");
-                pdf.tabla(List.of(
-                        new Columna("Trabajador", 165, false),
-                        new Columna("Período pagado", 150, false),
-                        new Columna("Jornales", 60, true),
-                        new Columna("Pagos", 50, true),
-                        new Columna("Total pagado", 90, true)),
-                        ws.stream().map(w -> List.of(
-                                Celda.negrita(w.workerName()),
-                                Celda.de(periodo(w.periodoInicio(), w.periodoFin())),
-                                Celda.de(numero(w.totalJornales() != null ? w.totalJornales() : 0, 0)),
-                                Celda.de(String.valueOf(w.totalPagos() != null ? w.totalPagos() : 0)),
-                                new Celda(pesos(w.totalPaid()), null, VERDE_OSCURO, true))).toList());
-            }
+            pdf.seccion("Detalle por trabajador");
+            pdf.tabla(
+                    List.of(
+                            new Columna("Trabajador", 165, false),
+                            new Columna("Período pagado", 150, false),
+                            new Columna("Jornales", 60, true),
+                            new Columna("Pagos", 50, true),
+                            new Columna("Total pagado", 90, true)),
+                    ws.stream()
+                            .map(w -> List.of(
+                                    Celda.negrita(w.workerName()),
+                                    Celda.de(periodo(w.periodoInicio(), w.periodoFin())),
+                                    Celda.de(numero(w.totalJornales() != null ? w.totalJornales() : 0, 0)),
+                                    Celda.de(String.valueOf(w.totalPagos() != null ? w.totalPagos() : 0)),
+                                    new Celda(pesos(w.totalPaid()), null, VERDE_OSCURO, true)))
+                            .toList());
+        }
     }
 
     // ══ Cultivos ═══════════════════════════════════════════════════════════
 
     public byte[] generateCropPdf(CropReport r, String preparadoPara) {
         try (PdfLienzo pdf = new PdfLienzo("Reporte de Cultivos", SUB_CULTIVOS)) {
-            pdf.encabezadoDerecha("Generado el " + fechaHora(r.generatedAt()),
+            pdf.encabezadoDerecha(
+                    "Generado el " + fechaHora(r.generatedAt()),
                     preparadoPara != null ? "Para " + preparadoPara : null);
             cultivos(pdf, r);
             return pdf.terminar();
@@ -144,69 +181,91 @@ public class PdfReportService {
     }
 
     private void cultivos(PdfLienzo pdf, CropReport r) throws IOException {
-            List<CropDetail> cs = r.cropDetails();
-            long activas = cs.stream().filter(c -> !"FINALIZADO".equals(c.estado())).count();
-            double kg = cs.stream().mapToDouble(c -> c.totalKgCosechado() != null ? c.totalKgCosechado() : 0).sum();
-            int cosechas = cs.stream().mapToInt(CropDetail::totalCosechas).sum();
-            long tipos = cs.stream().map(FormatoReporte::cultivoDe).distinct().count();
+        List<CropDetail> cs = r.cropDetails();
+        long activas = cs.stream().filter(c -> !"FINALIZADO".equals(c.estado())).count();
+        double kg = cs.stream()
+                .mapToDouble(c -> c.totalKgCosechado() != null ? c.totalKgCosechado() : 0)
+                .sum();
+        int cosechas = cs.stream().mapToInt(CropDetail::totalCosechas).sum();
+        long tipos = cs.stream().map(FormatoReporte::cultivoDe).distinct().count();
 
-            pdf.tarjetas(List.of(
-                    new Tarjeta("Siembras", String.valueOf(cs.size()), tipos + (tipos == 1 ? " cultivo" : " cultivos"), VERDE),
-                    new Tarjeta("Activas", String.valueOf(activas), (cs.size() - activas) + " finalizadas", new Color(0x66, 0xBB, 0x6A)),
-                    new Tarjeta("Kg cosechados", numero(kg, kg % 1 == 0 ? 0 : 1) + " kg", "en total", AMBAR),
-                    new Tarjeta("Cosechas", String.valueOf(cosechas),
-                            cs.isEmpty() ? "—" : numero(kg / Math.max(1, cosechas), 1) + " kg por cosecha", new Color(0x1F, 0x5F, 0xA8))));
+        pdf.tarjetas(List.of(
+                new Tarjeta(
+                        "Siembras", String.valueOf(cs.size()), tipos + (tipos == 1 ? " cultivo" : " cultivos"), VERDE),
+                new Tarjeta(
+                        "Activas",
+                        String.valueOf(activas),
+                        (cs.size() - activas) + " finalizadas",
+                        new Color(0x66, 0xBB, 0x6A)),
+                new Tarjeta("Kg cosechados", numero(kg, kg % 1 == 0 ? 0 : 1) + " kg", "en total", AMBAR),
+                new Tarjeta(
+                        "Cosechas",
+                        String.valueOf(cosechas),
+                        cs.isEmpty() ? "—" : numero(kg / Math.max(1, cosechas), 1) + " kg por cosecha",
+                        new Color(0x1F, 0x5F, 0xA8))));
 
-            if (cs.isEmpty()) {
-                pdf.seccion("Siembras");
-                pdf.nota("Todavía no hay siembras registradas.");
-                return;
-            }
+        if (cs.isEmpty()) {
+            pdf.seccion("Siembras");
+            pdf.nota("Todavía no hay siembras registradas.");
+            return;
+        }
 
-            pdf.seccion("Siembras por etapa");
-            Map<String, Integer> porEtapa = new LinkedHashMap<>();
-            COLOR_ETAPA.keySet().forEach(k -> porEtapa.put(k, 0));
-            cs.forEach(c -> porEtapa.merge(c.estado(), 1, Integer::sum));
-            pdf.barraApilada(porEtapa.entrySet().stream()
-                    .map(e -> new Segmento(etapa(e.getKey()), e.getValue(), COLOR_ETAPA.getOrDefault(e.getKey(), TINTA_3)))
+        pdf.seccion("Siembras por etapa");
+        Map<String, Integer> porEtapa = new LinkedHashMap<>();
+        COLOR_ETAPA.keySet().forEach(k -> porEtapa.put(k, 0));
+        cs.forEach(c -> porEtapa.merge(c.estado(), 1, Integer::sum));
+        pdf.barraApilada(porEtapa.entrySet().stream()
+                .map(e -> new Segmento(etapa(e.getKey()), e.getValue(), COLOR_ETAPA.getOrDefault(e.getKey(), TINTA_3)))
+                .toList());
+
+        Map<String, Double> kgPorCultivo = new LinkedHashMap<>();
+        cs.forEach(c ->
+                kgPorCultivo.merge(cultivoDe(c), c.totalKgCosechado() != null ? c.totalKgCosechado() : 0, Double::sum));
+        if (kgPorCultivo.values().stream().anyMatch(v -> v > 0)) {
+            pdf.seccion("Kg cosechados por cultivo");
+            pdf.barrasHorizontales(kgPorCultivo.entrySet().stream()
+                    .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                    .limit(MAX_BARRAS)
+                    .map(e -> new Barra(
+                            e.getKey(),
+                            e.getValue(),
+                            numero(e.getValue(), e.getValue() % 1 == 0 ? 0 : 1) + " kg",
+                            kg > 0 ? numero(e.getValue() * 100 / kg, 0) + " %" : null))
                     .toList());
+        }
 
-            Map<String, Double> kgPorCultivo = new LinkedHashMap<>();
-            cs.forEach(c -> kgPorCultivo.merge(cultivoDe(c), c.totalKgCosechado() != null ? c.totalKgCosechado() : 0, Double::sum));
-            if (kgPorCultivo.values().stream().anyMatch(v -> v > 0)) {
-                pdf.seccion("Kg cosechados por cultivo");
-                pdf.barrasHorizontales(kgPorCultivo.entrySet().stream()
-                        .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                        .limit(MAX_BARRAS)
-                        .map(e -> new Barra(e.getKey(), e.getValue(), numero(e.getValue(), e.getValue() % 1 == 0 ? 0 : 1) + " kg",
-                                kg > 0 ? numero(e.getValue() * 100 / kg, 0) + " %" : null))
+        pdf.seccion("Detalle de siembras");
+        pdf.tabla(
+                List.of(
+                        new Columna("Cultivo · variedad", 128, false),
+                        new Columna("Finca · lote", 108, false),
+                        new Columna("Etapa", 76, false),
+                        new Columna("Sembrado", 72, false),
+                        new Columna("Días", 34, true),
+                        new Columna("Kg", 44, true),
+                        new Columna("Cosechas", 53, true)),
+                cs.stream()
+                        .map(c -> List.of(
+                                Celda.negrita(c.variedad()),
+                                Celda.de(ubicacion(c)),
+                                new Celda(
+                                        etapa(c.estado()),
+                                        suave(COLOR_ETAPA.get(c.estado())),
+                                        oscuro(c.estado()),
+                                        true),
+                                Celda.de(fecha(c.fechaSiembra())),
+                                Celda.de(numero(c.diasDesdeSiembra(), 0)),
+                                Celda.de(kg(c.totalKgCosechado())),
+                                Celda.de(String.valueOf(c.totalCosechas()))))
                         .toList());
-            }
-
-            pdf.seccion("Detalle de siembras");
-            pdf.tabla(List.of(
-                    new Columna("Cultivo · variedad", 128, false),
-                    new Columna("Finca · lote", 108, false),
-                    new Columna("Etapa", 76, false),
-                    new Columna("Sembrado", 72, false),
-                    new Columna("Días", 34, true),
-                    new Columna("Kg", 44, true),
-                    new Columna("Cosechas", 53, true)),
-                    cs.stream().map(c -> List.of(
-                            Celda.negrita(c.variedad()),
-                            Celda.de(ubicacion(c)),
-                            new Celda(etapa(c.estado()), suave(COLOR_ETAPA.get(c.estado())), oscuro(c.estado()), true),
-                            Celda.de(fecha(c.fechaSiembra())),
-                            Celda.de(numero(c.diasDesdeSiembra(), 0)),
-                            Celda.de(kg(c.totalKgCosechado())),
-                            Celda.de(String.valueOf(c.totalCosechas())))).toList());
     }
 
     // ══ Costos ═════════════════════════════════════════════════════════════
 
     public byte[] generateCostsPdf(ReporteFinanciero r, String preparadoPara) {
         try (PdfLienzo pdf = new PdfLienzo("Reporte de Costos", SUB_COSTOS)) {
-            pdf.encabezadoDerecha("Generado el " + fechaHora(r.generatedAt()),
+            pdf.encabezadoDerecha(
+                    "Generado el " + fechaHora(r.generatedAt()),
                     preparadoPara != null ? "Para " + preparadoPara : null);
             costos(pdf, r);
             return pdf.terminar();
@@ -216,7 +275,8 @@ public class PdfReportService {
     }
 
     private void costos(PdfLienzo pdf, ReporteFinanciero r) throws IOException {
-        List<TemporadaFinanzas> con = r.temporadas().stream().filter(t -> t.costos() != null).toList();
+        List<TemporadaFinanzas> con =
+                r.temporadas().stream().filter(t -> t.costos() != null).toList();
         double costo = con.stream().mapToDouble(t -> t.costos().costoTotal()).sum();
         double ingresos = con.stream().mapToDouble(t -> t.costos().ingresos()).sum();
         double kg = con.stream().mapToDouble(t -> t.costos().kgTotal()).sum();
@@ -230,15 +290,23 @@ public class PdfReportService {
         pdf.tarjetas(List.of(
                 new Tarjeta("Costo total", pesosDe(costo), n + (n == 1 ? " temporada" : " temporadas"), AMBAR),
                 new Tarjeta("Ingresos", pesosDe(ingresos), kgTexto(kg) + " cosechados", VERDE),
-                new Tarjeta("Ganancia", conPrecio ? pesosConSigno(ingresos - costo) : "Sin precios",
+                new Tarjeta(
+                        "Ganancia",
+                        conPrecio ? pesosConSigno(ingresos - costo) : "Sin precios",
                         conPrecio ? "ingresos menos costos" : "registra el precio de tus cosechas",
                         conPrecio && ingresos - costo < 0 ? ROJO : VERDE_OSCURO),
-                new Tarjeta("Costo por kilo", kg > 0 ? pesosDe(costo / kg) : "—", kg > 0 ? "de lo cosechado" : "sin cosechas",
+                new Tarjeta(
+                        "Costo por kilo",
+                        kg > 0 ? pesosDe(costo / kg) : "—",
+                        kg > 0 ? "de lo cosechado" : "sin cosechas",
                         new Color(0x1F, 0x5F, 0xA8))));
 
         if (con.isEmpty()) {
             pdf.seccion("Temporadas");
-            pdf.nota(n == 0 ? "Todavía no hay siembras registradas." : "No se pudieron calcular los costos de las temporadas.");
+            pdf.nota(
+                    n == 0
+                            ? "Todavía no hay siembras registradas."
+                            : "No se pudieron calcular los costos de las temporadas.");
             return;
         }
 
@@ -249,49 +317,73 @@ public class PdfReportService {
             partes.add(new Barra("Insumos (fumigaciones)", insumos, pesosDe(insumos), porcentajeDe(insumos, costo)));
             partes.add(new Barra("Otros (materiales)", otros, pesosDe(otros), porcentajeDe(otros, costo)));
             pdf.barrasHorizontales(partes);
-            if (jornales > 0) pdf.nota(numero(jornales, 0) + (jornales == 1 ? " jornal" : " jornales") + " cargados a las temporadas.");
+            if (jornales > 0)
+                pdf.nota(numero(jornales, 0) + (jornales == 1 ? " jornal" : " jornales")
+                        + " cargados a las temporadas.");
 
             pdf.seccion("Costo por temporada");
             List<TemporadaFinanzas> porCosto = con.stream()
                     .filter(t -> t.costos().costoTotal() > 0)
-                    .sorted(Comparator.comparingDouble((TemporadaFinanzas t) -> t.costos().costoTotal()).reversed())
+                    .sorted(Comparator.comparingDouble(
+                                    (TemporadaFinanzas t) -> t.costos().costoTotal())
+                            .reversed())
                     .toList();
-            pdf.barrasHorizontales(porCosto.stream().limit(MAX_BARRAS).map(t -> new Barra(
-                    // Con el lote, para distinguir dos temporadas del mismo cultivo
-                    t.siembra().loteNombre() != null ? t.siembra().variedad() + " · " + t.siembra().loteNombre() : t.siembra().variedad(),
-                    t.costos().costoTotal(), pesosDe(t.costos().costoTotal()),
-                    porcentajeDe(t.costos().costoTotal(), costo))).toList());
-            if (porCosto.size() > MAX_BARRAS) pdf.nota("Y " + (porCosto.size() - MAX_BARRAS) + " temporadas más en la tabla.");
+            pdf.barrasHorizontales(porCosto.stream()
+                    .limit(MAX_BARRAS)
+                    .map(t -> new Barra(
+                            // Con el lote, para distinguir dos temporadas del mismo cultivo
+                            t.siembra().loteNombre() != null
+                                    ? t.siembra().variedad() + " · "
+                                            + t.siembra().loteNombre()
+                                    : t.siembra().variedad(),
+                            t.costos().costoTotal(),
+                            pesosDe(t.costos().costoTotal()),
+                            porcentajeDe(t.costos().costoTotal(), costo)))
+                    .toList());
+            if (porCosto.size() > MAX_BARRAS)
+                pdf.nota("Y " + (porCosto.size() - MAX_BARRAS) + " temporadas más en la tabla.");
         }
 
         pdf.seccion("Detalle por temporada");
         List<TemporadaFinanzas> recientes = r.temporadas().stream()
-                .sorted(Comparator.comparing((TemporadaFinanzas t) -> t.siembra().fechaSiembra(),
+                .sorted(Comparator.comparing(
+                        (TemporadaFinanzas t) -> t.siembra().fechaSiembra(),
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
-        pdf.tabla(List.of(
-                new Columna("Temporada", 104, false),
-                new Columna("Finca · lote", 124, false),
-                new Columna("Costo", 72, true),
-                new Columna("Ingresos", 72, true),
-                new Columna("Ganancia", 80, true),
-                new Columna("Costo/kg", 63, true)),
-                recientes.stream().map(t -> {
-                    CostosTemporada c = t.costos();
-                    String nombre = t.siembra().variedad() + (t.siembra().eliminada() ? " (eliminada)" : "");
-                    if (c == null) {
-                        return List.of(Celda.negrita(nombre), Celda.de(ubicacion(t.siembra())),
-                                Celda.de("—"), Celda.de("—"), Celda.de("—"), Celda.de("—"));
-                    }
-                    return List.of(
-                            Celda.negrita(nombre),
-                            Celda.de(ubicacion(t.siembra())),
-                            Celda.de(pesosDe(c.costoTotal())),
-                            Celda.de(pesosDe(c.ingresos())),
-                            celdaGanancia(c.ganancia()),
-                            Celda.de(c.costoPorKg() != null ? pesosDe(c.costoPorKg()) : "—"));
-                }).toList());
-        long sinPrecio = con.stream().filter(t -> t.costos().ganancia() == null && t.costos().kgTotal() > 0).count();
+        pdf.tabla(
+                List.of(
+                        new Columna("Temporada", 104, false),
+                        new Columna("Finca · lote", 124, false),
+                        new Columna("Costo", 72, true),
+                        new Columna("Ingresos", 72, true),
+                        new Columna("Ganancia", 80, true),
+                        new Columna("Costo/kg", 63, true)),
+                recientes.stream()
+                        .map(t -> {
+                            CostosTemporada c = t.costos();
+                            String nombre =
+                                    t.siembra().variedad() + (t.siembra().eliminada() ? " (eliminada)" : "");
+                            if (c == null) {
+                                return List.of(
+                                        Celda.negrita(nombre),
+                                        Celda.de(ubicacion(t.siembra())),
+                                        Celda.de("—"),
+                                        Celda.de("—"),
+                                        Celda.de("—"),
+                                        Celda.de("—"));
+                            }
+                            return List.of(
+                                    Celda.negrita(nombre),
+                                    Celda.de(ubicacion(t.siembra())),
+                                    Celda.de(pesosDe(c.costoTotal())),
+                                    Celda.de(pesosDe(c.ingresos())),
+                                    celdaGanancia(c.ganancia()),
+                                    Celda.de(c.costoPorKg() != null ? pesosDe(c.costoPorKg()) : "—"));
+                        })
+                        .toList());
+        long sinPrecio = con.stream()
+                .filter(t -> t.costos().ganancia() == null && t.costos().kgTotal() > 0)
+                .count();
         if (sinPrecio > 0) {
             pdf.nota(sinPrecio + (sinPrecio == 1 ? " temporada tiene" : " temporadas tienen")
                     + " cosechas sin precio de venta: su ganancia no se puede calcular.");
@@ -302,7 +394,8 @@ public class PdfReportService {
 
     public byte[] generateProfitabilityPdf(ReporteFinanciero r, String preparadoPara) {
         try (PdfLienzo pdf = new PdfLienzo("Reporte de Rentabilidad", SUB_RENTABILIDAD)) {
-            pdf.encabezadoDerecha("Generado el " + fechaHora(r.generatedAt()),
+            pdf.encabezadoDerecha(
+                    "Generado el " + fechaHora(r.generatedAt()),
                     preparadoPara != null ? "Para " + preparadoPara : null);
             rentabilidad(pdf, r);
             return pdf.terminar();
@@ -313,19 +406,32 @@ public class PdfReportService {
 
     private void rentabilidad(PdfLienzo pdf, ReporteFinanciero r) throws IOException {
         List<RentabilidadLote> lotes = RentabilidadLote.porLote(r.temporadas());
-        List<RentabilidadLote> con = lotes.stream().filter(l -> l.ganancia() != null).toList();
+        List<RentabilidadLote> con =
+                lotes.stream().filter(l -> l.ganancia() != null).toList();
         double ingresos = con.stream().mapToDouble(RentabilidadLote::ingresos).sum();
-        Double ganancia = con.isEmpty() ? null : con.stream().mapToDouble(RentabilidadLote::ganancia).sum();
+        Double ganancia = con.isEmpty()
+                ? null
+                : con.stream().mapToDouble(RentabilidadLote::ganancia).sum();
         RentabilidadLote mejor = con.isEmpty() ? null : con.get(0);
 
         pdf.tarjetas(List.of(
-                new Tarjeta("Lotes", String.valueOf(lotes.size()), con.size() + " con ventas", new Color(0x1F, 0x5F, 0xA8)),
-                new Tarjeta("Ganancia total", ganancia != null ? pesosConSigno(ganancia) : "Sin ventas", "de todos los lotes",
+                new Tarjeta(
+                        "Lotes", String.valueOf(lotes.size()), con.size() + " con ventas", new Color(0x1F, 0x5F, 0xA8)),
+                new Tarjeta(
+                        "Ganancia total",
+                        ganancia != null ? pesosConSigno(ganancia) : "Sin ventas",
+                        "de todos los lotes",
                         ganancia != null && ganancia < 0 ? ROJO : VERDE_OSCURO),
-                new Tarjeta("Margen", ganancia != null && ingresos > 0 ? porcentaje(ganancia / ingresos * 100) : "—",
-                        "de cada peso vendido", VERDE),
-                new Tarjeta("Mejor lote", mejor != null ? mejor.loteNombre() : "—",
-                        mejor != null ? pesosConSigno(mejor.ganancia()) : "sin ventas todavía", AMBAR)));
+                new Tarjeta(
+                        "Margen",
+                        ganancia != null && ingresos > 0 ? porcentaje(ganancia / ingresos * 100) : "—",
+                        "de cada peso vendido",
+                        VERDE),
+                new Tarjeta(
+                        "Mejor lote",
+                        mejor != null ? mejor.loteNombre() : "—",
+                        mejor != null ? pesosConSigno(mejor.ganancia()) : "sin ventas todavía",
+                        AMBAR)));
 
         if (lotes.isEmpty()) {
             pdf.seccion("Lotes");
@@ -335,10 +441,15 @@ public class PdfReportService {
 
         if (!con.isEmpty()) {
             pdf.seccion("Ganancia por lote");
-            pdf.barrasHorizontales(con.stream().limit(MAX_BARRAS).map(l -> new Barra(
-                    nombreLote(l), Math.abs(l.ganancia()), pesosConSigno(l.ganancia()),
-                    l.margen() != null ? porcentaje(l.margen()) : null,
-                    l.ganancia() < 0 ? ROJO : null)).toList());
+            pdf.barrasHorizontales(con.stream()
+                    .limit(MAX_BARRAS)
+                    .map(l -> new Barra(
+                            nombreLote(l),
+                            Math.abs(l.ganancia()),
+                            pesosConSigno(l.ganancia()),
+                            l.margen() != null ? porcentaje(l.margen()) : null,
+                            l.ganancia() < 0 ? ROJO : null))
+                    .toList());
             if (con.size() > MAX_BARRAS) pdf.nota("Y " + (con.size() - MAX_BARRAS) + " lotes más en la tabla.");
         }
 
@@ -353,61 +464,89 @@ public class PdfReportService {
                         Celda.de(pesosDe(t.costo())),
                         Celda.de(pesosDe(t.ingresos())),
                         celdaGanancia(t.ganancia()),
-                        t.cambio() == null ? Celda.de("—")
-                                : new Celda(pesosConSigno(t.cambio()), null, t.cambio() < 0 ? ROJO : VERDE_OSCURO, false)));
+                        t.cambio() == null
+                                ? Celda.de("—")
+                                : new Celda(
+                                        pesosConSigno(t.cambio()), null, t.cambio() < 0 ? ROJO : VERDE_OSCURO, false)));
                 primera = false;
             }
         }
-        pdf.tabla(List.of(
-                new Columna("Lote", 80, false),
-                new Columna("Temporada", 135, false),
-                new Columna("Costo", 70, true),
-                new Columna("Ingresos", 70, true),
-                new Columna("Ganancia", 80, true),
-                new Columna("Vs. anterior", 80, true)), filas);
+        pdf.tabla(
+                List.of(
+                        new Columna("Lote", 80, false),
+                        new Columna("Temporada", 135, false),
+                        new Columna("Costo", 70, true),
+                        new Columna("Ingresos", 70, true),
+                        new Columna("Ganancia", 80, true),
+                        new Columna("Vs. anterior", 80, true)),
+                filas);
         pdf.nota("Vs. anterior: cuánto ganó de más (o de menos) frente a la temporada anterior del mismo lote.");
         gastosGenerales(pdf, r.gastos(), ganancia);
     }
 
     /** Gastos de las fincas que no son de una siembra: se restan para ver la ganancia real */
-    private void gastosGenerales(PdfLienzo pdf, com.agroruta.report.domain.GastosGenerales g, Double ganancia) throws IOException {
+    private void gastosGenerales(PdfLienzo pdf, com.agroruta.report.domain.GastosGenerales g, Double ganancia)
+            throws IOException {
         if (g == null || g.total() <= 0) return;
         pdf.seccion("Gastos generales de las fincas");
         double real = (ganancia == null ? 0 : ganancia) - g.total();
         pdf.tarjetas(List.of(
                 new Tarjeta("Gastos generales", pesosDe(g.total()), "transporte, herramientas, servicios…", AMBAR),
-                new Tarjeta("Ganancia real", pesosConSigno(real), "lotes menos gastos generales",
+                new Tarjeta(
+                        "Ganancia real",
+                        pesosConSigno(real),
+                        "lotes menos gastos generales",
                         real < 0 ? ROJO : VERDE_OSCURO)));
         List<List<Celda>> filas = new ArrayList<>();
         for (var p : g.porCategoria()) {
-            filas.add(List.of(Celda.de(CATEGORIAS_GASTO.getOrDefault(p.categoria(), capitalizar(p.categoria()))),
+            filas.add(List.of(
+                    Celda.de(CATEGORIAS_GASTO.getOrDefault(p.categoria(), capitalizar(p.categoria()))),
                     Celda.de(pesosDe(p.total()))));
         }
         pdf.tabla(List.of(new Columna("Categoría", 300, false), new Columna("Total", 215, true)), filas);
     }
 
     private static final Map<String, String> CATEGORIAS_GASTO = Map.of(
-            "TRANSPORTE", "Transporte", "HERRAMIENTAS", "Herramientas", "SERVICIOS", "Servicios",
-            "MANTENIMIENTO", "Mantenimiento", "ADMINISTRACION", "Administración", "IMPUESTOS", "Impuestos",
-            "OTRO", "Otros");
+            "TRANSPORTE",
+            "Transporte",
+            "HERRAMIENTAS",
+            "Herramientas",
+            "SERVICIOS",
+            "Servicios",
+            "MANTENIMIENTO",
+            "Mantenimiento",
+            "ADMINISTRACION",
+            "Administración",
+            "IMPUESTOS",
+            "Impuestos",
+            "OTRO",
+            "Otros");
 
     // ══ Cuaderno de campo ══════════════════════════════════════════════════
-
 
     /**
      * Cuaderno de campo: todas las aplicaciones de producto del periodo (fecha, lugar, producto, dosis,
      * carencia y reentrada), como lo piden las certificaciones y algunos compradores.
      */
-    public byte[] generateFieldBookPdf(List<com.agroruta.report.domain.AplicacionCampo> aplicaciones,
-                                       com.agroruta.report.domain.Periodo periodo, String finca, String preparadoPara) {
-        String sub = "Registro de aplicaciones de productos" + (finca != null ? " · " + finca : "")
-                + " · " + textoPeriodo(periodo);
+    public byte[] generateFieldBookPdf(
+            List<com.agroruta.report.domain.AplicacionCampo> aplicaciones,
+            com.agroruta.report.domain.Periodo periodo,
+            String finca,
+            String preparadoPara) {
+        String sub = "Registro de aplicaciones de productos" + (finca != null ? " · " + finca : "") + " · "
+                + textoPeriodo(periodo);
         try (PdfLienzo pdf = new PdfLienzo("Cuaderno de campo", sub)) {
-            pdf.encabezadoDerecha("Generado el " + fechaHora(LocalDateTime.now()),
+            pdf.encabezadoDerecha(
+                    "Generado el " + fechaHora(LocalDateTime.now()),
                     preparadoPara != null ? "Productor: " + preparadoPara : null);
-            long productos = aplicaciones.stream().map(a -> a.producto() == null ? "" : a.producto().toLowerCase())
-                    .distinct().count();
-            long lotes = aplicaciones.stream().map(a -> a.finca() + "|" + a.lote()).distinct().count();
+            long productos = aplicaciones.stream()
+                    .map(a -> a.producto() == null ? "" : a.producto().toLowerCase())
+                    .distinct()
+                    .count();
+            long lotes = aplicaciones.stream()
+                    .map(a -> a.finca() + "|" + a.lote())
+                    .distinct()
+                    .count();
             pdf.tarjetas(List.of(
                     new Tarjeta("Aplicaciones", String.valueOf(aplicaciones.size()), "en el periodo", VERDE_OSCURO),
                     new Tarjeta("Productos", String.valueOf(productos), "distintos", new Color(0x1F, 0x5F, 0xA8)),
@@ -421,26 +560,42 @@ public class PdfReportService {
                     String dosis = a.dosis() == null ? "—" : numeroCorto(a.dosis()) + " " + unidad(a.unidadDosis());
                     List<String> detalleDosis = new ArrayList<>();
                     if (a.areaAplicada() != null) detalleDosis.add(numeroCorto(a.areaAplicada()) + " ha");
-                    if (a.cantidadUsada() != null) detalleDosis.add("gastado " + numeroCorto(a.cantidadUsada()) + " " + unidad(a.unidadCantidad()));
+                    if (a.cantidadUsada() != null)
+                        detalleDosis.add(
+                                "gastado " + numeroCorto(a.cantidadUsada()) + " " + unidad(a.unidadCantidad()));
                     boolean conCarencia = a.finCarencia() != null;
                     filas.add(List.of(
                             new PdfLienzo.Celda2(a.fecha().format(DIA_CUADERNO), null, false),
                             new PdfLienzo.Celda2(a.finca() + " / " + a.lote(), a.cultivo(), false),
-                            new PdfLienzo.Celda2(a.producto(), a.tipoProducto() != null ? tipoProducto(a.tipoProducto()) : null, true),
-                            new PdfLienzo.Celda2(dosis, detalleDosis.isEmpty() ? null : String.join(" · ", detalleDosis), false),
-                            new PdfLienzo.Celda2(conCarencia ? a.diasCarencia() + " días" : "—",
-                                    conCarencia ? "desde " + a.finCarencia().format(DIA_CUADERNO) : null, false),
-                            new PdfLienzo.Celda2(a.reentradaHoras() == null || a.reentradaHoras() <= 0 ? "—" : a.reentradaHoras() + " h", null, false)));
+                            new PdfLienzo.Celda2(
+                                    a.producto(),
+                                    a.tipoProducto() != null ? tipoProducto(a.tipoProducto()) : null,
+                                    true),
+                            new PdfLienzo.Celda2(
+                                    dosis, detalleDosis.isEmpty() ? null : String.join(" · ", detalleDosis), false),
+                            new PdfLienzo.Celda2(
+                                    conCarencia ? a.diasCarencia() + " días" : "—",
+                                    conCarencia ? "desde " + a.finCarencia().format(DIA_CUADERNO) : null,
+                                    false),
+                            new PdfLienzo.Celda2(
+                                    a.reentradaHoras() == null || a.reentradaHoras() <= 0
+                                            ? "—"
+                                            : a.reentradaHoras() + " h",
+                                    null,
+                                    false)));
                 }
-                pdf.tablaDosLineas(List.of(
-                        new Columna("Fecha", 60, false),
-                        new Columna("Finca / lote y cultivo", 120, false),
-                        new Columna("Producto", 128, false),
-                        new Columna("Dosis", 90, false),
-                        new Columna("Carencia", 62, false),
-                        new Columna("Reentrada", 55, true)), filas);
-                pdf.notaLarga("Carencia: días sin cosechar después de aplicar; debajo, el primer día en que se puede cosechar. "
-                        + "Reentrada: horas sin entrar al lote. En la dosis, el área aplicada y el producto gastado en total.");
+                pdf.tablaDosLineas(
+                        List.of(
+                                new Columna("Fecha", 60, false),
+                                new Columna("Finca / lote y cultivo", 120, false),
+                                new Columna("Producto", 128, false),
+                                new Columna("Dosis", 90, false),
+                                new Columna("Carencia", 62, false),
+                                new Columna("Reentrada", 55, true)),
+                        filas);
+                pdf.notaLarga(
+                        "Carencia: días sin cosechar después de aplicar; debajo, el primer día en que se puede cosechar. "
+                                + "Reentrada: horas sin entrar al lote. En la dosis, el área aplicada y el producto gastado en total.");
             }
             pdf.asegurar(70);
             pdf.y -= 30;
@@ -461,8 +616,13 @@ public class PdfReportService {
      * Las partes elegidas en un solo PDF, cada una desde una página nueva. Una parte en null no se incluye
      * (al menos una debe venir).
      */
-    public byte[] generateCompletePdf(PayrollReport nomina, CropReport cultivos, ReporteFinanciero finanzas,
-                                      boolean conCostos, boolean conRentabilidad, String preparadoPara) {
+    public byte[] generateCompletePdf(
+            PayrollReport nomina,
+            CropReport cultivos,
+            ReporteFinanciero finanzas,
+            boolean conCostos,
+            boolean conRentabilidad,
+            String preparadoPara) {
         List<String> nombres = new ArrayList<>();
         if (nomina != null) nombres.add("nómina");
         if (cultivos != null) nombres.add("cultivos");
@@ -471,7 +631,8 @@ public class PdfReportService {
         if (nombres.isEmpty()) throw new IllegalArgumentException("El reporte completo necesita al menos una parte");
 
         try (PdfLienzo pdf = new PdfLienzo("Reporte de la finca", capitalizar(enumerar(nombres)))) {
-            pdf.encabezadoDerecha("Generado el " + fechaHora(LocalDateTime.now()),
+            pdf.encabezadoDerecha(
+                    "Generado el " + fechaHora(LocalDateTime.now()),
                     preparadoPara != null ? "Para " + preparadoPara : null);
             boolean primera = true;
             if (nomina != null) {

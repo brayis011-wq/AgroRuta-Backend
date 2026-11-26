@@ -1,11 +1,10 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 class CarenciaTest {
 
@@ -27,31 +26,37 @@ class CarenciaTest {
 
     @Test
     void elDiaQueTerminaLaCarenciaYaSePuedeCosechar() {
-        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 14)), aplicado.plusDays(14)).isEmpty());
-        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 14)), aplicado.plusDays(13)).isPresent());
+        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 14)), aplicado.plusDays(14))
+                .isEmpty());
+        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 14)), aplicado.plusDays(13))
+                .isPresent());
     }
 
     @Test
     void elMismoDiaDeLaAplicacionEstaBloqueado() {
-        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 3)), aplicado).isPresent());
+        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 3)), aplicado)
+                .isPresent());
     }
 
     @Test
     void unaFumigacionPosteriorALaCosechaNoCuenta() {
-        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 14)), aplicado.minusDays(1)).isEmpty());
+        assertTrue(Carencia.queBloquea(List.of(fumigacion("Mancozeb", aplicado, 14)), aplicado.minusDays(1))
+                .isEmpty());
     }
 
     @Test
     void sinDiasDeCarenciaNoBloquea() {
-        assertTrue(Carencia.queBloquea(List.of(fumigacion("Agua", aplicado, null), fumigacion("Jabón", aplicado, 0)),
-                aplicado.plusDays(1)).isEmpty());
+        assertTrue(Carencia.queBloquea(
+                        List.of(fumigacion("Agua", aplicado, null), fumigacion("Jabón", aplicado, 0)),
+                        aplicado.plusDays(1))
+                .isEmpty());
     }
 
     @Test
     void conVariasEligeLaQueTerminaMasTarde() {
-        var b = Carencia.queBloquea(List.of(
-                fumigacion("Corto", aplicado.plusDays(2), 3),
-                fumigacion("Largo", aplicado, 21)), aplicado.plusDays(3));
+        var b = Carencia.queBloquea(
+                List.of(fumigacion("Corto", aplicado.plusDays(2), 3), fumigacion("Largo", aplicado, 21)),
+                aplicado.plusDays(3));
         assertEquals("Largo", b.orElseThrow().producto());
     }
 }

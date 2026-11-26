@@ -1,9 +1,9 @@
 package com.agroruta.user.infrastructure.persistence;
 
 import com.agroruta.user.domain.Rol;
-import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 // Extendemos de JpaRepository pasándole nuestra Entidad y el tipo de dato del ID (Long)
 public interface JpaUsuarioRepository extends JpaRepository<UsuarioEntity, Long> {

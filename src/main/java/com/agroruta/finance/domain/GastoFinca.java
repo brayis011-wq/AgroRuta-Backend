@@ -9,10 +9,22 @@ import java.time.LocalDate;
  *
  * @param fincaNombre solo al leer (para las listas)
  */
-public record GastoFinca(Long id, Long fincaId, String fincaNombre, LocalDate fecha, Categoria categoria,
-                         String descripcion, BigDecimal monto) {
+public record GastoFinca(
+        Long id,
+        Long fincaId,
+        String fincaNombre,
+        LocalDate fecha,
+        Categoria categoria,
+        String descripcion,
+        BigDecimal monto) {
 
     public enum Categoria {
-        TRANSPORTE, HERRAMIENTAS, SERVICIOS, MANTENIMIENTO, ADMINISTRACION, IMPUESTOS, OTRO
+        TRANSPORTE,
+        HERRAMIENTAS,
+        SERVICIOS,
+        MANTENIMIENTO,
+        ADMINISTRACION,
+        IMPUESTOS,
+        OTRO
     }
 }

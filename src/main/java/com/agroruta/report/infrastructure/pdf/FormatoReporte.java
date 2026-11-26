@@ -1,5 +1,7 @@
 package com.agroruta.report.infrastructure.pdf;
 
+import com.agroruta.report.domain.CropDetail;
+import com.agroruta.report.domain.RentabilidadLote;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
@@ -7,9 +9,6 @@ import java.text.DecimalFormatSymbols;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
-import com.agroruta.report.domain.CropDetail;
-import com.agroruta.report.domain.RentabilidadLote;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,7 +17,9 @@ import java.util.Map;
 final class FormatoReporte {
 
     private static final Locale ES_CO = Locale.forLanguageTag("es-CO");
-    private static final String[] MESES = {"ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"};
+    private static final String[] MESES = {
+        "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"
+    };
 
     static final Map<String, String> ETAPAS = Map.of(
             "GERMINACION", "Germinación",
@@ -27,7 +28,8 @@ final class FormatoReporte {
             "COSECHA", "Cosecha",
             "FINALIZADO", "Finalizado");
 
-    static final java.time.format.DateTimeFormatter DIA_CUADERNO = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    static final java.time.format.DateTimeFormatter DIA_CUADERNO =
+            java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private FormatoReporte() {}
 
@@ -56,7 +58,8 @@ final class FormatoReporte {
     }
 
     static String numero(double v, int decimales) {
-        return formato(decimales > 0 ? "#,##0." + "0".repeat(decimales) : "#,##0").format(v);
+        return formato(decimales > 0 ? "#,##0." + "0".repeat(decimales) : "#,##0")
+                .format(v);
     }
 
     static String fecha(LocalDate d) {

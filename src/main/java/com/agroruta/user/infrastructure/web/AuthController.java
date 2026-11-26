@@ -2,8 +2,8 @@ package com.agroruta.user.infrastructure.web;
 
 import com.agroruta.shared.security.CookieSesion;
 import com.agroruta.user.application.AuthService;
-import com.agroruta.user.application.ports.in.SesionUseCase;
 import com.agroruta.user.application.ports.in.SesionIniciada;
+import com.agroruta.user.application.ports.in.SesionUseCase;
 import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.infrastructure.web.dto.LoginRequest;
 import com.agroruta.user.infrastructure.web.dto.ReenviarVerificacionRequest;
@@ -11,10 +11,9 @@ import com.agroruta.user.infrastructure.web.dto.RegisterRequest;
 import com.agroruta.user.infrastructure.web.dto.VerificarRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * Inicio y cierre de sesión. El token de acceso (JWT, 15 min) va en el cuerpo y el frontend lo
@@ -37,7 +36,8 @@ public class AuthController {
     }
 
     /** Cookie de "dispositivo recordado" (no pedir el código de dos pasos por 30 días) */
-    private CookieDispositivo cookieDispositivo = new CookieDispositivo(new com.agroruta.shared.config.SesionProperties(30, true));
+    private CookieDispositivo cookieDispositivo =
+            new CookieDispositivo(new com.agroruta.shared.config.SesionProperties(30, true));
 
     @org.springframework.beans.factory.annotation.Autowired
     public void setCookieDispositivo(CookieDispositivo cookieDispositivo) {
@@ -61,8 +61,10 @@ public class AuthController {
 
     /** Cierra una sesión. Si es la de este dispositivo, también borra la cookie. */
     @DeleteMapping("/sessions/{id}")
-    public ResponseEntity<Void> cerrarSesion(@CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
-                                             @PathVariable Long id, HttpServletResponse response) {
+    public ResponseEntity<Void> cerrarSesion(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
+            @PathVariable Long id,
+            HttpServletResponse response) {
         if (abiertas.cerrar(token, id)) cookie.borrar(response);
         return ResponseEntity.noContent().build();
     }
@@ -80,9 +82,10 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
-                                              @CookieValue(name = CookieDispositivo.NOMBRE, required = false) String dispositivo,
-                                              HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            @CookieValue(name = CookieDispositivo.NOMBRE, required = false) String dispositivo,
+            HttpServletResponse response) {
         SesionIniciada auth = authService.login(request.aDatos(), dispositivo);
         // Entró escribiendo el código: se recuerda este dispositivo, salvo que haya desmarcado la casilla
         boolean conCodigo = request.codigo() != null && !request.codigo().isBlank();
@@ -98,15 +101,15 @@ public class AuthController {
 
     /** Enlace del correo de confirmación: confirma la cuenta e inicia sesión */
     @PostMapping("/verify")
-    public ResponseEntity<AuthResponse> verificar(@Valid @RequestBody VerificarRequest request,
-                                                  HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> verificar(
+            @Valid @RequestBody VerificarRequest request, HttpServletResponse response) {
         return conSesion(authService.verificarCorreo(request.token()), response);
     }
 
     /** Cambia la cookie de sesión por una nueva y entrega un token de acceso nuevo. */
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> renovar(@CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
-                                                HttpServletResponse response) {
+    public ResponseEntity<AuthResponse> renovar(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token, HttpServletResponse response) {
         SesionUseCase.Renovacion r;
         try {
             r = sesiones.renovar(token);
@@ -119,8 +122,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@CookieValue(name = CookieSesion.NOMBRE, required = false) String token,
-                                       HttpServletResponse response) {
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = CookieSesion.NOMBRE, required = false) String token, HttpServletResponse response) {
         sesiones.cerrar(token);
         cookie.borrar(response);
         return ResponseEntity.noContent().build();
@@ -128,10 +131,11 @@ public class AuthController {
 
     /** Siempre responde lo mismo, exista o no la cuenta */
     @PostMapping("/resend-verification")
-    public ResponseEntity<Map<String, String>> reenviarVerificacion(@Valid @RequestBody ReenviarVerificacionRequest request) {
+    public ResponseEntity<Map<String, String>> reenviarVerificacion(
+            @Valid @RequestBody ReenviarVerificacionRequest request) {
         authService.reenviarVerificacion(request.email());
-        return ResponseEntity.ok(Map.of("mensaje",
-                "Si la cuenta existe y falta confirmarla, te enviamos un enlace nuevo."));
+        return ResponseEntity.ok(
+                Map.of("mensaje", "Si la cuenta existe y falta confirmarla, te enviamos un enlace nuevo."));
     }
 
     /** Si la respuesta trae token de acceso (la cuenta ya puede entrar), abre la sesión renovable. */

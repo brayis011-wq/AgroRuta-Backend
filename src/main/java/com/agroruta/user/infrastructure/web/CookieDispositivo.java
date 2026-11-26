@@ -1,8 +1,8 @@
 package com.agroruta.user.infrastructure.web;
 
+import com.agroruta.shared.config.SesionProperties;
 import com.agroruta.user.application.ports.in.SegundoFactorUseCase;
 import jakarta.servlet.http.HttpServletResponse;
-import com.agroruta.shared.config.SesionProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
@@ -26,8 +26,12 @@ public class CookieDispositivo {
     }
 
     public void escribir(HttpServletResponse response, String marca) {
-        response.addHeader(HttpHeaders.SET_COOKIE,
-                base(marca).maxAge(SegundoFactorUseCase.RECORDAR_DISPOSITIVO).build().toString());
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                base(marca)
+                        .maxAge(SegundoFactorUseCase.RECORDAR_DISPOSITIVO)
+                        .build()
+                        .toString());
     }
 
     public void borrar(HttpServletResponse response) {

@@ -1,18 +1,17 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
 import com.agroruta.crop.domain.RestriccionesFumigacion;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
-
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record FumigacionRequest(
         @NotNull(message = "La fecha es obligatoria")
@@ -26,16 +25,14 @@ public record FumigacionRequest(
         // Opcional: solo viene si el producto se eligió del catálogo.
         Long agriculturalInputId,
 
-        @NotNull(message = "La dosis es obligatoria")
-        @Positive(message = "La dosis debe ser mayor a 0")
+        @NotNull(message = "La dosis es obligatoria") @Positive(message = "La dosis debe ser mayor a 0")
         Double dosis,
 
         // El valor exacto (LITROS, ML, GRAMOS, KG) lo valida FumigacionService.
         @NotBlank(message = "La unidad de medida es obligatoria")
         String unidadMedida,
 
-        @NotNull(message = "El área aplicada es obligatoria")
-        @Positive(message = "El área aplicada debe ser mayor a 0")
+        @NotNull(message = "El área aplicada es obligatoria") @Positive(message = "El área aplicada debe ser mayor a 0")
         Double areaAplicada,
 
         @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
@@ -62,10 +59,8 @@ public record FumigacionRequest(
 
         String unidadCantidad,
 
-        @NotNull(message = "La siembra es obligatoria")
-        @Positive(message = "La siembra no es válida")
-        Long siembraId
-) {
+        @NotNull(message = "La siembra es obligatoria") @Positive(message = "La siembra no es válida")
+        Long siembraId) {
 
     public RestriccionesFumigacion restricciones() {
         return new RestriccionesFumigacion(diasCarencia, reentradaHoras, costo, cantidadUsada, unidadCantidad);

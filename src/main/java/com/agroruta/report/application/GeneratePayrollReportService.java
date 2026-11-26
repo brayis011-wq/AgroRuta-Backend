@@ -5,14 +5,14 @@ import com.agroruta.report.application.ports.out.PayrollQueryPort;
 import com.agroruta.report.domain.MonthlyPayment;
 import com.agroruta.report.domain.PayrollReport;
 import com.agroruta.report.domain.Periodo;
+import com.agroruta.report.domain.WorkerPayrollDetail;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import com.agroruta.report.domain.WorkerPayrollDetail;
-import java.util.Comparator;
-import java.time.LocalDate;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +33,8 @@ public class GeneratePayrollReportService implements GeneratePayrollReportUseCas
         if (agricultorId == null) {
             return new PayrollReport(LocalDateTime.now(), BigDecimal.ZERO, List.of());
         }
-        return armar(agricultorId,
+        return armar(
+                agricultorId,
                 payrollQueryPort.getTotalAccumulatedByAgricultor(agricultorId),
                 payrollQueryPort.getDetailPerWorkerByAgricultor(agricultorId));
     }
@@ -66,26 +67,37 @@ public class GeneratePayrollReportService implements GeneratePayrollReportUseCas
     static LocalDate inicioSerie(Periodo periodo) {
         LocalDate fin = finSerie(periodo);
         LocalDate tope = fin.withDayOfMonth(1).minusMonths(MESES_SERIE_MAXIMO - 1L);
-        LocalDate desde = periodo.desde() == null ? fin.withDayOfMonth(1).minusMonths(MESES_SERIE - 1L) : periodo.desde();
+        LocalDate desde =
+                periodo.desde() == null ? fin.withDayOfMonth(1).minusMonths(MESES_SERIE - 1L) : periodo.desde();
         if (desde.isAfter(fin)) desde = fin;
         return desde.isBefore(tope) ? tope : desde;
     }
 
     private PayrollReport armar(Long agricultorId, BigDecimal total, List<WorkerPayrollDetail> detalle) {
         LocalDate desde = LocalDate.now().withDayOfMonth(1).minusMonths(MESES_SERIE - 1L);
-        return conDetalle(total, detalle, payrollQueryPort.getMonthlyPayments(agricultorId, desde),
+        return conDetalle(
+                total,
+                detalle,
+                payrollQueryPort.getMonthlyPayments(agricultorId, desde),
                 payrollQueryPort.getPendingPayroll(agricultorId));
     }
 
-    private PayrollReport conDetalle(BigDecimal total, List<WorkerPayrollDetail> detalle, List<MonthlyPayment> serie,
-                                     PayrollQueryPort.PendingPayroll pendiente) {
+    private PayrollReport conDetalle(
+            BigDecimal total,
+            List<WorkerPayrollDetail> detalle,
+            List<MonthlyPayment> serie,
+            PayrollQueryPort.PendingPayroll pendiente) {
         // Los trabajadores con más pagado primero
-        List<WorkerPayrollDetail> ordenado = detalle == null ? List.of() : detalle.stream()
-                .sorted(Comparator.comparing(WorkerPayrollDetail::totalPaid,
-                        Comparator.nullsLast(Comparator.reverseOrder())))
-                .toList();
+        List<WorkerPayrollDetail> ordenado = detalle == null
+                ? List.of()
+                : detalle.stream()
+                        .sorted(Comparator.comparing(
+                                WorkerPayrollDetail::totalPaid, Comparator.nullsLast(Comparator.reverseOrder())))
+                        .toList();
         return new PayrollReport(
-                LocalDateTime.now(), total, ordenado,
+                LocalDateTime.now(),
+                total,
+                ordenado,
                 serie,
                 pendiente != null ? pendiente.total() : BigDecimal.ZERO,
                 pendiente != null ? pendiente.nominas() : 0);

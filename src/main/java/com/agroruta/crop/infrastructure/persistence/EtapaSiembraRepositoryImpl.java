@@ -1,11 +1,10 @@
 package com.agroruta.crop.infrastructure.persistence;
 
-import com.agroruta.crop.domain.EtapaSiembra;
 import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.crop.domain.EtapaSiembra;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class EtapaSiembraRepositoryImpl implements EtapaSiembraRepository {
@@ -28,7 +27,9 @@ public class EtapaSiembraRepositoryImpl implements EtapaSiembraRepository {
 
     @Override
     public List<EtapaSiembra> findBySiembraId(Long siembraId) {
-        return jpa.findBySiembraIdOrderByFechaAscIdAsc(siembraId).stream().map(this::toDomain).toList();
+        return jpa.findBySiembraIdOrderByFechaAscIdAsc(siembraId).stream()
+                .map(this::toDomain)
+                .toList();
     }
 
     @Override

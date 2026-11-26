@@ -8,5 +8,7 @@ import java.time.LocalDate;
  * @param dejarEnDescanso   true: el lote queda en descanso; false: disponible para sembrar
  */
 public record FinalizarSiembraRequest(
-        @PastOrPresent(message = "La fecha no puede ser futura") LocalDate fecha,
+        @PastOrPresent(message = "La fecha no puede ser futura")
+        LocalDate fecha,
+
         boolean dejarEnDescanso) {}

@@ -1,12 +1,11 @@
 package com.agroruta.agriculturalinput.domain;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Pruebas unitarias - AgriculturalInput")
 class AgriculturalInputTest {
@@ -15,24 +14,18 @@ class AgriculturalInputTest {
 
     @BeforeEach
     void setUp() {
-        input = AgriculturalInput.create(
-                "Roundup",
-                AgriculturalInputType.HERBICIDA,
-                MeasurementUnit.LITROS,
-                2.5,
-                48
-        );
+        input = AgriculturalInput.create("Roundup", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 2.5, 48);
     }
 
     // ── 1. Factory method create ─────────────────────────────────────────
     @Test
     @DisplayName("create debe asignar correctamente todos los campos")
     void create_debeAsignarTodosLosCampos() {
-        assertEquals("Roundup",                       input.getNombre());
+        assertEquals("Roundup", input.getNombre());
         assertEquals(AgriculturalInputType.HERBICIDA, input.getTipo());
-        assertEquals(MeasurementUnit.LITROS,          input.getUnidadSugerida());
-        assertEquals(2.5,                             input.getDosisSugerida());
-        assertEquals(48,                              input.getReentradaHoras());
+        assertEquals(MeasurementUnit.LITROS, input.getUnidadSugerida());
+        assertEquals(2.5, input.getDosisSugerida());
+        assertEquals(48, input.getReentradaHoras());
         assertTrue(input.isActivo());
         assertNotNull(input.getCreadoEn());
     }
@@ -42,8 +35,7 @@ class AgriculturalInputTest {
     void create_debeFijarFechaCreacion() {
         LocalDateTime antes = LocalDateTime.now().minusSeconds(1);
         AgriculturalInput nuevo = AgriculturalInput.create(
-                "Bayfolan", AgriculturalInputType.FERTILIZANTE_FOLIAR,
-                MeasurementUnit.ML, 1.0, 0);
+                "Bayfolan", AgriculturalInputType.FERTILIZANTE_FOLIAR, MeasurementUnit.ML, 1.0, 0);
         LocalDateTime despues = LocalDateTime.now().plusSeconds(1);
 
         assertTrue(nuevo.getCreadoEn().isAfter(antes));
@@ -80,14 +72,13 @@ class AgriculturalInputTest {
     @Test
     @DisplayName("update debe modificar todos los campos editables")
     void update_debeModificarTodosLosCampos() {
-        input.update("Karate", AgriculturalInputType.INSECTICIDA,
-                MeasurementUnit.ML, 0.5, 24);
+        input.update("Karate", AgriculturalInputType.INSECTICIDA, MeasurementUnit.ML, 0.5, 24);
 
-        assertEquals("Karate",                         input.getNombre());
+        assertEquals("Karate", input.getNombre());
         assertEquals(AgriculturalInputType.INSECTICIDA, input.getTipo());
-        assertEquals(MeasurementUnit.ML,                input.getUnidadSugerida());
-        assertEquals(0.5,                               input.getDosisSugerida());
-        assertEquals(24,                                input.getReentradaHoras());
+        assertEquals(MeasurementUnit.ML, input.getUnidadSugerida());
+        assertEquals(0.5, input.getDosisSugerida());
+        assertEquals(24, input.getReentradaHoras());
     }
 
     @Test
@@ -96,10 +87,9 @@ class AgriculturalInputTest {
         input.setId(5L);
         LocalDateTime fechaOriginal = input.getCreadoEn();
 
-        input.update("Otro", AgriculturalInputType.FUNGICIDA,
-                MeasurementUnit.KG, 1.0, 12);
+        input.update("Otro", AgriculturalInputType.FUNGICIDA, MeasurementUnit.KG, 1.0, 12);
 
-        assertEquals(5L,           input.getId());
+        assertEquals(5L, input.getId());
         assertTrue(input.isActivo());
         assertEquals(fechaOriginal, input.getCreadoEn());
     }
@@ -132,8 +122,7 @@ class AgriculturalInputTest {
     @DisplayName("requiresReentryPeriod debe retornar false cuando reentradaHoras es 0")
     void requiresReentryPeriod_conCero_debeRetornarFalse() {
         AgriculturalInput sinReentrada = AgriculturalInput.create(
-                "Calcio", AgriculturalInputType.FERTILIZANTE_SUELO,
-                MeasurementUnit.KG, 3.0, 0);
+                "Calcio", AgriculturalInputType.FERTILIZANTE_SUELO, MeasurementUnit.KG, 3.0, 0);
 
         assertFalse(sinReentrada.requiresReentryPeriod());
     }
@@ -141,9 +130,8 @@ class AgriculturalInputTest {
     @Test
     @DisplayName("requiresReentryPeriod debe retornar false cuando reentradaHoras es null")
     void requiresReentryPeriod_conNull_debeRetornarFalse() {
-        AgriculturalInput sinHoras = AgriculturalInput.create(
-                "Azufre", AgriculturalInputType.FUNGICIDA,
-                MeasurementUnit.GRAMOS, 1.5, null);
+        AgriculturalInput sinHoras =
+                AgriculturalInput.create("Azufre", AgriculturalInputType.FUNGICIDA, MeasurementUnit.GRAMOS, 1.5, null);
 
         assertFalse(sinHoras.requiresReentryPeriod());
     }
@@ -153,22 +141,22 @@ class AgriculturalInputTest {
     @DisplayName("AgriculturalInputType debe contener todos los valores esperados y sus displayName")
     void agriculturalInputType_debeContenerTodosLosValores() {
         assertEquals(9, AgriculturalInputType.values().length);
-        assertEquals("Fungicida",               AgriculturalInputType.FUNGICIDA.getDisplayName());
-        assertEquals("Insecticida",             AgriculturalInputType.INSECTICIDA.getDisplayName());
-        assertEquals("Herbicida",               AgriculturalInputType.HERBICIDA.getDisplayName());
-        assertEquals("Fertilizante foliar",     AgriculturalInputType.FERTILIZANTE_FOLIAR.getDisplayName());
-        assertEquals("Fertilizante de suelo",   AgriculturalInputType.FERTILIZANTE_SUELO.getDisplayName());
-        assertEquals("Regulador de crecimiento",AgriculturalInputType.REGULADOR_CRECIMIENTO.getDisplayName());
-        assertEquals("Coadyuvante",             AgriculturalInputType.COADYUVANTE.getDisplayName());
+        assertEquals("Fungicida", AgriculturalInputType.FUNGICIDA.getDisplayName());
+        assertEquals("Insecticida", AgriculturalInputType.INSECTICIDA.getDisplayName());
+        assertEquals("Herbicida", AgriculturalInputType.HERBICIDA.getDisplayName());
+        assertEquals("Fertilizante foliar", AgriculturalInputType.FERTILIZANTE_FOLIAR.getDisplayName());
+        assertEquals("Fertilizante de suelo", AgriculturalInputType.FERTILIZANTE_SUELO.getDisplayName());
+        assertEquals("Regulador de crecimiento", AgriculturalInputType.REGULADOR_CRECIMIENTO.getDisplayName());
+        assertEquals("Coadyuvante", AgriculturalInputType.COADYUVANTE.getDisplayName());
     }
 
     @Test
     @DisplayName("MeasurementUnit debe contener todos los valores esperados")
     void measurementUnit_debeContenerTodosLosValores() {
         assertEquals(4, MeasurementUnit.values().length);
-        assertEquals(MeasurementUnit.LITROS,  MeasurementUnit.valueOf("LITROS"));
-        assertEquals(MeasurementUnit.ML,      MeasurementUnit.valueOf("ML"));
-        assertEquals(MeasurementUnit.GRAMOS,  MeasurementUnit.valueOf("GRAMOS"));
-        assertEquals(MeasurementUnit.KG,      MeasurementUnit.valueOf("KG"));
+        assertEquals(MeasurementUnit.LITROS, MeasurementUnit.valueOf("LITROS"));
+        assertEquals(MeasurementUnit.ML, MeasurementUnit.valueOf("ML"));
+        assertEquals(MeasurementUnit.GRAMOS, MeasurementUnit.valueOf("GRAMOS"));
+        assertEquals(MeasurementUnit.KG, MeasurementUnit.valueOf("KG"));
     }
 }

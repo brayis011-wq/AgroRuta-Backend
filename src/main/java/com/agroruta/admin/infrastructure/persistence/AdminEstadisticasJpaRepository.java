@@ -4,12 +4,11 @@ import com.agroruta.crop.domain.EstadoCultivo;
 import com.agroruta.crop.infrastructure.persistence.FincaEntity;
 import com.agroruta.worker.domain.EstadoNomina;
 import com.agroruta.worker.domain.EstadoTrabajador;
+import java.util.Collection;
+import java.util.List;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
-
-import java.util.Collection;
-import java.util.List;
 
 /**
  * Consultas de solo lectura para el panel de administración.
@@ -53,8 +52,7 @@ public interface AdminEstadisticasJpaRepository extends Repository<FincaEntity, 
             + "WHERE t.estado = :estado GROUP BY t.agricultorId")
     List<Object[]> trabajadoresPorAgricultor(@Param("estado") EstadoTrabajador estado);
 
-    @Query("SELECT n.trabajador.agricultorId, COUNT(n) FROM NominaEntity n "
-            + "GROUP BY n.trabajador.agricultorId")
+    @Query("SELECT n.trabajador.agricultorId, COUNT(n) FROM NominaEntity n " + "GROUP BY n.trabajador.agricultorId")
     List<Object[]> nominasPorAgricultor();
 
     @Query("SELECT p.nomina.trabajador.agricultorId, SUM(p.monto) FROM PagoEntity p "

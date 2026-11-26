@@ -11,8 +11,7 @@ public final class ZonaHoraria {
 
     public static final ZoneId COLOMBIA = ZoneId.of("America/Bogota");
 
-    private ZonaHoraria() {
-    }
+    private ZonaHoraria() {}
 
     /** Fija la zona por defecto de la JVM, para que los {@code now()} sin reloj también usen la hora de Colombia. */
     public static void fijarPorDefecto() {

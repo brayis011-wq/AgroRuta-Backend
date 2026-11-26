@@ -1,15 +1,15 @@
 package com.agroruta.shared.config;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.lang.reflect.Field;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
-import org.springframework.test.util.ReflectionTestUtils;
-import java.lang.reflect.Field;
-import java.util.Map;
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("CorsConfig")
 class CorsConfigTest {
@@ -34,8 +34,7 @@ class CorsConfigTest {
             CorsFilter filter = config.corsFilter();
             Field field = CorsFilter.class.getDeclaredField("configSource");
             field.setAccessible(true);
-            UrlBasedCorsConfigurationSource source =
-                    (UrlBasedCorsConfigurationSource) field.get(filter);
+            UrlBasedCorsConfigurationSource source = (UrlBasedCorsConfigurationSource) field.get(filter);
 
             Map<String, CorsConfiguration> configs = source.getCorsConfigurations();
             return configs.get("/**");
@@ -47,8 +46,7 @@ class CorsConfigTest {
             CorsFilter filter = config.corsFilter();
             Field field = CorsFilter.class.getDeclaredField("configSource");
             field.setAccessible(true);
-            UrlBasedCorsConfigurationSource source =
-                    (UrlBasedCorsConfigurationSource) field.get(filter);
+            UrlBasedCorsConfigurationSource source = (UrlBasedCorsConfigurationSource) field.get(filter);
 
             assertThat(source.getCorsConfigurations()).containsKey("/**");
         }

@@ -23,5 +23,4 @@ public record EventoCalendario(
         Long loteId,
         String loteNombre,
         String cultivo,
-        Long refId
-) {}
+        Long refId) {}

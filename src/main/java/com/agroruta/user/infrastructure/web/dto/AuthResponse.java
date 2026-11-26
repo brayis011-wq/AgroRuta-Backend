@@ -7,8 +7,8 @@ import com.agroruta.user.application.ports.in.SesionIniciada;
  *
  * @param verificacionPendiente true = la cuenta se creó pero falta confirmar el correo (no hay token todavía)
  */
-public record AuthResponse(Long id, String token, String email, String nombre, String rol,
-                           boolean verificacionPendiente) {
+public record AuthResponse(
+        Long id, String token, String email, String nombre, String rol, boolean verificacionPendiente) {
 
     public AuthResponse(Long id, String token, String email, String nombre, String rol) {
         this(id, token, email, nombre, rol, false);

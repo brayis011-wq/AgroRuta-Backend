@@ -1,7 +1,14 @@
 package com.agroruta.configuration.application;
 
-import com.agroruta.configuration.domain.Perfil;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.configuration.application.ports.out.ProfileRepository;
+import com.agroruta.configuration.domain.Perfil;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,14 +18,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
 
 /**
  * Pruebas unitarias para {@link ProfileService}.
@@ -40,7 +39,8 @@ class ProfileServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    @Mock private org.springframework.context.ApplicationEventPublisher eventos;
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventos;
 
     // ── servicio bajo prueba ──────────────────────────────────────────────────
     @InjectMocks
@@ -71,8 +71,7 @@ class ProfileServiceTest {
         void deberiaRetornarPerfil_cuandoEmailExiste() {
             // given
             String email = "ana@agroruta.com";
-            when(profileRepository.buscarPorEmail(email))
-                    .thenReturn(Optional.of(perfilEjemplo));
+            when(profileRepository.buscarPorEmail(email)).thenReturn(Optional.of(perfilEjemplo));
 
             // when
             Perfil resultado = profileService.obtenerPorEmail(email);
@@ -89,8 +88,7 @@ class ProfileServiceTest {
         void deberiaLanzarExcepcion_cuandoEmailNoExiste() {
             // given
             String emailInexistente = "fantasma@agroruta.com";
-            when(profileRepository.buscarPorEmail(emailInexistente))
-                    .thenReturn(Optional.empty());
+            when(profileRepository.buscarPorEmail(emailInexistente)).thenReturn(Optional.empty());
 
             // when / then
             assertThatThrownBy(() -> profileService.obtenerPorEmail(emailInexistente))
@@ -112,15 +110,13 @@ class ProfileServiceTest {
         @DisplayName("debería actualizar y retornar el perfil cuando el id existe")
         void deberiaActualizarPerfil_cuandoIdExiste() {
             // given
-            Long id          = 1L;
-            String nombre    = "Ana Actualizada";
-            String telefono  = "3109876543";
-            String foto      = "https://cdn.agroruta.com/nueva-foto.jpg";
+            Long id = 1L;
+            String nombre = "Ana Actualizada";
+            String telefono = "3109876543";
+            String foto = "https://cdn.agroruta.com/nueva-foto.jpg";
 
-            when(profileRepository.buscarPorId(id))
-                    .thenReturn(Optional.of(perfilEjemplo));
-            when(profileRepository.guardar(any(Perfil.class)))
-                    .thenReturn(perfilEjemplo);
+            when(profileRepository.buscarPorId(id)).thenReturn(Optional.of(perfilEjemplo));
+            when(profileRepository.guardar(any(Perfil.class))).thenReturn(perfilEjemplo);
 
             // when
             Perfil resultado = profileService.actualizar(id, nombre, telefono, foto);
@@ -136,12 +132,10 @@ class ProfileServiceTest {
         void deberiaLanzarExcepcion_cuandoIdNoExiste() {
             // given
             Long idInexistente = 99L;
-            when(profileRepository.buscarPorId(idInexistente))
-                    .thenReturn(Optional.empty());
+            when(profileRepository.buscarPorId(idInexistente)).thenReturn(Optional.empty());
 
             // when / then
-            assertThatThrownBy(
-                    () -> profileService.actualizar(idInexistente, "X", "Y", "Z"))
+            assertThatThrownBy(() -> profileService.actualizar(idInexistente, "X", "Y", "Z"))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("Perfil no encontrado");
 
@@ -152,10 +146,8 @@ class ProfileServiceTest {
         @DisplayName("debería persistir el perfil modificado exactamente una vez")
         void deberiaPersistirUnaVez_cuandoActualizaExitosamente() {
             // given
-            when(profileRepository.buscarPorId(1L))
-                    .thenReturn(Optional.of(perfilEjemplo));
-            when(profileRepository.guardar(perfilEjemplo))
-                    .thenReturn(perfilEjemplo);
+            when(profileRepository.buscarPorId(1L)).thenReturn(Optional.of(perfilEjemplo));
+            when(profileRepository.guardar(perfilEjemplo)).thenReturn(perfilEjemplo);
 
             // when
             profileService.actualizar(1L, "Nuevo Nombre", "3000000000", "url");
@@ -173,11 +165,11 @@ class ProfileServiceTest {
     @DisplayName("cambiarPassword")
     class CambiarPassword {
 
-        private static final Long   ID              = 1L;
+        private static final Long ID = 1L;
         private static final String PASSWORD_ACTUAL = "secret123";
-        private static final String HASH_ACTUAL     = "$2a$10$hash_simulado";
-        private static final String NUEVA_PASSWORD  = "nuevo_secret456";
-        private static final String NUEVO_HASH      = "$2a$10$nuevo_hash_simulado";
+        private static final String HASH_ACTUAL = "$2a$10$hash_simulado";
+        private static final String NUEVA_PASSWORD = "nuevo_secret456";
+        private static final String NUEVO_HASH = "$2a$10$nuevo_hash_simulado";
 
         @Test
         @DisplayName("debería cambiar la contraseña cuando la actual es correcta")
@@ -205,8 +197,7 @@ class ProfileServiceTest {
             when(passwordEncoder.matches(PASSWORD_ACTUAL, HASH_ACTUAL)).thenReturn(false);
 
             // when / then
-            assertThatThrownBy(
-                    () -> profileService.cambiarPassword(ID, PASSWORD_ACTUAL, NUEVA_PASSWORD))
+            assertThatThrownBy(() -> profileService.cambiarPassword(ID, PASSWORD_ACTUAL, NUEVA_PASSWORD))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessage("La contraseña actual es incorrecta");
 
@@ -222,11 +213,10 @@ class ProfileServiceTest {
             when(passwordEncoder.matches(anyString(), eq(HASH_ACTUAL))).thenReturn(false);
 
             // when / then
-            assertThatThrownBy(
-                    () -> profileService.cambiarPassword(ID, "wrongPass", NUEVA_PASSWORD))
+            assertThatThrownBy(() -> profileService.cambiarPassword(ID, "wrongPass", NUEVA_PASSWORD))
                     .isInstanceOf(RuntimeException.class);
 
-            verifyNoMoreInteractions(passwordEncoder);   // .encode nunca se llama
+            verifyNoMoreInteractions(passwordEncoder); // .encode nunca se llama
         }
 
         @Test

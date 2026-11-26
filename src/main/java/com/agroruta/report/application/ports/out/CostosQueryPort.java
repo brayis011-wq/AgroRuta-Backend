@@ -1,7 +1,6 @@
 package com.agroruta.report.application.ports.out;
 
 import com.agroruta.report.domain.CostosTemporada;
-
 import java.util.Optional;
 
 public interface CostosQueryPort {

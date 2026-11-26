@@ -7,5 +7,4 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @Configuration
 @EnableScheduling
 @EnableConfigurationProperties(BackupProperties.class)
-public class BackupConfig {
-}
+public class BackupConfig {}

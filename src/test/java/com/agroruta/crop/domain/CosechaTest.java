@@ -1,8 +1,9 @@
 package com.agroruta.crop.domain;
 
-import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
+
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
 
 class CosechaTest {
 
@@ -10,8 +11,7 @@ class CosechaTest {
     void deberiaCrearCosechaConConstructorCompleto() {
         LocalDate fecha = LocalDate.of(2026, 3, 15);
 
-        Cosecha cosecha = new Cosecha(1L, fecha, 250.5,
-                CalidadCosecha.PRIMERA, "Buena cosecha", 10L);
+        Cosecha cosecha = new Cosecha(1L, fecha, 250.5, CalidadCosecha.PRIMERA, "Buena cosecha", 10L);
 
         assertEquals(1L, cosecha.getId());
         assertEquals(fecha, cosecha.getFecha());
@@ -56,8 +56,7 @@ class CosechaTest {
     @Test
     void deberiaSoportarTodasLasCalidades() {
         for (CalidadCosecha calidad : CalidadCosecha.values()) {
-            Cosecha cosecha = new Cosecha(1L, LocalDate.now(), 100.0,
-                    calidad, "obs", 1L);
+            Cosecha cosecha = new Cosecha(1L, LocalDate.now(), 100.0, calidad, "obs", 1L);
 
             assertEquals(calidad, cosecha.getCalidad());
         }
@@ -65,8 +64,7 @@ class CosechaTest {
 
     @Test
     void deberiaPermitirObservacionesNulas() {
-        Cosecha cosecha = new Cosecha(1L, LocalDate.now(), 50.0,
-                CalidadCosecha.TERCERA, null, 1L);
+        Cosecha cosecha = new Cosecha(1L, LocalDate.now(), 50.0, CalidadCosecha.TERCERA, null, 1L);
 
         assertNull(cosecha.getObservaciones());
     }

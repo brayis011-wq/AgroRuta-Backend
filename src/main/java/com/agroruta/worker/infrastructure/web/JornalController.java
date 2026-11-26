@@ -1,25 +1,24 @@
 package com.agroruta.worker.infrastructure.web;
 
-import com.agroruta.worker.domain.ResumenJornales;
-import com.agroruta.shared.util.Pagina;
-import jakarta.validation.Valid;
 import com.agroruta.shared.security.CurrentUser;
+import com.agroruta.shared.util.Pagina;
 import com.agroruta.worker.application.ports.in.JornalUseCase;
 import com.agroruta.worker.application.ports.out.CultivoPort;
 import com.agroruta.worker.domain.Jornal;
+import com.agroruta.worker.domain.PlanillaSemanal;
+import com.agroruta.worker.domain.ResumenJornales;
 import com.agroruta.worker.infrastructure.web.dto.JornalRequest;
 import com.agroruta.worker.infrastructure.web.dto.JornalResponse;
 import com.agroruta.worker.infrastructure.web.dto.PlanillaRequest;
 import com.agroruta.worker.infrastructure.web.dto.PlanillaResponse;
-import com.agroruta.worker.domain.PlanillaSemanal;
+import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/workdays")
@@ -34,12 +33,14 @@ public class JornalController {
     @PostMapping
     @PreAuthorize("@ownership.trabajadorPropio(#req.trabajadorId, authentication)")
     public ResponseEntity<JornalResponse> registrar(@Valid @RequestBody JornalRequest req) {
-        JornalResponse response = JornalResponse.from(
-                jornalUseCase.registrarJornal(
-                        req.trabajadorId, req.cultivoId, req.nombreCultivo,
-                        req.fecha, req.actividadIds, req.observaciones, req.kilos
-                )
-        );
+        JornalResponse response = JornalResponse.from(jornalUseCase.registrarJornal(
+                req.trabajadorId,
+                req.cultivoId,
+                req.nombreCultivo,
+                req.fecha,
+                req.actividadIds,
+                req.observaciones,
+                req.kilos));
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -49,8 +50,8 @@ public class JornalController {
      */
     @GetMapping("/sheet")
     @PreAuthorize("hasAnyRole('Agricultor','Administrador')")
-    public ResponseEntity<PlanillaResponse> planilla(@RequestParam LocalDate inicio, @RequestParam LocalDate fin,
-                                                     Authentication authentication) {
+    public ResponseEntity<PlanillaResponse> planilla(
+            @RequestParam LocalDate inicio, @RequestParam LocalDate fin, Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
         return ResponseEntity.ok(PlanillaResponse.from(jornalUseCase.planilla(dueno, inicio, fin)));
     }
@@ -58,13 +59,17 @@ public class JornalController {
     /** Varios jornales a la vez desde la planilla (un toque en una casilla o en la cabeza de un día). */
     @PostMapping("/batch")
     @PreAuthorize("hasRole('Agricultor')")
-    public ResponseEntity<List<JornalResponse>> registrarVarios(@Valid @RequestBody PlanillaRequest req,
-                                                                Authentication authentication) {
+    public ResponseEntity<List<JornalResponse>> registrarVarios(
+            @Valid @RequestBody PlanillaRequest req, Authentication authentication) {
         var entradas = req.entradas.stream()
-                .map(e -> new PlanillaSemanal.Entrada(e.trabajadorId, e.fecha, e.kilos)).toList();
-        List<JornalResponse> creados = jornalUseCase
-                .registrarVarios(CurrentUser.id(authentication), req.cultivoId, req.actividadIds, entradas)
-                .stream().map(JornalResponse::from).toList();
+                .map(e -> new PlanillaSemanal.Entrada(e.trabajadorId, e.fecha, e.kilos))
+                .toList();
+        List<JornalResponse> creados =
+                jornalUseCase
+                        .registrarVarios(CurrentUser.id(authentication), req.cultivoId, req.actividadIds, entradas)
+                        .stream()
+                        .map(JornalResponse::from)
+                        .toList();
         return ResponseEntity.status(HttpStatus.CREATED).body(creados);
     }
 
@@ -82,8 +87,9 @@ public class JornalController {
             @RequestParam(required = false) Integer size,
             Authentication authentication) {
         Long dueno = CurrentUser.esAdmin(authentication) ? null : CurrentUser.id(authentication);
-        return ResponseEntity.ok(jornalUseCase.paginaDelEquipo(dueno, trabajadorId, inicio, fin,
-                Pagina.numero(page), Pagina.tamano(size)).map(JornalResponse::from));
+        return ResponseEntity.ok(jornalUseCase
+                .paginaDelEquipo(dueno, trabajadorId, inicio, fin, Pagina.numero(page), Pagina.tamano(size))
+                .map(JornalResponse::from));
     }
 
     /** Cuánto recoge cada trabajador y cuánto sale el kilo pagando por día o por kilo */
@@ -148,10 +154,12 @@ public class JornalController {
             @RequestParam(required = false) LocalDate inicio,
             @RequestParam(required = false) LocalDate fin) {
         List<JornalResponse> jornales = (inicio != null && fin != null)
-                ? jornalUseCase.listarPorTrabajadorYPeriodo(trabajadorId, inicio, fin)
-                .stream().map(JornalResponse::from).toList()
-                : jornalUseCase.listarPorTrabajador(trabajadorId)
-                .stream().map(JornalResponse::from).toList();
+                ? jornalUseCase.listarPorTrabajadorYPeriodo(trabajadorId, inicio, fin).stream()
+                        .map(JornalResponse::from)
+                        .toList()
+                : jornalUseCase.listarPorTrabajador(trabajadorId).stream()
+                        .map(JornalResponse::from)
+                        .toList();
         return ResponseEntity.ok(jornales);
     }
 
@@ -166,22 +174,21 @@ public class JornalController {
         List<Jornal> jornales = (inicio != null && fin != null)
                 ? jornalUseCase.listarPorCultivoYPeriodo(cultivoId, inicio, fin)
                 : jornalUseCase.listarPorCultivo(cultivoId);
-        List<JornalResponse> respuesta = soloLosDelUsuario(jornales, authentication)
-                .stream().map(JornalResponse::from).toList();
+        List<JornalResponse> respuesta = soloLosDelUsuario(jornales, authentication).stream()
+                .map(JornalResponse::from)
+                .toList();
         return ResponseEntity.ok(respuesta);
     }
 
     @PatchMapping("/{id}/activities/{actividadId}")
     @PreAuthorize("@ownership.jornalPropio(#id, authentication)")
-    public ResponseEntity<JornalResponse> agregarActividad(@PathVariable Long id,
-                                                           @PathVariable Long actividadId) {
+    public ResponseEntity<JornalResponse> agregarActividad(@PathVariable Long id, @PathVariable Long actividadId) {
         return ResponseEntity.ok(JornalResponse.from(jornalUseCase.agregarActividad(id, actividadId)));
     }
 
     @DeleteMapping("/{id}/activities/{actividadId}")
     @PreAuthorize("@ownership.jornalPropio(#id, authentication)")
-    public ResponseEntity<JornalResponse> removerActividad(@PathVariable Long id,
-                                                           @PathVariable Long actividadId) {
+    public ResponseEntity<JornalResponse> removerActividad(@PathVariable Long id, @PathVariable Long actividadId) {
         return ResponseEntity.ok(JornalResponse.from(jornalUseCase.removerActividad(id, actividadId)));
     }
 
@@ -205,8 +212,9 @@ public class JornalController {
             @RequestParam(required = false) LocalDate fin,
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        return ResponseEntity.ok(jornalUseCase.paginaPorTrabajador(trabajadorId, inicio, fin,
-                Pagina.numero(page), Pagina.tamano(size)).map(JornalResponse::from));
+        return ResponseEntity.ok(jornalUseCase
+                .paginaPorTrabajador(trabajadorId, inicio, fin, Pagina.numero(page), Pagina.tamano(size))
+                .map(JornalResponse::from));
     }
 
     /** Totales de los jornales del trabajador en el mismo rango (los muestra la lista paginada). */

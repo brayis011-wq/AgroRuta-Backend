@@ -7,6 +7,8 @@ import com.agroruta.user.application.ports.in.SegundoFactorUseCase.Preparacion;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
+import java.util.Map;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -16,20 +18,25 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
-
 /** Verificación en dos pasos de la cuenta que tiene la sesión iniciada (cualquier rol). */
 @RestController
 @RequestMapping("/api/configuration/security/2fa")
 public class SeguridadController {
 
-    public record PasswordRequest(@NotBlank(message = "La contraseña es obligatoria") @Size(max = 72) String password) {}
+    public record PasswordRequest(
+            @NotBlank(message = "La contraseña es obligatoria") @Size(max = 72)
+            String password) {}
 
-    public record CodigoRequest(@NotBlank(message = "El código es obligatorio") @Size(max = 20) String codigo) {}
+    public record CodigoRequest(
+            @NotBlank(message = "El código es obligatorio") @Size(max = 20)
+            String codigo) {}
 
-    public record DesactivarRequest(@NotBlank(message = "La contraseña es obligatoria") @Size(max = 72) String password,
-                                    @NotBlank(message = "El código es obligatorio") @Size(max = 20) String codigo) {}
+    public record DesactivarRequest(
+            @NotBlank(message = "La contraseña es obligatoria") @Size(max = 72)
+            String password,
+
+            @NotBlank(message = "El código es obligatorio") @Size(max = 20)
+            String codigo) {}
 
     private final SegundoFactorUseCase segundoFactor;
 
@@ -45,13 +52,16 @@ public class SeguridadController {
     /** Devuelve el secreto y su QR: no se guarda en caché de ningún lado */
     @PostMapping("/setup")
     public ResponseEntity<Preparacion> preparar(@Valid @RequestBody PasswordRequest req, Authentication auth) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
                 .body(segundoFactor.preparar(CurrentUser.id(auth), req.password()));
     }
 
     @PostMapping("/enable")
-    public ResponseEntity<Map<String, List<String>>> activar(@Valid @RequestBody CodigoRequest req, Authentication auth) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore())
+    public ResponseEntity<Map<String, List<String>>> activar(
+            @Valid @RequestBody CodigoRequest req, Authentication auth) {
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore())
                 .body(Map.of("codigosRespaldo", segundoFactor.activar(CurrentUser.id(auth), req.codigo())));
     }
 

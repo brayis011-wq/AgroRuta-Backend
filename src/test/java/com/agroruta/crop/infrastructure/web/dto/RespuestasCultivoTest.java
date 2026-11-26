@@ -1,20 +1,19 @@
 package com.agroruta.crop.infrastructure.web.dto;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.agroruta.crop.domain.*;
 import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.math.BigDecimal;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Las respuestas de la API de cultivos deben producir exactamente el mismo JSON que producía
@@ -24,7 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DisplayName("Respuestas de la API de cultivos")
 class RespuestasCultivoTest {
 
-    private final ObjectMapper json = new ObjectMapper().registerModule(new JavaTimeModule())
+    private final ObjectMapper json = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     private final LocalDate dia = LocalDate.of(2026, 11, 7);
@@ -61,8 +61,13 @@ class RespuestasCultivoTest {
     @Test
     void cosecha() {
         Cosecha c = new Cosecha();
-        c.setId(4L); c.setFecha(dia); c.setCantidadKg(100.0); c.setCalidad(CalidadCosecha.PRIMERA);
-        c.setObservaciones("buena"); c.setSiembraId(3L); c.setPrecioKg(new BigDecimal("8000"));
+        c.setId(4L);
+        c.setFecha(dia);
+        c.setCantidadKg(100.0);
+        c.setCalidad(CalidadCosecha.PRIMERA);
+        c.setObservaciones("buena");
+        c.setSiembraId(3L);
+        c.setPrecioKg(new BigDecimal("8000"));
         mismoJson(c, CosechaResponse.from(c));
     }
 
@@ -77,8 +82,12 @@ class RespuestasCultivoTest {
     @Test
     void actividadCultivo() {
         ActividadCultivo a = new ActividadCultivo();
-        a.setId(7L); a.setTipo(TipoActividad.PODA); a.setDescripcion("poda"); a.setFecha(dia);
-        a.setSiembraId(3L); a.setCosto(new BigDecimal("50000"));
+        a.setId(7L);
+        a.setTipo(TipoActividad.PODA);
+        a.setDescripcion("poda");
+        a.setFecha(dia);
+        a.setSiembraId(3L);
+        a.setCosto(new BigDecimal("50000"));
         mismoJson(a, ActividadCultivoResponse.from(a));
     }
 

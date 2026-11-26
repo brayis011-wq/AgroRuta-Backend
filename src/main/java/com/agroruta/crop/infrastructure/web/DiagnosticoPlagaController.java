@@ -6,6 +6,8 @@ import com.agroruta.crop.domain.DiagnosticosSiembra;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.security.CurrentUser;
+import java.io.IOException;
+import java.time.Duration;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,9 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
-import java.time.Duration;
 
 /** Diagnóstico de plagas y enfermedades con una foto, dentro de la bitácora de una siembra. */
 @RestController
@@ -44,17 +43,19 @@ public class DiagnosticoPlagaController {
     /** Recibe la foto (campo "foto") y, si se quiere, una nota sobre lo que se ve (campo "nota") */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
-    public ResponseEntity<DiagnosticoPlaga> diagnosticar(@PathVariable Long id,
-                                                         @RequestParam("foto") MultipartFile foto,
-                                                         @RequestParam(value = "nota", required = false) String nota,
-                                                         Authentication auth) {
+    public ResponseEntity<DiagnosticoPlaga> diagnosticar(
+            @PathVariable Long id,
+            @RequestParam("foto") MultipartFile foto,
+            @RequestParam(value = "nota", required = false) String nota,
+            Authentication auth) {
         byte[] archivo;
         try {
             archivo = foto.getBytes();
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.INVALID_ARGUMENT, "No se pudo leer la foto. Inténtalo de nuevo.");
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(diagnosticos.diagnosticar(id, CurrentUser.id(auth), archivo, nota));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(diagnosticos.diagnosticar(id, CurrentUser.id(auth), archivo, nota));
     }
 
     @GetMapping("/{diagnosticoId}/photo")

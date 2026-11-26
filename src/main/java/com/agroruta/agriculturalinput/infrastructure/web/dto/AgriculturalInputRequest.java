@@ -9,16 +9,14 @@ public record AgriculturalInputRequest(
 
         @NotBlank(message = "El tipo es obligatorio")
         @Pattern(
-        regexp  = "FUNGICIDA|INSECTICIDA|HERBICIDA|FERTILIZANTE_FOLIAR",
-        message = "Tipo inválido. Valores permitidos: FUNGICIDA, INSECTICIDA, HERBICIDA, FERTILIZANTE_FOLIAR"
-        )
+                regexp = "FUNGICIDA|INSECTICIDA|HERBICIDA|FERTILIZANTE_FOLIAR",
+                message = "Tipo inválido. Valores permitidos: FUNGICIDA, INSECTICIDA, HERBICIDA, FERTILIZANTE_FOLIAR")
         String tipo,
 
         @NotBlank(message = "La unidad sugerida es obligatoria")
         @Pattern(
-        regexp  = "LITROS|ML|GRAMOS|KG",
-        message = "Unidad inválida. Valores permitidos: LITROS, ML, GRAMOS, KG"
-        )
+                regexp = "LITROS|ML|GRAMOS|KG",
+                message = "Unidad inválida. Valores permitidos: LITROS, ML, GRAMOS, KG")
         String unidadSugerida,
 
         @NotNull(message = "La dosis sugerida es obligatoria")
@@ -32,6 +30,4 @@ public record AgriculturalInputRequest(
         // Opcional: depende del producto y del cultivo (ver la etiqueta)
         @Min(value = 0, message = "Los días de carencia no pueden ser negativos")
         @Max(value = 365, message = "Los días de carencia no pueden superar 365")
-        Integer diasCarencia
-) {
-}
+        Integer diasCarencia) {}

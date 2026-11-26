@@ -1,7 +1,6 @@
 package com.agroruta.worker.application.ports.in;
 
 import com.agroruta.worker.domain.ComprobantePago;
-
 import java.util.Optional;
 
 /** Comprobante de pago en PDF, con un QR para comprobar que es auténtico. */

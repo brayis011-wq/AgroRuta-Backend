@@ -12,5 +12,5 @@ import org.springframework.validation.annotation.Validated;
  */
 @Validated
 @ConfigurationProperties("weather.api")
-public record ClimaProperties(@NotBlank String key, @NotBlank String baseUrl) {
-}
+public record ClimaProperties(
+        @NotBlank String key, @NotBlank String baseUrl) {}

@@ -1,8 +1,15 @@
 package com.agroruta.agriculturalinput.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.agriculturalinput.domain.AgriculturalInput;
 import com.agroruta.agriculturalinput.domain.AgriculturalInputType;
 import com.agroruta.agriculturalinput.domain.MeasurementUnit;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -11,14 +18,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AgriculturalInputRepositoryAdapter - Pruebas Unitarias")
@@ -31,29 +30,31 @@ class AgriculturalInputRepositoryAdapterTest {
     private AgriculturalInputRepositoryAdapter adapter;
 
     private AgriculturalInputEntity entityBase;
-    private AgriculturalInput       domainBase;
-    private LocalDateTime           fechaCreacion;
+    private AgriculturalInput domainBase;
+    private LocalDateTime fechaCreacion;
 
     @BeforeEach
     void setUp() {
         fechaCreacion = LocalDateTime.of(2024, 3, 10, 9, 0);
 
-        entityBase = buildEntity(1L, "Glifosato", AgriculturalInputType.HERBICIDA,
-                MeasurementUnit.LITROS, 2.5, 48, true);
+        entityBase =
+                buildEntity(1L, "Glifosato", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 2.5, 48, true);
 
-        domainBase = AgriculturalInput.create(
-                "Glifosato", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 2.5, 48
-        );
+        domainBase =
+                AgriculturalInput.create("Glifosato", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 2.5, 48);
         domainBase.setId(1L);
         domainBase.setCreadoEn(fechaCreacion);
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────
-    private AgriculturalInputEntity buildEntity(Long id, String nombre,
-                                                AgriculturalInputType tipo,
-                                                MeasurementUnit unidad,
-                                                Double dosis, Integer reentrada,
-                                                boolean activo) {
+    private AgriculturalInputEntity buildEntity(
+            Long id,
+            String nombre,
+            AgriculturalInputType tipo,
+            MeasurementUnit unidad,
+            Double dosis,
+            Integer reentrada,
+            boolean activo) {
         AgriculturalInputEntity e = new AgriculturalInputEntity();
         e.setId(id);
         e.setNombre(nombre);
@@ -77,15 +78,13 @@ class AgriculturalInputRepositoryAdapterTest {
         @DisplayName("Debe retornar todos los insumos activos mapeados al dominio")
         void debeRetornarTodosLosInsumosActivosMapeados() {
             AgriculturalInputEntity otraEntity = buildEntity(
-                    2L, "Clorpirifos", AgriculturalInputType.INSECTICIDA,
-                    MeasurementUnit.ML, 1.0, 24, true
-            );
+                    2L, "Clorpirifos", AgriculturalInputType.INSECTICIDA, MeasurementUnit.ML, 1.0, 24, true);
             when(jpaRepository.findByActivoTrueOrderByNombreAsc()).thenReturn(List.of(entityBase, otraEntity));
 
             List<AgriculturalInput> resultado = adapter.findAllActive();
 
-            assertEquals(2,             resultado.size());
-            assertEquals("Glifosato",   resultado.get(0).getNombre());
+            assertEquals(2, resultado.size());
+            assertEquals("Glifosato", resultado.get(0).getNombre());
             assertEquals("Clorpirifos", resultado.get(1).getNombre());
             assertTrue(resultado.get(0).isActivo());
             assertTrue(resultado.get(1).isActivo());
@@ -118,7 +117,7 @@ class AgriculturalInputRepositoryAdapterTest {
 
             List<AgriculturalInput> resultado = adapter.searchByQuery("Glif");
 
-            assertEquals(1,           resultado.size());
+            assertEquals(1, resultado.size());
             assertEquals("Glifosato", resultado.get(0).getNombre());
             assertEquals(AgriculturalInputType.HERBICIDA, resultado.get(0).getTipo());
             verify(jpaRepository, times(1)).searchActiveByQuery("Glif");
@@ -151,12 +150,12 @@ class AgriculturalInputRepositoryAdapterTest {
             Optional<AgriculturalInput> resultado = adapter.findById(1L);
 
             assertTrue(resultado.isPresent());
-            assertEquals(1L,                             resultado.get().getId());
-            assertEquals("Glifosato",                    resultado.get().getNombre());
+            assertEquals(1L, resultado.get().getId());
+            assertEquals("Glifosato", resultado.get().getNombre());
             assertEquals(AgriculturalInputType.HERBICIDA, resultado.get().getTipo());
-            assertEquals(MeasurementUnit.LITROS,          resultado.get().getUnidadSugerida());
-            assertEquals(2.5,                             resultado.get().getDosisSugerida());
-            assertEquals(48,                              resultado.get().getReentradaHoras());
+            assertEquals(MeasurementUnit.LITROS, resultado.get().getUnidadSugerida());
+            assertEquals(2.5, resultado.get().getDosisSugerida());
+            assertEquals(48, resultado.get().getReentradaHoras());
             assertTrue(resultado.get().isActivo());
             verify(jpaRepository, times(1)).findByIdAndActivoTrue(1L);
         }
@@ -188,12 +187,12 @@ class AgriculturalInputRepositoryAdapterTest {
             AgriculturalInput resultado = adapter.save(domainBase);
 
             assertNotNull(resultado);
-            assertEquals(1L,                             resultado.getId());
-            assertEquals("Glifosato",                    resultado.getNombre());
+            assertEquals(1L, resultado.getId());
+            assertEquals("Glifosato", resultado.getNombre());
             assertEquals(AgriculturalInputType.HERBICIDA, resultado.getTipo());
-            assertEquals(MeasurementUnit.LITROS,          resultado.getUnidadSugerida());
-            assertEquals(2.5,                             resultado.getDosisSugerida());
-            assertEquals(48,                              resultado.getReentradaHoras());
+            assertEquals(MeasurementUnit.LITROS, resultado.getUnidadSugerida());
+            assertEquals(2.5, resultado.getDosisSugerida());
+            assertEquals(48, resultado.getReentradaHoras());
             assertTrue(resultado.isActivo());
             verify(jpaRepository, times(1)).save(any(AgriculturalInputEntity.class));
         }
@@ -202,12 +201,9 @@ class AgriculturalInputRepositoryAdapterTest {
         @DisplayName("Debe guardar y retornar correctamente un insumo desactivado")
         void debeGuardarInsumoDesactivado() {
             AgriculturalInputEntity entityInactiva = buildEntity(
-                    2L, "Clorpirifos", AgriculturalInputType.INSECTICIDA,
-                    MeasurementUnit.ML, 1.0, 24, false
-            );
+                    2L, "Clorpirifos", AgriculturalInputType.INSECTICIDA, MeasurementUnit.ML, 1.0, 24, false);
             AgriculturalInput domainInactivo = AgriculturalInput.create(
-                    "Clorpirifos", AgriculturalInputType.INSECTICIDA, MeasurementUnit.ML, 1.0, 24
-            );
+                    "Clorpirifos", AgriculturalInputType.INSECTICIDA, MeasurementUnit.ML, 1.0, 24);
             domainInactivo.setId(2L);
             domainInactivo.deactivate();
 
@@ -262,8 +258,8 @@ class AgriculturalInputRepositoryAdapterTest {
         @Test
         @DisplayName("findAll incluye inactivos")
         void findAllIncluyeInactivos() {
-            AgriculturalInputEntity inactivo = buildEntity(3L, "Antiguo", AgriculturalInputType.HERBICIDA,
-                    MeasurementUnit.LITROS, 1.0, 0, false);
+            AgriculturalInputEntity inactivo =
+                    buildEntity(3L, "Antiguo", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 1.0, 0, false);
             when(jpaRepository.findAllByOrderByNombreAsc()).thenReturn(List.of(inactivo, entityBase));
 
             List<AgriculturalInput> resultado = adapter.findAll();
@@ -275,8 +271,8 @@ class AgriculturalInputRepositoryAdapterTest {
         @Test
         @DisplayName("findAnyById encuentra también un insumo inactivo")
         void findAnyByIdEncuentraInactivo() {
-            AgriculturalInputEntity inactivo = buildEntity(3L, "Antiguo", AgriculturalInputType.HERBICIDA,
-                    MeasurementUnit.LITROS, 1.0, 0, false);
+            AgriculturalInputEntity inactivo =
+                    buildEntity(3L, "Antiguo", AgriculturalInputType.HERBICIDA, MeasurementUnit.LITROS, 1.0, 0, false);
             when(jpaRepository.findById(3L)).thenReturn(Optional.of(inactivo));
 
             assertTrue(adapter.findAnyById(3L).isPresent());

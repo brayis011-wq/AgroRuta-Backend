@@ -1,16 +1,18 @@
 package com.agroruta.agriculturalinput.domain;
 
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AgriculturalInput {
 
-    @Setter private Long id;
+    @Setter
+    private Long id;
+
     private String nombre;
     private AgriculturalInputType tipo;
     private MeasurementUnit unidadSugerida;
@@ -18,8 +20,12 @@ public class AgriculturalInput {
     private Integer reentradaHoras;
     /** Días entre la aplicación y la cosecha (periodo de carencia); null si no se conoce */
     private Integer diasCarencia;
-    @Setter private boolean activo;       // ← Boolean → boolean
-    @Setter private LocalDateTime creadoEn;
+
+    @Setter
+    private boolean activo; // ← Boolean → boolean
+
+    @Setter
+    private LocalDateTime creadoEn;
 
     public static AgriculturalInput create(
             String nombre,
@@ -39,14 +45,14 @@ public class AgriculturalInput {
             Integer diasCarencia) {
 
         AgriculturalInput input = new AgriculturalInput();
-        input.diasCarencia   = diasCarencia;
-        input.nombre         = nombre;
-        input.tipo           = tipo;
+        input.diasCarencia = diasCarencia;
+        input.nombre = nombre;
+        input.tipo = tipo;
         input.unidadSugerida = unidadSugerida;
-        input.dosisSugerida  = dosisSugerida;
+        input.dosisSugerida = dosisSugerida;
         input.reentradaHoras = reentradaHoras;
-        input.activo         = true;
-        input.creadoEn       = LocalDateTime.now();
+        input.activo = true;
+        input.creadoEn = LocalDateTime.now();
         return input;
     }
 
@@ -67,17 +73,21 @@ public class AgriculturalInput {
             Integer reentradaHoras,
             Integer diasCarencia) {
 
-        this.diasCarencia    = diasCarencia;
-        this.nombre          = nombre;
-        this.tipo            = tipo;
-        this.unidadSugerida  = unidadSugerida;
-        this.dosisSugerida   = dosisSugerida;
-        this.reentradaHoras  = reentradaHoras;
+        this.diasCarencia = diasCarencia;
+        this.nombre = nombre;
+        this.tipo = tipo;
+        this.unidadSugerida = unidadSugerida;
+        this.dosisSugerida = dosisSugerida;
+        this.reentradaHoras = reentradaHoras;
     }
 
-    public void deactivate() { this.activo = false; }
+    public void deactivate() {
+        this.activo = false;
+    }
 
-    public void activate() { this.activo = true; }
+    public void activate() {
+        this.activo = true;
+    }
 
     public boolean requiresReentryPeriod() {
         return this.reentradaHoras != null && this.reentradaHoras > 0;

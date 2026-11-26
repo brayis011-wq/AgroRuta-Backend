@@ -3,11 +3,10 @@ package com.agroruta.crop.infrastructure.persistence;
 import com.agroruta.crop.application.ports.out.CatalogoCultivoRepository;
 import com.agroruta.crop.domain.TipoCultivo;
 import com.agroruta.crop.domain.VariedadCultivo;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class CatalogoCultivoRepositoryImpl implements CatalogoCultivoRepository {
@@ -15,8 +14,7 @@ public class CatalogoCultivoRepositoryImpl implements CatalogoCultivoRepository 
     private final JpaTipoCultivoRepository tipos;
     private final JpaVariedadCultivoRepository variedades;
 
-    public CatalogoCultivoRepositoryImpl(JpaTipoCultivoRepository tipos,
-                                         JpaVariedadCultivoRepository variedades) {
+    public CatalogoCultivoRepositoryImpl(JpaTipoCultivoRepository tipos, JpaVariedadCultivoRepository variedades) {
         this.tipos = tipos;
         this.variedades = variedades;
     }
@@ -73,7 +71,10 @@ public class CatalogoCultivoRepositoryImpl implements CatalogoCultivoRepository 
         e.setActivo(v.isActivo());
         e.setTipoCultivo(tipos.getReferenceById(v.getTipoCultivoId()));
         VariedadCultivoEntity guardada = variedades.save(e);
-        return variedades.findById(guardada.getId()).map(CatalogoCultivoRepositoryImpl::toDomain).orElseThrow();
+        return variedades
+                .findById(guardada.getId())
+                .map(CatalogoCultivoRepositoryImpl::toDomain)
+                .orElseThrow();
     }
 
     @Override
@@ -91,7 +92,6 @@ public class CatalogoCultivoRepositoryImpl implements CatalogoCultivoRepository 
 
     private static VariedadCultivo toDomain(VariedadCultivoEntity v) {
         TipoCultivoEntity t = v.getTipoCultivo();
-        return new VariedadCultivo(v.getId(), v.getNombre(), v.isActivo(),
-                t.getId(), t.getNombre(), t.isActivo());
+        return new VariedadCultivo(v.getId(), v.getNombre(), v.isActivo(), t.getId(), t.getNombre(), t.isActivo());
     }
 }

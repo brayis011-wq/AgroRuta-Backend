@@ -1,12 +1,12 @@
 package com.agroruta.configuration.domain;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.agroruta.shared.exception.DatoInvalidoException;
 import com.agroruta.user.domain.Rol;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("Pruebas unitarias - Perfil")
 class PerfilTest {
@@ -15,14 +15,7 @@ class PerfilTest {
 
     @BeforeEach
     void setUp() {
-        perfil = new Perfil(
-                1L,
-                "Carlos Pérez",
-                "carlos@agroruta.com",
-                "3001234567",
-                "foto.jpg",
-                Rol.Agricultor
-        );
+        perfil = new Perfil(1L, "Carlos Pérez", "carlos@agroruta.com", "3001234567", "foto.jpg", Rol.Agricultor);
     }
 
     @Test
@@ -42,12 +35,12 @@ class PerfilTest {
     @Test
     @DisplayName("Constructor completo debe asignar correctamente todos los campos")
     void constructorCompleto_debeAsignarTodosLosCampos() {
-        assertEquals(1L,                    perfil.getId());
-        assertEquals("Carlos Pérez",        perfil.getNombre());
+        assertEquals(1L, perfil.getId());
+        assertEquals("Carlos Pérez", perfil.getNombre());
         assertEquals("carlos@agroruta.com", perfil.getEmail());
-        assertEquals("3001234567",          perfil.getTelefono());
-        assertEquals("foto.jpg",            perfil.getFotoPerfil());
-        assertEquals(Rol.Agricultor,        perfil.getRol());
+        assertEquals("3001234567", perfil.getTelefono());
+        assertEquals("foto.jpg", perfil.getFotoPerfil());
+        assertEquals(Rol.Agricultor, perfil.getRol());
     }
 
     @Test
@@ -55,13 +48,13 @@ class PerfilTest {
     void actualizarDatos_debeSoloModificarLosTresCampos() {
         perfil.actualizarDatos("Luis Gómez", "3109876543", "nueva_foto.png");
 
-        assertEquals("Luis Gómez",          perfil.getNombre());
-        assertEquals("3109876543",          perfil.getTelefono());
-        assertEquals("nueva_foto.png",      perfil.getFotoPerfil());
+        assertEquals("Luis Gómez", perfil.getNombre());
+        assertEquals("3109876543", perfil.getTelefono());
+        assertEquals("nueva_foto.png", perfil.getFotoPerfil());
 
         assertEquals("carlos@agroruta.com", perfil.getEmail());
-        assertEquals(Rol.Agricultor,        perfil.getRol());
-        assertEquals(1L,                    perfil.getId());
+        assertEquals(Rol.Agricultor, perfil.getRol());
+        assertEquals(1L, perfil.getId());
     }
 
     @Test
@@ -86,19 +79,18 @@ class PerfilTest {
         p.setFotoPerfil("avatar.png");
         p.setRol(Rol.Trabajador);
 
-        assertEquals(99L,                   p.getId());
-        assertEquals("María Ruiz",          p.getNombre());
-        assertEquals("maria@agroruta.com",  p.getEmail());
-        assertEquals("3205551234",          p.getTelefono());
-        assertEquals("avatar.png",          p.getFotoPerfil());
-        assertEquals(Rol.Trabajador,        p.getRol());
+        assertEquals(99L, p.getId());
+        assertEquals("María Ruiz", p.getNombre());
+        assertEquals("maria@agroruta.com", p.getEmail());
+        assertEquals("3205551234", p.getTelefono());
+        assertEquals("avatar.png", p.getFotoPerfil());
+        assertEquals(Rol.Trabajador, p.getRol());
     }
 
     @Test
     @DisplayName("Debe permitir crear un Perfil con rol null")
     void perfil_conRolNull_debeSerValido() {
-        Perfil sinRol = new Perfil(2L, "Pedro", "pedro@test.com",
-                null, null, null);
+        Perfil sinRol = new Perfil(2L, "Pedro", "pedro@test.com", null, null, null);
 
         assertNotNull(sinRol);
         assertNull(sinRol.getRol());
@@ -122,14 +114,15 @@ class PerfilTest {
 
         assertEquals(3, valores.length);
         assertEquals(Rol.Administrador, Rol.valueOf("Administrador"));
-        assertEquals(Rol.Agricultor,    Rol.valueOf("Agricultor"));
-        assertEquals(Rol.Trabajador,    Rol.valueOf("Trabajador"));
+        assertEquals(Rol.Agricultor, Rol.valueOf("Agricultor"));
+        assertEquals(Rol.Trabajador, Rol.valueOf("Trabajador"));
     }
 
     @Test
     @DisplayName("actualizarDatos rechaza una foto que no es imagen")
     void actualizarDatos_rechazaFotoInvalida() {
-        assertThrows(DatoInvalidoException.class,
+        assertThrows(
+                DatoInvalidoException.class,
                 () -> perfil.actualizarDatos("Ana", "300", "data:text/html;base64,PGgxPg=="));
     }
 }

@@ -6,12 +6,11 @@ import com.agroruta.report.application.ports.out.CropQueryPort;
 import com.agroruta.report.domain.CropDetail;
 import com.agroruta.report.domain.ReporteFinanciero;
 import com.agroruta.report.domain.TemporadaFinanzas;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /** Junta cada temporada con sus costos, para los reportes de costos y de rentabilidad. */
 @Service
@@ -37,8 +36,11 @@ public class GenerarReporteFinancieroService implements GenerarReporteFinanciero
     }
 
     private ReporteFinanciero reporte(List<CropDetail> siembras) {
-        return new ReporteFinanciero(LocalDateTime.now(), siembras.stream()
-                .map(s -> new TemporadaFinanzas(s, costosQueryPort.costosDe(s.siembraId()).orElse(null)))
-                .toList());
+        return new ReporteFinanciero(
+                LocalDateTime.now(),
+                siembras.stream()
+                        .map(s -> new TemporadaFinanzas(
+                                s, costosQueryPort.costosDe(s.siembraId()).orElse(null)))
+                        .toList());
     }
 }

@@ -9,8 +9,8 @@ import java.time.LocalDate;
  * @param titulo  producto o labor
  * @param detalle días de atraso, fecha hasta la que no se puede entrar, etc. (puede ser null)
  */
-public record AlertaCultivo(Tipo tipo, String finca, String lote, String cultivo,
-                            String titulo, String detalle, LocalDate fecha) {
+public record AlertaCultivo(
+        Tipo tipo, String finca, String lote, String cultivo, String titulo, String detalle, LocalDate fecha) {
 
     public enum Tipo {
         /** Ya pasó la fecha habitual de fumigar y no se ha registrado */

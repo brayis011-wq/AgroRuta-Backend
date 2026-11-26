@@ -1,7 +1,6 @@
 package com.agroruta.finance.domain;
 
 import com.agroruta.shared.exception.DatoInvalidoException;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -14,13 +13,29 @@ import java.util.List;
  * @param abonado       suma de los abonos
  * @param abonos        solo al leer una venta (en las listas viene vacío)
  */
-public record Venta(Long id, Long siembraId, String siembraNombre, String comprador, LocalDate fecha, String producto,
-                    BigDecimal cantidadKg, BigDecimal precioKg, BigDecimal total, LocalDate vence, String observaciones,
-                    BigDecimal abonado, List<Abono> abonos) {
+public record Venta(
+        Long id,
+        Long siembraId,
+        String siembraNombre,
+        String comprador,
+        LocalDate fecha,
+        String producto,
+        BigDecimal cantidadKg,
+        BigDecimal precioKg,
+        BigDecimal total,
+        LocalDate vence,
+        String observaciones,
+        BigDecimal abonado,
+        List<Abono> abonos) {
 
-    public enum Estado { PENDIENTE, VENCIDA, PAGADA }
+    public enum Estado {
+        PENDIENTE,
+        VENCIDA,
+        PAGADA
+    }
 
-    public record Abono(Long id, Long ventaId, LocalDate fecha, BigDecimal monto, String metodo, String observaciones) {}
+    public record Abono(
+            Long id, Long ventaId, LocalDate fecha, BigDecimal monto, String metodo, String observaciones) {}
 
     public BigDecimal saldo() {
         BigDecimal a = abonado == null ? BigDecimal.ZERO : abonado;
@@ -37,9 +52,17 @@ public record Venta(Long id, Long siembraId, String siembraNombre, String compra
      * Revisa los datos de una venta nueva o editada. Si vienen kilos y precio, el total es kilos × precio;
      * si no, el total es obligatorio.
      */
-    public static Venta nueva(Long id, Long siembraId, String comprador, LocalDate fecha, String producto,
-                              BigDecimal cantidadKg, BigDecimal precioKg, BigDecimal total, LocalDate vence,
-                              String observaciones) {
+    public static Venta nueva(
+            Long id,
+            Long siembraId,
+            String comprador,
+            LocalDate fecha,
+            String producto,
+            BigDecimal cantidadKg,
+            BigDecimal precioKg,
+            BigDecimal total,
+            LocalDate vence,
+            String observaciones) {
         String c = comprador == null ? "" : comprador.trim();
         String p = producto == null ? "" : producto.trim();
         if (c.isEmpty()) throw new DatoInvalidoException("Escribe a quién le vendiste.");
@@ -52,9 +75,22 @@ public record Venta(Long id, Long siembraId, String siembraNombre, String compra
         if (cantidadKg != null && precioKg != null) {
             t = cantidadKg.multiply(precioKg).setScale(2, RoundingMode.HALF_UP);
         }
-        if (t == null || t.signum() <= 0) throw new DatoInvalidoException("Indica el valor total o los kilos y el precio por kilo.");
+        if (t == null || t.signum() <= 0)
+            throw new DatoInvalidoException("Indica el valor total o los kilos y el precio por kilo.");
         String obs = observaciones == null || observaciones.isBlank() ? null : observaciones.trim();
-        return new Venta(id, siembraId, null, c, fecha, p, cantidadKg, precioKg, t.setScale(2, RoundingMode.HALF_UP),
-                vence, obs, BigDecimal.ZERO, List.of());
+        return new Venta(
+                id,
+                siembraId,
+                null,
+                c,
+                fecha,
+                p,
+                cantidadKg,
+                precioKg,
+                t.setScale(2, RoundingMode.HALF_UP),
+                vence,
+                obs,
+                BigDecimal.ZERO,
+                List.of());
     }
 }

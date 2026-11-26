@@ -1,6 +1,14 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.worker.domain.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,15 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("NominaRepositoryImpl - Pruebas Unitarias")
@@ -33,16 +32,22 @@ class NominaRepositoryImplTest {
     private NominaEntity entityBase;
 
     private final LocalDate INICIO = LocalDate.of(2025, 1, 1);
-    private final LocalDate FIN    = LocalDate.of(2025, 1, 31);
+    private final LocalDate FIN = LocalDate.of(2025, 1, 31);
 
     @BeforeEach
     void setUp() {
         // ── dominio ────────────────────────────────────────────────────────
         Cargo cargo = new Cargo(1L, "Operario", "Cargo operario", new BigDecimal("80000"), true);
         Trabajador trabajador = new Trabajador(
-                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1",
-                LocalDate.of(2020, 1, 1), TipoContrato.JORNAL, cargo
-        );
+                1L,
+                "Juan",
+                "Pérez",
+                "123456789",
+                "3001234567",
+                "Calle 1",
+                LocalDate.of(2020, 1, 1),
+                TipoContrato.JORNAL,
+                cargo);
         nominaBase = new Nomina(1L, trabajador, INICIO, FIN, List.of());
         nominaBase.setEstado(EstadoNomina.PENDIENTE);
         nominaBase.setObservaciones("Nómina enero");
@@ -94,12 +99,12 @@ class NominaRepositoryImplTest {
             Nomina resultado = repository.guardar(nominaBase);
 
             assertNotNull(resultado);
-            assertEquals(1L,                   resultado.getId());
-            assertEquals(INICIO,               resultado.getPeriodoInicio());
-            assertEquals(FIN,                  resultado.getPeriodoFin());
+            assertEquals(1L, resultado.getId());
+            assertEquals(INICIO, resultado.getPeriodoInicio());
+            assertEquals(FIN, resultado.getPeriodoFin());
             assertEquals(EstadoNomina.PENDIENTE, resultado.getEstado());
-            assertEquals("Nómina enero",       resultado.getObservaciones());
-            assertEquals(1L,                   resultado.getTrabajador().getId());
+            assertEquals("Nómina enero", resultado.getObservaciones());
+            assertEquals(1L, resultado.getTrabajador().getId());
             verify(jpa, times(1)).save(any(NominaEntity.class));
         }
 
@@ -145,9 +150,9 @@ class NominaRepositoryImplTest {
             Optional<Nomina> resultado = repository.buscarPorId(1L);
 
             assertTrue(resultado.isPresent());
-            assertEquals(1L,     resultado.get().getId());
+            assertEquals(1L, resultado.get().getId());
             assertEquals(INICIO, resultado.get().getPeriodoInicio());
-            assertEquals(FIN,    resultado.get().getPeriodoFin());
+            assertEquals(FIN, resultado.get().getPeriodoFin());
             assertEquals(EstadoNomina.PENDIENTE, resultado.get().getEstado());
             verify(jpa, times(1)).findById(1L);
         }
@@ -178,7 +183,7 @@ class NominaRepositoryImplTest {
 
             List<Nomina> resultado = repository.buscarPorTrabajador(1L);
 
-            assertEquals(1,  resultado.size());
+            assertEquals(1, resultado.size());
             assertEquals(1L, resultado.get(0).getId());
             assertEquals(1L, resultado.get(0).getTrabajador().getId());
             verify(jpa, times(1)).findByTrabajadorId(1L);
@@ -206,11 +211,9 @@ class NominaRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar nóminas del trabajador filtradas por el estado indicado")
         void debeRetornarNominasFiltadasPorEstado() {
-            when(jpa.findByTrabajadorIdAndEstado(1L, EstadoNomina.PENDIENTE))
-                    .thenReturn(List.of(entityBase));
+            when(jpa.findByTrabajadorIdAndEstado(1L, EstadoNomina.PENDIENTE)).thenReturn(List.of(entityBase));
 
-            List<Nomina> resultado =
-                    repository.buscarPorTrabajadorYEstado(1L, EstadoNomina.PENDIENTE);
+            List<Nomina> resultado = repository.buscarPorTrabajadorYEstado(1L, EstadoNomina.PENDIENTE);
 
             assertEquals(1, resultado.size());
             assertEquals(EstadoNomina.PENDIENTE, resultado.get(0).getEstado());
@@ -221,11 +224,9 @@ class NominaRepositoryImplTest {
         @Test
         @DisplayName("Debe retornar lista vacía si el trabajador no tiene nóminas con ese estado")
         void debeRetornarListaVaciaSiNoHayNominasConEseEstado() {
-            when(jpa.findByTrabajadorIdAndEstado(1L, EstadoNomina.APROBADA))
-                    .thenReturn(List.of());
+            when(jpa.findByTrabajadorIdAndEstado(1L, EstadoNomina.APROBADA)).thenReturn(List.of());
 
-            List<Nomina> resultado =
-                    repository.buscarPorTrabajadorYEstado(1L, EstadoNomina.APROBADA);
+            List<Nomina> resultado = repository.buscarPorTrabajadorYEstado(1L, EstadoNomina.APROBADA);
 
             assertTrue(resultado.isEmpty());
             verify(jpa, times(1)).findByTrabajadorIdAndEstado(1L, EstadoNomina.APROBADA);
@@ -246,9 +247,9 @@ class NominaRepositoryImplTest {
 
             List<Nomina> resultado = repository.buscarPorPeriodo(INICIO, FIN);
 
-            assertEquals(1,      resultado.size());
+            assertEquals(1, resultado.size());
             assertEquals(INICIO, resultado.get(0).getPeriodoInicio());
-            assertEquals(FIN,    resultado.get(0).getPeriodoFin());
+            assertEquals(FIN, resultado.get(0).getPeriodoFin());
             verify(jpa, times(1)).findByPeriodo(INICIO, FIN);
         }
 
@@ -288,9 +289,9 @@ class NominaRepositoryImplTest {
 
             List<Nomina> resultado = repository.listarTodas();
 
-            assertEquals(2,                      resultado.size());
+            assertEquals(2, resultado.size());
             assertEquals(EstadoNomina.PENDIENTE, resultado.get(0).getEstado());
-            assertEquals(EstadoNomina.APROBADA,  resultado.get(1).getEstado());
+            assertEquals(EstadoNomina.APROBADA, resultado.get(1).getEstado());
             verify(jpa, times(1)).findAll();
         }
 

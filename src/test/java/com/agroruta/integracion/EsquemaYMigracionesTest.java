@@ -1,12 +1,11 @@
 package com.agroruta.integracion;
 
-import org.junit.jupiter.api.Test;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.io.IOException;
+import org.junit.jupiter.api.Test;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 /**
  * Que la aplicación arranque ya dice que Hibernate validó el esquema. Aquí se comprueba además
@@ -17,12 +16,11 @@ class EsquemaYMigracionesTest extends ConBaseReal {
 
     @Test
     void sobreUnaBaseVaciaSeAplicanTodasLasMigraciones() throws IOException {
-        int archivos = new PathMatchingResourcePatternResolver()
-                .getResources("classpath:db/migration/V*.sql").length;
+        int archivos = new PathMatchingResourcePatternResolver().getResources("classpath:db/migration/V*.sql").length;
         assertTrue(archivos >= 17, "deberían estar al menos las 17 migraciones conocidas; hay " + archivos);
 
-        Integer fallidas = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM flyway_schema_history WHERE success = 0", Integer.class);
+        Integer fallidas =
+                jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success = 0", Integer.class);
         Integer aplicadas = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM flyway_schema_history WHERE success = 1 AND type = 'SQL'", Integer.class);
         Integer ultima = jdbc.queryForObject(

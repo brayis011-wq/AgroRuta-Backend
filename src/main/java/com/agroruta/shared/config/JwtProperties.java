@@ -15,7 +15,8 @@ import org.springframework.validation.annotation.Validated;
  */
 @Validated
 @ConfigurationProperties("jwt")
-public record JwtProperties(@NotBlank String secret, @Positive long expiration) {
+public record JwtProperties(
+        @NotBlank String secret, @Positive long expiration) {
 
     static final int BYTES_MINIMOS = 32;
 

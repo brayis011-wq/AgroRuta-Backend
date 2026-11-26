@@ -7,6 +7,4 @@ public record MinimoRequest(
         @PositiveOrZero(message = "El mínimo no puede ser negativo")
         Double minimo,
 
-        String unidad
-) {
-}
+        String unidad) {}

@@ -3,7 +3,6 @@ package com.agroruta.finance.application.ports.in;
 import com.agroruta.finance.domain.PrecioCultivo;
 import com.agroruta.finance.domain.PrecioReferencia;
 import com.agroruta.finance.domain.PreferenciaPrecio;
-
 import java.math.BigDecimal;
 import java.util.List;
 

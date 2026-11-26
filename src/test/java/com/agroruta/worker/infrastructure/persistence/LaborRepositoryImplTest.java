@@ -1,6 +1,12 @@
 package com.agroruta.worker.infrastructure.persistence;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.worker.domain.Labor;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -9,13 +15,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("LaborRepositoryImpl - Pruebas Unitarias")
@@ -56,8 +55,8 @@ class LaborRepositoryImplTest {
             Labor resultado = repository.guardar(actividadBase);
 
             assertNotNull(resultado);
-            assertEquals(1L,                         resultado.getId());
-            assertEquals("Fumigación",               resultado.getNombre());
+            assertEquals(1L, resultado.getId());
+            assertEquals("Fumigación", resultado.getNombre());
             assertEquals("Aplicación de pesticidas", resultado.getDescripcion());
             assertTrue(resultado.isActiva());
             verify(jpa, times(1)).save(any(LaborEntity.class));
@@ -161,7 +160,7 @@ class LaborRepositoryImplTest {
             Optional<Labor> resultado = repository.buscarPorId(1L);
 
             assertTrue(resultado.isPresent());
-            assertEquals(1L,           resultado.get().getId());
+            assertEquals(1L, resultado.get().getId());
             assertEquals("Fumigación", resultado.get().getNombre());
             assertTrue(resultado.get().isActiva());
             verify(jpa, times(1)).findById(1L);
@@ -199,9 +198,9 @@ class LaborRepositoryImplTest {
 
             List<Labor> resultado = repository.listarTodas();
 
-            assertEquals(2,            resultado.size());
+            assertEquals(2, resultado.size());
             assertEquals("Fumigación", resultado.get(0).getNombre());
-            assertEquals("Riego",      resultado.get(1).getNombre());
+            assertEquals("Riego", resultado.get(1).getNombre());
             assertTrue(resultado.get(0).isActiva());
             assertFalse(resultado.get(1).isActiva());
             verify(jpa, times(1)).findAll();
@@ -233,7 +232,7 @@ class LaborRepositoryImplTest {
 
             List<Labor> resultado = repository.listarActivas();
 
-            assertEquals(1,            resultado.size());
+            assertEquals(1, resultado.size());
             assertEquals("Fumigación", resultado.get(0).getNombre());
             assertTrue(resultado.get(0).isActiva());
             verify(jpa, times(1)).findByActivaTrue();

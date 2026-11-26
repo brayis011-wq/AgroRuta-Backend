@@ -1,21 +1,17 @@
 package com.agroruta.inventory.infrastructure.web.dto;
 
 import jakarta.validation.constraints.*;
-
-import java.time.LocalDate;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 public record CompraRequest(
-        @NotNull(message = "El insumo es obligatorio")
-        Long insumoId,
+        @NotNull(message = "El insumo es obligatorio") Long insumoId,
 
-        @NotNull(message = "La cantidad es obligatoria")
-        @Positive(message = "La cantidad debe ser mayor a 0")
+        @NotNull(message = "La cantidad es obligatoria") @Positive(message = "La cantidad debe ser mayor a 0")
         Double cantidad,
 
         // LITROS, ML, KG o GRAMOS (lo valida InventarioService)
-        @NotBlank(message = "La unidad es obligatoria")
-        String unidad,
+        @NotBlank(message = "La unidad es obligatoria") String unidad,
 
         // Opcional: lo que costó la compra completa (COP); sin él no se puede calcular el costo de las fumigaciones
         @PositiveOrZero(message = "El costo no puede ser negativo")
@@ -29,6 +25,4 @@ public record CompraRequest(
         String proveedor,
 
         @Size(max = 500, message = "Las observaciones no pueden superar 500 caracteres")
-        String observaciones
-) {
-}
+        String observaciones) {}

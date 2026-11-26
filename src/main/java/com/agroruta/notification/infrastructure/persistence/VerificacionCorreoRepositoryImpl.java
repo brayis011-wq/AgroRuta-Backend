@@ -1,11 +1,10 @@
 package com.agroruta.notification.infrastructure.persistence;
 
-import com.agroruta.notification.domain.VerificacionCorreo;
 import com.agroruta.notification.application.ports.out.VerificacionCorreoRepository;
-import org.springframework.stereotype.Repository;
-
+import com.agroruta.notification.domain.VerificacionCorreo;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class VerificacionCorreoRepositoryImpl implements VerificacionCorreoRepository {
@@ -44,7 +43,7 @@ public class VerificacionCorreoRepositoryImpl implements VerificacionCorreoRepos
     }
 
     private static VerificacionCorreo aDominio(VerificacionCorreoEntity e) {
-        return new VerificacionCorreo(e.getId(), e.getUsuarioId(), e.getTokenHash(),
-                e.getCreadoEn(), e.getExpiraEn(), e.getUsadoEn());
+        return new VerificacionCorreo(
+                e.getId(), e.getUsuarioId(), e.getTokenHash(), e.getCreadoEn(), e.getExpiraEn(), e.getUsadoEn());
     }
 }

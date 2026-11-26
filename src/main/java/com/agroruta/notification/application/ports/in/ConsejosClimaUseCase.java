@@ -1,7 +1,6 @@
 package com.agroruta.notification.application.ports.in;
 
 import com.agroruta.weather.domain.ConsejoClima;
-
 import java.util.List;
 
 /** Cruza el pronóstico de cada finca con lo que el agricultor tiene programado hoy y mañana. */

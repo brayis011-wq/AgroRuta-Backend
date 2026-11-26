@@ -1,9 +1,10 @@
 package com.agroruta.crop.domain;
 
-import com.agroruta.shared.exception.EstadoInvalidoException;
-import org.junit.jupiter.api.Test;
-import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;
+
+import com.agroruta.shared.exception.EstadoInvalidoException;
+import java.time.LocalDate;
+import org.junit.jupiter.api.Test;
 
 class SiembraTest {
 

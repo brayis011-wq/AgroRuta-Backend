@@ -11,16 +11,26 @@ public interface CargoUseCase {
      * @param agricultorId dueño del cargo: el usuario autenticado (lo pasa el controlador)
      * @param valorKilo    solo si se paga por kilo
      */
-    Cargo crearCargo(String nombre, String descripcion, ModalidadPago modalidad,
-                     BigDecimal valorJornal, BigDecimal valorKilo, Long agricultorId);
+    Cargo crearCargo(
+            String nombre,
+            String descripcion,
+            ModalidadPago modalidad,
+            BigDecimal valorJornal,
+            BigDecimal valorKilo,
+            Long agricultorId);
 
     /** Cargo pagado por día */
     default Cargo crearCargo(String nombre, String descripcion, BigDecimal valorJornal, Long agricultorId) {
         return crearCargo(nombre, descripcion, ModalidadPago.JORNAL, valorJornal, null, agricultorId);
     }
 
-    Cargo actualizarCargo(Long id, String nombre, String descripcion, ModalidadPago modalidad,
-                          BigDecimal valorJornal, BigDecimal valorKilo);
+    Cargo actualizarCargo(
+            Long id,
+            String nombre,
+            String descripcion,
+            ModalidadPago modalidad,
+            BigDecimal valorJornal,
+            BigDecimal valorKilo);
 
     default Cargo actualizarCargo(Long id, String nombre, String descripcion, BigDecimal valorJornal) {
         return actualizarCargo(id, nombre, descripcion, ModalidadPago.JORNAL, valorJornal, null);

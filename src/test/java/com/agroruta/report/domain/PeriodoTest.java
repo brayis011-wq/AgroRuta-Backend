@@ -1,15 +1,14 @@
 package com.agroruta.report.domain;
 
-import com.agroruta.shared.exception.DatoInvalidoException;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.agroruta.shared.exception.DatoInvalidoException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 @DisplayName("Periodo de los reportes")
 class PeriodoTest {
@@ -19,24 +18,46 @@ class PeriodoTest {
     private final Periodo anio2026 = Periodo.de(ENE, DIC);
 
     private static CropDetail temporada(long id, LocalDate inicio, LocalDate fin) {
-        return new CropDetail(id, "Café · Castillo", fin == null ? "PRODUCCION" : "FINALIZADO", inicio, 10, 0.0, 0,
-                "Café", "Lote", "Finca", false, 1L, 2.0, fin);
+        return new CropDetail(
+                id,
+                "Café · Castillo",
+                fin == null ? "PRODUCCION" : "FINALIZADO",
+                inicio,
+                10,
+                0.0,
+                0,
+                "Café",
+                "Lote",
+                "Finca",
+                false,
+                1L,
+                2.0,
+                fin);
     }
 
     @Test
     @DisplayName("sin fechas es TODO y deja pasar cualquier temporada")
     void sinFechas() {
         assertThat(Periodo.de(null, null)).isSameAs(Periodo.TODO);
-        assertThat(Periodo.TODO.seCruzaCon(LocalDate.of(2001, 1, 1), LocalDate.of(2002, 1, 1))).isTrue();
+        assertThat(Periodo.TODO.seCruzaCon(LocalDate.of(2001, 1, 1), LocalDate.of(2002, 1, 1)))
+                .isTrue();
     }
 
     @Test
     @DisplayName("una temporada cuenta si estuvo en el campo en algún día del periodo")
     void cruce() {
-        assertThat(anio2026.seCruzaCon(LocalDate.of(2025, 9, 22), null)).as("en curso desde 2025").isTrue();
-        assertThat(anio2026.seCruzaCon(LocalDate.of(2025, 3, 1), LocalDate.of(2026, 2, 1))).as("terminó en febrero").isTrue();
-        assertThat(anio2026.seCruzaCon(LocalDate.of(2025, 3, 1), LocalDate.of(2025, 12, 31))).as("terminó antes").isFalse();
-        assertThat(anio2026.seCruzaCon(LocalDate.of(2027, 1, 2), null)).as("sembrada después").isFalse();
+        assertThat(anio2026.seCruzaCon(LocalDate.of(2025, 9, 22), null))
+                .as("en curso desde 2025")
+                .isTrue();
+        assertThat(anio2026.seCruzaCon(LocalDate.of(2025, 3, 1), LocalDate.of(2026, 2, 1)))
+                .as("terminó en febrero")
+                .isTrue();
+        assertThat(anio2026.seCruzaCon(LocalDate.of(2025, 3, 1), LocalDate.of(2025, 12, 31)))
+                .as("terminó antes")
+                .isFalse();
+        assertThat(anio2026.seCruzaCon(LocalDate.of(2027, 1, 2), null))
+                .as("sembrada después")
+                .isFalse();
         assertThat(anio2026.seCruzaCon(DIC, null)).as("sembrada el último día").isTrue();
     }
 
@@ -63,8 +84,10 @@ class PeriodoTest {
         assertThat(cultivos.en(anio2026).cropDetails()).containsExactly(actual);
         assertThat(cultivos.en(Periodo.TODO)).isSameAs(cultivos);
 
-        ReporteFinanciero finanzas = new ReporteFinanciero(LocalDateTime.now(),
-                List.of(new TemporadaFinanzas(vieja, null), new TemporadaFinanzas(actual, null)));
-        assertThat(finanzas.en(anio2026).temporadas()).extracting(TemporadaFinanzas::siembra).containsExactly(actual);
+        ReporteFinanciero finanzas = new ReporteFinanciero(
+                LocalDateTime.now(), List.of(new TemporadaFinanzas(vieja, null), new TemporadaFinanzas(actual, null)));
+        assertThat(finanzas.en(anio2026).temporadas())
+                .extracting(TemporadaFinanzas::siembra)
+                .containsExactly(actual);
     }
 }

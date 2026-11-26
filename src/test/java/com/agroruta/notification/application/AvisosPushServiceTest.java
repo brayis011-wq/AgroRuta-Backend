@@ -1,5 +1,8 @@
 package com.agroruta.notification.application;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.agroruta.crop.domain.AlertaCultivo;
 import com.agroruta.notification.application.ports.out.ClavesPushRepository;
 import com.agroruta.notification.application.ports.out.PushPort;
@@ -8,8 +11,6 @@ import com.agroruta.notification.domain.AvisoPush;
 import com.agroruta.notification.domain.SuscripcionPush;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.weather.domain.ConsejoClima;
-import org.junit.jupiter.api.Test;
-
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,14 +18,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
 
 class AvisosPushServiceTest {
 
     // Claves de navegador del ejemplo de RFC 8291 (válidas)
-    private static final String P256DH = "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
+    private static final String P256DH =
+            "BCVxsr7N_eNgVRqvHtD0zTZsEc6-VV-JvLexhqUzORcxaOzi6-AYWXvTBHm4bjyPjs7Vd8pZGH6SRpkNtoIAiw4";
     private static final String AUTH = "BTBZMqHH6r4Tts7J_aSIgg";
     private static final String ENDPOINT = "https://fcm.googleapis.com/fcm/send/abc123";
     private static final AvisoPush AVISO = new AvisoPush("Tu finca hoy", "No fumigues hoy", "/dashboard", "resumen");
@@ -41,8 +41,10 @@ class AvisosPushServiceTest {
 
         @Override
         public List<SuscripcionPush> deUsuario(Long usuarioId) {
-            return filas.stream().filter(s -> s.usuarioId().equals(usuarioId))
-                    .sorted(Comparator.comparing(SuscripcionPush::id).reversed()).toList();
+            return filas.stream()
+                    .filter(s -> s.usuarioId().equals(usuarioId))
+                    .sorted(Comparator.comparing(SuscripcionPush::id).reversed())
+                    .toList();
         }
 
         @Override
@@ -121,7 +123,8 @@ class AvisosPushServiceTest {
     void otroArranqueDelServidorReutilizaLasMismasClaves() {
         String antes = service.clavePublica();
 
-        assertThat(servicio("secreto-de-prueba-suficientemente-largo").clavePublica()).isEqualTo(antes);
+        assertThat(servicio("secreto-de-prueba-suficientemente-largo").clavePublica())
+                .isEqualTo(antes);
         assertThat(claves.vecesGuardado).isEqualTo(1);
     }
 
@@ -142,7 +145,8 @@ class AvisosPushServiceTest {
 
         assertThat(service.tieneSuscripcion(7L)).isTrue();
         assertThat(service.tieneSuscripcion(8L)).isFalse();
-        assertThat(suscripciones.filas).singleElement()
+        assertThat(suscripciones.filas)
+                .singleElement()
                 .satisfies(s -> assertThat(s.dispositivo()).isEqualTo("Chrome · Android"));
     }
 
@@ -168,19 +172,25 @@ class AvisosPushServiceTest {
                 "https://fcm.googleapis.com:8443/abc",
                 "no es una url")) {
             assertThatThrownBy(() -> service.suscribir(7L, malo, P256DH, AUTH, null))
-                    .as(malo).isInstanceOf(BusinessException.class);
+                    .as(malo)
+                    .isInstanceOf(BusinessException.class);
         }
-        assertThat(AvisosPushService.endpointPermitido("https://updates.push.services.mozilla.com/wpush/v2/abc")).isTrue();
-        assertThat(AvisosPushService.endpointPermitido("https://web.push.apple.com/abc")).isTrue();
-        assertThat(AvisosPushService.endpointPermitido("https://wns2-by3p.notify.windows.com/w/?token=abc")).isTrue();
+        assertThat(AvisosPushService.endpointPermitido("https://updates.push.services.mozilla.com/wpush/v2/abc"))
+                .isTrue();
+        assertThat(AvisosPushService.endpointPermitido("https://web.push.apple.com/abc"))
+                .isTrue();
+        assertThat(AvisosPushService.endpointPermitido("https://wns2-by3p.notify.windows.com/w/?token=abc"))
+                .isTrue();
         assertThat(AvisosPushService.endpointPermitido(null)).isFalse();
         assertThat(suscripciones.filas).isEmpty();
     }
 
     @Test
     void rechazaClavesDeNavegadorMalFormadas() {
-        assertThatThrownBy(() -> service.suscribir(7L, ENDPOINT, "AAAA", AUTH, null)).isInstanceOf(BusinessException.class);
-        assertThatThrownBy(() -> service.suscribir(7L, ENDPOINT, P256DH, "AAAA", null)).isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.suscribir(7L, ENDPOINT, "AAAA", AUTH, null))
+                .isInstanceOf(BusinessException.class);
+        assertThatThrownBy(() -> service.suscribir(7L, ENDPOINT, P256DH, "AAAA", null))
+                .isInstanceOf(BusinessException.class);
     }
 
     @Test
@@ -188,8 +198,11 @@ class AvisosPushServiceTest {
         for (int i = 0; i < 12; i++) {
             service.suscribir(7L, ENDPOINT + i, P256DH, AUTH, "d" + i);
         }
-        assertThat(suscripciones.deUsuario(7L)).hasSize(10)
-                .extracting(SuscripcionPush::dispositivo).contains("d11").doesNotContain("d0", "d1");
+        assertThat(suscripciones.deUsuario(7L))
+                .hasSize(10)
+                .extracting(SuscripcionPush::dispositivo)
+                .contains("d11")
+                .doesNotContain("d0", "d1");
     }
 
     @Test
@@ -209,7 +222,8 @@ class AvisosPushServiceTest {
             assertThat(new String(e.cuerpo(), StandardCharsets.ISO_8859_1)).doesNotContain("No fumigues");
         }
         // La firma va dirigida al servicio de cada navegador
-        assertThat(audiencia(envios.hechos.get(0).autorizacion())).contains("https://updates.push.services.mozilla.com");
+        assertThat(audiencia(envios.hechos.get(0).autorizacion()))
+                .contains("https://updates.push.services.mozilla.com");
         assertThat(audiencia(envios.hechos.get(1).autorizacion())).contains("https://fcm.googleapis.com");
     }
 
@@ -249,8 +263,11 @@ class AvisosPushServiceTest {
 
     @Test
     void elAvisoViajaComoJsonEscapadoYRecortado() {
-        String json = new String(new AvisoPush("Pago \"listo\"", "Línea 1\nLínea 2 \\ fin", null, null).json(), StandardCharsets.UTF_8);
-        assertThat(json).isEqualTo("{\"title\":\"Pago \\\"listo\\\"\",\"body\":\"Línea 1\\nLínea 2 \\\\ fin\",\"url\":\"/\",\"tag\":\"agroruta\"}");
+        String json = new String(
+                new AvisoPush("Pago \"listo\"", "Línea 1\nLínea 2 \\ fin", null, null).json(), StandardCharsets.UTF_8);
+        assertThat(json)
+                .isEqualTo(
+                        "{\"title\":\"Pago \\\"listo\\\"\",\"body\":\"Línea 1\\nLínea 2 \\\\ fin\",\"url\":\"/\",\"tag\":\"agroruta\"}");
 
         String largo = new String(new AvisoPush("t", "x".repeat(1000), "/", "e").json(), StandardCharsets.UTF_8);
         assertThat(largo.length()).isLessThan(400);
@@ -260,12 +277,24 @@ class AvisosPushServiceTest {
     @Test
     void elResumenDelDiaPoneElClimaPrimero() {
         LocalDate hoy = LocalDate.of(2026, 11, 10);
-        ConsejoClima noFumigar = new ConsejoClima(ConsejoClima.Tipo.NO_FUMIGAR, ConsejoClima.Nivel.ALERTA, 1L, "La Esperanza",
-                "Lote 3", "Papa", hoy, "LLUVIA", LocalDateTime.of(2026, 11, 10, 15, 0), null, null, null);
-        AlertaCultivo alerta = new AlertaCultivo(AlertaCultivo.Tipo.FUMIGACION_HOY, "La Esperanza", "Lote 3", "Papa",
-                "Mancozeb", null, hoy);
+        ConsejoClima noFumigar = new ConsejoClima(
+                ConsejoClima.Tipo.NO_FUMIGAR,
+                ConsejoClima.Nivel.ALERTA,
+                1L,
+                "La Esperanza",
+                "Lote 3",
+                "Papa",
+                hoy,
+                "LLUVIA",
+                LocalDateTime.of(2026, 11, 10, 15, 0),
+                null,
+                null,
+                null);
+        AlertaCultivo alerta = new AlertaCultivo(
+                AlertaCultivo.Tipo.FUMIGACION_HOY, "La Esperanza", "Lote 3", "Papa", "Mancozeb", null, hoy);
 
-        assertThat(AlertasDiariasService.resumenCorto(List.of(alerta, alerta), List.of(), List.of(), List.of(noFumigar), hoy))
+        assertThat(AlertasDiariasService.resumenCorto(
+                        List.of(alerta, alerta), List.of(), List.of(), List.of(noFumigar), hoy))
                 .isEqualTo("Lote 3: no fumigues hoy: lluvia desde las 3 p. m. · 2 avisos del cultivo");
         assertThat(AlertasDiariasService.resumenCorto(List.of(alerta), List.of(), List.of(), List.of(), hoy))
                 .isEqualTo("1 aviso del cultivo");

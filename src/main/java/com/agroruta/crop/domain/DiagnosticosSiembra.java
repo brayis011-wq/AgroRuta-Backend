@@ -8,5 +8,4 @@ import java.util.List;
  * @param disponible   false si el servidor no tiene configurado el análisis de fotos
  * @param restantesHoy cuántas fotos más puede analizar hoy quien consulta
  */
-public record DiagnosticosSiembra(boolean disponible, int restantesHoy, List<DiagnosticoPlaga> diagnosticos) {
-}
+public record DiagnosticosSiembra(boolean disponible, int restantesHoy, List<DiagnosticoPlaga> diagnosticos) {}

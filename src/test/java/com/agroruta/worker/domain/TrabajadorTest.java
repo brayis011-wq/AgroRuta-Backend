@@ -1,12 +1,11 @@
 package com.agroruta.worker.domain;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 class TrabajadorTest {
 
@@ -16,9 +15,8 @@ class TrabajadorTest {
     @BeforeEach
     void setUp() {
         cargo = new Cargo(1L, "Operario", "Trabajador de campo", new BigDecimal("50000"), true);
-        trabajador = new Trabajador(1L, "Juan", "Pérez", "123456789",
-                "3001234567", "Calle 1", LocalDate.now(),
-                TipoContrato.JORNAL, cargo);
+        trabajador = new Trabajador(
+                1L, "Juan", "Pérez", "123456789", "3001234567", "Calle 1", LocalDate.now(), TipoContrato.JORNAL, cargo);
     }
 
     @Test

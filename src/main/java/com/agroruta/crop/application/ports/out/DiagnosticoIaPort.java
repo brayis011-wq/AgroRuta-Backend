@@ -2,7 +2,6 @@ package com.agroruta.crop.application.ports.out;
 
 import com.agroruta.crop.domain.AnalisisFoto;
 import com.agroruta.crop.domain.ContextoCultivo;
-
 import java.util.Optional;
 
 /** Servicio que mira la foto de un cultivo y dice qué problema puede tener. */

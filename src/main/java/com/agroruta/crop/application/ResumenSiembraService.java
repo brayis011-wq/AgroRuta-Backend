@@ -1,16 +1,15 @@
 package com.agroruta.crop.application;
 
-import com.agroruta.shared.util.ZonaHoraria;
+import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.application.ports.out.LoteRepository;
 import com.agroruta.crop.application.ports.out.SiembraRepository;
-import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.domain.*;
-import org.springframework.stereotype.Service;
-
+import com.agroruta.shared.util.ZonaHoraria;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import org.springframework.stereotype.Service;
 
 /** Arma el resumen de una siembra: rendimiento, cosechas por semana, carencia y reentrada. */
 @Service
@@ -25,9 +24,12 @@ public class ResumenSiembraService {
     private final CosechaRepository cosechaRepository;
     private final FumigacionRepository fumigacionRepository;
 
-    public ResumenSiembraService(SiembraUseCase siembraUseCase, SiembraRepository siembraRepository,
-                                 LoteRepository loteRepository, CosechaRepository cosechaRepository,
-                                 FumigacionRepository fumigacionRepository) {
+    public ResumenSiembraService(
+            SiembraUseCase siembraUseCase,
+            SiembraRepository siembraRepository,
+            LoteRepository loteRepository,
+            CosechaRepository cosechaRepository,
+            FumigacionRepository fumigacionRepository) {
         this.siembraUseCase = siembraUseCase;
         this.siembraRepository = siembraRepository;
         this.loteRepository = loteRepository;
@@ -37,9 +39,11 @@ public class ResumenSiembraService {
 
     public ResumenSiembra resumen(Long siembraId) {
         Siembra siembra = siembraUseCase.buscarSiembraPorId(siembraId);
-        Double area = loteRepository.findById(siembra.getLoteId()).map(Lote::getArea).orElse(null);
+        Double area =
+                loteRepository.findById(siembra.getLoteId()).map(Lote::getArea).orElse(null);
         return CalculadoraResumenSiembra.calcular(
-                siembra, area,
+                siembra,
+                area,
                 cosechaRepository.findBySiembraId(siembraId),
                 fumigacionRepository.findBySiembraId(siembraId),
                 siembraRepository.findHistorialByLoteId(siembra.getLoteId()),

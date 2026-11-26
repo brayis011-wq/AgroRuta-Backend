@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-
 import java.time.LocalDate;
 
 public class TrabajadorRequest {
@@ -21,7 +20,8 @@ public class TrabajadorRequest {
 
     // Admite cédula, cédula de extranjería o pasaporte (letras, números, puntos y guiones).
     @NotBlank(message = "La cédula es obligatoria")
-    @Pattern(regexp = "^[0-9A-Za-z.\\-]{5,20}$",
+    @Pattern(
+            regexp = "^[0-9A-Za-z.\\-]{5,20}$",
             message = "La cédula debe tener entre 5 y 20 caracteres (números, letras, puntos o guiones)")
     public String cedula;
 

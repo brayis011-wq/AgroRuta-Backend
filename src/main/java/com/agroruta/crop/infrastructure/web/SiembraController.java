@@ -1,18 +1,17 @@
 package com.agroruta.crop.infrastructure.web;
 
-import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
-import jakarta.validation.Valid;
 import com.agroruta.crop.application.ports.in.SiembraUseCase;
 import com.agroruta.crop.infrastructure.web.dto.FinalizarSiembraRequest;
+import com.agroruta.crop.infrastructure.web.dto.Respuestas.*;
 import com.agroruta.crop.infrastructure.web.dto.SiembraRequest;
+import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/plantings")
@@ -27,10 +26,10 @@ public class SiembraController {
     @PostMapping
     @PreAuthorize("@ownership.lotePropio(#req.loteId, authentication)")
     public ResponseEntity<SiembraResponse> registrar(@Valid @RequestBody SiembraRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(SiembraResponse.from(siembraUseCase.registrarSiembra(
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(SiembraResponse.from(siembraUseCase.registrarSiembra(
                         req.fechaSiembra(), req.cantidadPlantas(),
-                        req.variedadId(), req.loteId()
-                )));
+                        req.variedadId(), req.loteId())));
     }
 
     @GetMapping("/{id}")
@@ -49,15 +48,17 @@ public class SiembraController {
     @GetMapping("/plot/{loteId}/history")
     @PreAuthorize("@ownership.lotePropio(#loteId, authentication)")
     public ResponseEntity<List<SiembraResponse>> historialPorLote(@PathVariable Long loteId) {
-        return ResponseEntity.ok(siembraUseCase.listarHistorialPorLote(loteId).stream().map(SiembraResponse::from).toList());
+        return ResponseEntity.ok(siembraUseCase.listarHistorialPorLote(loteId).stream()
+                .map(SiembraResponse::from)
+                .toList());
     }
 
     /** Corrige fecha, plantas o variedad (el lote del cuerpo se ignora) */
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<SiembraResponse> actualizar(@PathVariable Long id, @Valid @RequestBody SiembraRequest req) {
-        return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.actualizarSiembra(
-                id, req.fechaSiembra(), req.cantidadPlantas(), req.variedadId())));
+        return ResponseEntity.ok(SiembraResponse.from(
+                siembraUseCase.actualizarSiembra(id, req.fechaSiembra(), req.cantidadPlantas(), req.variedadId())));
     }
 
     /** ?fecha=2026-11-04 opcional (por defecto hoy) */
@@ -77,8 +78,8 @@ public class SiembraController {
 
     @PatchMapping("/{id}/finish")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
-    public ResponseEntity<SiembraResponse> finalizar(@PathVariable Long id,
-                                             @Valid @RequestBody(required = false) FinalizarSiembraRequest req) {
+    public ResponseEntity<SiembraResponse> finalizar(
+            @PathVariable Long id, @Valid @RequestBody(required = false) FinalizarSiembraRequest req) {
         LocalDate fecha = req != null ? req.fecha() : null;
         boolean descanso = req != null && req.dejarEnDescanso();
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.finalizarSiembra(id, fecha, descanso)));
@@ -87,14 +88,18 @@ public class SiembraController {
     @GetMapping("/{id}/stages")
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<List<EtapaSiembraResponse>> etapas(@PathVariable Long id) {
-        return ResponseEntity.ok(siembraUseCase.listarEtapas(id).stream().map(EtapaSiembraResponse::from).toList());
+        return ResponseEntity.ok(siembraUseCase.listarEtapas(id).stream()
+                .map(EtapaSiembraResponse::from)
+                .toList());
     }
 
     // Devuelve siembras de TODOS los usuarios: solo administrador
     @GetMapping("/status/{estado}")
     @PreAuthorize("hasRole('Administrador')")
     public ResponseEntity<List<SiembraResponse>> listarPorEstado(@PathVariable String estado) {
-        return ResponseEntity.ok(siembraUseCase.listarSiembrasPorEstado(estado).stream().map(SiembraResponse::from).toList());
+        return ResponseEntity.ok(siembraUseCase.listarSiembrasPorEstado(estado).stream()
+                .map(SiembraResponse::from)
+                .toList());
     }
 
     @DeleteMapping("/{id}")

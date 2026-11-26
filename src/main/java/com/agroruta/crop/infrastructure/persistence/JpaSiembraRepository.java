@@ -1,11 +1,11 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.EstadoCultivo;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Las consultas con "EliminadoEnIsNull" son las de uso diario (pantallas, alertas, calendario):
@@ -15,8 +15,11 @@ import java.util.Optional;
 public interface JpaSiembraRepository extends JpaRepository<SiembraEntity, Long> {
     Optional<SiembraEntity> findFirstByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(
             Long loteId, EstadoCultivo estadoCultivo);
+
     List<SiembraEntity> findByLoteIdAndEliminadoEnIsNullOrderByFechaSiembraDescIdDesc(Long loteId);
+
     boolean existsByLoteIdAndEstadoCultivoNotAndEliminadoEnIsNull(Long loteId, EstadoCultivo estadoCultivo);
+
     List<SiembraEntity> findByEstadoCultivoAndEliminadoEnIsNull(EstadoCultivo estadoCultivo);
 
     /** Todas las siembras del agricultor, también las eliminadas (para los reportes) */

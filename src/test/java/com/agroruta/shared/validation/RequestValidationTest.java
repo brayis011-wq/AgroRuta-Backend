@@ -1,5 +1,7 @@
 package com.agroruta.shared.validation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.agroruta.crop.infrastructure.web.dto.ActualizarCentroideFincaRequest;
 import com.agroruta.crop.infrastructure.web.dto.FincaRequest;
 import com.agroruta.crop.infrastructure.web.dto.SiembraRequest;
@@ -12,19 +14,16 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 /**
  * Verifica las reglas de Bean Validation de los DTOs de entrada.
@@ -49,9 +48,7 @@ class RequestValidationTest {
 
     private <T> Set<String> camposInvalidos(T dto) {
         Set<ConstraintViolation<T>> violations = validator.validate(dto);
-        return violations.stream()
-                .map(v -> v.getPropertyPath().toString())
-                .collect(Collectors.toSet());
+        return violations.stream().map(v -> v.getPropertyPath().toString()).collect(Collectors.toSet());
     }
 
     // ── Registro ─────────────────────────────────────────────────────────────
@@ -60,7 +57,8 @@ class RequestValidationTest {
     class Registro {
 
         private RegisterRequest valido() {
-            RegisterRequest r = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "password123", "Agricultor", null);
+            RegisterRequest r =
+                    new RegisterRequest("Juan Pérez", "juan@agroruta.com", "password123", "Agricultor", null);
             return r;
         }
 
@@ -94,7 +92,8 @@ class RequestValidationTest {
         @Test
         @DisplayName("rechaza contraseña de más de 72 caracteres")
         void rechazaPasswordLarga() {
-            RegisterRequest r = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "a".repeat(73), "Agricultor", null);
+            RegisterRequest r =
+                    new RegisterRequest("Juan Pérez", "juan@agroruta.com", "a".repeat(73), "Agricultor", null);
             assertThat(camposInvalidos(r)).containsExactly("password");
         }
 
@@ -149,8 +148,7 @@ class RequestValidationTest {
         @DisplayName("rechaza siembra con fecha futura y plantas en cero")
         void rechazaSiembraInvalida() {
             SiembraRequest r = new SiembraRequest(LocalDate.now().plusDays(5), 0, 1L, 3L);
-            assertThat(camposInvalidos(r))
-                    .containsExactlyInAnyOrder("fechaSiembra", "cantidadPlantas");
+            assertThat(camposInvalidos(r)).containsExactlyInAnyOrder("fechaSiembra", "cantidadPlantas");
         }
 
         @Test

@@ -25,8 +25,7 @@ public record ComprobantePago(
         LocalDate periodoFin,
         int jornales,
         String codigo,
-        String urlVerificacion
-) {
+        String urlVerificacion) {
     public static String numeroDe(Long pagoId) {
         return String.format("CP-%06d", pagoId);
     }

@@ -1,13 +1,12 @@
 package com.agroruta.shared.web;
 
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
-
 import java.sql.Timestamp;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 
 @Component
 public class EnviosRecibidosJdbc implements EnviosRecibidos {
@@ -24,8 +23,11 @@ public class EnviosRecibidosJdbc implements EnviosRecibidos {
     @Override
     public boolean anotar(Long usuarioId, String clave) {
         try {
-            jdbc.update("INSERT INTO envios_recibidos (usuario_id, clave, recibido_en) VALUES (?, ?, ?)",
-                    usuarioId, clave, Timestamp.from(Instant.now()));
+            jdbc.update(
+                    "INSERT INTO envios_recibidos (usuario_id, clave, recibido_en) VALUES (?, ?, ?)",
+                    usuarioId,
+                    clave,
+                    Timestamp.from(Instant.now()));
         } catch (DuplicateKeyException repetida) {
             return false;
         }
@@ -42,7 +44,8 @@ public class EnviosRecibidosJdbc implements EnviosRecibidos {
     private void limpiarDeVezEnCuando() {
         if (ThreadLocalRandom.current().nextInt(50) != 0) return;
         try {
-            jdbc.update("DELETE FROM envios_recibidos WHERE recibido_en < ?",
+            jdbc.update(
+                    "DELETE FROM envios_recibidos WHERE recibido_en < ?",
                     Timestamp.from(Instant.now().minus(VIGENCIA)));
         } catch (RuntimeException e) {
             // La limpieza es de mantenimiento: si falla no debe tumbar el registro que sí se guardó

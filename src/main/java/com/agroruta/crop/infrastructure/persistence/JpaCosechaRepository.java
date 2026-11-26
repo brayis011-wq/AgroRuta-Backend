@@ -1,13 +1,12 @@
 package com.agroruta.crop.infrastructure.persistence;
 
 import com.agroruta.crop.domain.CalidadCosecha;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface JpaCosechaRepository extends JpaRepository<CosechaEntity, Long> {
 

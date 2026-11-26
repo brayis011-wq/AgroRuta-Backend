@@ -11,18 +11,35 @@ import java.util.List;
  * @param elegido      true si el producto o el precio los fijó el agricultor
  * @param alternativas otros productos de SIPSA que pueden corresponder al cultivo
  */
-public record PrecioCultivo(String cultivo, String fuente, String producto, BigDecimal precioKg,
-                            BigDecimal minimoKg, BigDecimal maximoKg, LocalDate semana, Integer mercados,
-                            boolean elegido, List<PrecioReferencia> alternativas) {
+public record PrecioCultivo(
+        String cultivo,
+        String fuente,
+        String producto,
+        BigDecimal precioKg,
+        BigDecimal minimoKg,
+        BigDecimal maximoKg,
+        LocalDate semana,
+        Integer mercados,
+        boolean elegido,
+        List<PrecioReferencia> alternativas) {
 
     public static PrecioCultivo sinPrecio(String cultivo, List<PrecioReferencia> alternativas) {
         return new PrecioCultivo(cultivo, null, null, null, null, null, null, null, false, alternativas);
     }
 
-    public static PrecioCultivo deSipsa(String cultivo, PrecioReferencia p, boolean elegido,
-                                        List<PrecioReferencia> alternativas) {
-        return new PrecioCultivo(cultivo, "SIPSA", p.producto(), p.precioKg(), p.minimoKg(), p.maximoKg(),
-                p.semana(), p.mercados(), elegido, alternativas);
+    public static PrecioCultivo deSipsa(
+            String cultivo, PrecioReferencia p, boolean elegido, List<PrecioReferencia> alternativas) {
+        return new PrecioCultivo(
+                cultivo,
+                "SIPSA",
+                p.producto(),
+                p.precioKg(),
+                p.minimoKg(),
+                p.maximoKg(),
+                p.semana(),
+                p.mercados(),
+                elegido,
+                alternativas);
     }
 
     public static PrecioCultivo propio(String cultivo, BigDecimal precioKg, List<PrecioReferencia> alternativas) {

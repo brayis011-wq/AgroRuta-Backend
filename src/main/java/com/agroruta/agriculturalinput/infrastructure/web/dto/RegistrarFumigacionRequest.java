@@ -14,8 +14,7 @@ import java.time.LocalDate;
  * del catálogo es eliminado en el futuro.
  */
 public record RegistrarFumigacionRequest(
-        @NotNull(message = "La fecha es obligatoria")
-        LocalDate fecha,
+        @NotNull(message = "La fecha es obligatoria") LocalDate fecha,
 
         @NotBlank(message = "El producto es obligatorio")
         @Size(max = 150, message = "El nombre del producto no puede superar 150 caracteres")
@@ -30,9 +29,8 @@ public record RegistrarFumigacionRequest(
 
         @NotBlank(message = "La unidad de medida es obligatoria")
         @Pattern(
-        regexp  = "LITROS|ML|GRAMOS|KG",
-        message = "Unidad inválida. Valores permitidos: LITROS, ML, GRAMOS, KG"
-        )
+                regexp = "LITROS|ML|GRAMOS|KG",
+                message = "Unidad inválida. Valores permitidos: LITROS, ML, GRAMOS, KG")
         String unidadMedida,
 
         @NotNull(message = "El área aplicada es obligatoria")
@@ -42,6 +40,4 @@ public record RegistrarFumigacionRequest(
         String observaciones,
 
         @NotNull(message = "El ID de siembra es obligatorio")
-        Long siembraId
-) {
-}
+        Long siembraId) {}

@@ -1,5 +1,17 @@
 package com.agroruta.crop.application;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.agroruta.crop.application.ports.out.DiagnosticoIaPort;
 import com.agroruta.crop.application.ports.out.DiagnosticoPlagaRepository;
 import com.agroruta.crop.application.ports.out.SiembraRepository;
@@ -15,14 +27,6 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ExternalApiException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,18 +38,13 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import javax.imageio.ImageIO;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DiagnosticoPlagaServiceTest {
@@ -55,9 +54,14 @@ class DiagnosticoPlagaServiceTest {
     private static final Long SIEMBRA = 7L;
     private static final Long USUARIO = 3L;
 
-    @Mock private DiagnosticoPlagaRepository repositorio;
-    @Mock private DiagnosticoIaPort ia;
-    @Mock private SiembraRepository siembras;
+    @Mock
+    private DiagnosticoPlagaRepository repositorio;
+
+    @Mock
+    private DiagnosticoIaPort ia;
+
+    @Mock
+    private SiembraRepository siembras;
 
     private DiagnosticoPlagaService service;
 
@@ -74,11 +78,23 @@ class DiagnosticoPlagaServiceTest {
         siembra.setEstadoCultivo(EstadoCultivo.CRECIMIENTO);
         siembra.setFechaSiembra(HOY.minusDays(40));
         lenient().when(siembras.findById(SIEMBRA)).thenReturn(Optional.of(siembra));
-        lenient().when(repositorio.guardar(any(), any(), any(), any(), any(), any())).thenAnswer(inv -> {
-            AnalisisFoto a = inv.getArgument(5);
-            return new DiagnosticoPlaga(1L, inv.getArgument(0), inv.getArgument(2), inv.getArgument(4), a.problema(), a.tipo(),
-                    a.confianza(), a.sintomas(), a.recomendaciones(), a.otrasPosibilidades(), a.advertencia());
-        });
+        lenient()
+                .when(repositorio.guardar(any(), any(), any(), any(), any(), any()))
+                .thenAnswer(inv -> {
+                    AnalisisFoto a = inv.getArgument(5);
+                    return new DiagnosticoPlaga(
+                            1L,
+                            inv.getArgument(0),
+                            inv.getArgument(2),
+                            inv.getArgument(4),
+                            a.problema(),
+                            a.tipo(),
+                            a.confianza(),
+                            a.sintomas(),
+                            a.recomendaciones(),
+                            a.otrasPosibilidades(),
+                            a.advertencia());
+                });
     }
 
     private static byte[] foto(int ancho, int alto, String formato) {
@@ -94,16 +110,24 @@ class DiagnosticoPlagaServiceTest {
     }
 
     private static AnalisisFoto roya() {
-        return new AnalisisFoto(true, "Roya del café (Hemileia vastatrix)", TipoProblema.ENFERMEDAD, ConfianzaDiagnostico.MEDIA,
-                "Polvillo  anaranjado\nen el envés.", List.of("Revisa el resto del lote.", "  ", "Retira las hojas más afectadas."),
-                List.of("Mancha de hierro"), "", "gemini-3.8-flash");
+        return new AnalisisFoto(
+                true,
+                "Roya del café (Hemileia vastatrix)",
+                TipoProblema.ENFERMEDAD,
+                ConfianzaDiagnostico.MEDIA,
+                "Polvillo  anaranjado\nen el envés.",
+                List.of("Revisa el resto del lote.", "  ", "Retira las hojas más afectadas."),
+                List.of("Mancha de hierro"),
+                "",
+                "gemini-3.8-flash");
     }
 
     @Test
     void analizaLaFotoReducidaYGuardaElResultadoEnLaBitacora() throws IOException {
         when(ia.analizar(any(), any())).thenReturn(Optional.of(roya()));
 
-        DiagnosticoPlaga d = service.diagnosticar(SIEMBRA, USUARIO, foto(3000, 2000, "jpg"), "  Hojas con\n polvo naranja ");
+        DiagnosticoPlaga d =
+                service.diagnosticar(SIEMBRA, USUARIO, foto(3000, 2000, "jpg"), "  Hojas con\n polvo naranja ");
 
         ArgumentCaptor<byte[]> enviada = ArgumentCaptor.forClass(byte[].class);
         ArgumentCaptor<ContextoCultivo> contexto = ArgumentCaptor.forClass(ContextoCultivo.class);
@@ -111,12 +135,21 @@ class DiagnosticoPlagaServiceTest {
         BufferedImage analizada = ImageIO.read(new ByteArrayInputStream(enviada.getValue()));
         assertEquals(1280, analizada.getWidth());
         assertEquals(853, analizada.getHeight());
-        assertEquals(new ContextoCultivo("Café", "Castillo", "crecimiento", 40L, "Hojas con polvo naranja"), contexto.getValue());
+        assertEquals(
+                new ContextoCultivo("Café", "Castillo", "crecimiento", 40L, "Hojas con polvo naranja"),
+                contexto.getValue());
 
         ArgumentCaptor<byte[]> guardada = ArgumentCaptor.forClass(byte[].class);
-        verify(repositorio).guardar(eq(SIEMBRA), eq(USUARIO), eq(LocalDateTime.of(2026, 11, 11, 10, 0)), guardada.capture(),
-                eq("Hojas con polvo naranja"), any());
-        assertEquals(640, ImageIO.read(new ByteArrayInputStream(guardada.getValue())).getWidth());
+        verify(repositorio)
+                .guardar(
+                        eq(SIEMBRA),
+                        eq(USUARIO),
+                        eq(LocalDateTime.of(2026, 11, 11, 10, 0)),
+                        guardada.capture(),
+                        eq("Hojas con polvo naranja"),
+                        any());
+        assertEquals(
+                640, ImageIO.read(new ByteArrayInputStream(guardada.getValue())).getWidth());
         verify(repositorio).anotarUso(USUARIO, HOY);
 
         assertEquals("Roya del café (Hemileia vastatrix)", d.problema());
@@ -131,22 +164,25 @@ class DiagnosticoPlagaServiceTest {
         service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "png"), null);
         ArgumentCaptor<byte[]> enviada = ArgumentCaptor.forClass(byte[].class);
         verify(ia).analizar(enviada.capture(), any());
-        assertEquals(400, ImageIO.read(new ByteArrayInputStream(enviada.getValue())).getWidth());
+        assertEquals(
+                400, ImageIO.read(new ByteArrayInputStream(enviada.getValue())).getWidth());
     }
 
     @Test
     void sinClaveDelServicioNoSeIntenta() {
         when(ia.disponible()).thenReturn(false);
-        BusinessException e = assertThrows(BusinessException.class,
-                () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        BusinessException e = assertThrows(
+                BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         assertEquals(ErrorCode.INVALID_OPERATION, e.getErrorCode());
         verify(ia, never()).analizar(any(), any());
     }
 
     @Test
     void rechazaArchivosQueNoSonFotosSinGastarUnAnalisis() {
-        for (byte[] archivo : List.of(new byte[0], "no soy una foto".getBytes(), foto(50, 50, "png"), foto(400, 300, "bmp"))) {
-            BusinessException e = assertThrows(BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, archivo, null));
+        for (byte[] archivo :
+                List.of(new byte[0], "no soy una foto".getBytes(), foto(50, 50, "png"), foto(400, 300, "bmp"))) {
+            BusinessException e =
+                    assertThrows(BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, archivo, null));
             assertEquals(ErrorCode.INVALID_ARGUMENT, e.getErrorCode());
         }
         verify(ia, never()).analizar(any(), any());
@@ -158,20 +194,22 @@ class DiagnosticoPlagaServiceTest {
         Siembra eliminada = new Siembra();
         eliminada.setEliminadoEn(LocalDateTime.now());
         when(siembras.findById(SIEMBRA)).thenReturn(Optional.of(eliminada));
-        assertThrows(ResourceNotFoundException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
     }
 
     @Test
     void respetaElTopeDiarioDeLaPersonaYElGeneral() {
         when(repositorio.usoDe(USUARIO, HOY)).thenReturn(3);
-        BusinessException propio = assertThrows(BusinessException.class,
-                () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        BusinessException propio = assertThrows(
+                BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         assertEquals(ErrorCode.TOO_MANY_ATTEMPTS, propio.getErrorCode());
 
         when(repositorio.usoDe(USUARIO, HOY)).thenReturn(0);
         when(repositorio.usoTotal(HOY)).thenReturn(100);
-        BusinessException general = assertThrows(BusinessException.class,
-                () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        BusinessException general = assertThrows(
+                BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         assertEquals(ErrorCode.TOO_MANY_ATTEMPTS, general.getErrorCode());
         verify(ia, never()).analizar(any(), any());
     }
@@ -179,7 +217,8 @@ class DiagnosticoPlagaServiceTest {
     @Test
     void siElServicioFallaSeDevuelveElUso() {
         when(ia.analizar(any(), any())).thenThrow(new ExternalApiException("caído"));
-        assertThrows(ExternalApiException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        assertThrows(
+                ExternalApiException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         verify(repositorio).anotarUso(USUARIO, HOY);
         verify(repositorio).devolverUso(USUARIO, HOY);
         verify(repositorio, never()).guardar(any(), any(), any(), any(), any(), any());
@@ -187,10 +226,19 @@ class DiagnosticoPlagaServiceTest {
 
     @Test
     void unaFotoSinPlantaNoSeGuardaPeroCuenta() {
-        when(ia.analizar(any(), any())).thenReturn(Optional.of(new AnalisisFoto(false, "Se ve una herramienta, no una planta.",
-                null, null, null, null, null, null, "gemini-3.8-flash")));
-        BusinessException e = assertThrows(BusinessException.class,
-                () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        when(ia.analizar(any(), any()))
+                .thenReturn(Optional.of(new AnalisisFoto(
+                        false,
+                        "Se ve una herramienta, no una planta.",
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "gemini-3.8-flash")));
+        BusinessException e = assertThrows(
+                BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         assertEquals(ErrorCode.INVALID_OPERATION, e.getErrorCode());
         assertTrue(e.getMessage().contains("Se ve una herramienta"));
         verify(repositorio, never()).guardar(any(), any(), any(), any(), any(), any());
@@ -200,15 +248,16 @@ class DiagnosticoPlagaServiceTest {
     @Test
     void siElModeloDeclinaLoDiceSinGuardar() {
         when(ia.analizar(any(), any())).thenReturn(Optional.empty());
-        BusinessException e = assertThrows(BusinessException.class,
-                () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
+        BusinessException e = assertThrows(
+                BusinessException.class, () -> service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null));
         assertEquals(ErrorCode.INVALID_OPERATION, e.getErrorCode());
         verify(repositorio, never()).guardar(any(), any(), any(), any(), any(), any());
     }
 
     @Test
     void unaRespuestaIncompletaSeGuardaComoIndeterminada() {
-        when(ia.analizar(any(), any())).thenReturn(Optional.of(new AnalisisFoto(true, " ", null, null, null, null, null, null, null)));
+        when(ia.analizar(any(), any()))
+                .thenReturn(Optional.of(new AnalisisFoto(true, " ", null, null, null, null, null, null, null)));
         DiagnosticoPlaga d = service.diagnosticar(SIEMBRA, USUARIO, foto(400, 300, "jpg"), null);
         assertEquals("No se pudo determinar", d.problema());
         assertEquals(TipoProblema.INDETERMINADO, d.tipo());

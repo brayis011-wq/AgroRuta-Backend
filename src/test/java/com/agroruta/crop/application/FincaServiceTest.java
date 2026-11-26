@@ -1,23 +1,22 @@
 package com.agroruta.crop.application;
 
-import com.agroruta.crop.domain.Finca;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import com.agroruta.crop.application.ports.out.FincaRepository;
-import com.agroruta.crop.domain.Lote;
 import com.agroruta.crop.application.ports.out.LoteRepository;
+import com.agroruta.crop.domain.Finca;
+import com.agroruta.crop.domain.Lote;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FincaServiceTest {
@@ -36,7 +35,8 @@ class FincaServiceTest {
     @Test
     void deberiaRegistrarFincaCorrectamente() {
         Finca finca = new Finca(1L, "Finca El Paraíso", "Cundinamarca", 50.0, agricultorId);
-        when(fincaRepository.existsByNombreAndAgricultorId("Finca El Paraíso", agricultorId)).thenReturn(false);
+        when(fincaRepository.existsByNombreAndAgricultorId("Finca El Paraíso", agricultorId))
+                .thenReturn(false);
         when(fincaRepository.save(any())).thenReturn(finca);
 
         Finca resultado = service.registrarFinca("Finca El Paraíso", "Cundinamarca", 50.0, agricultorId);
@@ -48,10 +48,12 @@ class FincaServiceTest {
 
     @Test
     void deberiaLanzarExcepcionSiFincaYaExiste() {
-        when(fincaRepository.existsByNombreAndAgricultorId("Finca El Paraíso", agricultorId)).thenReturn(true);
+        when(fincaRepository.existsByNombreAndAgricultorId("Finca El Paraíso", agricultorId))
+                .thenReturn(true);
 
-        assertThrows(BusinessException.class, () ->
-                service.registrarFinca("Finca El Paraíso", "Cundinamarca", 50.0, agricultorId));
+        assertThrows(
+                BusinessException.class,
+                () -> service.registrarFinca("Finca El Paraíso", "Cundinamarca", 50.0, agricultorId));
     }
 
     @Test
@@ -69,16 +71,14 @@ class FincaServiceTest {
     void deberiaLanzarExcepcionSiFincaNoExiste() {
         when(fincaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.buscarFincaPorId(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarFincaPorId(99L));
     }
 
     @Test
     void deberiaListarFincasPorAgricultor() {
         List<Finca> fincas = List.of(
                 new Finca(1L, "Finca A", "Loc A", 10.0, agricultorId),
-                new Finca(2L, "Finca B", "Loc B", 20.0, agricultorId)
-        );
+                new Finca(2L, "Finca B", "Loc B", 20.0, agricultorId));
         when(fincaRepository.findByAgricultorId(agricultorId)).thenReturn(fincas);
 
         List<Finca> resultado = service.listarFincasPorAgricultor(agricultorId);
@@ -124,8 +124,7 @@ class FincaServiceTest {
     void deberiaLanzarExcepcionAlEliminarFincaInexistente() {
         when(fincaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class, () ->
-                service.eliminarFinca(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.eliminarFinca(99L));
     }
 
     @Test
