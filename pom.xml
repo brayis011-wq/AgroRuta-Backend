@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.3</version>
+		<version>4.0.10</version>
 		<relativePath/>
 	</parent>
 	<groupId>com.agroruta</groupId>
@@ -68,20 +68,17 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- FLYWAY
-		     Fijo en 10.10 a propósito: es la versión con la que se probaron las migraciones contra
-		     TiDB (FlywayConfig arma el historial a mano porque TiDB no soporta CREATE TABLE ... SELECT).
-		     Subir de versión mayor (11+) hay que probarlo antes en una rama de TiDB. -->
+		<!-- FLYWAY: la versión la pone Spring Boot. FlywayConfig arma el historial a mano porque TiDB
+		     no soporta CREATE TABLE ... SELECT. Antes de cambiar de versión mayor, ensayar las migraciones
+		     contra TiDB local (imagen pingcap/tidb, la misma versión de TiDB Cloud). -->
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
-			<version>10.10.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-mysql</artifactId>
-			<version>10.10.0</version>
 		</dependency>
 
 		<!-- DEVTOOLS -->
@@ -120,18 +117,18 @@
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
-			<version>0.12.3</version>
+			<version>0.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-impl</artifactId>
-			<version>0.12.3</version>
+			<version>0.13.0</version>
 			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
-			<version>0.12.3</version>
+			<version>0.13.0</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -140,7 +137,7 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.8.6</version>
+			<version>3.0.3</version>
 		</dependency>
 
 
