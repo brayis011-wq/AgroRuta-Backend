@@ -52,12 +52,7 @@ class AgriculturalInputControllerTest {
         );
         inputBase.setId(1L);
 
-        requestBase = new AgriculturalInputRequest();
-        requestBase.setNombre("Glifosato");
-        requestBase.setTipo("HERBICIDA");
-        requestBase.setUnidadSugerida("LITROS");
-        requestBase.setDosisSugerida(2.5);
-        requestBase.setReentradaHoras(48);
+        requestBase = new AgriculturalInputRequest("Glifosato", "HERBICIDA", "LITROS", 2.5, 48, null);
     }
 
     // ══════════════════════════════════════════════════════════════════════

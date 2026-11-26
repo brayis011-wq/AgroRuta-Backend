@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.crop.application.ports.out.LluviaRepository;
 import com.agroruta.crop.domain.Lluvia;
 import com.agroruta.shared.exception.DatoInvalidoException;
@@ -17,7 +18,7 @@ import java.time.temporal.ChronoUnit;
 @Transactional
 public class LluviaService {
 
-    static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
     static final BigDecimal MAX_MM = new BigDecimal("500");
     static final long MAX_DIAS = 400;
 

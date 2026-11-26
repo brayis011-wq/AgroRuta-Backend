@@ -17,10 +17,7 @@ class CorsConfigTest {
     private final CorsConfig config = crearConfig();
 
     private static CorsConfig crearConfig() {
-        CorsConfig c = new CorsConfig();
-        ReflectionTestUtils.setField(c, "allowedOrigins",
-                "http://localhost:4200,http://localhost,http://localhost:80");
-        return c;
+        return new CorsConfig("http://localhost:4200,http://localhost,http://localhost:80");
     }
 
     @Test

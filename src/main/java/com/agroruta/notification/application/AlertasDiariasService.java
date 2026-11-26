@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,22 +53,14 @@ public class AlertasDiariasService implements AlertasDiariasUseCase {
     /** Último día que se mandó, para que un reintento de la tarea no duplique correos */
     private final AtomicReference<LocalDate> ultimoEnvio = new AtomicReference<>();
 
-    @Autowired
-    public AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
-                                 AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
-                                 MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo,
-                                 com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {
-        this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo,
-                Clock.system(ZoneId.of("America/Bogota")), consejosClima);
-    }
-
     AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                           AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
                           MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj) {
         this(usuarios, preferencias, alertasCultivo, fincas, clima, mensajes, correo, stockBajo, reloj, null);
     }
 
-    AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
+    @Autowired
+    public AlertasDiariasService(UsuarioRepository usuarios, PreferenciasCorreoUseCase preferencias,
                           AlertasCultivoUseCase alertasCultivo, FincaRepository fincas, WeatherUseCase clima,
                           MensajesCorreo mensajes, CorreoPort correo, StockBajoUseCase stockBajo, Clock reloj,
                           com.agroruta.notification.application.ports.in.ConsejosClimaUseCase consejosClima) {

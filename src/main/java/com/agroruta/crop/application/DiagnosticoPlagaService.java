@@ -15,14 +15,12 @@ import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ExternalApiException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Locale;
@@ -45,15 +43,9 @@ public class DiagnosticoPlagaService implements DiagnosticoPlagaUseCase {
     private final int maxTotalDia;
     private final Clock reloj;
 
-    @Autowired
     public DiagnosticoPlagaService(DiagnosticoPlagaRepository repositorio, DiagnosticoIaPort ia, SiembraRepository siembras,
                                    @Value("${app.diagnostico.max-por-dia:15}") int maxPorDia,
-                                   @Value("${app.diagnostico.max-total-dia:300}") int maxTotalDia) {
-        this(repositorio, ia, siembras, maxPorDia, maxTotalDia, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    DiagnosticoPlagaService(DiagnosticoPlagaRepository repositorio, DiagnosticoIaPort ia, SiembraRepository siembras,
-                            int maxPorDia, int maxTotalDia, Clock reloj) {
+                                   @Value("${app.diagnostico.max-total-dia:300}") int maxTotalDia, Clock reloj) {
         this.repositorio = repositorio;
         this.ia = ia;
         this.siembras = siembras;

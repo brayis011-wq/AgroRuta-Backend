@@ -2,7 +2,7 @@ package com.agroruta.user.infrastructure.security;
 
 import com.agroruta.shared.security.JwtService;
 import com.agroruta.user.application.ports.out.TokenPort;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.agroruta.user.domain.Usuario;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -15,17 +15,7 @@ public class JwtTokenAdapter implements TokenPort {
     }
 
     @Override
-    public String generateToken(UserDetails userDetails) {
-        return jwtService.generateToken(userDetails);
-    }
-
-    @Override
-    public String extractUsername(String token) {
-        return jwtService.extractUsername(token);
-    }
-
-    @Override
-    public boolean isTokenValid(String token, UserDetails userDetails) {
-        return jwtService.isTokenValid(token, userDetails);
+    public String generarToken(Usuario usuario) {
+        return jwtService.generateToken(new CustomUserDetails(usuario));
     }
 }

@@ -16,13 +16,11 @@ import com.agroruta.weather.domain.VentanaFumigacion.Estado;
 import com.agroruta.weather.domain.VentanaFumigacion.Resultado;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -38,12 +36,7 @@ public class ConsejosClimaService implements ConsejosClimaUseCase {
     private final WeatherUseCase clima;
     private final Clock reloj;
 
-    @Autowired
-    public ConsejosClimaService(FincaRepository fincas, AlertasCultivoUseCase alertasCultivo, WeatherUseCase clima) {
-        this(fincas, alertasCultivo, clima, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    ConsejosClimaService(FincaRepository fincas, AlertasCultivoUseCase alertasCultivo, WeatherUseCase clima, Clock reloj) {
+    public ConsejosClimaService(FincaRepository fincas, AlertasCultivoUseCase alertasCultivo, WeatherUseCase clima, Clock reloj) {
         this.fincas = fincas;
         this.alertasCultivo = alertasCultivo;
         this.clima = clima;

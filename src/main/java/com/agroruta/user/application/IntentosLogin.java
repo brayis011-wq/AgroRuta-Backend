@@ -2,7 +2,6 @@ package com.agroruta.user.application;
 
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.time.Clock;
@@ -27,12 +26,7 @@ public class IntentosLogin {
     private final Map<String, Registro> registros = new ConcurrentHashMap<>();
     private final Clock reloj;
 
-    @Autowired
-    public IntentosLogin() {
-        this(Clock.systemUTC());
-    }
-
-    IntentosLogin(Clock reloj) {
+    public IntentosLogin(Clock reloj) {
         this.reloj = reloj;
     }
 

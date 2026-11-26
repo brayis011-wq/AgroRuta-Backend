@@ -1,5 +1,6 @@
 package com.agroruta.report.infrastructure.pdf;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.worker.application.ports.out.ComprobantePdfPort;
 import com.agroruta.worker.domain.ComprobantePago;
 import com.agroruta.worker.domain.MetodoPago;
@@ -26,7 +27,7 @@ import static com.agroruta.report.infrastructure.pdf.PdfLienzo.*;
 @Component
 public class ComprobantePagoPdf implements ComprobantePdfPort {
 
-    private static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    private static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
     private static final float LADO_QR = 118;
 
     @Override

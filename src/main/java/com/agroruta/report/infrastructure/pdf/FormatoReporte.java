@@ -71,7 +71,7 @@ final class FormatoReporte {
             YearMonth m = YearMonth.parse(mes);
             String base = MESES[m.getMonthValue() - 1];
             return conAnio ? base + " " + String.valueOf(m.getYear()).substring(2) : base;
-        } catch (Exception e) {
+        } catch (java.time.format.DateTimeParseException | NullPointerException e) {
             return mes;
         }
     }

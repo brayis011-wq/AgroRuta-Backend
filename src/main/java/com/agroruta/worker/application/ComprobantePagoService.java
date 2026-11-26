@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -127,7 +128,7 @@ public class ComprobantePagoService implements ComprobantePagoUseCase {
             mac.init(new SecretKeySpec(clave, "HmacSHA256"));
             return mac.doFinal(datos.getBytes(StandardCharsets.UTF_8));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("No se pudo firmar el comprobante", e);
+            throw new FalloInternoException("No se pudo firmar el comprobante", e);
         }
     }
 }

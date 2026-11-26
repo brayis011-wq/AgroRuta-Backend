@@ -1,6 +1,5 @@
 package com.agroruta.shared.maintenance;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -8,7 +7,6 @@ import java.sql.Date;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -41,12 +39,7 @@ public class LimpiezaDatosVencidos {
     private final JdbcTemplate jdbc;
     private final Clock reloj;
 
-    @Autowired
-    public LimpiezaDatosVencidos(JdbcTemplate jdbc) {
-        this(jdbc, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    LimpiezaDatosVencidos(JdbcTemplate jdbc, Clock reloj) {
+    public LimpiezaDatosVencidos(JdbcTemplate jdbc, Clock reloj) {
         this.jdbc = jdbc;
         this.reloj = reloj;
     }

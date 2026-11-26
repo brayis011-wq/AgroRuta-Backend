@@ -26,14 +26,14 @@ public class FumigacionController {
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
     public ResponseEntity<FumigacionResponse> registrar(@Valid @RequestBody FumigacionRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(FumigacionResponse.from(fumigacionUseCase.registrarFumigacion(
-                        req.getFecha(),
-                        req.getProducto(),
-                        req.getAgriculturalInputId(), // nullable
-                        req.getDosis(),
-                        req.getUnidadMedida(),
-                        req.getAreaAplicada(),
-                        req.getObservaciones(),
-                        req.getSiembraId(),
+                        req.fecha(),
+                        req.producto(),
+                        req.agriculturalInputId(), // nullable
+                        req.dosis(),
+                        req.unidadMedida(),
+                        req.areaAplicada(),
+                        req.observaciones(),
+                        req.siembraId(),
                         req.restricciones()
                 )));
     }
@@ -49,8 +49,8 @@ public class FumigacionController {
     @PreAuthorize("@ownership.fumigacionPropia(#id, authentication)")
     public ResponseEntity<FumigacionResponse> actualizar(@PathVariable Long id, @Valid @RequestBody FumigacionRequest req) {
         return ResponseEntity.ok(FumigacionResponse.from(fumigacionUseCase.actualizarFumigacion(
-                id, req.getFecha(), req.getProducto(), req.getAgriculturalInputId(), req.getDosis(),
-                req.getUnidadMedida(), req.getAreaAplicada(), req.getObservaciones(),
+                id, req.fecha(), req.producto(), req.agriculturalInputId(), req.dosis(),
+                req.unidadMedida(), req.areaAplicada(), req.observaciones(),
                 req.restricciones())));
     }
 

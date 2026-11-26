@@ -3,6 +3,7 @@ package com.agroruta.user.infrastructure.web;
 import com.agroruta.shared.security.CookieSesion;
 import com.agroruta.user.application.AuthService;
 import com.agroruta.user.application.ports.in.SesionUseCase;
+import com.agroruta.user.application.ports.in.SesionIniciada;
 import com.agroruta.user.infrastructure.web.dto.AuthResponse;
 import com.agroruta.user.infrastructure.web.dto.LoginRequest;
 import com.agroruta.user.infrastructure.web.dto.ReenviarVerificacionRequest;
@@ -36,7 +37,7 @@ public class AuthController {
     }
 
     /** Cookie de "dispositivo recordado" (no pedir el código de dos pasos por 30 días) */
-    private CookieDispositivo cookieDispositivo = new CookieDispositivo(true);
+    private CookieDispositivo cookieDispositivo = new CookieDispositivo(new com.agroruta.shared.config.SesionProperties(30, true));
 
     @org.springframework.beans.factory.annotation.Autowired
     public void setCookieDispositivo(CookieDispositivo cookieDispositivo) {
@@ -75,21 +76,21 @@ public class AuthController {
     /** No abre sesión: después de registrarse la persona entra por el login (o confirma su correo). */
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> registro(@Valid @RequestBody RegisterRequest request) {
-        return ResponseEntity.ok(authService.registrar(request));
+        return ResponseEntity.ok(AuthResponse.de(authService.registrar(request.aDatos())));
     }
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
                                               @CookieValue(name = CookieDispositivo.NOMBRE, required = false) String dispositivo,
                                               HttpServletResponse response) {
-        AuthResponse auth = authService.login(request, dispositivo);
+        SesionIniciada auth = authService.login(request.aDatos(), dispositivo);
         // Entró escribiendo el código: se recuerda este dispositivo, salvo que haya desmarcado la casilla
-        boolean conCodigo = request.getCodigo() != null && !request.getCodigo().isBlank();
-        if (auth.getToken() != null && conCodigo) {
-            if (Boolean.FALSE.equals(request.getRecordarDispositivo())) {
+        boolean conCodigo = request.codigo() != null && !request.codigo().isBlank();
+        if (auth.token() != null && conCodigo) {
+            if (Boolean.FALSE.equals(request.recordarDispositivo())) {
                 cookieDispositivo.borrar(response);
             } else {
-                authService.recordarDispositivo(auth.getId()).ifPresent(m -> cookieDispositivo.escribir(response, m));
+                authService.recordarDispositivo(auth.id()).ifPresent(m -> cookieDispositivo.escribir(response, m));
             }
         }
         return conSesion(auth, response);
@@ -114,7 +115,7 @@ public class AuthController {
             throw e;
         }
         cookie.escribir(response, r.token());
-        return ResponseEntity.ok(authService.respuestaDeSesion(r.usuario()));
+        return ResponseEntity.ok(AuthResponse.de(authService.respuestaDeSesion(r.usuario())));
     }
 
     @PostMapping("/logout")
@@ -134,10 +135,10 @@ public class AuthController {
     }
 
     /** Si la respuesta trae token de acceso (la cuenta ya puede entrar), abre la sesión renovable. */
-    private ResponseEntity<AuthResponse> conSesion(AuthResponse auth, HttpServletResponse response) {
-        if (auth.getToken() != null) {
-            cookie.escribir(response, sesiones.abrir(auth.getId()));
+    private ResponseEntity<AuthResponse> conSesion(SesionIniciada auth, HttpServletResponse response) {
+        if (auth.token() != null) {
+            cookie.escribir(response, sesiones.abrir(auth.id()));
         }
-        return ResponseEntity.ok(auth);
+        return ResponseEntity.ok(AuthResponse.de(auth));
     }
 }

@@ -1,5 +1,6 @@
 package com.agroruta.user.application;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.evento.ContrasenaCambiada;
 import com.agroruta.shared.exception.SesionInvalidaException;
 import com.agroruta.user.application.ports.in.SesionUseCase;
@@ -10,7 +11,7 @@ import com.agroruta.user.domain.Usuario;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.agroruta.shared.config.SesionProperties;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -46,8 +47,8 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
     @Autowired
     public SesionService(SesionRepository sesiones, UsuarioRepository usuarios,
                          com.agroruta.user.application.ports.out.DispositivoPort dispositivo,
-                         @Value("${app.sesion.duracion-dias:30}") long duracionDias) {
-        this(sesiones, usuarios, Duration.ofDays(duracionDias), Clock.systemDefaultZone(), dispositivo);
+                         SesionProperties propiedades, Clock reloj) {
+        this(sesiones, usuarios, propiedades.duracion(), reloj, dispositivo);
     }
 
     SesionService(SesionRepository sesiones, UsuarioRepository usuarios, Duration duracion, Clock reloj) {
@@ -212,7 +213,7 @@ public class SesionService implements SesionUseCase, com.agroruta.user.applicati
             byte[] d = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(d);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 }

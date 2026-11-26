@@ -28,8 +28,8 @@ public class SiembraController {
     @PreAuthorize("@ownership.lotePropio(#req.loteId, authentication)")
     public ResponseEntity<SiembraResponse> registrar(@Valid @RequestBody SiembraRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(SiembraResponse.from(siembraUseCase.registrarSiembra(
-                        req.getFechaSiembra(), req.getCantidadPlantas(),
-                        req.getVariedadId(), req.getLoteId()
+                        req.fechaSiembra(), req.cantidadPlantas(),
+                        req.variedadId(), req.loteId()
                 )));
     }
 
@@ -57,7 +57,7 @@ public class SiembraController {
     @PreAuthorize("@ownership.siembraPropia(#id, authentication)")
     public ResponseEntity<SiembraResponse> actualizar(@PathVariable Long id, @Valid @RequestBody SiembraRequest req) {
         return ResponseEntity.ok(SiembraResponse.from(siembraUseCase.actualizarSiembra(
-                id, req.getFechaSiembra(), req.getCantidadPlantas(), req.getVariedadId())));
+                id, req.fechaSiembra(), req.cantidadPlantas(), req.variedadId())));
     }
 
     /** ?fecha=2026-11-04 opcional (por defecto hoy) */

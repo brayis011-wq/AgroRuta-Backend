@@ -1,5 +1,6 @@
 package com.agroruta.worker.application;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.shared.exception.EstadoInvalidoException;
 import com.agroruta.worker.domain.ResumenJornales;
 import com.agroruta.shared.util.Pagina;
@@ -31,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class JornalService implements JornalUseCase {
-    private static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    private static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
 
     private final JornalRepository jornalRepository;
     private final TrabajadorRepository trabajadorRepository;

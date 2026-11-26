@@ -9,7 +9,6 @@ import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,15 +40,9 @@ public class VerificacionCorreoService implements VerificacionCorreoPort {
     private final Clock reloj;
     private final SecureRandom azar = new SecureRandom();
 
-    @Autowired
     public VerificacionCorreoService(@Value("${correo.verificar-registro:true}") boolean activa,
                                      UsuarioRepository usuarios, VerificacionCorreoRepository verificaciones,
-                                     MensajesCorreo mensajes, EnvioCorreo envio) {
-        this(activa, usuarios, verificaciones, mensajes, envio, Clock.system(RecuperarContrasenaService.ZONA));
-    }
-
-    VerificacionCorreoService(boolean activa, UsuarioRepository usuarios, VerificacionCorreoRepository verificaciones,
-                              MensajesCorreo mensajes, EnvioCorreo envio, Clock reloj) {
+                                     MensajesCorreo mensajes, EnvioCorreo envio, Clock reloj) {
         this.activa = activa;
         this.usuarios = usuarios;
         this.verificaciones = verificaciones;

@@ -1,5 +1,7 @@
 package com.agroruta.notification.application;
 
+import com.agroruta.shared.exception.FalloInternoException;
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.notification.application.ports.in.RecuperarContrasenaUseCase;
 import com.agroruta.notification.domain.RestablecimientoContrasena;
 import com.agroruta.notification.application.ports.out.RestablecimientoRepository;
@@ -11,7 +13,6 @@ import com.agroruta.user.domain.Usuario;
 import com.agroruta.user.application.ports.out.UsuarioRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class RecuperarContrasenaService implements RecuperarContrasenaUseCase {
     static final Duration VIGENCIA = Duration.ofMinutes(30);
     /** Máximo de enlaces por cuenta en una hora */
     static final int MAX_POR_HORA = 3;
-    static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
 
     private final UsuarioRepository usuarioRepository;
     private final RestablecimientoRepository restablecimientos;
@@ -48,15 +49,7 @@ public class RecuperarContrasenaService implements RecuperarContrasenaUseCase {
     private final Clock reloj;
     private final SecureRandom azar = new SecureRandom();
 
-    @Autowired
     public RecuperarContrasenaService(UsuarioRepository usuarioRepository, RestablecimientoRepository restablecimientos,
-                                      PasswordEncoder passwordEncoder, MensajesCorreo mensajes, EnvioCorreo envio,
-                                      IntentosLogin intentosLogin, ApplicationEventPublisher eventos) {
-        this(usuarioRepository, restablecimientos, passwordEncoder, mensajes, envio, intentosLogin, eventos,
-                Clock.system(ZONA));
-    }
-
-    RecuperarContrasenaService(UsuarioRepository usuarioRepository, RestablecimientoRepository restablecimientos,
                                PasswordEncoder passwordEncoder, MensajesCorreo mensajes, EnvioCorreo envio,
                                IntentosLogin intentosLogin, ApplicationEventPublisher eventos, Clock reloj) {
         this.usuarioRepository = usuarioRepository;
@@ -125,7 +118,7 @@ public class RecuperarContrasenaService implements RecuperarContrasenaUseCase {
             byte[] d = MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(d);
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 }

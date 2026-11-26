@@ -69,9 +69,9 @@ public class ProfileController {
 
         Perfil actualizado = actualizarPerfilUseCase.actualizar(
                 perfil.getId(),
-                request.getNombre(),
-                request.getTelefono(),
-                request.getFotoPerfil()
+                request.nombre(),
+                request.telefono(),
+                request.fotoPerfil()
         );
 
         return ResponseEntity.ok(ProfileResponse.from(actualizado));
@@ -93,8 +93,8 @@ public class ProfileController {
 
         cambiarPasswordUseCase.cambiarPassword(
                 perfil.getId(),
-                request.getPasswordActual(),
-                request.getNuevaPassword()
+                request.passwordActual(),
+                request.nuevaPassword()
         );
 
         cookie.escribir(response, sesiones.abrir(perfil.getId()));

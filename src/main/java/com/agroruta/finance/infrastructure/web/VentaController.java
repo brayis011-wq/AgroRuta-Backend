@@ -1,5 +1,6 @@
 package com.agroruta.finance.infrastructure.web;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.finance.application.ports.in.VentasUseCase;
 import com.agroruta.finance.domain.ResumenVentas;
 import com.agroruta.finance.domain.Venta;
@@ -29,7 +30,7 @@ import java.util.List;
 @RequestMapping("/api/sales")
 public class VentaController {
 
-    private static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    private static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
 
     private final VentasUseCase ventas;
 

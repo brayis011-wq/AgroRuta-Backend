@@ -28,13 +28,12 @@ class OpenWeatherAdapterTest {
     @Mock
     private RestTemplate restTemplate;
 
-    @InjectMocks
     private OpenWeatherAdapter adapter;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(adapter, "apiKey",  "test-api-key");
-        ReflectionTestUtils.setField(adapter, "baseUrl", "https://api.openweathermap.org/data/2.5");
+        adapter = new OpenWeatherAdapter(restTemplate,
+                new ClimaProperties("test-api-key", "https://api.openweathermap.org/data/2.5"));
     }
 
     // Construye un Map que imita la respuesta real de OpenWeatherMap
@@ -69,14 +68,14 @@ class OpenWeatherAdapterTest {
             Weather resultado = adapter.fetchWeatherByCity("Bogotá");
 
             assertNotNull(resultado);
-            assertEquals("Bogotá",                resultado.getCity());
-            assertEquals("CO",                    resultado.getCountry());
-            assertEquals(18.5,                    resultado.getTemperature());
-            assertEquals(17.0,                    resultado.getFeelsLike());
-            assertEquals(72,                      resultado.getHumidity());
-            assertEquals(3.2,                     resultado.getWindSpeed());
-            assertEquals("parcialmente nublado",  resultado.getDescription());
-            assertEquals("04d",                   resultado.getIcon());
+            assertEquals("Bogotá",                resultado.city());
+            assertEquals("CO",                    resultado.country());
+            assertEquals(18.5,                    resultado.temperature());
+            assertEquals(17.0,                    resultado.feelsLike());
+            assertEquals(72,                      resultado.humidity());
+            assertEquals(3.2,                     resultado.windSpeed());
+            assertEquals("parcialmente nublado",  resultado.description());
+            assertEquals("04d",                   resultado.icon());
         }
 
         @Test
@@ -144,10 +143,10 @@ class OpenWeatherAdapterTest {
             Weather resultado = adapter.fetchWeatherByCoordinates(4.711, -74.0721);
 
             assertNotNull(resultado);
-            assertEquals("Bogotá", resultado.getCity());
-            assertEquals("CO",     resultado.getCountry());
-            assertEquals(18.5,     resultado.getTemperature());
-            assertEquals(72,       resultado.getHumidity());
+            assertEquals("Bogotá", resultado.city());
+            assertEquals("CO",     resultado.country());
+            assertEquals(18.5,     resultado.temperature());
+            assertEquals(72,       resultado.humidity());
         }
 
         @Test

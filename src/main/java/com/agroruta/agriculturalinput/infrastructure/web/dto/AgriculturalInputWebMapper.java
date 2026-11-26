@@ -29,23 +29,23 @@ public class AgriculturalInputWebMapper {
 
     public static CreateAgriculturalInputCommand toCreateCommand(AgriculturalInputRequest request) {
         return new CreateAgriculturalInputCommand(
-                request.getNombre(),
-                request.getTipo(),
-                request.getUnidadSugerida(),
-                request.getDosisSugerida(),
-                request.getReentradaHoras(),
-                request.getDiasCarencia()
+                request.nombre(),
+                request.tipo(),
+                request.unidadSugerida(),
+                request.dosisSugerida(),
+                request.reentradaHoras(),
+                request.diasCarencia()
         );
     }
 
     public static UpdateAgriculturalInputCommand toUpdateCommand(AgriculturalInputRequest request) {
         return new UpdateAgriculturalInputCommand(
-                request.getNombre(),
-                request.getTipo(),
-                request.getUnidadSugerida(),
-                request.getDosisSugerida(),
-                request.getReentradaHoras(),
-                request.getDiasCarencia()
+                request.nombre(),
+                request.tipo(),
+                request.unidadSugerida(),
+                request.dosisSugerida(),
+                request.reentradaHoras(),
+                request.diasCarencia()
         );
     }
 }

@@ -1,5 +1,6 @@
 package com.agroruta.report.infrastructure.pdf;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.report.domain.CostosTemporada;
 import com.agroruta.report.domain.CropDetail;
 import com.agroruta.report.domain.CropReport;
@@ -67,7 +68,7 @@ public class PdfReportService {
             nomina(pdf, r);
             return pdf.terminar();
         } catch (IOException e) {
-            throw new IllegalStateException("Error generando PDF de nómina", e);
+            throw new FalloInternoException("Error generando PDF de nómina", e);
         }
     }
 
@@ -138,7 +139,7 @@ public class PdfReportService {
             cultivos(pdf, r);
             return pdf.terminar();
         } catch (IOException e) {
-            throw new IllegalStateException("Error generando PDF de cultivos", e);
+            throw new FalloInternoException("Error generando PDF de cultivos", e);
         }
     }
 
@@ -210,7 +211,7 @@ public class PdfReportService {
             costos(pdf, r);
             return pdf.terminar();
         } catch (IOException e) {
-            throw new IllegalStateException("Error generando PDF de costos", e);
+            throw new FalloInternoException("Error generando PDF de costos", e);
         }
     }
 
@@ -306,7 +307,7 @@ public class PdfReportService {
             rentabilidad(pdf, r);
             return pdf.terminar();
         } catch (IOException e) {
-            throw new IllegalStateException("Error generando PDF de rentabilidad", e);
+            throw new FalloInternoException("Error generando PDF de rentabilidad", e);
         }
     }
 
@@ -451,7 +452,7 @@ public class PdfReportService {
             pdf.y -= 24;
             return pdf.terminar();
         } catch (IOException e) {
-            throw new IllegalStateException("Error generando el cuaderno de campo", e);
+            throw new FalloInternoException("Error generando el cuaderno de campo", e);
         }
     }
 
@@ -523,7 +524,7 @@ public class PdfReportService {
             }
             return pdf.terminar();
         } catch (IOException e) {
-            throw new IllegalStateException("Error generando el reporte completo", e);
+            throw new FalloInternoException("Error generando el reporte completo", e);
         }
     }
 

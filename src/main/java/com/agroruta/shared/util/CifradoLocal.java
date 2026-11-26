@@ -1,5 +1,6 @@
 package com.agroruta.shared.util;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
 import javax.crypto.spec.GCMParameterSpec;
@@ -25,7 +26,7 @@ public final class CifradoLocal {
             mac.init(new SecretKeySpec(secreto.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
             this.clave = new SecretKeySpec(mac.doFinal(contexto.getBytes(StandardCharsets.UTF_8)), "AES");
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("No se pudo preparar el cifrado", e);
+            throw new FalloInternoException("No se pudo preparar el cifrado", e);
         }
     }
 
@@ -42,7 +43,7 @@ public final class CifradoLocal {
             System.arraycopy(cifrado, 0, todo, iv.length, cifrado.length);
             return Base64.getEncoder().encodeToString(todo);
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("No se pudo cifrar", e);
+            throw new FalloInternoException("No se pudo cifrar", e);
         }
     }
 
@@ -54,7 +55,7 @@ public final class CifradoLocal {
             c.init(Cipher.DECRYPT_MODE, clave, new GCMParameterSpec(128, todo, 0, 12));
             return new String(c.doFinal(todo, 12, todo.length - 12), StandardCharsets.UTF_8);
         } catch (GeneralSecurityException | IllegalArgumentException e) {
-            throw new IllegalStateException("No se pudo descifrar", e);
+            throw new FalloInternoException("No se pudo descifrar", e);
         }
     }
 }

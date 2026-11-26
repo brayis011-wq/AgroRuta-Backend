@@ -27,8 +27,8 @@ public class FincaController {
     @PreAuthorize("@ownership.esAgricultor(#req.agricultorId, authentication)")
     public ResponseEntity<FincaResponse> registrar(@Valid @RequestBody FincaRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(FincaResponse.from(fincaUseCase.registrarFinca(
-                        req.getNombre(), req.getUbicacion(),
-                        req.getHectareas(), req.getAgricultorId()
+                        req.nombre(), req.ubicacion(),
+                        req.hectareas(), req.agricultorId()
                 )));
     }
 
@@ -49,7 +49,7 @@ public class FincaController {
     @PreAuthorize("@ownership.fincaPropia(#id, authentication)")
     public ResponseEntity<FincaResponse> actualizar(@PathVariable Long id, @Valid @RequestBody FincaRequest req) {
         return ResponseEntity.ok(FincaResponse.from(fincaUseCase.actualizarFinca(
-                id, req.getNombre(), req.getUbicacion(), req.getHectareas())));
+                id, req.nombre(), req.ubicacion(), req.hectareas())));
     }
 
     @DeleteMapping("/{id}")

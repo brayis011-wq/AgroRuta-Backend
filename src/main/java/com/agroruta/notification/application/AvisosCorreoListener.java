@@ -1,5 +1,6 @@
 package com.agroruta.notification.application;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.notification.application.ports.in.PreferenciasCorreoUseCase;
 import com.agroruta.notification.application.ports.out.CorreoPort;
 import com.agroruta.shared.evento.AccesoPortalResuelto;
@@ -22,7 +23,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Optional;
 
 /**
@@ -41,7 +41,7 @@ public class AvisosCorreoListener {
     private final PreferenciasCorreoUseCase preferencias;
     private final MensajesCorreo mensajes;
     private final CorreoPort correo;
-    private final Clock reloj = Clock.system(ZoneId.of("America/Bogota"));
+    private final Clock reloj = Clock.system(ZonaHoraria.COLOMBIA);
 
     public AvisosCorreoListener(UsuarioRepository usuarios, TrabajadorRepository trabajadores, PagoRepository pagos,
                                 PreferenciasCorreoUseCase preferencias, MensajesCorreo mensajes, CorreoPort correo) {

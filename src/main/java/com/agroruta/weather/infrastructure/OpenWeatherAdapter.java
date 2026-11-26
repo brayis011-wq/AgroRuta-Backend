@@ -1,11 +1,10 @@
 package com.agroruta.weather.infrastructure;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.Pronostico;
 import com.agroruta.weather.domain.Weather;
 import com.agroruta.shared.exception.ExternalApiException;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,16 +12,18 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-@RequiredArgsConstructor
 public class OpenWeatherAdapter implements WeatherApiPort {
 
     private final RestTemplate restTemplate;
 
-    @Value("${weather.api.key}")
-    private String apiKey;
+    private final String apiKey;
+    private final String baseUrl;
 
-    @Value("${weather.api.base-url}")
-    private String baseUrl;
+    public OpenWeatherAdapter(RestTemplate restTemplate, ClimaProperties propiedades) {
+        this.restTemplate = restTemplate;
+        this.apiKey = propiedades.key();
+        this.baseUrl = propiedades.baseUrl();
+    }
 
     @Override
     public Weather fetchWeatherByCity(String city) {
@@ -51,8 +52,9 @@ public class OpenWeatherAdapter implements WeatherApiPort {
             return resumir(franjas);
         } catch (ExternalApiException e) {
             throw e;
-        } catch (Exception e) {
-            throw new ExternalApiException("Error al consultar el pronóstico de OpenWeatherMap: " + e.getMessage());
+        } catch (RuntimeException e) {
+            // Sin el mensaje original: trae la URL con la clave de la API, y este mensaje llega al navegador
+            throw new ExternalApiException("Error al consultar el pronóstico de OpenWeatherMap", e);
         }
     }
 
@@ -69,13 +71,13 @@ public class OpenWeatherAdapter implements WeatherApiPort {
             return franjas(franjas);
         } catch (ExternalApiException e) {
             throw e;
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             // Sin el mensaje original: trae la URL con la clave de la API
-            throw new ExternalApiException("Error al consultar el pronóstico de OpenWeatherMap");
+            throw new ExternalApiException("Error al consultar el pronóstico de OpenWeatherMap", e);
         }
     }
 
-    private static final java.time.ZoneId ZONA = java.time.ZoneId.of("America/Bogota");
+    private static final java.time.ZoneId ZONA = ZonaHoraria.COLOMBIA;
 
     @SuppressWarnings("unchecked")
     static List<com.agroruta.weather.domain.FranjaClima> franjas(List<Map<String, Object>> lista) {
@@ -129,21 +131,22 @@ public class OpenWeatherAdapter implements WeatherApiPort {
             List<Map<String, Object>> weatherList = (List<Map<String, Object>>) response.get("weather");
             Map<String, Object> weatherInfo = weatherList.get(0);
 
-            Weather weather = new Weather();
-            weather.setCity((String) response.get("name"));
-            weather.setCountry((String) sys.get("country"));
-            weather.setTemperature(((Number) main.get("temp")).doubleValue());
-            weather.setFeelsLike(((Number) main.get("feels_like")).doubleValue());
-            weather.setHumidity(((Number) main.get("humidity")).intValue());
-            weather.setWindSpeed(((Number) wind.get("speed")).doubleValue());
-            weather.setDescription((String) weatherInfo.get("description"));
-            weather.setIcon((String) weatherInfo.get("icon"));
+            Weather weather = new Weather(
+                    (String) response.get("name"),
+                    (String) sys.get("country"),
+                    ((Number) main.get("temp")).doubleValue(),
+                    ((Number) main.get("feels_like")).doubleValue(),
+                    ((Number) main.get("humidity")).intValue(),
+                    ((Number) wind.get("speed")).doubleValue(),
+                    (String) weatherInfo.get("description"),
+                    (String) weatherInfo.get("icon"));
 
             return weather;
         } catch (ExternalApiException e) {
             throw e;
-        } catch (Exception e) {
-            throw new ExternalApiException("Error al consultar OpenWeatherMap: " + e.getMessage());
+        } catch (RuntimeException e) {
+            // Sin el mensaje original: trae la URL con la clave de la API, y este mensaje llega al navegador
+            throw new ExternalApiException("Error al consultar OpenWeatherMap", e);
         }
     }
 }

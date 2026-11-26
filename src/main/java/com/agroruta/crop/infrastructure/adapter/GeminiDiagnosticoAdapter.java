@@ -1,5 +1,6 @@
 package com.agroruta.crop.infrastructure.adapter;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.crop.application.ports.out.DiagnosticoIaPort;
 import com.agroruta.crop.domain.AnalisisFoto;
 import com.agroruta.crop.domain.ConfianzaDiagnostico;
@@ -211,7 +212,7 @@ public class GeminiDiagnosticoAdapter implements DiagnosticoIaPort {
         try {
             return json.writeValueAsString(peticion);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 

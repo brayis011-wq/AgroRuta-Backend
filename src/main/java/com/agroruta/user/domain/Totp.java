@@ -1,5 +1,6 @@
 package com.agroruta.user.domain;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
@@ -46,7 +47,7 @@ public final class Totp {
             mac.init(new SecretKeySpec(deBase32(secretoBase32), "HmacSHA1"));
             hash = mac.doFinal(ByteBuffer.allocate(8).putLong(paso).array());
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
         int desde = hash[hash.length - 1] & 0x0f;
         int binario = ((hash[desde] & 0x7f) << 24) | ((hash[desde + 1] & 0xff) << 16)

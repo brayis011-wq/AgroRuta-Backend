@@ -10,13 +10,11 @@ import com.agroruta.inventory.domain.*;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import com.agroruta.shared.util.EnumParser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.math.BigDecimal;
@@ -32,12 +30,7 @@ public class InventarioService implements InventarioUseCase, StockBajoUseCase, I
     private final CatalogoInsumosPort catalogo;
     private final Clock reloj;
 
-    @Autowired
-    public InventarioService(InventarioRepository repositorio, CatalogoInsumosPort catalogo) {
-        this(repositorio, catalogo, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    InventarioService(InventarioRepository repositorio, CatalogoInsumosPort catalogo, Clock reloj) {
+    public InventarioService(InventarioRepository repositorio, CatalogoInsumosPort catalogo, Clock reloj) {
         this.repositorio = repositorio;
         this.catalogo = catalogo;
         this.reloj = reloj;

@@ -626,16 +626,14 @@ class GlobalExceptionHandlerTest {
         }
 
         @Test
-        @DisplayName("IllegalStateException de AgroRuta debe retornar 409 con su mensaje")
-        void ownIllegalStateShouldReturn409() {
-            IllegalStateException ex =
-                    new IllegalStateException("Solo se pueden aprobar nóminas en estado PENDIENTE.");
+        @DisplayName("Un fallo interno de AgroRuta debe retornar 500 sin exponer el detalle")
+        void falloInternoShouldReturn500() {
+            FalloInternoException ex = new FalloInternoException("No se pudo descifrar: clave AES vencida");
 
             ResponseEntity<ErrorResponse> response = handler.handleIllegalState(ex, request);
 
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-            assertThat(response.getBody().getErrorCode()).isEqualTo(ErrorCode.INVALID_OPERATION.getCode());
-            assertThat(response.getBody().getMessage()).contains("PENDIENTE");
+            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+            assertThat(response.getBody().getMessage()).doesNotContain("AES");
         }
 
         @Test

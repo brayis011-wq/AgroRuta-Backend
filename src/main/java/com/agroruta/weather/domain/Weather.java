@@ -1,19 +1,6 @@
 package com.agroruta.weather.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class Weather {
-    private String city;
-    private String country;
-    private double temperature;
-    private double feelsLike;
-    private int humidity;
-    private double windSpeed;
-    private String description;
-    private String icon;
+/** Clima actual de un lugar, tal como lo entrega OpenWeather (temperaturas en °C, viento en m/s). */
+public record Weather(String city, String country, double temperature, double feelsLike, int humidity,
+                      double windSpeed, String description, String icon) {
 }

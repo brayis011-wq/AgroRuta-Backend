@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.crop.application.ports.out.ActividadCultivoRepository;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.EtapaSiembraRepository;
@@ -27,7 +28,7 @@ import java.util.Map;
 @Service
 public class CostosCalendarioService {
 
-    static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
     /** Rango máximo que se puede pedir al calendario */
     static final long MAX_DIAS = 400;
 

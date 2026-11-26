@@ -27,7 +27,7 @@ public class LoteController {
     @PostMapping
     @PreAuthorize("@ownership.fincaPropia(#req.fincaId, authentication)")
     public ResponseEntity<LoteResponse> registrar(@Valid @RequestBody LoteRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(LoteResponse.from(loteUseCase.registrarLote(req.getNombre(), req.getArea(), req.getFincaId())));
+        return ResponseEntity.status(HttpStatus.CREATED).body(LoteResponse.from(loteUseCase.registrarLote(req.nombre(), req.area(), req.fincaId())));
     }
 
     @GetMapping("/{id}")
@@ -46,7 +46,7 @@ public class LoteController {
     @PutMapping("/{id}")
     @PreAuthorize("@ownership.lotePropio(#id, authentication)")
     public ResponseEntity<LoteResponse> actualizar(@PathVariable Long id, @Valid @RequestBody LoteRequest req) {
-        return ResponseEntity.ok(LoteResponse.from(loteUseCase.actualizarLote(id, req.getNombre(), req.getArea())));
+        return ResponseEntity.ok(LoteResponse.from(loteUseCase.actualizarLote(id, req.nombre(), req.area())));
     }
 
     /** Disponible o en descanso, cuando el lote no tiene siembra en curso */

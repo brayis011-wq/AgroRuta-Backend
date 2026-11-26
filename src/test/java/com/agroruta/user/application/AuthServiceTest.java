@@ -7,10 +7,9 @@ import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.application.ports.out.TokenPort;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.infrastructure.security.CustomUserDetails;
-import com.agroruta.user.infrastructure.web.dto.AuthResponse;
-import com.agroruta.user.infrastructure.web.dto.LoginRequest;
-import com.agroruta.user.infrastructure.web.dto.RegisterRequest;
+import com.agroruta.user.application.ports.in.DatosLogin;
+import com.agroruta.user.application.ports.in.DatosRegistro;
+import com.agroruta.user.application.ports.in.SesionIniciada;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,7 +47,7 @@ class AuthServiceTest {
     private VinculoTrabajadorPort vinculoTrabajador;
 
     @org.mockito.Spy
-    private IntentosLogin intentosLogin = new IntentosLogin();
+    private IntentosLogin intentosLogin = new IntentosLogin(java.time.Clock.systemUTC());
 
     @Mock private org.springframework.context.ApplicationEventPublisher eventos;
 
@@ -80,36 +79,28 @@ class AuthServiceTest {
 
     @Test
     void deberiaRegistrarUsuarioYRetornarAuthResponse() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(ROL.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, ROL.name(), null);
 
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-        AuthResponse response = authService.registrar(request);
+        SesionIniciada response = authService.registrar(request);
 
-        assertEquals(ID,       response.getId());
-        assertEquals(TOKEN,    response.getToken());
-        assertEquals(EMAIL,    response.getEmail());
-        assertEquals(NOMBRE,   response.getNombre());
-        assertEquals(ROL.name(), response.getRol());
+        assertEquals(ID,       response.id());
+        assertEquals(TOKEN,    response.token());
+        assertEquals(EMAIL,    response.email());
+        assertEquals(NOMBRE,   response.nombre());
+        assertEquals(ROL.name(), response.rol());
     }
 
     @Test
     void registrarDeberiaEncodearElPasswordAntesDeGuardar() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(ROL.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, ROL.name(), null);
 
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.registrar(request);
 
@@ -121,17 +112,12 @@ class AuthServiceTest {
 
     @Test
     void registrarDeberiaPermitirRolTrabajador() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(Rol.Trabajador.name());
-        request.setCedula("1052334120");
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Trabajador.name(), "1052334120");
 
         Usuario usuarioTrabajador = new Usuario(2L, NOMBRE, EMAIL, PASSWORD_ENCODED, Rol.Trabajador);
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioTrabajador);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.registrar(request);
 
@@ -144,11 +130,7 @@ class AuthServiceTest {
 
     @Test
     void registrarTrabajadorSinCedulaDeberiaFallar() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(Rol.Trabajador.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Trabajador.name(), null);
 
         DatoInvalidoException ex = assertThrows(DatoInvalidoException.class,
                 () -> authService.registrar(request));
@@ -159,12 +141,7 @@ class AuthServiceTest {
 
     @Test
     void registrarTrabajadorConCedulaNoRegistradaNoCreaLaCuenta() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(Rol.Trabajador.name());
-        request.setCedula("999999");
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Trabajador.name(), "999999");
         doThrow(new com.agroruta.shared.exception.BusinessException("Ningún agricultor ha registrado esta cédula."))
                 .when(vinculoTrabajador).validarCedulaDisponible("999999");
 
@@ -175,14 +152,10 @@ class AuthServiceTest {
 
     @Test
     void registrarAgricultorNoUsaLaCedula() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(Rol.Agricultor.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Agricultor.name(), null);
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.registrar(request);
 
@@ -191,15 +164,11 @@ class AuthServiceTest {
 
     @Test
     void registrarDeberiaAsignarAgricultorSiNoSeIndicaRol() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(null);
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, null, null);
 
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.registrar(request);
 
@@ -210,11 +179,7 @@ class AuthServiceTest {
 
     @Test
     void registrarDeberiaRechazarRolAdministrador() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(Rol.Administrador.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, Rol.Administrador.name(), null);
 
         assertThrows(DatoInvalidoException.class, () -> authService.registrar(request));
         verify(registrarUsuarioUseCase, never()).registrar(any(Usuario.class));
@@ -222,11 +187,7 @@ class AuthServiceTest {
 
     @Test
     void registrarDeberiaRechazarRolInexistente() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol("SuperUsuario");
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, "SuperUsuario", null);
 
         assertThrows(DatoInvalidoException.class, () -> authService.registrar(request));
         verify(registrarUsuarioUseCase, never()).registrar(any(Usuario.class));
@@ -234,32 +195,24 @@ class AuthServiceTest {
 
     @Test
     void registrarDeberiaDelegarLaGeneracionDelToken() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(ROL.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, ROL.name(), null);
 
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.registrar(request);
 
-        verify(tokenPort, times(1)).generateToken(any(CustomUserDetails.class));
+        verify(tokenPort, times(1)).generarToken(any(Usuario.class));
     }
 
     @Test
     void registrarDeberiaLlamarAlUsoCasoConLosDatosDelRequest() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(ROL.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, ROL.name(), null);
 
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.registrar(request);
 
@@ -274,21 +227,16 @@ class AuthServiceTest {
     @Test
     void registrarDeberiaCubrirLosRolesPermitidos() {
         for (Rol rol : new Rol[]{Rol.Agricultor, Rol.Trabajador}) {
-            RegisterRequest request = new RegisterRequest();
-            request.setNombre(NOMBRE);
-            request.setEmail(EMAIL);
-            request.setPassword(PASSWORD);
-            request.setRol(rol.name());
-            request.setCedula("1052334120");
+            DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, rol.name(), "1052334120");
 
             Usuario usuario = new Usuario(ID, NOMBRE, EMAIL, PASSWORD_ENCODED, rol);
             when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
             when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenReturn(usuario);
-            when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+            when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-            AuthResponse response = authService.registrar(request);
+            SesionIniciada response = authService.registrar(request);
 
-            assertEquals(rol.name(), response.getRol());
+            assertEquals(rol.name(), response.rol());
         }
     }
 
@@ -296,32 +244,28 @@ class AuthServiceTest {
 
     @Test
     void deberiaLoginYRetornarAuthResponse() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, null, null);
 
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-        AuthResponse response = authService.login(request);
+        SesionIniciada response = authService.login(request);
 
-        assertEquals(ID,         response.getId());
-        assertEquals(TOKEN,      response.getToken());
-        assertEquals(EMAIL,      response.getEmail());
-        assertEquals(NOMBRE,     response.getNombre());
-        assertEquals(ROL.name(), response.getRol());
+        assertEquals(ID,         response.id());
+        assertEquals(TOKEN,      response.token());
+        assertEquals(EMAIL,      response.email());
+        assertEquals(NOMBRE,     response.nombre());
+        assertEquals(ROL.name(), response.rol());
     }
 
     @Test
     void loginDeberiaAutenticarConEmailYPasswordCorrectos() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, null, null);
 
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.login(request);
 
@@ -334,13 +278,11 @@ class AuthServiceTest {
 
     @Test
     void loginDeberiaBuscarElUsuarioPorEmailTrasAutenticar() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, null, null);
 
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.login(request);
 
@@ -351,24 +293,20 @@ class AuthServiceTest {
 
     @Test
     void loginDeberiaDelegarLaGeneracionDelToken() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, null, null);
 
         when(authenticationManager.authenticate(any())).thenReturn(null);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
         authService.login(request);
 
-        verify(tokenPort, times(1)).generateToken(any(CustomUserDetails.class));
+        verify(tokenPort, times(1)).generarToken(any(Usuario.class));
     }
 
     @Test
     void loginDeberiaLanzarExcepcionSiLaAutenticacionFalla() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword("wrongpassword");
+        DatosLogin request = new DatosLogin(EMAIL, "wrongpassword", null, null);
 
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new org.springframework.security.core.AuthenticationException("Bad credentials") {});
@@ -386,9 +324,7 @@ class AuthServiceTest {
 
     @Test
     void loginDeberiaBloquearElCorreoTrasDiezContrasenasEquivocadas() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword("wrongpassword");
+        DatosLogin request = new DatosLogin(EMAIL, "wrongpassword", null, null);
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new org.springframework.security.authentication.BadCredentialsException("Bad credentials"));
 
@@ -407,11 +343,9 @@ class AuthServiceTest {
 
     @Test
     void loginCorrectoDeberiaOlvidarLosFallosAnteriores() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, null, null);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any())).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any())).thenReturn(TOKEN);
 
         authService.login(request);
 
@@ -428,19 +362,15 @@ class AuthServiceTest {
 
     @Test
     void registrarConVerificacionNoDeberiaDarSesionYDeberiaMandarElEnlace() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(ROL.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, ROL.name(), null);
         when(verificacion.activa()).thenReturn(true);
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
 
-        AuthResponse response = authService.registrar(request);
+        SesionIniciada response = authService.registrar(request);
 
-        org.junit.jupiter.api.Assertions.assertNull(response.getToken());
-        org.junit.jupiter.api.Assertions.assertTrue(response.isVerificacionPendiente());
+        org.junit.jupiter.api.Assertions.assertNull(response.token());
+        org.junit.jupiter.api.Assertions.assertTrue(response.verificacionPendiente());
         org.mockito.ArgumentCaptor<Usuario> u = org.mockito.ArgumentCaptor.forClass(Usuario.class);
         verify(verificacion).enviarEnlace(u.capture());
         org.junit.jupiter.api.Assertions.assertFalse(u.getValue().isEmailVerificado());
@@ -449,27 +379,21 @@ class AuthServiceTest {
 
     @Test
     void registrarSinVerificacionDeberiaQuedarConfirmado() {
-        RegisterRequest request = new RegisterRequest();
-        request.setNombre(NOMBRE);
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setRol(ROL.name());
+        DatosRegistro request = new DatosRegistro(NOMBRE, EMAIL, PASSWORD, ROL.name(), null);
         when(passwordEncoder.encode(PASSWORD)).thenReturn(PASSWORD_ENCODED);
         when(registrarUsuarioUseCase.registrar(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-        AuthResponse response = authService.registrar(request);
+        SesionIniciada response = authService.registrar(request);
 
-        assertEquals(TOKEN, response.getToken());
-        org.junit.jupiter.api.Assertions.assertFalse(response.isVerificacionPendiente());
+        assertEquals(TOKEN, response.token());
+        org.junit.jupiter.api.Assertions.assertFalse(response.verificacionPendiente());
         verify(verificacion, never()).enviarEnlace(any());
     }
 
     @Test
     void loginConCorreoSinConfirmarDeberiaRechazarseDespuesDeLaContrasena() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, null, null);
         usuarioGuardado.setEmailVerificado(false);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
         when(verificacion.activa()).thenReturn(true);
@@ -484,21 +408,18 @@ class AuthServiceTest {
     @Test
     void verificarCorreoDeberiaIniciarSesion() {
         when(verificacion.confirmar("tok")).thenReturn(usuarioGuardado);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-        AuthResponse response = authService.verificarCorreo("tok");
+        SesionIniciada response = authService.verificarCorreo("tok");
 
-        assertEquals(TOKEN, response.getToken());
-        assertEquals(EMAIL, response.getEmail());
+        assertEquals(TOKEN, response.token());
+        assertEquals(EMAIL, response.email());
     }
 
     // ── segundo factor ────────────────────────────────────────────
 
-    private LoginRequest loginConCodigo(String codigo) {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword(PASSWORD);
-        request.setCodigo(codigo);
+    private DatosLogin loginConCodigo(String codigo) {
+        DatosLogin request = new DatosLogin(EMAIL, PASSWORD, codigo, null);
         when(buscarUsuarioUseCase.buscarPorEmail(EMAIL)).thenReturn(usuarioGuardado);
         when(segundoFactor.activo(ID)).thenReturn(true);
         return request;
@@ -506,7 +427,7 @@ class AuthServiceTest {
 
     @Test
     void loginConSegundoFactorSinCodigoDeberiaPedirlo() {
-        LoginRequest request = loginConCodigo(null);
+        DatosLogin request = loginConCodigo(null);
 
         com.agroruta.shared.exception.BusinessException e = assertThrows(
                 com.agroruta.shared.exception.BusinessException.class, () -> authService.login(request));
@@ -518,7 +439,7 @@ class AuthServiceTest {
 
     @Test
     void loginConCodigoEquivocadoDeberiaRechazarseYContarComoIntento() {
-        LoginRequest request = loginConCodigo("000000");
+        DatosLogin request = loginConCodigo("000000");
         when(segundoFactor.verificar(ID, "000000")).thenReturn(false);
 
         for (int i = 0; i < IntentosLogin.MAX_FALLOS; i++) {
@@ -535,26 +456,26 @@ class AuthServiceTest {
 
     @Test
     void loginConCodigoCorrectoDeberiaEntrar() {
-        LoginRequest request = loginConCodigo("123456");
+        DatosLogin request = loginConCodigo("123456");
         when(segundoFactor.verificar(ID, "123456")).thenReturn(true);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-        assertEquals(TOKEN, authService.login(request).getToken());
+        assertEquals(TOKEN, authService.login(request).token());
     }
 
     @Test
     void conDispositivoRecordadoNoDeberiaPedirElCodigo() {
-        LoginRequest request = loginConCodigo(null);
+        DatosLogin request = loginConCodigo(null);
         when(segundoFactor.dispositivoRecordado(ID, "marca-valida")).thenReturn(true);
-        when(tokenPort.generateToken(any(CustomUserDetails.class))).thenReturn(TOKEN);
+        when(tokenPort.generarToken(any(Usuario.class))).thenReturn(TOKEN);
 
-        assertEquals(TOKEN, authService.login(request, "marca-valida").getToken());
+        assertEquals(TOKEN, authService.login(request, "marca-valida").token());
         verify(segundoFactor, never()).verificar(any(), any());
     }
 
     @Test
     void conMarcaDeDispositivoInvalidaDeberiaPedirElCodigo() {
-        LoginRequest request = loginConCodigo(null);
+        DatosLogin request = loginConCodigo(null);
         when(segundoFactor.dispositivoRecordado(ID, "marca-falsa")).thenReturn(false);
 
         com.agroruta.shared.exception.BusinessException e = assertThrows(
@@ -566,9 +487,7 @@ class AuthServiceTest {
 
     @Test
     void laMarcaDeDispositivoNoSirveSinLaContrasena() {
-        LoginRequest request = new LoginRequest();
-        request.setEmail(EMAIL);
-        request.setPassword("otra");
+        DatosLogin request = new DatosLogin(EMAIL, "otra", null, null);
         when(authenticationManager.authenticate(any())).thenThrow(new org.springframework.security.authentication.BadCredentialsException("mala"));
 
         assertThrows(org.springframework.security.authentication.BadCredentialsException.class,

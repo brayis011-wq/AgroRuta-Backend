@@ -163,28 +163,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // ── Estado inválido para la operación (p. ej. aprobar una nómina ya pagada) ──
+    // ── Fallo interno (FalloInternoException o de una librería): 500 sin exponer el detalle ──
+    // Las reglas de estado del negocio usan EstadoInvalidoException (409).
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalState(
             IllegalStateException ex, HttpServletRequest req) {
-
-        // Solo las de nuestro código son reglas de estado; las de librerías son fallos internos.
-        if (!lanzadaPorAgroRuta(ex)) {
-            return handleGeneral(ex, req);
-        }
-
-        log.warn("[{}] Operación no permitida en el estado actual en {}: {}",
-                MDC.get(MdcKeys.TRACE_ID),
-                req.getRequestURI(),
-                ex.getMessage());
-
-        ErrorResponse error = ErrorResponse.of(
-                HttpStatus.CONFLICT.value(),
-                ErrorCode.INVALID_OPERATION,
-                ex.getMessage(),
-                MDC.get(MdcKeys.TRACE_ID)
-        );
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return handleGeneral(ex, req);
     }
 
     // ── Parámetro con tipo inválido (p. ej. /api/farms/abc) ─────────────────
@@ -379,11 +363,6 @@ public class GlobalExceptionHandler {
             case EMAIL_NOT_VERIFIED, TWO_FACTOR_REQUIRED -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
-    }
-
-    private static boolean lanzadaPorAgroRuta(Throwable ex) {
-        StackTraceElement[] trace = ex.getStackTrace();
-        return trace.length > 0 && trace[0].getClassName().startsWith("com.agroruta.");
     }
 
     private ResponseEntity<ErrorResponse> simple(HttpStatus status, ErrorCode code, String message) {

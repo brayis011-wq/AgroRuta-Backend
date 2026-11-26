@@ -51,20 +51,20 @@ public class InventarioController {
     @PostMapping("/purchases")
     public ResponseEntity<MovimientoInventario> compra(@Valid @RequestBody CompraRequest req, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventario.registrarCompra(
-                CurrentUser.id(auth), req.getInsumoId(), req.getCantidad(), req.getUnidad(), req.getCostoTotal(),
-                req.getFecha(), req.getProveedor(), req.getObservaciones()));
+                CurrentUser.id(auth), req.insumoId(), req.cantidad(), req.unidad(), req.costoTotal(),
+                req.fecha(), req.proveedor(), req.observaciones()));
     }
 
     @PostMapping("/adjustments")
     public ResponseEntity<MovimientoInventario> ajuste(@Valid @RequestBody AjusteRequest req, Authentication auth) {
         return ResponseEntity.status(HttpStatus.CREATED).body(inventario.ajustarA(
-                CurrentUser.id(auth), req.getInsumoId(), req.getCantidadReal(), req.getUnidad(), req.getObservaciones()));
+                CurrentUser.id(auth), req.insumoId(), req.cantidadReal(), req.unidad(), req.observaciones()));
     }
 
     @PutMapping("/{insumoId}/minimum")
     public ResponseEntity<StockInsumo> minimo(@PathVariable Long insumoId, @Valid @RequestBody MinimoRequest req,
                                               Authentication auth) {
-        return ResponseEntity.ok(inventario.definirMinimo(CurrentUser.id(auth), insumoId, req.getMinimo(), req.getUnidad()));
+        return ResponseEntity.ok(inventario.definirMinimo(CurrentUser.id(auth), insumoId, req.minimo(), req.unidad()));
     }
 
     @DeleteMapping("/movements/{id}")

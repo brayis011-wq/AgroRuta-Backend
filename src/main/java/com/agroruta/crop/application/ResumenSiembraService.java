@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.crop.application.ports.out.CosechaRepository;
 import com.agroruta.crop.application.ports.out.FumigacionRepository;
 import com.agroruta.crop.application.ports.out.LoteRepository;
@@ -16,7 +17,7 @@ import java.time.ZoneId;
 public class ResumenSiembraService {
 
     /** Las fechas de la app son de Colombia */
-    static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
 
     private final SiembraUseCase siembraUseCase;
     private final SiembraRepository siembraRepository;

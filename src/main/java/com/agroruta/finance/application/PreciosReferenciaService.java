@@ -21,7 +21,6 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Executor;
@@ -52,8 +51,8 @@ public class PreciosReferenciaService implements PreciosReferenciaUseCase {
     private final AtomicReference<String> ultimoError = new AtomicReference<>();
 
     @Autowired
-    public PreciosReferenciaService(PreciosReferenciaRepository repositorio, SipsaPort sipsa) {
-        this(repositorio, sipsa, Clock.system(ZoneId.of("America/Bogota")),
+    public PreciosReferenciaService(PreciosReferenciaRepository repositorio, SipsaPort sipsa, Clock reloj) {
+        this(repositorio, sipsa, reloj,
                 Executors.newSingleThreadExecutor(r -> {
                     Thread t = new Thread(r, "precios-sipsa");
                     t.setDaemon(true);

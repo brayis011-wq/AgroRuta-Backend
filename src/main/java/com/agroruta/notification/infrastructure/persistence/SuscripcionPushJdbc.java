@@ -1,5 +1,6 @@
 package com.agroruta.notification.infrastructure.persistence;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.notification.application.ports.out.SuscripcionPushRepository;
 import com.agroruta.notification.domain.SuscripcionPush;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -67,7 +68,7 @@ public class SuscripcionPushJdbc implements SuscripcionPushRepository {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(endpoint.getBytes(StandardCharsets.UTF_8)));
         } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 }

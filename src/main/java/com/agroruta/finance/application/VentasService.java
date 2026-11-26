@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -31,12 +30,7 @@ public class VentasService implements VentasUseCase {
     private final VentasRepository repositorio;
     private final Clock reloj;
 
-    @org.springframework.beans.factory.annotation.Autowired
-    public VentasService(VentasRepository repositorio) {
-        this(repositorio, Clock.system(ZoneId.of("America/Bogota")));
-    }
-
-    VentasService(VentasRepository repositorio, Clock reloj) {
+    public VentasService(VentasRepository repositorio, Clock reloj) {
         this.repositorio = repositorio;
         this.reloj = reloj;
     }

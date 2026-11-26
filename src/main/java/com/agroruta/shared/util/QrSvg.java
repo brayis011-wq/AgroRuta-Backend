@@ -1,5 +1,6 @@
 package com.agroruta.shared.util;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.EncodeHintType;
 import com.google.zxing.WriterException;
@@ -28,7 +29,7 @@ public final class QrSvg {
             m = new QRCodeWriter().encode(texto, BarcodeFormat.QR_CODE, 0, 0,
                     Map.of(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M, EncodeHintType.MARGIN, 2));
         } catch (WriterException e) {
-            throw new IllegalStateException("No se pudo crear el código QR", e);
+            throw new FalloInternoException("No se pudo crear el código QR", e);
         }
         int n = m.getWidth();
         StringBuilder d = new StringBuilder();

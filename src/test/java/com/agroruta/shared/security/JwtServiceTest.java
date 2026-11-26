@@ -1,5 +1,6 @@
 package com.agroruta.shared.security;
 
+import com.agroruta.shared.config.JwtProperties;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,9 +37,7 @@ class JwtServiceTest {
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtService();
-        ReflectionTestUtils.setField(jwtService, "secretKey", SECRET);
-        ReflectionTestUtils.setField(jwtService, "jwtExpiration", EXPIRATION);
+        jwtService = new JwtService(new JwtProperties(SECRET, EXPIRATION));
 
         usuario = User.builder()
                 .username("carlos@agroruta.com")
@@ -210,7 +209,7 @@ class JwtServiceTest {
         @DisplayName("token expirado lanza ExpiredJwtException al intentar validarlo")
         void tokenExpiradoLanzaExcepcion() {
             // Expiración en el pasado → JJWT lanza ExpiredJwtException al parsear
-            ReflectionTestUtils.setField(jwtService, "jwtExpiration", -1000L);
+            jwtService = new JwtService(new JwtProperties(SECRET, -1000L));
             String token = jwtService.generateToken(usuario);
 
             assertThatThrownBy(() -> jwtService.isTokenValid(token, usuario))

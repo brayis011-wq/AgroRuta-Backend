@@ -1,5 +1,6 @@
 package com.agroruta.user.application;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.shared.exception.BusinessException;
 import com.agroruta.shared.exception.ErrorCode;
 import com.agroruta.shared.exception.ResourceNotFoundException;
@@ -10,7 +11,6 @@ import com.agroruta.user.application.ports.out.UsuarioRepository;
 import com.agroruta.user.domain.SegundoFactor;
 import com.agroruta.user.domain.Totp;
 import com.agroruta.user.domain.Usuario;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,14 +51,8 @@ public class SegundoFactorService implements SegundoFactorUseCase {
     private final Clock reloj;
     private final SecureRandom azar = new SecureRandom();
 
-    @Autowired
     public SegundoFactorService(SegundoFactorRepository repo, UsuarioRepository usuarios, PasswordEncoder passwordEncoder,
-                                @Value("${app.segundo-factor.clave:${jwt.secret}}") String clave) {
-        this(repo, usuarios, passwordEncoder, clave, Clock.systemDefaultZone());
-    }
-
-    SegundoFactorService(SegundoFactorRepository repo, UsuarioRepository usuarios, PasswordEncoder passwordEncoder,
-                         String clave, Clock reloj) {
+                                @Value("${app.segundo-factor.clave:${jwt.secret}}") String clave, Clock reloj) {
         this.repo = repo;
         this.usuarios = usuarios;
         this.passwordEncoder = passwordEncoder;
@@ -228,7 +222,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(codigo.getBytes(StandardCharsets.UTF_8)));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 
@@ -244,7 +238,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             System.arraycopy(cifrado, 0, todo, iv.length, cifrado.length);
             return Base64.getEncoder().encodeToString(todo);
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("No se pudo cifrar el secreto", e);
+            throw new FalloInternoException("No se pudo cifrar el secreto", e);
         }
     }
 
@@ -256,7 +250,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             return new String(c.doFinal(todo, 12, todo.length - 12), StandardCharsets.UTF_8);
         } catch (GeneralSecurityException | IllegalArgumentException e) {
             // Pasa si cambió la clave del servidor: hay que borrar la fila de segundo_factor de esa cuenta
-            throw new IllegalStateException("No se pudo leer el secreto del segundo factor", e);
+            throw new FalloInternoException("No se pudo leer el secreto del segundo factor", e);
         }
     }
 
@@ -266,7 +260,7 @@ public class SegundoFactorService implements SegundoFactorUseCase {
             mac.init(new SecretKeySpec(clave, "HmacSHA256"));
             return mac.doFinal(datos.getBytes(StandardCharsets.UTF_8));
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException(e);
+            throw new FalloInternoException(e);
         }
     }
 }

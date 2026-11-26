@@ -14,10 +14,9 @@ import com.agroruta.user.application.ports.in.RegistrarUsuarioUseCase;
 import com.agroruta.user.application.ports.out.TokenPort;
 import com.agroruta.user.domain.Rol;
 import com.agroruta.user.domain.Usuario;
-import com.agroruta.user.infrastructure.security.CustomUserDetails;
-import com.agroruta.user.infrastructure.web.dto.AuthResponse;
-import com.agroruta.user.infrastructure.web.dto.LoginRequest;
-import com.agroruta.user.infrastructure.web.dto.RegisterRequest;
+import com.agroruta.user.application.ports.in.DatosLogin;
+import com.agroruta.user.application.ports.in.DatosRegistro;
+import com.agroruta.user.application.ports.in.SesionIniciada;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -66,11 +65,11 @@ public class AuthService {
     }
 
     @Transactional
-    public AuthResponse registrar(RegisterRequest request) {
-        Rol rol = resolverRolAutoRegistro(request.getRol());
+    public SesionIniciada registrar(DatosRegistro request) {
+        Rol rol = resolverRolAutoRegistro(request.rol());
 
         // Un trabajador se registra con su cédula: debe haberlo registrado antes un agricultor
-        String cedula = request.getCedula() == null ? "" : request.getCedula().trim();
+        String cedula = request.cedula() == null ? "" : request.cedula().trim();
         if (rol == Rol.Trabajador) {
             if (cedula.isEmpty()) {
                 throw new DatoInvalidoException("La cédula es obligatoria para registrarse como trabajador.");
@@ -80,9 +79,9 @@ public class AuthService {
 
         Usuario usuario = new Usuario(
                 null,
-                request.getNombre(),
-                normalizarEmail(request.getEmail()),
-                passwordEncoder.encode(request.getPassword()),
+                request.nombre(),
+                normalizarEmail(request.email()),
+                passwordEncoder.encode(request.password()),
                 rol
         );
         boolean verificar = verificacion.activa();
@@ -96,13 +95,12 @@ public class AuthService {
         if (verificar) {
             // Sin sesión hasta que confirme el correo con el enlace
             verificacion.enviarEnlace(guardado);
-            return new AuthResponse(guardado.getId(), null, guardado.getEmail(), guardado.getNombre(),
+            return new SesionIniciada(guardado.getId(), null, guardado.getEmail(), guardado.getNombre(),
                     guardado.getRol().name(), true);
         }
-        CustomUserDetails userDetails = new CustomUserDetails(guardado);
-        String token = tokenPort.generateToken(userDetails);
+        String token = tokenPort.generarToken(guardado);
 
-        return new AuthResponse(
+        return new SesionIniciada(
                 guardado.getId(),
                 token,
                 guardado.getEmail(),
@@ -111,7 +109,7 @@ public class AuthService {
         );
     }
 
-    public AuthResponse login(LoginRequest request) {
+    public SesionIniciada login(DatosLogin request) {
         return login(request, null);
     }
 
@@ -119,25 +117,25 @@ public class AuthService {
      * @param dispositivo marca de "dispositivo recordado" que trae el navegador (cookie), o null.
      *                    Si es válida, no se pide el código de la verificación en dos pasos.
      */
-    public AuthResponse login(LoginRequest request, String dispositivo) {
-        intentosLogin.exigirNoBloqueado(request.getEmail());
+    public SesionIniciada login(DatosLogin request, String dispositivo) {
+        intentosLogin.exigirNoBloqueado(request.email());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
+                            request.email(),
+                            request.password()
                     )
             );
         } catch (BadCredentialsException e) {
-            if (intentosLogin.registrarFallo(request.getEmail())) {
-                eventos.publishEvent(new CuentaBloqueada(request.getEmail(), IntentosLogin.BLOQUEO.toMinutes()));
+            if (intentosLogin.registrarFallo(request.email())) {
+                eventos.publishEvent(new CuentaBloqueada(request.email(), IntentosLogin.BLOQUEO.toMinutes()));
             }
             throw e;
         }
-        Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.getEmail());
+        Usuario usuario = buscarUsuarioUseCase.buscarPorEmail(request.email());
         exigirSegundoFactor(usuario, request, dispositivo);
         // Solo cuando pasó todo: un código equivocado cuenta como intento fallido
-        intentosLogin.limpiar(request.getEmail());
+        intentosLogin.limpiar(request.email());
 
         // Se revisa después de la contraseña, para no contarle a cualquiera qué cuentas faltan por confirmar
         if (!usuario.isEmailVerificado() && verificacion.activa()) {
@@ -152,18 +150,18 @@ public class AuthService {
      * TWO_FACTOR_REQUIRED (la pantalla muestra el campo); con un código equivocado, TWO_FACTOR_INVALID,
      * y cuenta para el bloqueo por intentos, para que nadie pruebe códigos al azar.
      */
-    private void exigirSegundoFactor(Usuario usuario, LoginRequest request, String dispositivo) {
+    private void exigirSegundoFactor(Usuario usuario, DatosLogin request, String dispositivo) {
         if (!segundoFactor.activo(usuario.getId())) return;
         // Este navegador ya escribió el código hace menos de un mes: basta con la contraseña
         if (segundoFactor.dispositivoRecordado(usuario.getId(), dispositivo)) return;
-        String codigo = request.getCodigo();
+        String codigo = request.codigo();
         if (codigo == null || codigo.isBlank()) {
             throw new BusinessException(ErrorCode.TWO_FACTOR_REQUIRED,
                     "Escribe el código de 6 dígitos de tu app de autenticación.");
         }
         if (!segundoFactor.verificar(usuario.getId(), codigo)) {
-            if (intentosLogin.registrarFallo(request.getEmail())) {
-                eventos.publishEvent(new CuentaBloqueada(request.getEmail(), IntentosLogin.BLOQUEO.toMinutes()));
+            if (intentosLogin.registrarFallo(request.email())) {
+                eventos.publishEvent(new CuentaBloqueada(request.email(), IntentosLogin.BLOQUEO.toMinutes()));
             }
             throw new BusinessException(ErrorCode.TWO_FACTOR_INVALID,
                     "El código no es correcto. Usa el más reciente de tu app o un código de respaldo.");
@@ -176,7 +174,7 @@ public class AuthService {
     }
 
     /** El enlace del correo de confirmación: confirma la cuenta y deja la sesión iniciada. */
-    public AuthResponse verificarCorreo(String token) {
+    public SesionIniciada verificarCorreo(String token) {
         return respuestaDeSesion(verificacion.confirmar(token));
     }
 
@@ -186,10 +184,9 @@ public class AuthService {
     }
 
     /** Respuesta con un token de acceso nuevo para el usuario (login, confirmación o renovación). */
-    public AuthResponse respuestaDeSesion(Usuario usuario) {
-        CustomUserDetails userDetails = new CustomUserDetails(usuario);
-        String token = tokenPort.generateToken(userDetails);
-        return new AuthResponse(
+    public SesionIniciada respuestaDeSesion(Usuario usuario) {
+        String token = tokenPort.generarToken(usuario);
+        return new SesionIniciada(
                 usuario.getId(),
                 token,
                 usuario.getEmail(),

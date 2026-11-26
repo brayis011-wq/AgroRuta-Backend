@@ -6,7 +6,6 @@ import com.agroruta.notification.domain.AvisoBandeja;
 import com.agroruta.shared.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -23,12 +22,7 @@ public class BandejaAvisosService implements BandejaAvisosUseCase {
     private final BandejaAvisosRepository avisos;
     private final Clock reloj;
 
-    @Autowired
-    public BandejaAvisosService(BandejaAvisosRepository avisos) {
-        this(avisos, Clock.systemUTC());
-    }
-
-    BandejaAvisosService(BandejaAvisosRepository avisos, Clock reloj) {
+    public BandejaAvisosService(BandejaAvisosRepository avisos, Clock reloj) {
         this.avisos = avisos;
         this.reloj = reloj;
     }

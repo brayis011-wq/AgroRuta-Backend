@@ -25,8 +25,8 @@ public class ActividadCultivoController {
     @PreAuthorize("@ownership.siembraPropia(#req.siembraId, authentication)")
     public ResponseEntity<ActividadCultivoResponse> registrar(@Valid @RequestBody ActividadRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ActividadCultivoResponse.from(actividadUseCase.registrarActividad(
-                        req.getTipo(), req.getDescripcion(),
-                        req.getFecha(), req.getSiembraId(), req.getCosto(), req.insumo()
+                        req.tipo(), req.descripcion(),
+                        req.fecha(), req.siembraId(), req.costo(), req.insumo()
                 )));
     }
 
@@ -42,7 +42,7 @@ public class ActividadCultivoController {
     public ResponseEntity<ActividadCultivoResponse> actualizar(@PathVariable Long id,
                                                        @Valid @RequestBody ActividadRequest req) {
         return ResponseEntity.ok(ActividadCultivoResponse.from(actividadUseCase.actualizarActividad(
-                id, req.getTipo(), req.getDescripcion(), req.getFecha(), req.getCosto(), req.insumo())));
+                id, req.tipo(), req.descripcion(), req.fecha(), req.costo(), req.insumo())));
     }
 
     @DeleteMapping("/{id}")

@@ -1,5 +1,6 @@
 package com.agroruta.crop.application;
 
+import com.agroruta.shared.util.ZonaHoraria;
 import com.agroruta.crop.application.ports.in.ActividadProgramadaUseCase;
 import com.agroruta.crop.application.ports.out.ActividadProgramadaRepository;
 import com.agroruta.crop.application.ports.out.SiembraRepository;
@@ -24,7 +25,7 @@ import java.util.Set;
 @Transactional
 public class ActividadProgramadaService implements ActividadProgramadaUseCase {
 
-    static final ZoneId ZONA = ZoneId.of("America/Bogota");
+    static final ZoneId ZONA = ZonaHoraria.COLOMBIA;
     /** Una labor atrasada se recuerda estos días después de la fecha, no todos los días */
     static final Set<Long> DIAS_RECORDAR_ATRASO = Set.of(1L, 3L, 7L, 14L);
 

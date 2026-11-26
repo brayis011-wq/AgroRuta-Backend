@@ -6,7 +6,6 @@ import com.agroruta.weather.application.ports.out.WeatherApiPort;
 import com.agroruta.weather.domain.FranjaClima;
 import com.agroruta.weather.domain.Pronostico;
 import com.agroruta.weather.domain.Weather;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -30,12 +29,7 @@ public class WeatherService implements WeatherUseCase {
     private final CopiaBreve<Pronostico> pronosticos;
     private final CopiaBreve<List<FranjaClima>> franjas;
 
-    @Autowired
-    public WeatherService(WeatherApiPort weatherApiPort) {
-        this(weatherApiPort, Clock.systemUTC());
-    }
-
-    WeatherService(WeatherApiPort weatherApiPort, Clock reloj) {
+    public WeatherService(WeatherApiPort weatherApiPort, Clock reloj) {
         this.weatherApiPort = weatherApiPort;
         if (reloj == null) reloj = Clock.systemUTC(); // las pruebas con @InjectMocks no traen reloj
         this.actualPorCiudad = new CopiaBreve<>(VIGENCIA_ACTUAL, MAX_GUARDADOS, reloj);

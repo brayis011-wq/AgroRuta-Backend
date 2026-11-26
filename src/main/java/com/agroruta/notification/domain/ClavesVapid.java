@@ -1,5 +1,6 @@
 package com.agroruta.notification.domain;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.AlgorithmParameters;
@@ -54,7 +55,7 @@ public record ClavesVapid(String publica, String privada) {
             firma.update(porFirmar.getBytes(StandardCharsets.US_ASCII));
             return "vapid t=" + porFirmar + "." + B64.encodeToString(firma.sign()) + ", k=" + publica;
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("No se pudo firmar el aviso push", e);
+            throw new FalloInternoException("No se pudo firmar el aviso push", e);
         }
     }
 
@@ -66,7 +67,7 @@ public record ClavesVapid(String publica, String privada) {
             g.initialize(new ECGenParameterSpec("secp256r1"));
             return g.generateKeyPair();
         } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("Este servidor no soporta claves P-256", e);
+            throw new FalloInternoException("Este servidor no soporta claves P-256", e);
         }
     }
 

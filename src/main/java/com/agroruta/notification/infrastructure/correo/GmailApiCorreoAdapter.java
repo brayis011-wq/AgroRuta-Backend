@@ -1,5 +1,6 @@
 package com.agroruta.notification.infrastructure.correo;
 
+import com.agroruta.shared.exception.FalloInternoException;
 import com.agroruta.notification.application.ports.out.CorreoPort;
 import com.agroruta.notification.domain.Correo;
 import org.slf4j.Logger;
@@ -97,7 +98,7 @@ public class GmailApiCorreoAdapter implements CorreoPort {
         Map<String, Object> r = http.postForObject(URL_TOKEN, new HttpEntity<>(form, h), Map.class);
         Object t = r == null ? null : r.get("access_token");
         if (!(t instanceof String s) || s.isBlank()) {
-            throw new IllegalStateException("Google no devolvió access_token");
+            throw new FalloInternoException("Google no devolvió access_token");
         }
         long segundos = r.get("expires_in") instanceof Number n ? n.longValue() : 3600;
         accessToken = s;

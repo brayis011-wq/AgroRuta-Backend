@@ -60,11 +60,7 @@ class RequestValidationTest {
     class Registro {
 
         private RegisterRequest valido() {
-            RegisterRequest r = new RegisterRequest();
-            r.setNombre("Juan Pérez");
-            r.setEmail("juan@agroruta.com");
-            r.setPassword("password123");
-            r.setRol("Agricultor");
+            RegisterRequest r = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "password123", "Agricultor", null);
             return r;
         }
 
@@ -77,39 +73,35 @@ class RequestValidationTest {
         @Test
         @DisplayName("acepta registro sin rol (se asigna Agricultor)")
         void aceptaSinRol() {
-            RegisterRequest r = valido();
-            r.setRol(null);
+            RegisterRequest r = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "password123", null, null);
             assertThat(camposInvalidos(r)).isEmpty();
         }
 
         @Test
         @DisplayName("rechaza correo con formato inválido")
         void rechazaCorreoInvalido() {
-            RegisterRequest r = valido();
-            r.setEmail("no-es-un-correo");
+            RegisterRequest r = new RegisterRequest("Juan Pérez", "no-es-un-correo", "password123", "Agricultor", null);
             assertThat(camposInvalidos(r)).containsExactly("email");
         }
 
         @Test
         @DisplayName("rechaza contraseña de menos de 8 caracteres")
         void rechazaPasswordCorta() {
-            RegisterRequest r = valido();
-            r.setPassword("1234567");
+            RegisterRequest r = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "1234567", "Agricultor", null);
             assertThat(camposInvalidos(r)).containsExactly("password");
         }
 
         @Test
         @DisplayName("rechaza contraseña de más de 72 caracteres")
         void rechazaPasswordLarga() {
-            RegisterRequest r = valido();
-            r.setPassword("a".repeat(73));
+            RegisterRequest r = new RegisterRequest("Juan Pérez", "juan@agroruta.com", "a".repeat(73), "Agricultor", null);
             assertThat(camposInvalidos(r)).containsExactly("password");
         }
 
         @Test
         @DisplayName("rechaza campos vacíos")
         void rechazaVacios() {
-            assertThat(camposInvalidos(new RegisterRequest()))
+            assertThat(camposInvalidos(new RegisterRequest(null, null, null, null, null)))
                     .containsExactlyInAnyOrder("nombre", "email", "password");
         }
     }
@@ -122,18 +114,14 @@ class RequestValidationTest {
         @Test
         @DisplayName("no exige longitud mínima de contraseña (usuarios antiguos)")
         void noExigeMinimo() {
-            LoginRequest r = new LoginRequest();
-            r.setEmail("ana@agroruta.com");
-            r.setPassword("abc");
+            LoginRequest r = new LoginRequest("ana@agroruta.com", "abc", null, null);
             assertThat(camposInvalidos(r)).isEmpty();
         }
 
         @Test
         @DisplayName("rechaza correo y contraseña vacíos")
         void rechazaVacios() {
-            LoginRequest r = new LoginRequest();
-            r.setEmail(" ");
-            r.setPassword("");
+            LoginRequest r = new LoginRequest(" ", "", null, null);
             assertThat(camposInvalidos(r)).containsExactlyInAnyOrder("email", "password");
         }
     }
@@ -146,29 +134,21 @@ class RequestValidationTest {
         @Test
         @DisplayName("rechaza finca con hectáreas negativas o en cero")
         void rechazaHectareasNoPositivas() {
-            FincaRequest r = new FincaRequest();
-            r.setNombre("La Esperanza");
-            r.setUbicacion("Vereda El Monte");
-            r.setAgricultorId(5L);
+            assertThat(camposInvalidos(finca(-3.0))).containsExactly("hectareas");
 
-            r.setHectareas(-3.0);
-            assertThat(camposInvalidos(r)).containsExactly("hectareas");
+            assertThat(camposInvalidos(finca(0.0))).containsExactly("hectareas");
 
-            r.setHectareas(0.0);
-            assertThat(camposInvalidos(r)).containsExactly("hectareas");
+            assertThat(camposInvalidos(finca(12.5))).isEmpty();
+        }
 
-            r.setHectareas(12.5);
-            assertThat(camposInvalidos(r)).isEmpty();
+        private FincaRequest finca(Double hectareas) {
+            return new FincaRequest("La Esperanza", "Vereda El Monte", hectareas, 5L);
         }
 
         @Test
         @DisplayName("rechaza siembra con fecha futura y plantas en cero")
         void rechazaSiembraInvalida() {
-            SiembraRequest r = new SiembraRequest();
-            r.setFechaSiembra(LocalDate.now().plusDays(5));
-            r.setCantidadPlantas(0);
-            r.setVariedadId(1L);
-            r.setLoteId(3L);
+            SiembraRequest r = new SiembraRequest(LocalDate.now().plusDays(5), 0, 1L, 3L);
             assertThat(camposInvalidos(r))
                     .containsExactlyInAnyOrder("fechaSiembra", "cantidadPlantas");
         }
